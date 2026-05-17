@@ -12,14 +12,17 @@
 body{background:#111;color:#eee;font-family:system-ui,-apple-system,sans-serif;min-height:100vh}
 #root{max-width:600px;margin:0 auto;padding-bottom:calc(40px + env(safe-area-inset-bottom,0px))}
 
+/* Top bar (single sticky container) */
+.top-bar{position:sticky;top:0;z-index:10;background:#111}
+
 /* Header */
-.header{position:sticky;top:0;z-index:10;background:#111;padding:10px 12px 8px;padding-top:calc(10px + env(safe-area-inset-top,0px));border-bottom:1px solid #2a2a2a}
+.header{padding:10px 12px 8px;padding-top:calc(10px + env(safe-area-inset-top,0px));border-bottom:1px solid #2a2a2a}
 .title{font-size:14px;color:#888;margin-bottom:8px}
 .search{width:100%;background:#1e1e1e;border:1px solid #333;border-radius:8px;padding:10px 12px;color:#eee;font-size:16px;outline:none;touch-action:manipulation}
 .search:focus{border-color:#555}
 
 /* Filters */
-.filters{padding:6px 12px;background:#111;position:sticky;top:82px;z-index:9;border-bottom:1px solid #1e1e1e;display:flex;flex-direction:column;gap:5px}
+.filters{padding:6px 12px;border-bottom:1px solid #1e1e1e;display:flex;flex-direction:column;gap:5px}
 .filter-row{display:flex;align-items:center;gap:5px;overflow-x:auto}
 .filter-row::-webkit-scrollbar{display:none}
 .filter-label{font-size:11px;color:#555;flex-shrink:0;width:26px}
@@ -136,6 +139,7 @@ function App() {
 
   return (
     <>
+      <div className="top-bar">
       <div className="header">
         <div className="title">排球少年!! バボカ!! BREAK 卡片查詢</div>
         <input className="search" placeholder="搜尋卡號、學校、效果…" value={query} onChange={e => setQuery(e.target.value)} />
@@ -163,6 +167,7 @@ function App() {
               onClick={() => setFilterSchool(filterSchool === s ? '' : s)}>{s}</button>
           ))}
         </div>
+      </div>
       </div>
 
       <div className="count">{filtered.length} 張</div>
