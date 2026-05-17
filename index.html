@@ -23,10 +23,9 @@ body{background:#111;color:#eee;font-family:system-ui,-apple-system,sans-serif;m
 
 /* Filters */
 .filters{padding:6px 12px;border-bottom:1px solid #1e1e1e;display:flex;flex-direction:column;gap:5px}
-.filter-row{display:flex;align-items:center;gap:5px;overflow-x:auto}
-.filter-row::-webkit-scrollbar{display:none}
+.filter-row{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
 .filter-label{font-size:11px;color:#555;flex-shrink:0;width:26px}
-.filter-btn{background:#1e1e1e;border:1px solid #333;border-radius:6px;color:#aaa;padding:6px 12px;font-size:13px;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background .1s,color .1s,border-color .1s;touch-action:manipulation;min-height:34px;line-height:1.2}
+.filter-btn{background:#1e1e1e;border:1px solid #333;border-radius:6px;color:#aaa;padding:6px 12px;font-size:13px;cursor:pointer;white-space:nowrap;transition:background .1s,color .1s,border-color .1s;touch-action:manipulation;min-height:34px;line-height:1.2}
 .filter-btn.active{background:#1e3a5f;border-color:#4a8abf;color:#fff}
 .filter-btn:active{opacity:.7}
 
