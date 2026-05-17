@@ -7,9 +7,15 @@ BASE = 'https://www.hashtagmrboard.com'
 
 ARTICLES = [
     '/blog/posts/hv-pr-promo',
+    '/blog/posts/hv-d01-haikyu-baboka-break-hv-cn-translate',
     '/blog/posts/hv-d02-haikyu-baboka-break-hv-cn-translate',
-    '/blog/posts/hv-p01-haikyu-baboka-break-hv-p02--inarizaki-high-school-cn-translate',
     '/blog/posts/hv-d03-inarizaki-high-school',
+    '/blog/posts/hv-p01-haikyu-baboka-break-hv-p01-karasunohigh-cn-translate',
+    '/blog/posts/hv-p01-haikyu-baboka-break-hv-p01-nekoma-high-cn-translate',
+    '/blog/posts/hv-p01-haikyu-baboka-break-hv-p01-seijoh-cn-translate',
+    '/blog/posts/hv-p01-haikyu-baboka-break-hv-p01-otherhigh-cn-translate',
+    '/blog/posts/hv-p01-haikyu-baboka-break-hv-p01-event-cn-translate',
+    '/blog/posts/hv-p01-haikyu-baboka-break-hv-p02--inarizaki-high-school-cn-translate',
     '/blog/posts/hv-p02-haikyu-baboka-break-hv-p01-karasunohigh-cn-translate',
     '/blog/posts/hv-p02-date-kogyo-high-school',
     '/blog/posts/hv-p02-shiratorizawa',

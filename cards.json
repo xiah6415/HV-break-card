@@ -1,5 +1,95 @@
 [
   {
+    "number": "HV-D01-001",
+    "rarity": "D",
+    "school": "烏野·1年",
+    "position": "MB",
+    "effect": "支付 2 Guts 發動以下效果。 此角色的攻擊值+2。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f1a90a9b7ff300163c794a/original.png"
+  },
+  {
+    "number": "HV-D01-002",
+    "rarity": "S",
+    "school": "烏野·1年",
+    "position": "S",
+    "effect": "支付 2 Guts 發動以下效果。 此角色的托球值+2。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f1a92cb2ae2c000ae82493/original.png"
+  },
+  {
+    "number": "HV-D01-003",
+    "rarity": "D",
+    "school": "烏野·1年",
+    "position": "MB",
+    "effect": "對手進攻總值4或以下時，支付 1 Guts發動以下效果。 抽1張卡。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f1a978e496030012cbed6e/original.png"
+  },
+  {
+    "number": "HV-D01-004",
+    "rarity": "D",
+    "school": "烏野·1年",
+    "position": "MB",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f1a9b14c9efd001202f6c6/original.png"
+  },
+  {
+    "number": "HV-D01-005",
+    "rarity": "D",
+    "school": "烏野·2年",
+    "position": "Li",
+    "effect": "支付 3 Guts 發動以下效果。 抽1張卡，此角色接球值+2。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f1a9bd4c9efd001002f853/original.png"
+  },
+  {
+    "number": "HV-D01-006",
+    "rarity": "D",
+    "school": "烏野·2年",
+    "position": "WS",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f1a9fe5481f900163a4310/original.png"
+  },
+  {
+    "number": "HV-D01-007",
+    "rarity": "D",
+    "school": "烏野·2年",
+    "position": "WS",
+    "effect": "掉棄自己的1張手牌發動以下效果。 此角色接球值+3。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f1aa0e4c1f38001831ca04/original.png"
+  },
+  {
+    "number": "HV-D01-008",
+    "rarity": "D",
+    "school": "烏野·3年",
+    "position": "WS",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f1aa3daf02db0b01046e80/original.png"
+  },
+  {
+    "number": "HV-D01-009",
+    "rarity": "D",
+    "school": "烏野·3年",
+    "position": "S",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f1aa6df889f000186c9212/original.png"
+  },
+  {
+    "number": "HV-D01-010",
+    "rarity": "D",
+    "school": "烏野·3年",
+    "position": "WS",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f1aa780e89540012fd5bf6/original.png"
+  },
+  {
     "number": "HV-D02-001",
     "rarity": "D",
     "school": "音駒·2年",
@@ -187,6 +277,960 @@
     "effect": "支付 2 Guts 發動以下效果。 此角色接球值+2。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6972d71aec2c0d00184c4d87/original.png"
+  },
+  {
+    "number": "HV-P01-001",
+    "rarity": "秘",
+    "school": "烏野·1年",
+    "position": "MB",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/691aaa93c5fd4700163df615/original.png"
+  },
+  {
+    "number": "HV-P01-002",
+    "rarity": "頂",
+    "school": "烏野·1年",
+    "position": "MB",
+    "effect": "支付 3 Guts 發動以下效果。 此 角色 的攻擊值+4，對手下一回合中，對手原始接球值6或以上的 角色 在接球區不能登場。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f06f3d4db76b00105023ac/original.png"
+  },
+  {
+    "number": "HV-P01-002",
+    "rarity": "頂P",
+    "school": "烏野·1年",
+    "position": "MB",
+    "effect": "支付 3 Guts 發動以下效果。 此 角色 的攻擊值+4，對手下一回合中，對手原始接球值6或以上的 角色 在接球區不能登場。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f077034db76b0014502734/original.png"
+  },
+  {
+    "number": "HV-P01-003",
+    "rarity": "S",
+    "school": "烏野·1年",
+    "position": "MB",
+    "effect": "當角色從手牌中登場，自己的手牌 3 張或以下， 自己的托球角色是「影山飛雄」時 發動以下效果， 此 角色 的攻擊值+2，並且在對手下一回合中，只能打出最多 2 個 阻擋角色 。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f07e3a4e269d001017ae92/original.png"
+  },
+  {
+    "number": "HV-P01-004",
+    "rarity": "R",
+    "school": "烏野·1年",
+    "position": "MB",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0824cb8e1920012ff65de/original.png"
+  },
+  {
+    "number": "HV-P01-004",
+    "rarity": "極",
+    "school": "烏野·1年",
+    "position": "MB",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/6916e1c806826c000a3cd342/original.png"
+  },
+  {
+    "number": "HV-P01-004",
+    "rarity": "極P",
+    "school": "烏野·1年",
+    "position": "MB",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/6916e1d9ef93e7000ebd0ac1/original.png"
+  },
+  {
+    "number": "HV-P01-005",
+    "rarity": "秘",
+    "school": "烏野·1年",
+    "position": "S",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f89fdea5bf37000ef2639d/original.png"
+  },
+  {
+    "number": "HV-P01-006",
+    "rarity": "頂",
+    "school": "烏野·1年",
+    "position": "S",
+    "effect": "支付 3 Guts 發動以下效果。 自己牌庫頂公開1張，將最多1張「 日向翔陽 」或「 オープン攻撃 」加入手牌， 並將剩餘的卡放置於牌組底。 此外，在本回合中，「 日向翔陽 」登場，該 角色 的攻擊值+2。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f082966bc17610d631ae64/original.png"
+  },
+  {
+    "number": "HV-P01-006",
+    "rarity": "頂P",
+    "school": "烏野·1年",
+    "position": "S",
+    "effect": "支付 3 Guts 發動以下效果。 自己牌庫頂公開1張，將最多1張「 日向翔陽 」或「 オープン攻撃 」加入手牌， 並將剩餘的卡放置於牌組底。 此外，在本回合中，「 日向翔陽 」登場，該 角色 的攻擊值+2。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f084d523e5f8000a116a46/original.png"
+  },
+  {
+    "number": "HV-P01-006",
+    "rarity": "S",
+    "school": "烏野·1年",
+    "position": "MB",
+    "effect": "支付 2 Guts 發動以下2個效果。 ▶自己場上有「 山口 忠 」時，此 角色 攔網+2。 ▶此回合中，攔網成功時，獲得 Block Kill 6 。 _____________________________ Block Kill N ：這個回合結束時，進攻總值為N 。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/691aaadb4399f100101c5c4d/original.png"
+  },
+  {
+    "number": "HV-P01-006",
+    "rarity": "SP",
+    "school": "烏野·1年",
+    "position": "MB",
+    "effect": "支付 2 Guts 發動以下2個效果。 ▶自己場上有「 山口 忠 」時，此 角色 攔網+2。 ▶此回合中，攔網成功時，獲得 Block Kill 6 。 ______________________________ Block Kill N ：這個回合結束時，進攻總值為N 。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f6e421ffaefd000e4be061/original.png"
+  },
+  {
+    "number": "HV-P01-007",
+    "rarity": "R",
+    "school": "烏野·1年",
+    "position": "S",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f084ff64d97a00140bc717/original.png"
+  },
+  {
+    "number": "HV-P01-009",
+    "rarity": "N",
+    "school": "烏野·1年",
+    "position": "MB",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/691aab06ee9c2b00125bf8e5/original.png"
+  },
+  {
+    "number": "HV-P01-010",
+    "rarity": "S",
+    "school": "烏野·1年",
+    "position": "S",
+    "effect": "公開自己牌庫頂1張牌，該卡是烏野時， 下一個對手回合中，對手 托球角色 登場時，該 角色 托球值-2。 公開的卡放置到牌庫底。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/691aab7bb31b78000c3d4d80/original.png"
+  },
+  {
+    "number": "HV-P01-011",
+    "rarity": "R",
+    "school": "烏野·2年",
+    "position": "Li",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/691aab9161227100140272c5/original.png"
+  },
+  {
+    "number": "HV-P01-011",
+    "rarity": "RP",
+    "school": "烏野·2年",
+    "position": "Li",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f08d3ad690580012e7a827/original.png"
+  },
+  {
+    "number": "HV-P01-012",
+    "rarity": "N",
+    "school": "烏野·2年",
+    "position": "WS",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/691aac01880c0200163d8814/original.png"
+  },
+  {
+    "number": "HV-P01-012",
+    "rarity": "NP",
+    "school": "烏野·2年",
+    "position": "WS",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f08d65a0debb000e8f1c43/original.png"
+  },
+  {
+    "number": "HV-P01-013",
+    "rarity": "N",
+    "school": "烏野·2年",
+    "position": "WS",
+    "effect": "(從手牌中掉棄此卡牌)： 自己的1個 烏野角色 的接球值+2。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f08d6f1737c40012a8f386/original.png"
+  },
+  {
+    "number": "HV-P01-014",
+    "rarity": "R",
+    "school": "烏野·3年",
+    "position": "WS",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/691aac3e5ea6f500121cce00/original.png"
+  },
+  {
+    "number": "HV-P01-014",
+    "rarity": "RP",
+    "school": "烏野·3年",
+    "position": "WS",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f08fdcb45522000c42c4a1/original.png"
+  },
+  {
+    "number": "HV-P01-015",
+    "rarity": "N",
+    "school": "烏野·3年",
+    "position": "S",
+    "effect": "支付 2 Guts 發動以下效果。 抽1張牌，此 角色 的托球值+1。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/691aac50129cb9000ebc63c4/original.png"
+  },
+  {
+    "number": "HV-P01-015",
+    "rarity": "NP",
+    "school": "烏野·3年",
+    "position": "S",
+    "effect": "支付 2 Guts 發動以下效果。 抽1張牌，此 角色 的托球值+1。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/691aac690c11a5000a8740ac/original.png"
+  },
+  {
+    "number": "HV-P01-016",
+    "rarity": "N",
+    "school": "烏野·3年",
+    "position": "WS",
+    "effect": "自己的托球角色是烏野的S 時，支付 4 Guts 發動以下效果。 此 角色 的攻擊值+2。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/691aac7ac66d9e0014acd7c8/original.png"
+  },
+  {
+    "number": "HV-P01-017",
+    "rarity": "秘",
+    "school": "音駒·2年",
+    "position": "S",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/690c444c1a65f4000ab5ddc7/original.png"
+  },
+  {
+    "number": "HV-P01-018",
+    "rarity": "頂",
+    "school": "音駒·2年",
+    "position": "S",
+    "effect": "支付 3 Guts 發動以下效果。 此 角色 的托球值+1，如果自己的 角色 只有音駒時，從自己EVENT區將最多1張的卡牌加到手牌。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0931dcdc528000a02705f/original.png"
+  },
+  {
+    "number": "HV-P01-018",
+    "rarity": "頂P",
+    "school": "音駒·2年",
+    "position": "S",
+    "effect": "支付 3 Guts 發動以下效果。 此 角色 的托球值+1，如果自己的 角色 只有音駒時，從自己EVENT區將最多1張的卡牌加到手牌。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f1c9b5af856400129e4c41/original.png"
+  },
+  {
+    "number": "HV-P01-019",
+    "rarity": "R",
+    "school": "音駒·2年",
+    "position": "S",
+    "effect": "自己原始攻擊值3的 攻擊角色 登場，而此角色是 托球角色 時，支付2 Guts 發動以下效果。 可從自己攻擊區最多1張的 音駒Guts 在攻擊區登場，該角色的攻擊值+2。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f09598e8ebd30014bb8b7c/original.png"
+  },
+  {
+    "number": "HV-P01-020",
+    "rarity": "秘",
+    "school": "音駒·3年",
+    "position": "MB",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/691aadcd4399f100161c5f7d/original.png"
+  },
+  {
+    "number": "HV-P01-021",
+    "rarity": "頂",
+    "school": "音駒·3年",
+    "position": "MB",
+    "effect": "支付3 Guts 發動以下效果。 此角色的攻擊值+3，從自己區域的 Guts ，將2張不同卡名的音駒卡加到手牌中。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f097ddae94ca000ada7fc1/original.png"
+  },
+  {
+    "number": "HV-P01-021",
+    "rarity": "頂P",
+    "school": "音駒·3年",
+    "position": "MB",
+    "effect": "支付3 Guts 發動以下效果。 此角色的攻擊值+3，從自己區域的 Guts ，將2張不同卡名的音駒卡加到手牌中。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/6916e224386016000c908971/original.png"
+  },
+  {
+    "number": "HV-P01-022",
+    "rarity": "S",
+    "school": "音駒·3年",
+    "position": "MB",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/691aaddf4c6cec00163fc923/original.png"
+  },
+  {
+    "number": "HV-P01-023",
+    "rarity": "S",
+    "school": "音駒·3年",
+    "position": "Li",
+    "effect": "當有「夜久衛輔」以外的 音駒角色 在此角色上登場接球區時， 將此角色放置到廢棄區發動以下效果。 該角色的接球值+2。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/691aadf063e6690010a1dd8a/original.png"
+  },
+  {
+    "number": "HV-P01-023",
+    "rarity": "SP",
+    "school": "音駒·3年",
+    "position": "Li",
+    "effect": "當有「夜久衛輔」以外的 音駒角色 在此角色上登場接球區時， 將此角色放置到廢棄區發動以下效果。 該角色的接球值+2。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f09a4c3d17730016bc95da/original.png"
+  },
+  {
+    "number": "HV-P01-024",
+    "rarity": "N",
+    "school": "音駒·3年",
+    "position": "Li",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/691aae03b31b78000c3d4fc4/original.png"
+  },
+  {
+    "number": "HV-P01-025",
+    "rarity": "S",
+    "school": "音駒·1年",
+    "position": "MB",
+    "effect": "支付2 Guts 發動以下2個效果。 ▶此角色因為「 孤爪研磨 」的效果登場時，此角色的攻擊值+2。 ▶下一個對手回合中，對手的 主攔網角色 登場時，該角色攔網值-3。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f09a76b93f4b000c820096/original.png"
+  },
+  {
+    "number": "HV-P01-025",
+    "rarity": "R",
+    "school": "音駒·1年",
+    "position": "S",
+    "effect": "下一個對手回合中，對手的 接球角色 和 托球角色 效果無效。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/691aae90acf0b600186a0840/original.png"
+  },
+  {
+    "number": "HV-P01-026",
+    "rarity": "N",
+    "school": "音駒·1年",
+    "position": "MB",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f09b715d116f000aef8ef6/original.png"
+  },
+  {
+    "number": "HV-P01-027",
+    "rarity": "R",
+    "school": "音駒·3年",
+    "position": "WS",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/691aae17e75471000c6799eb/original.png"
+  },
+  {
+    "number": "HV-P01-027",
+    "rarity": "RP",
+    "school": "音駒·3年",
+    "position": "WS",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/691aae3a5ad0300012056219/original.png"
+  },
+  {
+    "number": "HV-P01-028",
+    "rarity": "N",
+    "school": "音駒·2年",
+    "position": "WS",
+    "effect": "在攻擊區域，「灰羽リエーフ」登場於此卡之上時， 從自己手牌掉棄1張音駒的卡發動以下效果， 該角色攻擊值+1。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/691aae495dc59c000c193f32/original.png"
+  },
+  {
+    "number": "HV-P01-029",
+    "rarity": "R",
+    "school": "音駒·2年",
+    "position": "WS",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/691aae58d6de4d0016129d2c/original.png"
+  },
+  {
+    "number": "HV-P01-029",
+    "rarity": "RP",
+    "school": "音駒·2年",
+    "position": "WS",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f09c883d17730010bc9682/original.png"
+  },
+  {
+    "number": "HV-P01-030",
+    "rarity": "N",
+    "school": "音駒·1年",
+    "position": "WS",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/691aae6d0e6b1e6181d522aa/original.png"
+  },
+  {
+    "number": "HV-P01-031",
+    "rarity": "N",
+    "school": "音駒·1年",
+    "position": "Li",
+    "effect": "(從手牌中掉棄此卡牌)： 自己的1個音駒角色的接球值+2。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/691aae7a8d2625001699d04b/original.png"
+  },
+  {
+    "number": "HV-P01-033",
+    "rarity": "頂",
+    "school": "青葉城西·3年",
+    "position": "S",
+    "effect": "從自己手牌掉棄1張 青葉城西的卡 發動以下效果。 此角色能力值+1，對手手牌4張或以上時，掉棄對手1張手牌。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0a813367f55000c28d15a/original.png"
+  },
+  {
+    "number": "HV-P01-033",
+    "rarity": "頂P",
+    "school": "青葉城西·3年",
+    "position": "S",
+    "effect": "從自己手牌掉棄1張 青葉城西的卡 發動以下效果。 此角色能力值+1，對手手牌4張或以上時，掉棄對手1張手牌。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0a81bd45ac5000e80961a/original.png"
+  },
+  {
+    "number": "HV-P01-034",
+    "rarity": "R",
+    "school": "青葉城西·3年",
+    "position": "S",
+    "effect": "支付 1Guts 發動以下效果。 支付的卡是青葉城西時，對手全部手牌放回牌組並洗牌，之後抽6張卡。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0a82262e603001655602e/original.png"
+  },
+  {
+    "number": "HV-P01-034",
+    "rarity": "R",
+    "school": "青葉城西·3年",
+    "position": "WS",
+    "effect": "從自己手牌掉棄1張青葉城西的卡發動以下效果。 此角色攻擊值+2，對手手牌4張或以下時，下一個回合中，對手不能因卡牌效果將牌加入手牌。 ※「因卡牌效果將牌加入手牌」包括: 從棄牌區加入手牌 、 從Guts加入手牌 、 卡牌效果的抽1張牌 、 查看自己牌組頂3張牌，選1張並加入手牌 等等。 (Ref Q&A)",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0a8295f945d0012658d09/original.png"
+  },
+  {
+    "number": "HV-P01-034",
+    "rarity": "R",
+    "school": "青葉城西·3年",
+    "position": "WS",
+    "effect": "從自己手牌掉棄1張青葉城西的卡發動以下效果。 此角色攻擊值+2，對手手牌4張或以下時，下一個回合中，對手不能因卡牌效果將牌加入手牌。 ※「因卡牌效果將牌加入手牌」包括: 從棄牌區加入手牌 、 從Guts加入手牌 、 卡牌效果的抽1張牌 、 查看自己牌組頂3張牌，選1張並加入手牌 等等。 (Ref Q&A)",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/6916e2769ea1800016b0122c/original.png"
+  },
+  {
+    "number": "HV-P01-036",
+    "rarity": "N",
+    "school": "青葉城西·1年",
+    "position": "MB",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/691aaeb09450540016b6c99b/original.png"
+  },
+  {
+    "number": "HV-P01-037",
+    "rarity": "N",
+    "school": "青葉城西·3年",
+    "position": "MB",
+    "effect": "對手進攻總值8或以上時，支付1Guts 發動以下效果。 立即結束攔網階段，進入抽牌階段。 此回合中，自己的青葉城西的 接球角色 登場，該角色接球值+3。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0a8362e36310016819e38/original.png"
+  },
+  {
+    "number": "HV-P01-038",
+    "rarity": "N",
+    "school": "青葉城西·3年",
+    "position": "WS",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0a83ca0cd2b001488a174/original.png"
+  },
+  {
+    "number": "HV-P01-039",
+    "rarity": "N",
+    "school": "青葉城西·2年",
+    "position": "Li",
+    "effect": "對手進攻總值6或以上時，從自己手牌掉棄1張青葉城西的卡發動以下效果。 此角色的接球值+1，場上只有 青葉城西角色 時，抽1張卡。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/691aaee6e3a0e900164e4d84/original.png"
+  },
+  {
+    "number": "HV-P01-040",
+    "rarity": "N",
+    "school": "青葉城西·2年",
+    "position": "S",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0a8463b13da00180236b0/original.png"
+  },
+  {
+    "number": "HV-P01-041",
+    "rarity": "R",
+    "school": "青葉城西·1年",
+    "position": "WS",
+    "effect": "自己場上只有青葉城西角色，對手手牌3張或以下時，支付1 Guts 發動以下效果。 獲得 吊球4 。 ________________________________ 吊球N ： 此回合結束時，自己的進攻總值N，下一個對手回合中， 對手不能登場攔網角度。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/691aaed4e3a0e9000a4e4f57/original.png"
+  },
+  {
+    "number": "HV-P01-042",
+    "rarity": "R",
+    "school": "青葉城西·2年",
+    "position": "WS",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/691aaec6e75471000e679ccb/original.png"
+  },
+  {
+    "number": "HV-P01-043",
+    "rarity": "頂",
+    "school": "梟谷·3年",
+    "position": "WS",
+    "effect": "此角色從手牌登場時，自己場上的角色全是梟谷， 自己的 攻擊區域的Guts 是單數時發動以下效果， 此角色攻擊值+5。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0adef2e3631001281a34a/original.png"
+  },
+  {
+    "number": "HV-P01-043",
+    "rarity": "頂P",
+    "school": "梟谷·3年",
+    "position": "WS",
+    "effect": "此角色從手牌登場時，自己場上的角色全是梟谷， 自己的 攻擊區域的Guts 是單數時發動以下效果， 此角色攻擊值+5。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0aee3ca0fdb000a5ea447/original.png"
+  },
+  {
+    "number": "HV-P01-044",
+    "rarity": "R",
+    "school": "梟谷·3年",
+    "position": "WS",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0aef3125a7e001046bd4a/original.png"
+  },
+  {
+    "number": "HV-P01-045",
+    "rarity": "S",
+    "school": "梟谷·2年",
+    "position": "S",
+    "effect": "支付自己的托球區與攻擊區合計4張Guts發動以下效果。 此角色托球值+2，並從棄牌區將「 木兎光太郎 」加入手牌。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0aeff898caa000eb254e6/original.png"
+  },
+  {
+    "number": "HV-P01-045",
+    "rarity": "SP",
+    "school": "梟谷·2年",
+    "position": "S",
+    "effect": "支付自己的托球區與攻擊區合計4張Guts發動以下效果。 此角色托球值+2，並從棄牌區將「 木兎光太郎 」加入手牌。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0afdea0cd2b001088a6d1/original.png"
+  },
+  {
+    "number": "HV-P01-046",
+    "rarity": "R",
+    "school": "梟谷·2年",
+    "position": "S",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0afe65ac0f50010e848d5/original.png"
+  },
+  {
+    "number": "HV-P01-047",
+    "rarity": "R",
+    "school": "梟谷·3年",
+    "position": "WS",
+    "effect": "當有梟谷角色在攻擊區的此角色之上登場時，自己棄掉1張手牌發動以下效果。 該角色攻擊值+1。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0aff132670600147574cc/original.png"
+  },
+  {
+    "number": "HV-P01-048",
+    "rarity": "N",
+    "school": "梟谷·3年",
+    "position": "WS",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0b0b42e3631000c81a5fb/original.png"
+  },
+  {
+    "number": "HV-P01-048",
+    "rarity": "NP",
+    "school": "梟谷·3年",
+    "position": "WS",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0b0c617ccb9000e2f2f7a/original.png"
+  },
+  {
+    "number": "HV-P01-049",
+    "rarity": "N",
+    "school": "梟谷·3年",
+    "position": "WS",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0b0d112fb79000ca6ea2c/original.png"
+  },
+  {
+    "number": "HV-P01-050",
+    "rarity": "N",
+    "school": "梟谷·3年",
+    "position": "Li",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0b0e062e603000e556805/original.png"
+  },
+  {
+    "number": "HV-P01-051",
+    "rarity": "N",
+    "school": "梟谷·3年",
+    "position": "MB",
+    "effect": "對手的進攻總值4或以上時，棄掉1張自己牌組頂的卡牌發動以下效果。 該卡是梟谷時，獲得 One Touch 3 。 ________________________________ One Touch N ：對手的進攻總值-N。 立即結束攔網階段，並進入自己的抽牌階段。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0b0f0cdc528000a02801c/original.png"
+  },
+  {
+    "number": "HV-P01-052",
+    "rarity": "N",
+    "school": "梟谷·1年",
+    "position": "MB",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0b176ba582c00108e7b3f/original.png"
+  },
+  {
+    "number": "HV-P01-053",
+    "rarity": "N",
+    "school": "常波·3年",
+    "position": "WS",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0b197b222a80018ea1e22/original.png"
+  },
+  {
+    "number": "HV-P01-054",
+    "rarity": "N",
+    "school": "伊達工業·2年",
+    "position": "MB",
+    "effect": "支付3 Guts發動以下效果。 此角色攔網值+5。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0b1a3ed4e6b0014011e47/original.png"
+  },
+  {
+    "number": "HV-P01-054",
+    "rarity": "NP",
+    "school": "伊達工業·2年",
+    "position": "MB",
+    "effect": "支付3 Guts發動以下效果。 此角色攔網值+5。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/6916e7b679d4b30018bc5a2f/original.png"
+  },
+  {
+    "number": "HV-P01-055",
+    "rarity": "N",
+    "school": "伊達工業·2年",
+    "position": "WS",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0b1da77a3970012567f1f/original.png"
+  },
+  {
+    "number": "HV-P01-055",
+    "rarity": "NP",
+    "school": "伊達工業·2年",
+    "position": "WS",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/6916e7cd32234500100db4e8/original.png"
+  },
+  {
+    "number": "HV-P01-056",
+    "rarity": "S",
+    "school": "白鳥沢·3年",
+    "position": "WS",
+    "effect": "棄掉1張自己手牌的EVENT卡發動以下效果。 抽1張卡，此角色1項能力值+2。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0b1e6a0cd2b001888a729/original.png"
+  },
+  {
+    "number": "HV-P01-056",
+    "rarity": "SP",
+    "school": "白鳥沢·3年",
+    "position": "WS",
+    "effect": "棄掉1張自己手牌的EVENT卡發動以下效果。 抽1張卡，此角色1項能力值+2。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0b29e35210e001464343c/original.png"
+  },
+  {
+    "number": "HV-P01-057",
+    "rarity": "N",
+    "school": "白鳥沢·3年",
+    "position": "MB",
+    "effect": "下一個對手回合中，對手 抽牌以外的方法 將卡加入手牌時，自己抽1張卡。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0b2a83ae7790012db50ab/original.png"
+  },
+  {
+    "number": "HV-P01-058",
+    "rarity": "N",
+    "school": "白鳥沢·1年",
+    "position": "WS",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0b2f1f13ef50018584dc9/original.png"
+  },
+  {
+    "number": "HV-P01-059",
+    "rarity": "N",
+    "school": "扇南·2年",
+    "position": "WS",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0b2fd3ae7790016db514a/original.png"
+  },
+  {
+    "number": "HV-P01-060",
+    "rarity": "N",
+    "school": "角川·1年",
+    "position": "WS",
+    "effect": "對手的進攻總值4或以上時發動以下效果。 獲得 One Touch 2 。 ________________________________ One Touch N ：對手的進攻總值-N。 立即結束攔網階段，並進入自己的抽牌階段。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0b31145e7240014e594e3/original.png"
+  },
+  {
+    "number": "HV-P01-061",
+    "rarity": "N",
+    "school": "条善寺·2年",
+    "position": "WS",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0b5a4602461000c5ca90b/original.png"
+  },
+  {
+    "number": "HV-P01-062",
+    "rarity": "N",
+    "school": "和久谷南·3年",
+    "position": "WS",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0b5ae91c850000c4d71a6/original.png"
+  },
+  {
+    "number": "HV-P01-063",
+    "rarity": "N",
+    "school": "稲荷崎·2年",
+    "position": "S",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0b5b6b4e731000e860d07/original.png"
+  },
+  {
+    "number": "HV-P01-063",
+    "rarity": "NP",
+    "school": "稲荷崎·2年",
+    "position": "S",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0b5c091c850000c4d71a9/original.png"
+  },
+  {
+    "number": "HV-P01-064",
+    "rarity": "N",
+    "school": "稲荷崎·2年",
+    "position": "WS",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0b5d2bbf2730012941091/original.png"
+  },
+  {
+    "number": "HV-P01-064",
+    "rarity": "NP",
+    "school": "稲荷崎·2年",
+    "position": "WS",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0b5dbd487bc00147bed7f/original.png"
+  },
+  {
+    "number": "HV-P01-065",
+    "rarity": "N",
+    "school": "稲荷崎·3年",
+    "position": "WS",
+    "effect": "對手的EVENT區 托球 及 攻擊 卡合計5張或以上時，此角色接球值+6。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0b5e6bbf2730010940e9f/original.png"
+  },
+  {
+    "number": "HV-P01-066",
+    "rarity": "S",
+    "school": "鴎台·2年",
+    "position": "WS",
+    "effect": "自己角色全是鴎台，或 四位或以上不同所屬的角色時，支付 3 Guts發動以下效果。 此角色的攻擊值+3。 然後，掉棄對手2張Event區的卡，如果該區域不足2張卡時，攻擊值再+1。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f6e74fbb4dfe001051d349/original.png"
+  },
+  {
+    "number": "HV-P01-066",
+    "rarity": "SP",
+    "school": "鴎台·2年",
+    "position": "WS",
+    "effect": "自己角色全是鴎台，或 四位或以上不同所屬的角色時，支付 3 Guts發動以下效果。 此角色的攻擊值+3。 然後，掉棄對手2張Event區的卡，如果該區域不足2張卡時，攻擊值再+1。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f6e747047a3c0018019162/original.png"
+  },
+  {
+    "number": "HV-P01-067",
+    "rarity": "R",
+    "school": "鴎台·2年",
+    "position": "MB",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f6e73fb5ec390010e157f5/original.png"
+  },
+  {
+    "number": "HV-P01-068",
+    "rarity": "S",
+    "school": "井闥山·2年",
+    "position": "WS",
+    "effect": "自己手牌3張或以下時，自己有四位或以上不同所屬的角色時發動以下效果。 此角色攻擊值+2，獲得 Blockout 2 。 ________________________________ Blockout N ：下個對手回合中，原始攔網值N或以下攔網角色登場時， 對手失敗。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f6e73823fc06a17afd9c35/original.png"
+  },
+  {
+    "number": "HV-P01-069",
+    "rarity": "N",
+    "school": "椿原·3年",
+    "position": "S",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0b674d487bc00187bed5d/original.png"
+  },
+  {
+    "number": "HV-P01-070",
+    "rarity": "N",
+    "school": "早流川工業·3年",
+    "position": "S",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0b67ea0cd2b000c88aa97/original.png"
+  },
+  {
+    "number": "HV-P01-071",
+    "rarity": "R",
+    "school": "戸美·3年",
+    "position": "WS",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0b6894b71970016fdc86b/original.png"
+  },
+  {
+    "number": "HV-P01-071",
+    "rarity": "RP",
+    "school": "戸美·3年",
+    "position": "WS",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0b693ba582c00128e7e52/original.png"
+  },
+  {
+    "number": "HV-P01-072",
+    "rarity": "N",
+    "school": "烏野·1年",
+    "position": "MB",
+    "effect": "所屬: 音駒·2年 位置: S 此角登場時，此卡的名稱由「 日向．孤爪 」改為「 日向翔陽 」或「 孤爪研磨 」。 (放置此卡時選擇的名稱在本回合結束前有效。計算場上角色數量時，此卡計為1個角色。)",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f1cb768dafac001453fbf7/original.png"
+  },
+  {
+    "number": "HV-P01-074",
+    "rarity": "N",
+    "school": "烏野",
+    "position": "元監督",
+    "effect": "抽1張卡，自己的1個角色的攻擊值+1。 對手EVENT區的 抽牌 或 接球 卡合計5張時，攻擊值+2。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0b789c6cf8100142ca7ea/original.png"
+  },
+  {
+    "number": "HV-P01-074",
+    "rarity": "NP",
+    "school": "烏野",
+    "position": "元監督",
+    "effect": "抽1張卡，自己的1個角色的攻擊值+1。 對手EVENT區的 抽牌 或 接球 卡合計5張時，攻擊值+2。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0b818b4e731000a860e29/original.png"
+  },
+  {
+    "number": "HV-P01-075",
+    "rarity": "N",
+    "school": "烏野·3年",
+    "position": "マネージャー",
+    "effect": "(經理人) 自己的1個烏野角色1項能力值+1， 如果處於接球階段時，抽1張卡。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0b83b704868000e60e898/original.png"
+  },
+  {
+    "number": "HV-P01-080",
+    "rarity": "N",
+    "school": "音駒",
+    "position": "監督",
+    "effect": "抽1張卡，自己1名角色的接球值+1，對手EVENT區的 托球 或 攻擊 卡合計5張時，接球值再+2。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0b963252c970016229f0b/original.png"
+  },
+  {
+    "number": "HV-P01-080",
+    "rarity": "NP",
+    "school": "音駒",
+    "position": "監督",
+    "effect": "抽1張卡，自己1名角色的接球值+1，對手EVENT區的 托球 或 攻擊 卡合計5張時，接球值再+2。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0b9e535210e0016643aee/original.png"
+  },
+  {
+    "number": "HV-P01-081",
+    "rarity": "N",
+    "school": "音駒",
+    "position": "応援団長(應緩團長)",
+    "effect": "抽1張卡，自己1名音駒角色的攻擊值+1。 自己場上只有音駒角色時，支付自己的接球區3 Guts時發動以下效果， 攻擊值+1。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0b9f3e4b78f0010197d87/original.png"
+  },
+  {
+    "number": "HV-P01-085",
+    "rarity": "N",
+    "school": "青葉城西",
+    "position": "監督",
+    "effect": "抽1張卡， 自己區域支付合計8 Guts發動以下效果。 本回合中，自己的青葉城西的角色登場時，該角色的1項能力值+1。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0ba6fb2bd70000ce19731/original.png"
+  },
+  {
+    "number": "HV-P01-089",
+    "rarity": "N",
+    "school": "梟谷",
+    "position": "監督",
+    "effect": "查看自己牌組頂3張牌，公開1張梟谷的卡，並加入手牌。 其餘的卡牌以任意順序放置到牌組底。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/68f0baec255f2700169ddbae/original.png"
   },
   {
     "number": "HV-P02-001",
