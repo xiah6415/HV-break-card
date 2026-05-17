@@ -19,10 +19,13 @@ body{background:#111;color:#eee;font-family:system-ui,-apple-system,sans-serif;m
 .search:focus{border-color:#555}
 
 /* Filters */
-.filters{display:flex;gap:6px;padding:8px 12px;background:#111;position:sticky;top:65px;z-index:9;overflow-x:auto;border-bottom:1px solid #1e1e1e}
-.filters::-webkit-scrollbar{display:none}
-select{background:#1e1e1e;border:1px solid #333;border-radius:6px;color:#ccc;padding:5px 8px;font-size:13px;outline:none;white-space:nowrap;flex-shrink:0}
-select:focus{border-color:#555}
+.filters{padding:6px 12px;background:#111;position:sticky;top:65px;z-index:9;border-bottom:1px solid #1e1e1e;display:flex;flex-direction:column;gap:5px}
+.filter-row{display:flex;align-items:center;gap:5px;overflow-x:auto}
+.filter-row::-webkit-scrollbar{display:none}
+.filter-label{font-size:11px;color:#555;flex-shrink:0;width:26px}
+.filter-btn{background:#1e1e1e;border:1px solid #333;border-radius:6px;color:#aaa;padding:4px 10px;font-size:12px;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background .1s,color .1s,border-color .1s}
+.filter-btn.active{background:#1e3a5f;border-color:#4a8abf;color:#fff}
+.filter-btn:active{opacity:.7}
 
 /* Count */
 .count{padding:8px 12px;font-size:12px;color:#555}
@@ -139,18 +142,27 @@ function App() {
       </div>
 
       <div className="filters">
-        <select value={filterSet} onChange={e => setFilterSet(e.target.value)}>
-          <option value="">全系列</option>
-          {sets.map(s => <option key={s} value={s}>{s}</option>)}
-        </select>
-        <select value={filterSchool} onChange={e => setFilterSchool(e.target.value)}>
-          <option value="">全學校</option>
-          {schools.map(s => <option key={s} value={s}>{s}</option>)}
-        </select>
-        <select value={filterPos} onChange={e => setFilterPos(e.target.value)}>
-          <option value="">全位置</option>
-          {positions.map(p => <option key={p} value={p}>{p}</option>)}
-        </select>
+        <div className="filter-row">
+          <span className="filter-label">位置</span>
+          {positions.map(p => (
+            <button key={p} className={`filter-btn${filterPos === p ? ' active' : ''}`}
+              onClick={() => setFilterPos(filterPos === p ? '' : p)}>{p}</button>
+          ))}
+        </div>
+        <div className="filter-row">
+          <span className="filter-label">系列</span>
+          {sets.map(s => (
+            <button key={s} className={`filter-btn${filterSet === s ? ' active' : ''}`}
+              onClick={() => setFilterSet(filterSet === s ? '' : s)}>{s}</button>
+          ))}
+        </div>
+        <div className="filter-row">
+          <span className="filter-label">學校</span>
+          {schools.map(s => (
+            <button key={s} className={`filter-btn${filterSchool === s ? ' active' : ''}`}
+              onClick={() => setFilterSchool(filterSchool === s ? '' : s)}>{s}</button>
+          ))}
+        </div>
       </div>
 
       <div className="count">{filtered.length} 張</div>
