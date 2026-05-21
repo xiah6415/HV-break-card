@@ -5,9 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>排球少年!! バボカ!!BREAK 卡牌資料庫</title>
 <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><style>
   :root {
     --bg: #0f0f13;
     --surface: #1a1a24;
@@ -1472,9 +1470,6 @@
       <div class="modal-skill-title">技能文字</div>
       <div class="modal-skill" id="modal-skill"></div>
       <div class="modal-qa-section" id="modal-qa"></div>
-      <a class="modal-feedback-btn" id="modal-feedback-btn" href="#" target="_blank" rel="noopener">
-        🚩 回報翻譯問題
-      </a>
     </div>
   </div>
 </div>
@@ -3914,21 +3909,72 @@ function sCloseExport() { document.getElementById('sexport-overlay').classList.r
 function sExportImage() {
   const btn = document.getElementById('sexport-copy-btn');
   btn.textContent = '生成中…'; btn.disabled = true;
-  const cap = document.getElementById('sexport-cap');
-  html2canvas(cap, { useCORS: true, scale: 2, backgroundColor: '#0f1923' })
-    .then(canvas => {
-      const link = document.createElement('a');
-      const date = new Date().toISOString().slice(0,10);
-      link.download = 'hv-deck-' + date + '.png';
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-      btn.textContent = '✓ 已下載！'; btn.classList.add('ok');
-      setTimeout(() => { btn.textContent = '下載圖片'; btn.disabled = false; btn.classList.remove('ok'); }, 2000);
-    })
-    .catch(() => {
-      sToast('圖片生成失敗，請截圖');
-      btn.textContent = '下載圖片'; btn.disabled = false;
+
+  const entries = Object.entries(sdeck)
+    .map(([imgFile, count]) => ({ card: cards.find(c => c.image_file === imgFile), count }))
+    .filter(e => e.card).sort((a,b) => a.card.card_no.localeCompare(b.card.card_no));
+
+  const PROXY = 'https://corsproxy.io/?';
+  const COLS = 5, CARD_W = 110, CARD_H = 154, PAD = 14, GAP = 8, TITLE_H = 36;
+  const rows = Math.ceil(entries.length / COLS);
+  const usedCols = Math.min(entries.length, COLS);
+  const W = PAD * 2 + usedCols * CARD_W + (usedCols - 1) * GAP;
+  const H = TITLE_H + PAD * 2 + rows * CARD_H + (rows - 1) * GAP;
+
+  const loadImg = url => new Promise(resolve => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = PROXY + encodeURIComponent(url);
+  });
+
+  Promise.all(entries.map(e => loadImg(e.card.image_url))).then(imgs => {
+    const canvas = document.createElement('canvas');
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d');
+
+    // background
+    ctx.fillStyle = '#0f1923';
+    ctx.fillRect(0, 0, W, H);
+
+    // title
+    ctx.fillStyle = '#8ab4d8';
+    ctx.font = 'bold 13px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('排球少年!! バボカ!! BREAK　共 ' + sTotal() + ' 張', W / 2, 24);
+
+    entries.forEach(({ count }, i) => {
+      const col = i % COLS, row = Math.floor(i / COLS);
+      const x = PAD + col * (CARD_W + GAP);
+      const y = TITLE_H + PAD + row * (CARD_H + GAP);
+      const img = imgs[i];
+      if (img) {
+        ctx.drawImage(img, x, y, CARD_W, CARD_H);
+      } else {
+        ctx.fillStyle = '#1a2a3a';
+        ctx.fillRect(x, y, CARD_W, CARD_H);
+      }
+      if (count > 1) {
+        const bx = x + CARD_W - 13, by = y + 13;
+        ctx.fillStyle = '#c0392b';
+        ctx.beginPath(); ctx.arc(bx, by, 13, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('×' + count, bx, by + 4);
+      }
     });
+
+    const link = document.createElement('a');
+    link.download = 'hv-deck-' + new Date().toISOString().slice(0, 10) + '.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    btn.textContent = '✓ 已下載！'; btn.classList.add('ok');
+    setTimeout(() => { btn.textContent = '下載圖片'; btn.disabled = false; btn.classList.remove('ok'); }, 2000);
+  }).catch(() => {
+    sToast('圖片生成失敗，請截圖');
+    btn.textContent = '下載圖片'; btn.disabled = false;
+  });
 }
 function sToast(msg) {
   let t = document.getElementById('s-toast');
