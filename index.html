@@ -3953,9 +3953,11 @@ function sExportImage() {
     const W = PAD * 2 + actCols * CW + (actCols - 1) * GAP;
     const H = HEAD_H + rows * CH + (rows - 1) * GAP + PAD;
 
+    const SCALE = 2;
     const canvas = document.createElement('canvas');
-    canvas.width = W; canvas.height = H;
+    canvas.width = W * SCALE; canvas.height = H * SCALE;
     const ctx = canvas.getContext('2d');
+    ctx.scale(SCALE, SCALE);
 
     ctx.fillStyle = '#192036';
     ctx.fillRect(0, 0, W, H);
