@@ -342,22 +342,17 @@ function App() {
   const { deck, add, remove, clear, total } = useDeck();
 
   useEffect(() => {
-    fetch('cards.json').then(r => r.json()).then(data => {
-      setCards(data.map(c => ({
-        ...c,
-        _group: c.school_group || null,
-        _set: getSet(c.number)
-      })));
+    fetch('cards.json?v=4').then(r => r.json()).then(data => {
+      setCards(data.map(c => ({ ...c, _set: getSet(c.number) })));
     });
   }, []);
 
   const sets = useMemo(() => [...new Set(cards.map(c => c._set))].sort(), [cards]);
 
   const schools = useMemo(() => {
-    const gs = new Set(cards.map(c => c._group).filter(Boolean));
+    const gs = new Set(cards.map(c => c.school_group).filter(Boolean));
     return SCHOOL_GROUPS.filter(g => gs.has(g));
   }, [cards]);
-
 
   const activeFilters = [filterSet, filterSchool, filterEvent].filter(Boolean).length;
 
@@ -365,9 +360,9 @@ function App() {
     const q = query.trim().toLowerCase();
     return cards.filter(c => {
       if (filterSet && c._set !== filterSet) return false;
-      if (filterSchool && c._group !== filterSchool) return false;
+      if (filterSchool && (c.school_group || '') !== filterSchool) return false;
       if (filterEvent && c.type !== 'event') return false;
-      if (q && !c.number.toLowerCase().includes(q) && !c.school.includes(q) && !c.effect.includes(q)) return false;
+      if (q && !c.number.toLowerCase().includes(q) && !(c.name||'').includes(q) && !c.school.includes(q) && !c.effect.includes(q)) return false;
       return true;
     });
   }, [cards, query, filterSet, filterSchool, filterEvent]);
@@ -443,6 +438,7 @@ function App() {
             <button className="card-add-btn" onClick={e => handleAdd(e, c)}>＋</button>
             <div className="card-foot">
               <div className="card-num">{c.number}<Badge r={c.rarity} /></div>
+              {c.name && <div className="card-school" style={{color:'#ddd',fontWeight:500}}>{c.name}</div>}
               <div className="card-school">{c.school}</div>
             </div>
           </div>
