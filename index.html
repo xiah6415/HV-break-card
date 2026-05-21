@@ -2,1654 +2,140 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>排球少年!! バボカ!!BREAK 卡牌資料庫</title>
-<script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>排球少年!! バボカ!! BREAK 卡片查詢</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <style>
-  :root {
-    --bg: #0f0f13;
-    --surface: #1a1a24;
-    --surface2: #22222f;
-    --border: #2e2e40;
-    --text: #e8e8f0;
-    --text-dim: #8888aa;
-    --accent: #6c63ff;
-    --accent2: #ff6584;
-
-    /* rarity */
-    --r-himitsu: #f0c040;
-    --r-top: #c084fc;
-    --r-s: #60a5fa;
-    --r-r: #4ade80;
-    --r-n: #94a3b8;
-    --r-d: #fb923c;
-    --r-p: #f87171;
-
-    /* school */
-    --s-烏野: #f97316;
-    --s-音駒: #ef4444;
-    --s-稲荷崎: #a855f7;
-    --s-白鳥沢: #3b82f6;
-    --s-伊達工業: #22c55e;
-    --s-青葉城西: #06b6d4;
-    --s-梟谷: #a16207;
-    --s-鴎台: #8b5cf6;
-    --s-other: #64748b;
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Segoe UI', 'Noto Sans TC', sans-serif;
-    min-height: 100vh;
-    touch-action: manipulation;
-  }
-
-  /* ── Sticky Wrapper ── */
-  #sticky-wrapper {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-
-  /* Desktop: search-row 並排進 filter 列 */
-  @media (min-width: 601px) {
-    #sticky-wrapper { display: flex; flex-wrap: wrap; }
-    #sticky-wrapper > header { width: 100%; }
-    #search-row {
-      flex: 0 1 380px;
-      border-bottom: 1px solid var(--border);
-      padding: 0 16px;
-    }
-    .filter-panel { flex: 1; min-width: 0; flex-wrap: nowrap; font-size: clamp(11px, 0.85vw, 13px); }
-    .deck-panel { max-height: 60vh; max-width: 540px; width: 100%; align-self: center; }
-    .deck-panel.color-mode-open { max-height: 85vh; }
-    .deck-preview-float { max-width: 540px; width: 100%; align-self: center; }
-  }
-
-  /* ── Search Row ── */
-  #search-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 24px;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-  }
-  #search-row .search-box { flex: 1; margin: 0; }
-  #filter-toggle-compact { display: none; }
-
-  /* ── Header ── */
-  header {
-    background: linear-gradient(135deg, #1a0a2e 0%, #0a1628 100%);
-    border-bottom: 1px solid var(--border);
-    padding: 16px 24px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-  header h1 { font-size: clamp(15px, 1.4vw, 22px); font-weight: 700; color: var(--accent); letter-spacing: 0.5px; }
-  header .subtitle { font-size: 12px; color: var(--text-dim); }
-  header .count { margin-left: auto; font-size: 13px; color: var(--text-dim); }
-  header .count span { color: var(--text); font-weight: 600; }
-
-  /* Filter toggle button (mobile only) */
-  .filter-toggle-btn {
-    display: none;
-    position: relative;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: var(--text-dim);
-    border-radius: 8px;
-    padding: 6px 10px;
-    font-size: 12px;
-    cursor: pointer;
-    align-items: center;
-    gap: 5px;
-    white-space: nowrap;
-    flex-shrink: 0;
-    transition: border-color 0.2s, color 0.2s;
-  }
-  .filter-toggle-btn.has-active {
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-  .filter-badge {
-    background: var(--accent);
-    color: #fff;
-    border-radius: 10px;
-    font-size: 10px;
-    font-weight: 700;
-    padding: 1px 5px;
-    line-height: 1.4;
-  }
-
-  /* ── Filter Panel ── */
-  .filter-panel {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 14px 24px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    align-items: center;
-  }
-
-  .filter-group { display: flex; align-items: center; gap: 6px; }
-  .filter-group label { font-size: 12px; color: var(--text-dim); white-space: nowrap; }
-
-  select, input[type="text"] {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    border-radius: 6px;
-    padding: 6px 10px;
-    font-size: 13px;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  select:focus, input:focus { border-color: var(--accent); }
-  select { cursor: pointer; }
-
-  .search-box { flex: 1; min-width: 180px; max-width: 320px; }
-
-  /* Category toggle buttons */
-  .toggle-group { display: flex; gap: 4px; flex-wrap: wrap; }
-  .toggle-btn {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: var(--text-dim);
-    border-radius: 20px;
-    padding: 4px 12px;
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.15s;
-    white-space: nowrap;
-  }
-  .toggle-btn:hover { border-color: var(--accent); color: var(--text); }
-  .toggle-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
-
-  .btn-reset {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text-dim);
-    border-radius: 6px;
-    padding: 6px 12px;
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .btn-reset:hover { border-color: var(--accent2); color: var(--accent2); }
-
-  /* ── Card Grid ── */
-  .grid-container {
-    padding: 20px 24px;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 14px;
-  }
-
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    overflow: hidden;
-    cursor: pointer;
-    transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
-    position: relative;
-  }
-  .card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 24px rgba(108,99,255,0.25);
-    border-color: var(--accent);
-  }
-
-  .card-star-btn {
-    position: absolute;
-    bottom: 6px;
-    right: 6px;
-    background: rgba(0,0,0,0.45);
-    border: none;
-    border-radius: 50%;
-    width: 26px;
-    height: 26px;
-    cursor: pointer;
-    font-size: 15px;
-    line-height: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 2;
-    color: rgba(255,255,255,0.5);
-    transition: background 0.15s, color 0.15s;
-  }
-  .card-star-btn:hover { background: rgba(0,0,0,0.7); }
-  .card-star-btn.starred { color: #FFD700; }
-
-  .card-img-wrap {
-    position: relative;
-    width: 100%;
-    padding-top: 140%; /* roughly card aspect ratio */
-    background: var(--surface2);
-    overflow: hidden;
-  }
-  .card-img-wrap img {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    object-fit: cover;
-    transition: opacity 0.2s;
-  }
-  .card-img-wrap img.error { opacity: 0.3; }
-  .img-placeholder {
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 11px;
-    color: var(--text-dim);
-    text-align: center;
-  }
-
-  /* Rarity badge */
-  .rarity-badge {
-    position: absolute;
-    top: 6px; right: 6px;
-    font-size: 10px;
-    font-weight: 700;
-    padding: 2px 6px;
-    border-radius: 4px;
-    background: rgba(0,0,0,0.7);
-    backdrop-filter: blur(4px);
-  }
-
-  .card-info {
-    padding: 8px 10px;
-  }
-  .card-no { font-size: 10px; color: var(--text-dim); margin-bottom: 2px; }
-  .card-name { font-size: 13px; font-weight: 600; line-height: 1.3; margin-bottom: 4px; }
-  .card-school {
-    display: inline-block;
-    font-size: 10px;
-    padding: 2px 7px;
-    border-radius: 20px;
-    color: #fff;
-    font-weight: 600;
-  }
-
-  .card-stats {
-    display: flex;
-    gap: 4px;
-    flex-wrap: wrap;
-    margin-top: 6px;
-  }
-  .stat {
-    font-size: 10px;
-    padding: 1px 5px;
-    background: var(--surface2);
-    border-radius: 3px;
-    color: var(--text-dim);
-  }
-  .stat b { color: var(--text); }
-  .stat.stat-srv b { color: #EAB308; }
-  .stat.stat-blk b { color: #9CA3AF; }
-  .stat.stat-rcv b { color: #2563EB; }
-  .stat.stat-tos b { color: #16A34A; }
-  .stat.stat-atk b { color: #DC2626; }
-
-  /* ── Empty state ── */
-  .empty {
-    grid-column: 1/-1;
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--text-dim);
-  }
-  .empty .icon { font-size: 48px; margin-bottom: 12px; }
-
-  /* ── Modal ── */
-  .modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    z-index: 200;
-    background: rgba(0,0,0,0.82);
-    z-index: 200;
-    justify-content: center;
-    align-items: flex-start;
-    padding: 40px 16px;
-    overflow-y: auto;
-  }
-  .modal-overlay.open { display: flex; }
-
-  .modal {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    width: 100%;
-    max-width: 680px;
-    display: flex;
-    gap: 0;
-    overflow: hidden;
-    position: relative;
-    animation: modalIn 0.2s ease;
-  }
-  @keyframes modalIn {
-    from { opacity: 0; transform: scale(0.96) translateY(10px); }
-    to   { opacity: 1; transform: scale(1) translateY(0); }
-  }
-
-  .modal-close {
-    position: absolute;
-    top: 12px; right: 12px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    width: 30px; height: 30px;
-    border-radius: 50%;
-    font-size: 16px;
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    transition: background 0.15s;
-    z-index: 1;
-  }
-  .modal-close:hover { background: var(--border); }
-
-  .modal-img {
-    width: 220px;
-    flex-shrink: 0;
-    background: var(--surface2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    position: relative;
-  }
-  .modal-img::after {
-    content: '';
-    position: absolute;
-    bottom: 8px; right: 8px;
-    width: 26px; height: 26px;
-    background: rgba(0,0,0,0.5) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3Cline x1='11' y1='8' x2='11' y2='14'/%3E%3Cline x1='8' y1='11' x2='14' y2='11'/%3E%3C/svg%3E") center/14px no-repeat;
-    border-radius: 50%;
-    pointer-events: none;
-    opacity: 0.85;
-  }
-  .modal-img img { width: 100%; object-fit: cover; }
-
-  .modal-body {
-    padding: 20px 20px 20px 20px;
-    flex: 1;
-    overflow-y: auto;
-    max-height: 80vh;
-  }
-
-  .modal-no { font-size: 12px; color: var(--text-dim); margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
-  .copy-no-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 2px 4px;
-    border-radius: 4px;
-    color: var(--text-dim);
-    font-size: 13px;
-    line-height: 1;
-    transition: color 0.15s, background 0.15s;
-    display: inline-flex;
-    align-items: center;
-  }
-  .copy-no-btn:hover { color: var(--text); background: var(--surface2); }
-  .copy-no-btn.copied { color: #4ade80; }
-
-  /* Lightbox */
-  .modal-img img { width: 100%; object-fit: cover; cursor: pointer; }
-  .modal-img img:hover { opacity: 0.9; }
-  #lightbox-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    z-index: 500;
-    background: rgba(0,0,0,0.92);
-    align-items: center;
-    justify-content: center;
-    cursor: zoom-out;
-  }
-  #lightbox-overlay.open { display: flex; }
-  #lightbox-img {
-    max-height: 90vh;
-    max-width: 90vw;
-    object-fit: contain;
-    border-radius: 6px;
-    box-shadow: 0 8px 40px rgba(0,0,0,0.6);
-    cursor: default;
-    pointer-events: none;
-  }
-  .modal-name { font-size: 22px; font-weight: 700; margin-bottom: 8px; line-height: 1.2; }
-
-  .modal-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
-  .tag {
-    font-size: 11px;
-    padding: 3px 9px;
-    border-radius: 20px;
-    border: 1px solid var(--border);
-    color: var(--text-dim);
-  }
-
-  .modal-stats-grid {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 6px;
-    margin-bottom: 14px;
-  }
-  .modal-stats-grid .stat-box:nth-child(-n+2) { grid-column: span 3; }
-  .modal-stats-grid .stat-box:nth-child(n+3)  { grid-column: span 2; }
-  .stat-box {
-    background: var(--surface2);
-    border-radius: 8px;
-    padding: 8px 10px;
-    text-align: center;
-  }
-  .stat-box .label { font-size: 10px; color: var(--text-dim); margin-bottom: 2px; }
-  .stat-box .value { font-size: 20px; font-weight: 700; }
-  .stat-box-srv { background: #EAB308; }
-  .stat-box-srv .label { color: rgba(0,0,0,0.6); }
-  .stat-box-srv .value { color: #1A1A1A !important; }
-  .stat-box-blk { background: #1C1C1C; border: 1px solid #444; }
-  .stat-box-blk .label { color: #888; }
-  .stat-box-blk .value { color: #FFFFFF !important; }
-  .stat-box-rcv { background: #2563EB; }
-  .stat-box-rcv .label { color: rgba(255,255,255,0.65); }
-  .stat-box-rcv .value { color: #FFFFFF !important; }
-  .stat-box-tos { background: #16A34A; }
-  .stat-box-tos .label { color: rgba(255,255,255,0.65); }
-  .stat-box-tos .value { color: #FFFFFF !important; }
-  .stat-box-atk { background: #DC2626; }
-  .stat-box-atk .label { color: rgba(255,255,255,0.65); }
-  .stat-box-atk .value { color: #FFFFFF !important; }
-
-  .modal-skill-title { font-size: 12px; color: var(--text-dim); margin-bottom: 6px; font-weight: 600; letter-spacing: 0.5px; }
-  .modal-skill {
-    font-size: 13px;
-    line-height: 1.8;
-    color: var(--text);
-    white-space: pre-wrap;
-    background: var(--surface2);
-    border-radius: 8px;
-    padding: 12px 14px;
-    border-left: 3px solid var(--accent);
-  }
-
-  /* ── Modal Q&A ── */
-  .modal-qa-section { margin-top: 14px; }
-  .modal-qa-toggle {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    width: 100%;
-    background: none;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--text-dim);
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    padding: 7px 12px;
-    cursor: pointer;
-    transition: border-color 0.15s, color 0.15s;
-    text-align: left;
-  }
-  .modal-qa-toggle:hover { border-color: var(--accent); color: var(--text); }
-  .modal-qa-toggle.open { color: var(--text); border-color: var(--accent); }
-  .modal-qa-arrow { font-style: normal; transition: transform 0.2s ease; display: inline-block; }
-  .modal-qa-toggle.open .modal-qa-arrow { transform: rotate(90deg); }
-  .modal-qa-list {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease;
-  }
-  .modal-qa-list.open { max-height: 4000px; }
-  .qa-item {
-    padding: 10px 0 10px 0;
-    border-bottom: 1px solid var(--border);
-  }
-  .qa-item:last-child { border-bottom: none; }
-  .qa-date {
-    font-size: 11px;
-    color: var(--text-dim);
-    margin-bottom: 6px;
-  }
-  .qa-q, .qa-a {
-    font-size: 13px;
-    line-height: 1.7;
-    white-space: pre-wrap;
-  }
-  .qa-q { color: var(--text); margin-bottom: 4px; }
-  .qa-a { color: var(--text-dim); }
-  .qa-prefix-q {
-    font-weight: 700;
-    color: var(--accent);
-    margin-right: 4px;
-  }
-  .qa-prefix-a {
-    font-weight: 700;
-    color: var(--text-dim);
-    margin-right: 4px;
-  }
-
-  /* ── Modal Feedback Button ── */
-  .modal-feedback-btn {
-    display: block;
-    text-align: center;
-    margin-top: 14px;
-    padding: 9px 12px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--text-dim);
-    font-size: 12px;
-    text-decoration: none;
-    transition: border-color 0.15s, color 0.15s;
-  }
-  .modal-feedback-btn:hover {
-    border-color: var(--accent2);
-    color: var(--accent2);
-  }
-  .modal-qa-inner {
-    background: var(--surface2);
-    border-radius: 0 0 8px 8px;
-    padding: 0 14px;
-    border: 1px solid var(--border);
-    border-top: none;
-  }
-
-  /* Loading */
-  #loading {
-    position: fixed;
-    inset: 0;
-    background: var(--bg);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 999;
-    font-size: 16px;
-    color: var(--text-dim);
-  }
-  #loading.hidden { display: none; }
-
-  @media (max-width: 600px) {
-    .modal-img {
-      width: 25%;
-      align-self: stretch;
-      height: auto;
-      aspect-ratio: unset;
-    }
-    .modal-img img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: top center;
-    }
-    .modal-body {
-      max-height: 85vh;
-      padding: 14px 14px 14px 12px;
-    }
-    .grid-container { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; }
-    header, #search-row {
-      transition: max-height 0.25s ease, padding 0.25s ease, opacity 0.2s ease;
-      overflow: hidden;
-    }
-    header { padding: 8px 16px; max-height: 80px; }
-    header .subtitle { display: none; }
-    #search-row { padding: 6px 12px; max-height: 50px; }
-    #sticky-wrapper.header-hidden header,
-    #sticky-wrapper.header-hidden #search-row {
-      max-height: 0;
-      padding-top: 0;
-      padding-bottom: 0;
-      opacity: 0;
-    }
-    #filter-toggle-compact { display: flex; }
-    .grid-container { padding: 14px 16px; }
-
-    /* Show toggle button on mobile (compact only; hide header's) */
-    .filter-toggle-btn { display: flex; }
-    #filter-toggle { display: none; }
-
-    /* Filter panel: collapsed by default on mobile */
-    .filter-panel {
-      padding: 0 16px;
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.3s ease, padding 0.3s ease;
-    }
-
-    /* Filter panel: expanded state */
-    .filter-panel.open {
-      padding: 12px 16px;
-      max-height: 600px;
-    }
-  }
-
-  /* ── Deck: Card Count Input ── */
-  .card-count-input {
-    position: absolute;
-    top: 5px; left: 5px;
-    width: 38px;
-    padding: 2px 4px;
-    text-align: center;
-    background: rgba(0,0,0,0.72);
-    border: 1px solid rgba(255,255,255,0.2);
-    color: #fff;
-    border-radius: 4px;
-    font-size: 12px; font-weight: 700;
-    outline: none;
-    z-index: 3;
-    opacity: 0;
-    transition: opacity 0.15s, border-color 0.15s;
-    appearance: textfield;
-    -moz-appearance: textfield;
-  }
-  .card-count-input::-webkit-inner-spin-button,
-  .card-count-input::-webkit-outer-spin-button { -webkit-appearance: none; }
-  /* 有值時常駐顯示，顏色高亮 */
-  .card-count-input.has-count {
-    opacity: 1;
-    color: var(--accent);
-    border-color: var(--accent);
-  }
-  /* 桌面 hover 時顯示（即使值為 0） */
-  .card:hover .card-count-input { opacity: 1; }
-  .card-count-input:focus { opacity: 1; border-color: var(--accent); }
-  /* 手機一律顯示 */
-  @media (max-width: 600px) { .card-count-input { opacity: 1; } }
-
-  /* ── Bottom Deck Tray ── */
-  .deck-tray {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    background: linear-gradient(135deg, #1a0a2e 0%, #0a1628 100%);
-    border-top: 2px solid var(--accent);
-    padding: 10px 16px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    z-index: 150;
-    transform: translateY(100%);
-    transition: transform 0.3s ease;
-    flex-wrap: nowrap;
-  }
-  .deck-tray.visible { transform: translateY(0); }
-  .deck-tray.visible.tray-scroll-hidden { transform: translateY(100%); transition: transform 0.25s ease; }
-  body.deck-active .grid-container { padding-bottom: 72px; }
-
-  /* 收合狀態：只剩一條細帶 */
-  .deck-tray.mini {
-    padding: 5px 16px;
-    flex-wrap: nowrap;
-  }
-  .deck-tray.mini .tray-spacer,
-  .deck-tray.mini .tray-warn-text,
-  .deck-tray.mini #tray-analysis-btn,
-  .deck-tray.mini #tray-open-btn { display: none; }
-  .deck-tray.mini .tray-deck-select { max-width: none; flex: 1; }
-  body.deck-active.tray-mini .grid-container { padding-bottom: 36px; }
-
-  /* 收合/展開切換按鈕 */
-  .tray-toggle-btn {
-    background: none; border: none; color: var(--text-dim);
-    font-size: 14px; cursor: pointer; padding: 2px 4px;
-    flex-shrink: 0; line-height: 1; transition: color 0.15s;
-  }
-  .tray-toggle-btn:hover { color: var(--accent); }
-
-  .tray-deck-select {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text);
-    border-radius: 6px;
-    padding: 4px 6px;
-    font-size: 13px; font-weight: 600;
-    cursor: pointer; outline: none;
-    max-width: 260px;
-    flex-shrink: 1;
-    transition: border-color 0.15s;
-  }
-  .tray-deck-select:hover,
-  .tray-deck-select:focus { border-color: var(--accent); }
-  .tray-deck-select option { background: #fff; color: #111; }
-  .tray-count-label { font-size: 13px; color: var(--text-dim); white-space: nowrap; flex-shrink: 0; }
-  .tray-count-num { font-weight: 700; color: var(--accent); }
-  .tray-count-num.warn { color: #fb923c; }
-  .tray-warn-text { font-size: 11px; color: #fb923c; white-space: nowrap; }
-  .tray-spacer { flex: 1; min-width: 4px; }
-
-  .tray-btn {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    border-radius: 6px;
-    padding: 6px 11px;
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.15s;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-  .tray-btn:hover { border-color: var(--accent); color: var(--accent); }
-  .tray-btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-  .tray-btn.primary:hover { opacity: 0.85; color: #fff; }
-  .tray-btn.danger:hover { border-color: var(--accent2); color: var(--accent2); }
-  .tray-btn:disabled { opacity: 0.4; cursor: default; }
-
-  /* ── Deck Panel (slide-up) ── */
-  .deck-panel-overlay {
-    display: none;
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.55);
-    z-index: 160;
-    flex-direction: column;
-    align-items: stretch;
-    justify-content: flex-end;
-  }
-  .deck-panel-overlay.open { display: flex; }
-
-  /* ── DECK PREVIEW FLOAT（在 DECK PANEL 外）── */
-  .deck-preview-float {
-    display: none;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    margin: 0 0 8px;
-    padding: 12px;
-    gap: 12px;
-    align-items: flex-start;
-    position: relative;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.5);
-    animation: fadeUp 0.18s ease;
-    flex-shrink: 0;
-  }
-  .deck-preview-float.show { display: flex; }
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  .deck-preview-close {
-    position: absolute; top: 8px; right: 8px;
-    background: var(--surface2); border: 1px solid var(--border);
-    color: var(--text-dim); border-radius: 50%;
-    width: 22px; height: 22px; font-size: 11px;
-    cursor: pointer; display: flex; align-items: center; justify-content: center;
-  }
-  .deck-preview-close:hover { border-color: var(--accent2); color: var(--accent2); }
-  .deck-preview-img {
-    width: clamp(64px, 18vw, 96px); flex-shrink: 0;
-    aspect-ratio: 63/88; object-fit: cover;
-    border-radius: 7px; background: var(--border);
-    cursor: zoom-in;
-  }
-  .deck-preview-info {
-    flex: 1; min-width: 0;
-    display: flex; flex-direction: column;
-    gap: clamp(3px, 0.8vw, 6px);
-  }
-  .deck-preview-name {
-    font-size: clamp(13px, 3.2vw, 17px); font-weight: 700;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    padding-right: 22px;
-  }
-  .deck-preview-sub { font-size: clamp(10px, 2.4vw, 13px); color: var(--text-dim); }
-  .deck-preview-stats { display: flex; gap: 4px; flex-wrap: wrap; }
-  .deck-preview-stat-chip {
-    background: var(--surface2); border: 1px solid var(--border);
-    border-radius: 4px; padding: clamp(1px,0.3vw,2px) clamp(5px,1.2vw,8px);
-    font-size: clamp(10px, 2.4vw, 13px); color: var(--text-dim);
-  }
-  .deck-preview-stat-chip span { color: var(--text); font-weight: 700; }
-  .deck-preview-skill {
-    font-size: clamp(11px, 2.6vw, 14px); color: var(--text-dim);
-    line-height: 1.6; max-height: clamp(52px, 12vw, 72px); overflow-y: auto;
-  }
-  .deck-preview-skill::-webkit-scrollbar { width: 3px; }
-  .deck-preview-skill::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-  .deck-preview-count-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-  .deck-preview-count-label { font-size: clamp(10px, 2.4vw, 13px); color: var(--text-dim); }
-  .deck-preview-remove-btn {
-    margin-left: auto; background: none; border: 1px solid #444;
-    color: var(--text-dim); border-radius: 6px;
-    padding: 3px 8px; font-size: 10px; cursor: pointer; white-space: nowrap;
-  }
-  .deck-preview-remove-btn:hover { border-color: var(--accent2); color: var(--accent2); }
-
-  .deck-panel {
-    background: var(--surface);
-    border-top: 1px solid var(--border);
-    border-radius: 16px 16px 0 0;
-    max-height: 60vh;
-    display: flex;
-    flex-direction: column;
-    animation: slideUp 0.25s ease;
-    flex-shrink: 0;
-  }
-  @keyframes slideUp {
-    from { transform: translateY(100%); }
-    to   { transform: translateY(0); }
-  }
-
-  .deck-panel-header {
-    padding: 14px 18px 10px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    flex-shrink: 0;
-  }
-  .deck-panel-titlerow {
-    display: flex; align-items: center; gap: 8px;
-    font-size: 14px; font-weight: 700;
-  }
-  .deck-selector-row {
-    display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
-  }
-  .deck-switch-select {
-    background: var(--surface2); border: 1px solid var(--border);
-    color: var(--text); border-radius: 6px;
-    padding: 5px 8px; font-size: 12px; cursor: pointer; outline: none; flex-shrink: 0;
-  }
-  .deck-name-input {
-    background: var(--surface2); border: 1px solid var(--border);
-    color: var(--text); border-radius: 6px;
-    padding: 5px 10px; font-size: 13px;
-    flex: 1; min-width: 80px; outline: none;
-  }
-  .deck-name-input:focus { border-color: var(--accent); }
-  .deck-panel-info { font-size: 11px; color: var(--text-dim); }
-  .deck-panel-info .warn-orange { color: #fb923c; font-weight: 600; }
-
-  .deck-panel-body { flex: 1; min-height: 0; overflow-y: auto; padding: 10px 12px; }
-  .deck-card-list {
-    display: grid;
-    grid-template-columns: repeat(8, 1fr);
-    gap: 5px;
-  }
-  .deck-empty { grid-column: 1 / -1; text-align: center; padding: 30px 20px; color: var(--text-dim); font-size: 13px; }
-  .deck-thumb-item {
-    position: relative; cursor: pointer;
-    border-radius: 5px; overflow: hidden;
-    border: 2px solid transparent;
-    transition: border-color 0.15s, transform 0.1s;
-    aspect-ratio: 63/88;
-    background: var(--surface2);
-  }
-  .deck-thumb-item:hover { transform: scale(1.05); }
-  .deck-thumb-item.selected { border-color: var(--accent) !important; }
-  .deck-thumb-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .deck-thumb-badge {
-    position: absolute; bottom: 2px; right: 2px;
-    background: rgba(0,0,0,0.82); border-radius: 3px;
-    padding: 0 3px; font-size: 8px; font-weight: 700; color: #fff;
-    display: flex; align-items: center; gap: 2px;
-  }
-  .deck-thumb-dot { width: 4px; height: 4px; border-radius: 50%; flex-shrink: 0; }
-
-  .deck-card-item {
-    display: flex; align-items: center; gap: 8px;
-    background: var(--surface2); border-radius: 8px; padding: 6px 10px;
-  }
-  .deck-card-item-img {
-    width: 32px; height: 45px; object-fit: cover;
-    border-radius: 4px; background: var(--border); flex-shrink: 0;
-  }
-  .deck-card-item-info { flex: 1; min-width: 0; }
-  .deck-card-item-name { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .deck-card-item-sub { font-size: 10px; color: var(--text-dim); }
-  .deck-card-item-count { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
-  .count-btn {
-    background: var(--border); border: none; color: var(--text);
-    width: 22px; height: 22px; border-radius: 4px; font-size: 14px;
-    cursor: pointer; display: flex; align-items: center; justify-content: center;
-    transition: background 0.15s;
-  }
-  .count-btn:hover { background: var(--accent); }
-  .count-num { font-size: 13px; font-weight: 700; min-width: 18px; text-align: center; }
-
-  .deck-panel-footer-toggle {
-    display: flex; align-items: center; justify-content: center;
-    padding: 4px 16px; border-top: 1px solid var(--border);
-    cursor: pointer; font-size: 11px; color: rgba(255,255,255,0.45);
-    gap: 5px; flex-shrink: 0; user-select: none;
-    transition: color 0.15s;
-  }
-  .deck-panel-footer-toggle:hover { color: rgba(255,255,255,0.75); }
-  .deck-panel-footer-toggle .toggle-arrow { transition: transform 0.2s; }
-  .deck-panel-footer-toggle.open .toggle-arrow { transform: rotate(180deg); }
-  .deck-panel-footer {
-    padding: 0 16px; border-top: none;
-    display: flex; gap: 8px; flex-wrap: wrap; flex-shrink: 0;
-    max-height: 0; overflow: hidden;
-    transition: max-height 0.25s ease, padding 0.25s ease;
-  }
-  .deck-panel-footer.open {
-    max-height: 200px; padding: 10px 16px;
-  }
-
-  /* ── Analysis Overlay ── */
-  .analysis-overlay {
-    display: none; position: fixed; inset: 0;
-    background: var(--bg); z-index: 170; flex-direction: column;
-  }
-  .analysis-overlay.open { display: flex; }
-
-  .analysis-header {
-    background: var(--surface); border-bottom: 1px solid var(--border);
-    padding: 12px 16px; display: flex; align-items: center; gap: 10px; flex-shrink: 0;
-    flex-wrap: wrap;
-  }
-  .analysis-title { font-size: 15px; font-weight: 700; flex: 1; min-width: 100px; }
-  .analysis-stats { display: flex; gap: 6px; flex-shrink: 0; }
-  .analysis-stat {
-    font-size: 12px; background: var(--surface2);
-    border-radius: 20px; padding: 3px 11px;
-  }
-  .analysis-stat .num { font-weight: 700; }
-  .analysis-stat .num.miss { color: var(--accent2); }
-
-  .analysis-body {
-    flex: 1; overflow-y: auto; padding: 20px 24px;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 14px; align-content: start;
-  }
-  @media (max-width: 600px) {
-    .analysis-body { padding: 14px 16px; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; }
-  }
-
-  .an-card {
-    position: relative; border-radius: 10px; overflow: hidden;
-    cursor: pointer; border: 2px solid transparent;
-    transition: border-color 0.15s, opacity 0.15s;
-  }
-  .an-card.owned   { border-color: #4ade80; }
-  .an-card.partial { border-color: #fb923c; }
-  .an-card.not-owned { border-color: #fb923c; }
-
-  .an-card-img {
-    width: 100%; aspect-ratio: 5/7; object-fit: cover;
-    display: block; background: var(--surface2);
-  }
-
-  /* 左上角持有數量計數器 */
-  .an-own-counter {
-    position: absolute; top: 5px; left: 5px;
-    display: flex; align-items: center; gap: 2px;
-    z-index: 2;
-  }
-  .an-counter-btn {
-    width: 20px; height: 20px;
-    background: rgba(0,0,0,0.72); border: 1px solid rgba(255,255,255,0.25);
-    border-radius: 4px; color: #fff; font-size: 13px; line-height: 1;
-    cursor: pointer; display: flex; align-items: center; justify-content: center;
-    transition: background 0.12s; flex-shrink: 0;
-  }
-  .an-counter-btn:hover { background: rgba(255,255,255,0.2); }
-  .an-counter-num {
-    min-width: 22px; text-align: center;
-    font-size: 10px; font-weight: 700; color: #fff;
-    background: rgba(0,0,0,0.72); border-radius: 3px;
-    padding: 2px 3px; line-height: 1.3;
-  }
-  .an-card.owned   .an-counter-num { color: #4ade80; }
-  .an-card.partial .an-counter-num { color: #fb923c; }
-
-  .an-card-name {
-    position: absolute; bottom: 0; left: 0; right: 0;
-    background: linear-gradient(transparent, rgba(0,0,0,0.85));
-    padding: 14px 5px 5px; font-size: 10px; color: #fff;
-    text-align: center; line-height: 1.2; pointer-events: none;
-  }
-
-  /* ── Qty Modal ── */
-  .qty-overlay {
-    display: none; position: fixed; inset: 0;
-    background: rgba(0,0,0,0.65); z-index: 220;
-    justify-content: center; align-items: flex-end;
-  }
-  .qty-overlay.open { display: flex; }
-  .qty-box {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 16px 16px 0 0; padding: 20px 20px 28px;
-    width: 100%; max-width: 400px;
-  }
-  .qty-box-name {
-    font-size: 14px; font-weight: 700; margin-bottom: 14px;
-    color: var(--text); text-align: center;
-  }
-  .qty-box-row {
-    display: flex; align-items: center; gap: 10px;
-    justify-content: center; margin-bottom: 16px;
-  }
-  .qty-box-label { font-size: 13px; color: var(--text-dim); }
-  .qty-input {
-    width: 80px; padding: 6px 10px; text-align: center;
-    background: var(--surface2); border: 1px solid var(--border);
-    color: var(--text); border-radius: 8px; font-size: 18px;
-    font-weight: 700; outline: none;
-  }
-  .qty-input:focus { border-color: var(--accent); }
-  .qty-input::-webkit-inner-spin-button,
-  .qty-input::-webkit-outer-spin-button { -webkit-appearance: none; }
-  .qty-adj-btn {
-    width: 36px; height: 36px;
-    background: var(--surface2); border: 1px solid var(--border);
-    color: var(--text); border-radius: 8px; font-size: 20px;
-    cursor: pointer; display: flex; align-items: center; justify-content: center;
-    transition: background 0.15s, border-color 0.15s; flex-shrink: 0;
-  }
-  .qty-adj-btn:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
-  .qty-box-btns { display: flex; gap: 8px; justify-content: center; }
-
-  /* ── Deck count number input ── */
-  .deck-count-input {
-    width: 52px; padding: 3px 6px; text-align: center;
-    background: var(--surface); border: 1px solid var(--border);
-    color: var(--text); border-radius: 6px; font-size: 13px;
-    font-weight: 700; outline: none;
-  }
-  .deck-count-input:focus { border-color: var(--accent); }
-
-  /* ── Color Tag Feature ── */
-  .deck-color-stats {
-    display: flex; flex-wrap: wrap; gap: 8px;
-    padding: 6px 16px 4px; font-size: 11px; color: var(--text-dim);
-    border-bottom: 1px solid var(--border); background: var(--surface);
-  }
-  .deck-color-stat-item {
-    display: flex; align-items: center; gap: 4px;
-  }
-  .deck-color-dot {
-    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
-  }
-  .deck-color-subrow {
-    display: flex; align-items: center; gap: 8px;
-    border: 2px solid transparent;
-    border-radius: 6px; margin: 0 6px;
-    padding: 4px 10px;
-  }
-  .deck-color-subrow-dot {
-    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
-  }
-  .deck-color-subrow-name { font-size: 11px; color: var(--text-dim); flex: 1; }
-  .deck-color-subrow-count { font-size: 12px; font-weight: 700; color: var(--text-dim); }
-
-  /* ── Color Mode (批次上色) ── */
-  .deck-card-item.color-selected {
-    outline: 2px solid var(--accent); border-radius: 6px;
-    background: rgba(108,99,255,0.12) !important;
-  }
-  .deck-panel.color-mode-open { max-height: 85vh; }
-  .deck-color-picker-bar {
-    display: none; align-items: center; gap: 8px; flex-wrap: wrap;
-    padding: 10px 14px; background: var(--surface2);
-    border-top: 1px solid var(--border); flex-shrink: 0;
-  }
-  .deck-color-picker-bar.show { display: flex; }
-  .color-pick-label { font-size: 11px; color: var(--text-dim); flex-shrink: 0; }
-  .color-pick-btn {
-    width: 28px; height: 28px; border-radius: 50%;
-    border: 3px solid transparent; cursor: pointer;
-    transition: transform 0.12s, border-color 0.12s; flex-shrink: 0;
-  }
-  .color-pick-btn:hover { transform: scale(1.18); border-color: rgba(255,255,255,0.55); }
-  .color-pick-clear {
-    background: var(--surface) !important; border: 1px solid var(--border) !important;
-    font-size: 13px; color: var(--text-dim);
-    display: flex; align-items: center; justify-content: center;
-  }
-  .color-pick-count { font-size: 11px; color: var(--text-dim); margin-left: auto; flex-shrink: 0; }
-  #deck-color-mode-btn.active {
-    background: var(--accent); color: #fff; border-color: var(--accent);
-  }
-  .color-mode-grid {
-    display: grid;
-    grid-template-columns: repeat(8, 1fr);
-    gap: 5px;
-    padding: 8px;
-  }
-  .color-mode-thumb {
-    position: relative;
-    aspect-ratio: 63/88;
-    border: 2.5px solid var(--border);
-    border-radius: 4px;
-    overflow: hidden;
-    cursor: pointer;
-    transition: border-color 0.12s;
-    box-sizing: border-box;
-  }
-  .color-mode-thumb img {
-    width: 100%; height: 100%; object-fit: cover; display: block;
-  }
-  .color-mode-thumb.selected::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: rgba(108,99,255,0.45);
-    pointer-events: none;
-  }
-  .color-mode-thumb.c-free    { border-color: #888888; }
-  .color-mode-thumb.c-receive { border-color: #3b82f6; }
-  .color-mode-thumb.c-set     { border-color: #22c55e; }
-  .color-mode-thumb.c-attack  { border-color: #ef4444; }
-  .color-mode-thumb.c-event   { border-color: #eab308; cursor: default; opacity: 0.6; }
-  .color-qty-badge {
-    position: absolute; bottom: 0; left: 0; right: 0;
-    display: flex; align-items: stretch;
-    background: rgba(0,0,0,.78); z-index: 5;
-    height: 20px;
-  }
-  .color-qty-btn {
-    flex: 1; border: none; background: transparent;
-    color: #fff; font-size: 13px; line-height: 1;
-    cursor: pointer; display: flex; align-items: center; justify-content: center;
-    padding: 0; touch-action: manipulation;
-  }
-  .color-qty-btn:hover { background: rgba(255,255,255,.18); }
-  .color-qty-btn:active { background: rgba(255,255,255,.32); }
-  .color-qty-btn:disabled { opacity: .3; cursor: default; }
-  .color-qty-num {
-    flex: 1; font-size: 10px; font-weight: 700; color: #fff;
-    text-align: center; line-height: 20px; pointer-events: none;
-  }
-
-  /* ── Analysis count number input ── */
-  .an-count-input {
-    width: 46px; padding: 2px 4px; text-align: center;
-    background: rgba(0,0,0,0.72); border: 1px solid rgba(255,255,255,0.25);
-    color: #fff; border-radius: 4px; font-size: 11px;
-    font-weight: 700; outline: none; appearance: textfield;
-  }
-  .an-count-input::-webkit-inner-spin-button,
-  .an-count-input::-webkit-outer-spin-button { -webkit-appearance: none; }
-  .an-count-input:focus { border-color: var(--accent); }
-  .an-card.owned   .an-count-input { color: #4ade80; }
-  .an-card.partial .an-count-input { color: #fb923c; }
-
-  /* 右下角需求張數 */
-  .an-need-badge {
-    position: absolute; bottom: 22px; right: 5px;
-    background: rgba(0,0,0,0.72); border-radius: 4px;
-    padding: 2px 5px; font-size: 11px; font-weight: 700;
-    color: rgba(255,255,255,0.7); pointer-events: none; z-index: 2;
-  }
-
-  .analysis-section-header {
-    grid-column: 1 / -1;
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--text-dim);
-    padding: 8px 4px 4px;
-    border-bottom: 1px solid var(--border);
-    margin-top: 4px;
-  }
-
-  /* ── Import Confirm Modal ── */
-  .import-confirm-overlay {
-    display: none; position: fixed; inset: 0;
-    background: rgba(0,0,0,0.7); z-index: 210;
-    justify-content: center; align-items: center;
-  }
-  .import-confirm-overlay.open { display: flex; }
-  .import-confirm-box {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 12px; padding: 22px 20px; width: 90%; max-width: 340px;
-  }
-  .import-confirm-box h3 { font-size: 15px; margin-bottom: 8px; }
-  .import-confirm-box p { font-size: 12px; color: var(--text-dim); margin-bottom: 16px; line-height: 1.6; }
-  .import-confirm-btns { display: flex; gap: 8px; justify-content: flex-end; }
-
-  /* Toast */
-  #hv-toast {
-    position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
-    background: var(--surface); border: 1px solid var(--border);
-    color: var(--text); padding: 8px 18px; border-radius: 20px;
-    font-size: 13px; z-index: 999; opacity: 0;
-    transition: opacity 0.3s; pointer-events: none; white-space: nowrap;
-  }
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:#111;color:#eee;font-family:system-ui,-apple-system,sans-serif;min-height:100vh}
+#root{max-width:600px;margin:0 auto;padding-bottom:calc(80px + env(safe-area-inset-bottom,0px))}
+
+.top-bar{position:sticky;top:0;z-index:10;background:#111}
+.header{padding:10px 12px 8px;padding-top:calc(10px + env(safe-area-inset-top,0px));border-bottom:1px solid #2a2a2a}
+.title{font-size:14px;color:#888;margin-bottom:8px}
+.search{width:100%;background:#1e1e1e;border:1px solid #333;border-radius:8px;padding:10px 12px;color:#eee;font-size:16px;outline:none;touch-action:manipulation}
+.search:focus{border-color:#555}
+
+/* Filter toggle bar */
+.filter-toggle{display:flex;align-items:center;justify-content:space-between;padding:7px 12px;border-bottom:1px solid #1e1e1e;cursor:pointer;user-select:none}
+.filter-toggle-label{font-size:12px;color:#666;display:flex;align-items:center;gap:6px}
+.filter-toggle-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#4a8abf}
+.filter-toggle-arrow{font-size:11px;color:#555;transition:transform .2s}
+.filter-toggle-arrow.open{transform:rotate(180deg)}
+
+/* Filters */
+.filters{padding:6px 12px 8px;border-bottom:1px solid #1e1e1e;display:flex;flex-direction:column;gap:5px}
+.filter-row{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.filter-label{font-size:11px;color:#555;flex-shrink:0;width:26px}
+.filter-btn{background:#1e1e1e;border:1px solid #333;border-radius:6px;color:#aaa;padding:5px 10px;font-size:13px;cursor:pointer;white-space:nowrap;transition:background .1s,color .1s,border-color .1s;touch-action:manipulation;min-height:32px;line-height:1.2}
+.filter-btn.active{background:#1e3a5f;border-color:#4a8abf;color:#fff}
+.filter-btn:active{opacity:.7}
+
+.count{padding:7px 12px;font-size:12px;color:#555}
+
+/* Grid */
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 12px}
+.card{background:#1a1a1a;border-radius:8px;overflow:hidden;cursor:pointer;transition:transform .15s;touch-action:manipulation;position:relative}
+.card:active{transform:scale(.97)}
+.card img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block;background:#222}
+.card-foot{padding:5px 6px}
+.card-num{font-size:11px;color:#888}
+.card-school{font-size:11px;color:#bbb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-deck-badge{position:absolute;top:4px;left:4px;background:rgba(30,100,200,.9);color:#fff;font-size:12px;font-weight:bold;border-radius:5px;padding:1px 6px;pointer-events:none}
+.card-add-btn{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.65);border:1px solid #555;border-radius:5px;color:#eee;font-size:16px;line-height:1;padding:2px 7px;cursor:pointer;touch-action:manipulation}
+.card-add-btn:active{background:rgba(30,100,200,.8)}
+.card.in-deck{outline:2px solid #2a6bbf}
+
+/* Rarity badge */
+.badge{display:inline-block;font-size:10px;padding:1px 5px;border-radius:3px;font-weight:bold;margin-left:4px;vertical-align:middle}
+.r-top,.r-極{background:#B8860B;color:#fff}
+.r-秘{background:#6a0dad;color:#fff}
+.r-S{background:#c0392b;color:#fff}
+.r-R{background:#1a6fa8;color:#fff}
+.r-D{background:#1a6fa8;color:#fff}
+.r-N{background:#444;color:#ccc}
+.r-P{background:#1a7a4a;color:#fff}
+.r-default{background:#333;color:#ccc}
+
+/* Sheet overlay */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:flex;align-items:flex-end}
+.sheet{background:#1a1a1a;border-radius:16px 16px 0 0;width:100%;max-width:600px;margin:0 auto;max-height:90vh;overflow-y:auto;padding:16px;padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}
+.sheet-close{float:right;background:none;border:none;color:#888;font-size:26px;cursor:pointer;line-height:1;padding:2px 4px;touch-action:manipulation}
+.sheet img{width:100%;max-width:220px;border-radius:8px;display:block;margin:0 auto 12px}
+.sheet-num{text-align:center;font-size:13px;color:#888;margin-bottom:8px}
+.sheet-row{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.chip{background:#252525;border-radius:5px;padding:4px 10px;font-size:13px;color:#ccc}
+.chip span{color:#888;margin-right:4px}
+.effect-label{font-size:12px;color:#666;margin-bottom:4px;margin-top:4px}
+.effect{font-size:14px;color:#ddd;line-height:1.7;white-space:pre-wrap}
+.source{font-size:11px;color:#555;margin-top:8px}
+
+/* Deck qty control in detail sheet */
+.deck-qty-wrap{margin-top:16px;border-top:1px solid #2a2a2a;padding-top:14px;display:flex;align-items:center;justify-content:center;gap:16px}
+.deck-qty-label{font-size:13px;color:#888}
+.qty-btn{background:#252525;border:1px solid #444;border-radius:8px;color:#eee;font-size:22px;width:40px;height:40px;cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:manipulation;flex-shrink:0}
+.qty-btn:active{background:#333}
+.qty-btn:disabled{opacity:.3;cursor:default}
+.qty-count{font-size:20px;font-weight:bold;min-width:40px;text-align:center}
+
+/* Floating deck button */
+.deck-fab{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));right:50%;transform:translateX(calc(50% + 160px));background:#1e3a5f;border:1px solid #4a8abf;border-radius:24px;color:#fff;font-size:14px;font-weight:bold;padding:10px 18px;cursor:pointer;z-index:50;touch-action:manipulation;white-space:nowrap;box-shadow:0 2px 12px rgba(0,0,0,.5)}
+.deck-fab:active{opacity:.8}
+@media(max-width:600px){.deck-fab{right:16px;transform:none}}
+
+/* Deck panel */
+.deck-panel-sheet{background:#1a1a1a;border-radius:16px 16px 0 0;width:100%;max-width:600px;margin:0 auto;max-height:90vh;display:flex;flex-direction:column;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+.deck-panel-header{padding:14px 16px 10px;border-bottom:1px solid #2a2a2a;flex-shrink:0}
+.deck-panel-title{font-size:16px;font-weight:bold}
+.deck-panel-total{font-size:13px;color:#888;margin-left:8px}
+.deck-header-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.deck-actions{display:flex;gap:8px;align-items:center}
+.deck-action-btn{background:#252525;border:1px solid #444;border-radius:8px;color:#ccc;font-size:13px;padding:6px 12px;cursor:pointer;touch-action:manipulation}
+.deck-action-btn:active{opacity:.7}
+.deck-action-btn.danger{border-color:#6b2a2a;color:#e07070}
+.pos-stats{display:flex;gap:6px;flex-wrap:wrap;padding:0 0 10px;flex-shrink:0;border-bottom:1px solid #1e1e1e}
+.pos-stat{background:#252525;border-radius:6px;padding:4px 10px;font-size:12px;color:#aaa}
+.pos-stat b{color:#fff;margin-right:3px}
+.deck-list{overflow-y:auto;padding:8px 16px}
+.deck-section-title{font-size:12px;color:#555;margin:10px 0 5px;letter-spacing:.5px}
+.deck-card-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #1e1e1e}
+.deck-card-row:last-child{border-bottom:none}
+.deck-card-img{width:36px;height:48px;object-fit:cover;border-radius:4px;background:#222;flex-shrink:0}
+.deck-card-info{flex:1;min-width:0}
+.deck-card-num{font-size:11px;color:#888}
+.deck-card-school{font-size:12px;color:#ccc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.deck-card-qty{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.deck-qty-sm-btn{background:#252525;border:1px solid #444;border-radius:5px;color:#eee;font-size:15px;width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:manipulation}
+.deck-qty-sm-btn:active{background:#333}
+.deck-qty-sm-btn:disabled{opacity:.3;cursor:default}
+.deck-qty-num{font-size:14px;font-weight:bold;min-width:18px;text-align:center}
+.deck-empty{text-align:center;color:#555;font-size:14px;padding:40px 0}
+
+/* Export preview */
+.export-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px}
+.export-card-item{background:#252525;border-radius:6px;overflow:hidden;text-align:center}
+.export-card-item img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block;background:#1a1a1a}
+.export-card-item-foot{padding:4px;font-size:11px;color:#aaa}
+.export-card-count{font-weight:bold;color:#fff}
+.export-section{margin-bottom:12px}
+.export-section-title{font-size:12px;color:#555;margin-bottom:6px}
+.export-copy-btn{width:100%;background:#1e3a5f;border:1px solid #4a8abf;border-radius:10px;color:#fff;font-size:16px;font-weight:bold;padding:13px;cursor:pointer;touch-action:manipulation;transition:background .2s}
+.export-copy-btn.ok{background:#1a5a2a;border-color:#3a9a4a}
+
+/* Toast */
+.toast{position:fixed;bottom:calc(90px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:#1e3a5f;color:#fff;font-size:13px;padding:8px 18px;border-radius:20px;z-index:200;pointer-events:none}
 </style>
 </head>
 <body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useMemo, useCallback, useRef } = React;
 
-<div id="loading">載入卡牌資料中...</div>
+const DECK_MAX = 40;
 
-<div id="sticky-wrapper">
-<header>
-  <div>
-    <h1>排球少年!! バボカ!!BREAK</h1>
-    <div class="subtitle">卡牌資料庫 / Card Database</div>
-  </div>
-  <div class="count">顯示 <span id="count-display">0</span> / <span id="count-total">0</span> 張</div>
-  <button class="filter-toggle-btn" id="filter-toggle" aria-label="篩選">
-    ☰ 篩選<span class="filter-badge" id="filter-badge" style="display:none">0</span>
-  </button>
-</header>
-
-<div id="search-row">
-  <input type="text" class="search-box" id="search" placeholder="卡名 / 卡號 / 技能關鍵字...">
-  <button class="filter-toggle-btn" id="filter-toggle-compact" aria-label="篩選">
-    ☰ 篩選<span class="filter-badge" id="filter-badge-compact" style="display:none">0</span>
-  </button>
-</div>
-
-<div class="filter-panel" id="filter-panel">
-  <!-- 系列 -->
-  <div class="filter-group">
-    <label>系列</label>
-    <select id="filter-series">
-      <option value="">全部系列</option>
-    </select>
-  </div>
-
-  <!-- 學校 -->
-  <div class="filter-group">
-    <label>學校</label>
-    <select id="filter-school">
-      <option value="">全部學校</option>
-    </select>
-  </div>
-
-  <!-- 類型 -->
-  <div class="filter-group">
-    <label>類型</label>
-    <select id="filter-category">
-      <option value="">全部</option>
-      <option value="CHARACTER">角色</option>
-      <option value="EVENT">事件</option>
-    </select>
-  </div>
-
-  <!-- 位置 -->
-  <div class="filter-group">
-    <label>位置</label>
-    <select id="filter-position">
-      <option value="">全部</option>
-      <option value="WS">WS 側翼</option>
-      <option value="S">S 舉球</option>
-      <option value="MB">MB 中間</option>
-      <option value="Li">Li 自由</option>
-      <option value="OP">OP 對角</option>
-      <option value="監督">監督</option>
-      <option value="コーチ">教練</option>
-      <option value="元監督">前任監督</option>
-      <option value="マネージャー">球隊經理</option>
-      <option value="応援団長">啦啦隊長</option>
-      <option value="事件">事件卡</option>
-    </select>
-  </div>
-
-  <!-- 稀有度 -->
-  <div class="filter-group">
-    <label>稀有度</label>
-    <select id="filter-rarity">
-      <option value="">全部稀有度</option>
-    </select>
-  </div>
-
-  <!-- 排序 -->
-  <div class="filter-group">
-    <label>排序</label>
-    <select id="filter-sort">
-      <option value="card_no">卡號</option>
-      <option value="rarity">稀有度</option>
-      <option value="srv">發球↓</option>
-      <option value="blk">攔網↓</option>
-      <option value="rcv">接球↓</option>
-      <option value="tos">舉球↓</option>
-      <option value="atk">攻擊↓</option>
-      <option value="name">名稱</option>
-    </select>
-  </div>
-
-  <button class="btn-reset" id="btn-reset">重置篩選</button>
-</div>
-</div><!-- /#sticky-wrapper -->
-
-<div class="grid-container" id="card-grid"></div>
-
-
-<!-- ── Deck Tray ── -->
-<div class="deck-tray" id="deck-tray">
-  <button class="tray-toggle-btn" id="tray-toggle-btn" title="收合／展開">▼</button>
-  <select class="tray-deck-select" id="tray-deck-select"></select>
-  <div class="tray-count-label">
-    <span class="tray-count-num" id="tray-count-num">0</span> 張
-  </div>
-  <span class="tray-warn-text" id="tray-warn-text" style="display:none"></span>
-  <div class="tray-spacer"></div>
-  <button class="tray-btn" id="tray-analysis-btn">庫存分析</button>
-  <button class="tray-btn primary" id="tray-open-btn">管理牌組 ▲</button>
-</div>
-
-<!-- ── Deck Panel ── -->
-<div class="deck-panel-overlay" id="deck-panel-overlay">
-  <!-- PREVIEW：浮在 DECK PANEL 外 -->
-  <div class="deck-preview-float" id="deck-preview-float">
-    <button class="deck-preview-close" id="deck-preview-close">✕</button>
-    <img class="deck-preview-img" id="deck-preview-img" src="" alt=""
-      onerror="this.style.background='var(--border)';this.removeAttribute('src')">
-    <div class="deck-preview-info">
-      <div class="deck-preview-name" id="deck-preview-name"></div>
-      <div class="deck-preview-sub" id="deck-preview-sub"></div>
-      <div class="deck-preview-stats" id="deck-preview-stats"></div>
-      <div class="deck-preview-skill" id="deck-preview-skill"></div>
-      <div class="deck-preview-count-row">
-        <span class="deck-preview-count-label">張數</span>
-        <button class="count-btn" id="deck-preview-dec">−</button>
-        <span class="count-num" id="deck-preview-count">1</span>
-        <button class="count-btn" id="deck-preview-inc">＋</button>
-        <button class="deck-preview-remove-btn" id="deck-preview-remove">從牌組移除</button>
-      </div>
-    </div>
-  </div>
-  <div class="deck-panel" id="deck-panel">
-    <div class="deck-panel-header">
-      <div class="deck-panel-titlerow">
-        🃏 牌組管理
-        <button class="tray-btn" style="margin-left:auto;padding:3px 9px;font-size:11px" id="deck-panel-close">✕</button>
-      </div>
-      <div class="deck-selector-row">
-        <input type="text" class="deck-name-input" id="deck-name-input" placeholder="牌組名稱...">
-        <button class="tray-btn" id="deck-rename-btn">改名</button>
-        <button class="tray-btn" id="deck-new-btn">＋新增</button>
-        <button class="tray-btn" id="deck-duplicate-btn" title="複製目前牌組為新牌組">複製</button>
-        <button class="tray-btn danger" id="deck-delete-btn">刪除</button>
-        <button class="tray-btn danger" id="deck-clear-btn" style="margin-left:8px;border-left:1px solid var(--border);padding-left:8px">清空</button>
-      </div>
-      <div class="deck-panel-info" id="deck-panel-info" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-        <span id="deck-panel-info-text"></span>
-        <div style="display:flex;gap:4px;flex-shrink:0">
-          <select class="tray-btn" id="deck-reorganize-select" style="font-size:11px;padding:2px 6px;cursor:pointer">
-            <option value="color">🔀 顏色</option>
-            <option value="srv">發球↓</option>
-            <option value="blk">攔網↓</option>
-            <option value="rcv">接球↓</option>
-            <option value="tos">舉球↓</option>
-            <option value="atk">攻擊↓</option>
-            <option value="card_no">卡號</option>
-            <option value="rarity">稀有度</option>
-          </select>
-          <button class="tray-btn" id="deck-color-mode-btn" style="font-size:11px;padding:2px 8px">🎨 上色</button>
-        </div>
-      </div>
-    </div>
-    <div class="deck-panel-body">
-      <div class="deck-card-list" id="deck-card-list">
-        <div class="deck-empty">牌組是空的，到卡片列表按「＋」加入卡片</div>
-      </div>
-    </div>
-    <div class="deck-color-picker-bar" id="deck-color-picker-bar">
-      <span class="color-pick-label">套用至選取：</span>
-      <button class="color-pick-btn" data-colorkey="free"    style="background:#888888" title="自由"></button>
-      <button class="color-pick-btn" data-colorkey="receive" style="background:#3b82f6" title="接球"></button>
-      <button class="color-pick-btn" data-colorkey="set"     style="background:#22c55e" title="舉球"></button>
-      <button class="color-pick-btn" data-colorkey="attack"  style="background:#ef4444" title="攻擊"></button>
-      <button class="color-pick-btn color-pick-clear" data-colorkey="" title="清除顏色">✕</button>
-      <span class="color-pick-count" id="color-pick-count">已選 0 張</span>
-    </div>
-    <div class="deck-panel-footer-toggle" id="deck-footer-toggle">
-      <span class="toggle-arrow">▲</span><span>工具</span>
-    </div>
-    <div class="deck-panel-footer" id="deck-panel-footer">
-      <button class="tray-btn" id="deck-share-btn" style="width:100%">📲 QR Code 快速分享</button>
-      <div style="display:flex;gap:8px;width:100%">
-        <button class="tray-btn" id="deck-export-img-btn" style="flex:1">🖼️ 牌組轉圖片</button>
-        <button class="tray-btn" id="deck-import-img-btn" style="flex:1">📸 圖片轉牌組</button>
-      </div>
-      <div style="display:flex;gap:8px;width:100%">
-        <button class="tray-btn" id="deck-export-btn" style="flex:1">📤 匯出所有牌組</button>
-        <button class="tray-btn" id="deck-import-btn" style="flex:1">📥 匯入所有牌組</button>
-      </div>
-      <input type="file" id="deck-import-file" accept=".json" style="display:none">
-      <input type="file" id="deck-import-img-file" accept="image/png" style="display:none">
-    </div>
-  </div>
-</div>
-
-<!-- ── Analysis Overlay ── -->
-<div class="analysis-overlay" id="analysis-overlay">
-  <div class="analysis-header">
-    <button class="tray-btn" id="analysis-back-btn">← 返回</button>
-    <div class="analysis-title" id="analysis-title">庫存分析</div>
-    <div class="analysis-stats">
-      <div class="analysis-stat">全部 <span class="num" id="analysis-total">0</span> 張</div>
-      <div class="analysis-stat">缺 <span class="num miss" id="analysis-missing">0</span> 張</div>
-    </div>
-  </div>
-  <div class="analysis-body" id="analysis-body"></div>
-</div>
-
-<!-- ── Import Confirm ── -->
-<div class="import-confirm-overlay" id="import-confirm-overlay">
-  <div class="import-confirm-box">
-    <h3>匯入 JSON</h3>
-    <p>請選擇匯入方式：<br>
-    <b>覆蓋</b> — 取代所有現有牌組與收藏資料<br>
-    <b>合併</b> — 保留現有資料，加入新牌組（ID 不重複才加入）</p>
-    <div class="import-confirm-btns">
-      <button class="tray-btn" id="import-cancel-btn">取消</button>
-      <button class="tray-btn" id="import-merge-btn">合併</button>
-      <button class="tray-btn primary" id="import-overwrite-btn">覆蓋</button>
-    </div>
-  </div>
-</div>
-
-<!-- ── Qty Modal ── -->
-<div class="qty-overlay" id="qty-overlay">
-  <div class="qty-box">
-    <div class="qty-box-name" id="qty-modal-name"></div>
-    <div class="qty-box-row">
-      <button class="qty-adj-btn" id="qty-minus">−</button>
-      <input type="number" id="qty-input" class="qty-input" min="1" max="40" value="1">
-      <button class="qty-adj-btn" id="qty-plus">＋</button>
-    </div>
-    <div class="qty-box-btns">
-      <button class="tray-btn" id="qty-cancel">取消</button>
-      <button class="tray-btn primary" id="qty-confirm">加入牌組</button>
-    </div>
-  </div>
-</div>
-
-<!-- Toast -->
-<div id="hv-toast"></div>
-
-<!-- ── Share Modal ── -->
-<div id="share-modal-overlay" style="display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.93);flex-direction:column;align-items:center;justify-content:center;padding:24px;box-sizing:border-box">
-  <div style="width:100%;max-width:380px;text-align:center">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-      <span id="share-modal-title" style="color:#fff;font-size:17px;font-weight:700">分享牌組</span>
-      <button id="share-modal-close" style="background:rgba(255,255,255,0.15);border:none;color:#fff;font-size:18px;cursor:pointer;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center">✕</button>
-    </div>
-    <div style="background:#fff;border-radius:16px;padding:20px;display:inline-block;box-shadow:0 8px 40px rgba(0,0,0,0.5)">
-      <div id="share-qr-div"></div>
-    </div>
-    <div style="margin-top:16px;color:rgba(255,255,255,0.45);font-size:12px">請對準 QR Code 掃描</div>
-    <button id="share-copy-btn" style="margin-top:12px;width:100%;padding:14px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;letter-spacing:0.5px">複製連結</button>
-    <div style="margin-top:10px;color:rgba(255,255,255,0.3);font-size:11px">點擊任意空白處關閉</div>
-  </div>
-</div>
-
-<!-- Lightbox -->
-<div id="lightbox-overlay">
-  <img id="lightbox-img" src="" alt="">
-</div>
-
-<!-- Modal -->
-<div class="modal-overlay" id="modal-overlay">
-  <div class="modal" id="modal">
-    <button class="modal-close" id="modal-close">✕</button>
-    <div class="modal-img">
-      <img id="modal-img" src="" alt="">
-    </div>
-    <div class="modal-body">
-      <div class="modal-no" id="modal-no"></div>
-      <div class="modal-name" id="modal-name"></div>
-      <div class="modal-tags" id="modal-tags"></div>
-      <div class="modal-stats-grid" id="modal-stats"></div>
-      <div class="modal-skill-title">技能文字</div>
-      <div class="modal-skill" id="modal-skill"></div>
-      <div class="modal-qa-section" id="modal-qa"></div>
-      <a class="modal-feedback-btn" id="modal-feedback-btn" href="#" target="_blank" rel="noopener">
-        🚩 回報翻譯問題
-      </a>
-    </div>
-  </div>
-</div>
-
-<!--
-  ════════════════════════════════════════════════════════════════
-    翻譯系統維護指南（build_data.py）
-  ════════════════════════════════════════════════════════════════
-
-  【cards_data.js 更新流程】
-    1. 修改 build_data.py（見以下規則說明）
-    2. 執行：python build_data.py
-    3. 確認輸出「[OK] 生成完成，364張」
-    4. git add cards_data.js && git commit && git push
-
-  ════════════════════════════════════════════════════════════════
-    已修正的翻譯問題（勿重複犯相同錯誤）
-  ════════════════════════════════════════════════════════════════
-
-  【問題一】規則順序衝突：その後 vs その
-    症狀：「その後」翻成「該後」而非「之後」
-    原因：「その→該」規則先執行，把「その後」中的「その」吃掉
-    解法：「その後→之後」必須寫在「その→該」之前（特殊長串 > 一般短串）
-    位置：build_data.py section 3b（line ~160）
-
-  【問題二】規則順序衝突：登場させられない vs 登場させ
-    症狀：「登場させられない」翻成「使其出場至，不能」（拆壞）
-    原因：「登場させ→使其出場」先把前半吃掉，「られない」孤立殘留
-    解法：「登場させられない→不能出場」必須寫在所有「登場させ」規則之前
-    位置：build_data.py section 13（line ~271）
-
-  【問題三】觸發詞「たび」不應翻成「每當/每次」
-    症狀：「が登場するたび」→「每次出場時」「每當…出場時」（語氣繁冗）
-    原因：「たび」直譯為「每次」，但中文卡牌文法中「當X出場時，Y」
-          本身已隱含「每次觸發」語意，不需額外加「每當/每次」
-    解法：
-      - が登場するたび → 出場時，（去掉「每次」）
-      - 手牌に加えるたび → 加入手牌時，（去掉「每次」）
-      - MANUAL_OVERRIDES 中一律用「當…時」，不用「每當/每次」
-    原則：「たび」= 事件觸發，中文固定格式為「當[條件]時，[效果]」
-
-  【問題四】動詞語序：「自己的 + 動詞 + 受詞」
-    症狀：「自己的公開牌庫頂部」「自己的查看手牌」（動詞跑到受詞後面）
-    原因：「自分の」→「自己的」先接上，之後「公開し」等動詞才替換，
-          導致「自己的」夾在動詞和受詞之間
-    解法：後處理 regex 修正「自己的(公開|查看|棄置)(牌庫|手牌|…)」
-          → 動詞移到「自己的」前面
-    位置：build_data.py 後處理 section（line ~596）
-
-  【問題五】條件句缺少「是」字
-    症狀：「此角色攻擊角色時」（缺少「是」，不合中文語法）
-    應為：「此角色是攻擊角色時」
-    原因：「このキャラが〜キャラの場合」中，「が」助詞被清除，
-          「是」字從未被插入
-    解法：後處理 regex 在「此角色(角色種類)角色時」前補「是」
-    位置：build_data.py section S 附近
-
-  【問題六】雙角色牌括號說明文字語序混亂
-    症狀：「此牌場地的角色的計算數量時計為1人」（語序顛倒）
-    應為：「此牌在計算場地角色數量時計為1人」
-    原因：括號內多個從句分別被不同 regex 翻譯，組合後語序錯亂
-    解法：用完整 regex 匹配整個括號模式，統一改寫為固定格式
-    位置：build_data.py lines ~446-449
-
-  【問題七】`に置けば使える` 翻成「時可使用」而非「可發動」
-    症狀：Event 牌放置條件翻成「時可使用」（語意不準確）
-    應為：「後可發動」
-    原因：catch-all 規則 `に置けば使える` → `時可使用` 語意偏移；
-          且含所屬前綴的 Event 牌（如「音駒のイベントカード1枚」）
-          無法被無前綴的 regex 匹配
-    解法：
-      - `に置けば使える` → `後可發動`
-      - `手札から(.{0,10}?)イベントカード(\d+)枚をイベントエリアに置けば使える`
-        改為允許前綴（含所屬名如「音駒の」）
-    位置：build_data.py line ~532 及 line ~213
-
-  【問題八】`値が(\d+)或以上/以下` 產生多餘 `=`
-    症狀：「進攻値=2或以下時」（= 多餘）
-    原因：lines 352-355 先把「以下の場合」轉為「或以下時」，
-          之後 line 409 的「値が(\d+)」規則把剩下的「値が2」轉為「値=2」，
-          導致最終出現「値=2或以下」
-    解法：在 line 409 的精確 = 規則之前，先處理「値が(\d+)或以上/以下」→「値\2或以上/以下」
-    位置：build_data.py line ~407-412
-
-  【問題九】`自分の + Area + から` → 產生「自己的從X區」語序錯誤
-    症狀：「自己的從棄牌區」「自己的從接球區」（「自己的」插在「從」前面）
-    原因：section O（`Area + から` → `從Area`）執行後，
-          前綴「自己的」（來自「自分の」）仍殘留在「從」前面
-    涉及區域：Event區、棄牌區、接球區、發球區、攻擊區、攔網區、舉球區、手牌、牌庫
-    解法：後處理 regex：
-          `自己的從(X區)` → `從自己的(X區)`
-    位置：build_data.py 後處理 section（語序修正區附近）
-
-  【問題十一】`相手の + Area + から` → 產生「對手的從X區」語序錯誤
-    症狀：「從對手的接球區棄置...」變成「對手的從接球區棄置...」
-    原因：與問題九相同機制，只是前綴是「對手的」而非「自己的」
-          section O 的 `Area + から → 從Area` 無法同時移動前面的「對手的」
-    解法：後處理 regex 追加：
-          `對手的從(X區)` → `從對手的(X區)`
-    位置：build_data.py 後處理 section（與問題九相鄰）
-
-  【問題十】`自分の手札から...をドロップすれば使える` 前綴殘留
-    症狀：「自己的棄置手牌中的白鳥沢的牌1枚後可發動」（語序錯）
-    應為：「從自己的手牌棄置白鳥沢的牌1張後可發動」
-    原因：regex `手札から...をドロップすれば使える` 只匹配 `手札から` 開頭的部分，
-          前面的 `自分の` 被跳過，之後翻成「自己的」殘留在結果最前面
-    解法：新增「自分の手札から」前綴版本的規則，優先匹配
-    位置：build_data.py line ~208, 214
-
-  【問題十二】`以下から1つを選んで使える` → 「選擇以下其中一項可發動的」（多餘語）
-    症狀：「選擇以下其中一項可發動的」（「可發動的」是多餘的殘留）
-    原因：section 2.5 的 `で使える → 可發動的` 規則先執行，
-          把 `選んで使える` 中的 `で使える` 吃掉變成 `選ん可發動的`，
-          之後 `以下から(\d+)つを選ん → 選擇以下其中一項` 匹配 `選ん` 殘留
-          `可發動的` 留在句尾
-    解法：在 `で使える → 可發動的` 之前，先完整匹配並替換
-          `以下から(\d+)つを選んで使える → 選擇以下其中一項使用`
-    位置：build_data.py section 2.5（`で使える` 規則前一行）
-
-  【問題十三】`自己的在X區中` / `對手的在X區中` 語序錯誤
-    症狀：「自己的在攔網區中伊達工業的角色有3人時」（語序混亂）
-    原因：`AREAに → 在AREA中`（section P）轉換後，前綴「自己的/對手的」
-          留在「在」前面，造成「自己的在X區中」
-    解法：後處理 regex：
-          `(自己的|對手的)在(X區)中` → `\1\2中`
-    位置：build_data.py 後處理語序修正區
-
-  【問題十四】`さらに...值に+N` → 「再+N值」語序顛倒
-    症狀：「再+6攔網值」（值跑到最後面）
-    原因：`さらに → 再，` 先轉換，之後「値に+N」助詞清除後 N 和值的順序顛倒
-    解法：後處理 regex：`再\+(\d+)(值)` → `\2再 +\1`
-    位置：build_data.py 後處理語序修正區
-
-  【問題十五】`ディフェンスポイント` 翻成「防守點數」不準確
-    症狀：「對手的攔網的防守點數有6或以下時」
-    應為：「防禦值」（ブロックのディフェンスポイント = 攔網的防禦值）
-    解法：`ディフェンスポイント → 防禦值`
-    位置：build_data.py 專有名詞替換區（line ~453）
-
-  ════════════════════════════════════════════════════════════════
-    MANUAL_OVERRIDES 使用時機
-  ════════════════════════════════════════════════════════════════
-    - 新增規則後仍無法修正的個別卡片（結構太特殊）
-    - Key：image_file（如 'HV-P01-010-S.webp'）
-    - MANUAL_OVERRIDES 在 translate_skill() 之後套用，會完整覆蓋
-    - 若規則已修正，MANUAL_OVERRIDES 的條目仍可保留（不影響正確性）
-    - 目前約 120 筆，集中在語序複雜、雙觸發、特殊條件的卡片
-
-  ════════════════════════════════════════════════════════════════
--->
-<script>
+// 直接對照表：原始學校名稱（base，分隔符前）→ 顯示群組名
 const SCHOOL_MAP = {
   '烏野':'烏野','音駒':'音駒',
   '稲荷崎':'稻荷崎','稻荷崎':'稻荷崎',
@@ -1662,2199 +148,408 @@ const SCHOOL_MAP = {
   '角川':'角川','条善寺':'条善寺','和久谷南':'和久谷南',
   '井闥山':'井闥山','森然':'森然','中立':'中立',
 };
-function _getSchoolGroup(school) {
-  const base = school.split(/[\/\u00B7\uFF65\s]/)[0].trim();
-  return SCHOOL_MAP[base] || '其他';
-}
-function _getProductType(number) {
-  const m = number.match(/^(HV-[A-Z0-9]+)-/);
-  return m ? m[1] : 'HV-PR';
-}
-const CARDS_DATA = { cards: [], product_labels: {
-  'HV-P01':'P01 第1彈',
-  'HV-P02':'P02 第2彈',
-  'HV-P03':'P03 第3彈',
-  'HV-D01':'D01 烏野',
-  'HV-D02':'D02 音駒',
-  'HV-D03':'D03 稻荷崎',
-  'HV-PR':'PR 促銷',
-}};
-fetch('cards.json').then(r=>r.json()).then(raw=>{
-  let id=1;
-  CARDS_DATA.cards = raw.map(c=>({
-    id: String(id++),
-    card_no: c.number,
-    image_file: c.number + '__' + c.rarity,
-    image_url: c.image,
-    product_type: _getProductType(c.number),
-    product_label: _getProductType(c.number),
-    name: '',
-    name_ruby: '',
-    category: c.type==='event'?'EVENT':'CHARACTER',
-    category_zh: c.type==='event'?'事件':'角色',
-    affiliation: c.school,
-    school: _getSchoolGroup(c.school),
-    rarity: c.rarity,
-    rarity_code: c.rarity,
-    position: c.position,
-    position_zh: '',
-    srv:null,blk:null,rcv:null,tos:null,atk:null,
-    skill_jp:'',
-    skill_zh: c.effect,
-    qa:[],
-  }));
-  init();
-}).catch(e=>{
-  document.getElementById('loading').textContent='錯誤：找不到 cards.json';
-  console.error(e);
-});
-</script>
-<script>
-// ── Constants ──────────────────────────────────────────────────────────
-const RARITY_COLOR = {
-  '秘': '#f0c040', '頂': '#c084fc', '頂P': '#d8b4fe',
-  'S': '#60a5fa', 'SP': '#93c5fd',
-  'R': '#4ade80', 'RP': '#86efac',
-  'N': '#94a3b8', 'NP': '#cbd5e1',
-  'D': '#fb923c', 'DP': '#fdba74',
-  'P': '#f87171', 'K': '#e879f9', 'KP': '#f0abfc'
-};
-const RARITY_ORDER = ['K','秘','頂','S','R','N','D','P'];
-const RARITY_LABEL = { 'K': '極', 'KP': '極P' };
-
-const SCHOOL_COLOR = {
-  '烏野': '#f97316', '音駒': '#ef4444', '稲荷崎': '#a855f7',
-  '白鳥沢': '#3b82f6', '伊達工業': '#22c55e', '青葉城西': '#06b6d4',
-  '梟谷': '#a16207', '鴎台': '#8b5cf6'
-};
-
-const CATEGORY_ZH = { 'CHARACTER': '角色', 'EVENT': '事件', 'SERVE': '發球' };
-
-// ── Color Tag Constants ─────────────────────────────────────────────────
-const COLOR_TAGS = [
-  { key: 'free',    label: '自由',  hex: '#888888' },
-  { key: 'receive', label: '接球',  hex: '#3b82f6' },
-  { key: 'set',     label: '舉球',  hex: '#22c55e' },
-  { key: 'attack',  label: '攻擊',  hex: '#ef4444' },
+const SCHOOL_GROUPS = [
+  '烏野','音駒','稻荷崎','白鳥沢','伊達工業','青葉城西','梟谷','井闥山','鷗台',
+  '椿原','早流川','北川','戶美','新山','常波','扇南','角川','条善寺','和久谷南','森然','中立'
 ];
-const EVENT_COLOR_HEX = '#eab308';
-const STAT_LABELS = {
-  'atk': '攻擊', 'blk': '攔網', 'rcv': '接球',
-  'tos': '舉球', 'srv': '發球'
-};
 
-// ── State ──────────────────────────────────────────────────────────────
-let cards = [];
-let filtered = [];
-let activeCategory = '';
-let activeSeries = '';
-let activeSchool = '';
-let activeRarity = '';
-let activePosition = '';
-let searchText = '';
+const POS_LABEL = { MB:'中間攻擊', WS:'外側攻擊', S:'舉球手', Li:'自由球員', OP:'對角攻擊', '事件':'事件卡' };
+const RARITY_ORDER = ['N','NP','R','RP','RA','S','SP','D','P','頂','頂P','秘','極','極P'];
 
-// ── Deck State (宣告在 init 之前，避免 TDZ 錯誤) ──────────────────────
-const DECK_LS_KEY  = 'hv_decks';
-const QUICK_DECK_ID = 'dk_quick';
-const MAX_TOTAL    = 40;
-const MAX_EVENT    = Infinity;
-let decks               = [];
-let currentDeckId       = null;
-let pendingImport       = null;
-let shareUrl            = '';
-let qtyPendingImageFile = null;
-
-// ── Color State ─────────────────────────────────────────────────────────
-// Structure: { [deckId]: { [imageFile]: { free, receive, set, attack } | null } }
-const COLOR_LS_KEY = 'hv_deck_colors';
-let deckColorState = {};
-
-// ── Share / QR ─────────────────────────────────────────────────────────
-function encodeDeck(deck) {
-  const payload = {
-    n: deck.name,
-    c: deck.cards.map(c => [c.image_file, c.count])
-  };
-  return LZString.compressToEncodedURIComponent(JSON.stringify(payload));
+function getSchoolGroup(school) {
+  const base = school.split(/[\/·･\s]/)[0].trim();
+  return SCHOOL_MAP[base] || null;
 }
 
-function decodeDeck(str) {
-  try {
-    const json = LZString.decompressFromEncodedURIComponent(str);
-    const payload = JSON.parse(json);
-    return {
-      name: payload.n,
-      cards: payload.c.map(([identifier, count]) => {
-        // New format: identifier is image_file (ends with .webp)
-        // Old format: identifier is card_no (no extension) — fallback for old links
-        let cardObj;
-        if (identifier.endsWith('.webp')) {
-          cardObj = cards.find(c => c.image_file === identifier);
-        } else {
-          cardObj = cards.find(c => c.card_no === identifier);
-        }
-        return {
-          image_file: cardObj?.image_file || identifier,
-          card_no: cardObj?.card_no || identifier,
-          count
-        };
-      })
-    };
-  } catch { return null; }
+function getSet(number) {
+  const m = number.match(/^(HV-[A-Z0-9]+)-/);
+  return m ? m[1] : '?';
 }
 
-function openShareModal() {
-  const deck = getCurrentDeck();
-  if (!deck || deck.cards.length === 0) { showToast('牌組是空的，無法分享'); return; }
-
-  closeDeckPanel();
-
-  const encoded = encodeDeck(deck);
-  shareUrl = `${location.origin}${location.pathname}?deck=${encoded}`;
-
-  document.getElementById('share-modal-title').textContent = `分享「${deck.name}」`;
-
-  // 清除舊 QR code 並重新生成
-  const qrDiv = document.getElementById('share-qr-div');
-  qrDiv.innerHTML = '';
-  const size = Math.min(window.innerWidth - 88, window.innerHeight - 280, 300);
-  new QRCode(qrDiv, { text: shareUrl, width: size, height: size, correctLevel: QRCode.CorrectLevel.M });
-
-  document.getElementById('share-modal-overlay').style.display = 'flex';
+function rarityClass(r) {
+  if (r.startsWith('頂')) return 'r-top';
+  if (r.startsWith('極')) return 'r-極';
+  if (r.startsWith('秘')) return 'r-秘';
+  const base = r.replace(/P$/,'');
+  return ['S','R','N','D','P'].includes(base) ? `r-${base}` : 'r-default';
 }
 
-function checkSharedDeck() {
-  const params = new URLSearchParams(location.search);
-  const encoded = params.get('deck');
-  if (!encoded) return;
-
-  const imported = decodeDeck(encoded);
-  if (!imported) { showToast('分享連結無效'); return; }
-
-  history.replaceState(null, '', location.pathname);
-
-  const total = imported.cards.reduce((s, c) => s + c.count, 0);
-  if (confirm(`收到分享牌組「${imported.name}」（${total} 張），是否匯入？`)) {
-    const d = {
-      id: makeDeckId(),
-      name: imported.name,
-      cards: imported.cards,
-      owned: {}
-    };
-    decks.push(d);
-    currentDeckId = d.id;
-    saveDecks();
-    renderDeckSwitcher();
-    updateTray();
-    renderGrid();
-    showToast(`已匯入「${imported.name}」`);
-  }
+function Badge({ r }) {
+  return <span className={`badge ${rarityClass(r)}`}>{r}</span>;
 }
 
-// ── Init ───────────────────────────────────────────────────────────────
-function init() {
-  cards = CARDS_DATA.cards;
-  document.getElementById('count-total').textContent = cards.length;
-  document.getElementById('loading').classList.add('hidden');
+function useDeck() {
+  const [deck, setDeck] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('hv-deck') || '{}'); }
+    catch { return {}; }
+  });
+  useEffect(() => { localStorage.setItem('hv-deck', JSON.stringify(deck)); }, [deck]);
 
-  loadDecks();
-  loadColorState();
-  buildFilters();
-  applyFilters();
-  bindEvents();
-  bindDeckEvents();
-  renderDeckSwitcher();
-  updateTray();
-  checkSharedDeck();
+  const add = useCallback((card) => {
+    setDeck(d => {
+      const cur = d[card.number] || 0;
+      const tot = Object.values(d).reduce((a, b) => a + b, 0);
+      if (tot >= DECK_MAX) return d;
+      return { ...d, [card.number]: cur + 1 };
+    });
+  }, []);
+
+  const remove = useCallback((num) => {
+    setDeck(d => {
+      const cur = d[num] || 0;
+      if (cur <= 0) return d;
+      const next = { ...d };
+      if (cur === 1) delete next[num];
+      else next[num] = cur - 1;
+      return next;
+    });
+  }, []);
+
+  const clear = useCallback(() => setDeck({}), []);
+  const total = Object.values(deck).reduce((a, b) => a + b, 0);
+  return { deck, add, remove, clear, total };
 }
 
-function buildFilters() {
-  // Series
-  const seriesSet = [...new Set(cards.map(c => c.product_type).filter(Boolean))];
-  const seriesLabels = CARDS_DATA.product_labels || {};
-  const seriesSel = document.getElementById('filter-series');
-  // Use CARDS_DATA product order
-  const seriesOrder = ['HV-P01','HV-P02','HV-P03','HV-D01','HV-D02','HV-D03','HV-PR'];
-  seriesOrder.filter(s => seriesSet.includes(s)).forEach(s => {
-    const opt = document.createElement('option');
-    opt.value = s;
-    opt.textContent = seriesLabels[s] || s;
-    seriesSel.appendChild(opt);
-  });
-  // Any remaining
-  seriesSet.filter(s => !seriesOrder.includes(s)).forEach(s => {
-    const opt = document.createElement('option');
-    opt.value = s;
-    opt.textContent = seriesLabels[s] || s;
-    seriesSel.appendChild(opt);
-  });
-
-  // School
-  const schoolSet = [...new Set(cards.map(c => c.school).filter(Boolean))];
-  const schoolOrder = ['烏野','音駒','稻荷崎','白鳥沢','伊達工業','青葉城西','梟谷','鷗台','井闥山','椿原','早流川','北川','戶美','新山','常波','扇南','角川','条善寺','和久谷南','森然','中立','其他'];
-  const schoolSel = document.getElementById('filter-school');
-  [...schoolOrder.filter(s => schoolSet.includes(s)),
-   ...schoolSet.filter(s => !schoolOrder.includes(s)).sort()
-  ].forEach(s => {
-    const opt = document.createElement('option');
-    opt.value = s;
-    opt.textContent = s;
-    schoolSel.appendChild(opt);
-  });
-
-  // Rarity
-  const raritySet = [...new Set(cards.map(c => c.rarity).filter(Boolean))];
-  const raritySel = document.getElementById('filter-rarity');
-  RARITY_ORDER.filter(r => raritySet.includes(r)).forEach(r => {
-    const opt = document.createElement('option');
-    opt.value = r;
-    opt.textContent = RARITY_LABEL[r] || r;
-    raritySel.appendChild(opt);
-  });
+function Toast({ msg }) {
+  if (!msg) return null;
+  return <div className="toast">{msg}</div>;
 }
 
-// ── Events ─────────────────────────────────────────────────────────────
-function bindEvents() {
-  document.getElementById('search').addEventListener('input', e => {
-    searchText = e.target.value.trim().toLowerCase();
-    applyFilters();
-  });
+/* Export preview modal */
+function ExportModal({ deck, cards, onClose }) {
+  const [copied, setCopied] = useState(false);
 
-  document.getElementById('filter-series').addEventListener('change', e => {
-    activeSeries = e.target.value;
-    applyFilters();
-  });
+  const deckCards = useMemo(() => {
+    return Object.entries(deck)
+      .map(([num, count]) => ({ card: cards.find(c => c.number === num), count }))
+      .filter(({ card }) => card);
+  }, [deck, cards]);
 
-  document.getElementById('filter-school').addEventListener('change', e => {
-    activeSchool = e.target.value;
-    applyFilters();
-  });
+  const posOrder = ['MB','WS','S','Li','OP'];
+  const byPos = useMemo(() => {
+    const g = {};
+    deckCards.forEach(({ card, count }) => {
+      const p = card.position || '其他';
+      if (!g[p]) g[p] = [];
+      g[p].push({ card, count });
+    });
+    return g;
+  }, [deckCards]);
+  const sortedPos = [...posOrder.filter(p => byPos[p]), ...Object.keys(byPos).filter(p => !posOrder.includes(p))];
+  const total = Object.values(deck).reduce((a, b) => a + b, 0);
 
-  document.getElementById('filter-rarity').addEventListener('change', e => {
-    activeRarity = e.target.value;
-    applyFilters();
-  });
-
-  document.getElementById('filter-position').addEventListener('change', e => {
-    activePosition = e.target.value;
-    applyFilters();
-  });
-
-  document.getElementById('filter-sort').addEventListener('change', () => applyFilters());
-
-  document.getElementById('filter-category').addEventListener('change', e => {
-    activeCategory = e.target.value;
-    applyFilters();
-  });
-
-  document.getElementById('btn-reset').addEventListener('click', () => {
-    document.getElementById('search').value = '';
-    document.getElementById('filter-series').value = '';
-    document.getElementById('filter-school').value = '';
-    document.getElementById('filter-rarity').value = '';
-    document.getElementById('filter-category').value = '';
-    document.getElementById('filter-position').value = '';
-    searchText = ''; activeSeries = ''; activeSchool = ''; activeCategory = ''; activeRarity = ''; activePosition = '';
-    applyFilters();
-  });
-
-  document.getElementById('modal-overlay').addEventListener('click', e => {
-    if (e.target === document.getElementById('modal-overlay')) closeModal();
-  });
-  document.getElementById('modal-close').addEventListener('click', closeModal);
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') {
-      const lb = document.getElementById('lightbox-overlay');
-      if (lb.classList.contains('open')) {
-        lb.classList.remove('open');
-      } else {
-        closeModal();
-      }
-    }
-  });
-
-  // Lightbox close on background click
-  document.getElementById('lightbox-overlay').addEventListener('click', () => {
-    document.getElementById('lightbox-overlay').classList.remove('open');
-  });
-
-  function toggleFilterPanel() {
-    const panel = document.getElementById('filter-panel');
-    if (!panel.classList.contains('open')) {
-      document.getElementById('sticky-wrapper').classList.remove('header-hidden');
-    }
-    panel.classList.toggle('open');
-  }
-  document.getElementById('filter-toggle').addEventListener('click', toggleFilterPanel);
-  document.getElementById('filter-toggle-compact').addEventListener('click', toggleFilterPanel);
-
-  // Mobile: hide header on scroll down, show on scroll up
-  (function() {
-    const wrapper = document.getElementById('sticky-wrapper');
-    const panel   = document.getElementById('filter-panel');
-    let lastY = window.scrollY;
-    window.addEventListener('scroll', () => {
-      if (window.innerWidth > 600) return;
-      if (panel.classList.contains('open')) return;
-      const y = window.scrollY;
-      const delta = y - lastY;
-      if (Math.abs(delta) < window.innerHeight / 3) return;
-      if (delta > 0 && y > 60) {
-        wrapper.classList.add('header-hidden');
-        document.querySelector('.deck-tray').classList.add('tray-scroll-hidden');
-      } else {
-        wrapper.classList.remove('header-hidden');
-        document.querySelector('.deck-tray').classList.remove('tray-scroll-hidden');
-      }
-      lastY = y;
-    }, { passive: true });
-  })();
-}
-
-// ── Filter Logic ───────────────────────────────────────────────────────
-function applyFilters() {
-  filtered = cards.filter(c => {
-    if (activeSeries && c.product_type !== activeSeries) return false;
-    if (activeSchool && c.school !== activeSchool) return false;
-    if (activeCategory && c.category !== activeCategory) return false;
-    if (activeRarity && c.rarity !== activeRarity && c.rarity !== activeRarity + 'P') return false;
-    if (activePosition && c.position !== activePosition) return false;
-    if (searchText) {
-      const stats = [
-        c.atk && `攻擊${c.atk}`, c.rcv && `接球${c.rcv}`,
-        c.tos && `舉球${c.tos}`, c.blk && `攔網${c.blk}`, c.srv && `發球${c.srv}`
-      ].filter(Boolean).join(' ');
-      const typeZh = ({CHARACTER:'角色',EVENT:'事件',SERVE:'發球'})[c.category] || '';
-      const haystack = [c.card_no, c.name, c.affiliation, c.skill_zh, c.rarity, stats, typeZh,
-        c.position, c.position_zh]
-        .filter(Boolean).join(' ').toLowerCase();
-      const terms = searchText.split(/\s+/).filter(Boolean);
-      if (!terms.every(t => haystack.includes(t))) return false;
-    }
-    return true;
-  });
-
-  // Sort
-  const sortMode = document.getElementById('filter-sort')?.value || 'card_no';
-  const RARITY_ORDER = { '秘':0, '頂P':1, '頂':2, 'S':3, 'R':4, 'N':5, 'D':6, 'P':7 };
-  filtered.sort((a, b) => {
-    if (sortMode === 'card_no') return (a.card_no||'').localeCompare(b.card_no||'');
-    if (sortMode === 'name')    return (a.name||'').localeCompare(b.name||'');
-    if (sortMode === 'rarity') {
-      const diff = (RARITY_ORDER[a.rarity] ?? 99) - (RARITY_ORDER[b.rarity] ?? 99);
-      return diff !== 0 ? diff : (a.card_no||'').localeCompare(b.card_no||'');
-    }
-    // stat sort descending
-    const av = a[sortMode] ?? -1, bv = b[sortMode] ?? -1;
-    return av !== bv ? bv - av : (a.card_no||'').localeCompare(b.card_no||'');
-  });
-
-  document.getElementById('count-display').textContent = filtered.length;
-  updateFilterBadge();
-  renderGrid();
-}
-
-function updateFilterBadge() {
-  const count = [activeSeries, activeSchool, activeCategory, activeRarity, activePosition, searchText]
-    .filter(Boolean).length;
-  const badge = document.getElementById('filter-badge');
-  const badgeC = document.getElementById('filter-badge-compact');
-  const btn = document.getElementById('filter-toggle');
-  const btnC = document.getElementById('filter-toggle-compact');
-  if (count > 0) {
-    badge.textContent = count; badge.style.display = 'inline-block';
-    badgeC.textContent = count; badgeC.style.display = 'inline-block';
-    btn.classList.add('has-active'); btnC.classList.add('has-active');
-  } else {
-    badge.style.display = 'none'; badgeC.style.display = 'none';
-    btn.classList.remove('has-active'); btnC.classList.remove('has-active');
-  }
-}
-
-// ── Render ─────────────────────────────────────────────────────────────
-function renderGrid() {
-  const grid = document.getElementById('card-grid');
-  grid.innerHTML = '';
-
-  if (filtered.length === 0) {
-    grid.innerHTML = '<div class="empty"><div class="icon">搜尋無結果</div><div>沒有符合條件的卡牌</div></div>';
-    return;
+  function buildText() {
+    const lines = ['排球少年!! バボカ!! BREAK 牌組構築表', `總張數：${total}`, ''];
+    sortedPos.forEach(pos => {
+      lines.push(`【${POS_LABEL[pos] || pos}】`);
+      byPos[pos].forEach(({ card, count }) => {
+        lines.push(`×${count} ${card.number} ${card.school}`);
+      });
+      lines.push('');
+    });
+    return lines.join('\n');
   }
 
-  const frag = document.createDocumentFragment();
-  filtered.forEach(card => {
-    const el = buildCardEl(card);
-    frag.appendChild(el);
-  });
-  grid.appendChild(frag);
-}
-
-function buildCardEl(card) {
-  const div = document.createElement('div');
-  div.className = 'card';
-  div.addEventListener('click', () => openModal(card));
-
-  const rarityColor = RARITY_COLOR[card.rarity] || '#888';
-  const schoolColor = SCHOOL_COLOR[card.school] || '#64748b';
-  const imgSrc = card.image_file ? card.image_url : '';
-
-  // Stats for CHARACTER cards
-  let statsHtml = '';
-  if (card.category === 'CHARACTER') {
-    const statPairs = [
-      ['srv', card.srv], ['blk', card.blk], ['rcv', card.rcv],
-      ['tos', card.tos], ['atk', card.atk]
-    ].filter(([,v]) => v !== null && v !== undefined && v !== '' && v != 0);
-    if (statPairs.length) {
-      statsHtml = `<div class="card-stats">${statPairs.map(([k,v]) =>
-        `<div class="stat stat-${k}">${STAT_LABELS[k]}<b>${v}</b></div>`
-      ).join('')}</div>`;
-    }
+  function copy() {
+    navigator.clipboard.writeText(buildText()).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   }
 
-  const deckCount = getCardCountInDeck(card.image_file);
+  return (
+    <div className="overlay" onClick={onClose}>
+      <div className="sheet" onClick={e => e.stopPropagation()}>
+        <button className="sheet-close" onClick={onClose}>×</button>
+        <div style={{fontWeight:'bold',fontSize:16,marginBottom:14}}>匯出預覽 <span style={{fontSize:13,color:'#888',fontWeight:'normal'}}>共 {total} 張</span></div>
 
-  div.innerHTML = `
-    <div class="card-img-wrap">
-      <img src="${imgSrc}" alt="${card.name || ''}" loading="lazy" onerror="this.classList.add('error')">
-      <div class="img-placeholder" style="display:none"></div>
-      <div class="rarity-badge" style="color:${rarityColor}">${RARITY_LABEL[card.rarity] || card.rarity || ''}</div>
-      <input type="number" class="card-count-input${deckCount > 0 ? ' has-count' : ''}"
-        id="input-${card.image_file}"
-        data-img="${card.image_file}"
-        value="${deckCount > 0 ? deckCount : ''}"
-        min="0" placeholder="0">
-      <button class="card-star-btn ${isCardInQuickDeck(card.image_file) ? 'starred' : ''}"
-        data-img="${card.image_file}"
-        title="${isCardInQuickDeck(card.image_file) ? '從快速查詢移除' : '加入快速查詢'}">
-        ${isCardInQuickDeck(card.image_file) ? '★' : '☆'}
-      </button>
+        {sortedPos.map(pos => (
+          <div key={pos} className="export-section">
+            <div className="export-section-title">{POS_LABEL[pos] || pos}</div>
+            <div className="export-grid">
+              {byPos[pos].map(({ card, count }) => (
+                <div key={card.number} className="export-card-item">
+                  <img src={card.image} alt={card.number} loading="lazy" />
+                  <div className="export-card-item-foot">
+                    <span className="export-card-count">×{count}</span>
+                    <div style={{fontSize:10,color:'#666',marginTop:2,overflow:'hidden',whiteSpace:'nowrap',textOverflow:'ellipsis'}}>{card.school}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+
+        {deckCards.length === 0 && <div style={{textAlign:'center',color:'#555',padding:'30px 0'}}>牌組是空的</div>}
+
+        <button className={`export-copy-btn${copied ? ' ok' : ''}`} onClick={copy}>
+          {copied ? '✓ 已複製！' : '複製文字清單'}
+        </button>
+      </div>
     </div>
-    <div class="card-info">
-      <div class="card-no">${card.card_no || ''}</div>
-      <div class="card-name">${card.name || '（無名稱）'}</div>
-      <div class="card-school" style="background:${schoolColor}">${card.school || ''}</div>
-      ${statsHtml}
-    </div>`;
-
-  const starBtn = div.querySelector('.card-star-btn');
-  starBtn.addEventListener('click', e => {
-    e.stopPropagation();
-    toggleQuickDeck(starBtn.dataset.img);
-  });
-
-  const inp = div.querySelector('.card-count-input');
-  inp.addEventListener('click',  e => e.stopPropagation());
-  inp.addEventListener('focus',  e => e.stopPropagation());
-  inp.addEventListener('keydown', e => { if (e.key === 'Enter') inp.blur(); e.stopPropagation(); });
-
-  const saveCount = () => {
-    if (!currentDeckId && decks.length === 0) createDeck('我的牌組1');
-    const deck = getCurrentDeck();
-    if (!deck) return;
-    const imgFile = inp.dataset.img;
-    const newCount = parseInt(inp.value, 10);
-    const cardObj  = cards.find(c => c.image_file === imgFile);
-    const existing = deck.cards.find(c => c.image_file === imgFile);
-
-    if (isNaN(newCount) || newCount <= 0) {
-      // 移除此卡
-      const idx = deck.cards.findIndex(c => c.image_file === imgFile);
-      if (idx !== -1) deck.cards.splice(idx, 1);
-      inp.value = '';
-      inp.classList.remove('has-count');
-    } else {
-      if (existing) existing.count = newCount;
-      else deck.cards.push({ image_file: imgFile, card_no: cardObj?.card_no || '', count: newCount });
-      inp.value = newCount;
-      inp.classList.add('has-count');
-    }
-    saveDecks();
-    updateTray();
-  };
-  inp.addEventListener('change', saveCount);
-  inp.addEventListener('blur',   saveCount);
-
-  return div;
-}
-
-// ── Modal ──────────────────────────────────────────────────────────────
-function openModal(card) {
-  const rarityColor = RARITY_COLOR[card.rarity] || '#888';
-  const schoolColor = SCHOOL_COLOR[card.school] || '#64748b';
-
-  const cardNo = card.card_no || '';
-  const noEl = document.getElementById('modal-no');
-  noEl.innerHTML = '';
-  const noText = document.createTextNode(cardNo);
-  noEl.appendChild(noText);
-  if (cardNo) {
-    const copyBtn = document.createElement('button');
-    copyBtn.className = 'copy-no-btn';
-    copyBtn.title = '複製卡號';
-    copyBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
-    copyBtn.addEventListener('click', () => {
-      navigator.clipboard.writeText(cardNo).then(() => {
-        copyBtn.classList.add('copied');
-        copyBtn.innerHTML = '已複製';
-        copyBtn.style.fontSize = '11px';
-        setTimeout(() => {
-          copyBtn.classList.remove('copied');
-          copyBtn.style.fontSize = '';
-          copyBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
-        }, 1500);
-      });
-    });
-    noEl.appendChild(copyBtn);
-  }
-
-  document.getElementById('modal-name').textContent = card.name || '（無名稱）';
-  const modalImg = document.getElementById('modal-img');
-  modalImg.src = card.image_file ? card.image_url : '';
-  modalImg.onclick = () => {
-    if (modalImg.src) {
-      document.getElementById('lightbox-img').src = modalImg.src;
-      document.getElementById('lightbox-overlay').classList.add('open');
-    }
-  };
-
-  // Tags
-  const tags = [];
-  if (card.rarity) tags.push(`<span class="tag" style="color:${rarityColor};border-color:${rarityColor}">${RARITY_LABEL[card.rarity] || card.rarity}</span>`);
-  if (card.school) tags.push(`<span class="tag" style="color:${schoolColor};border-color:${schoolColor}">${card.school}</span>`);
-  if (card.category) tags.push(`<span class="tag">${CATEGORY_ZH[card.category] || card.category}</span>`);
-  if (card.affiliation) tags.push(`<span class="tag">${card.affiliation}</span>`);
-  if (card.product_label) tags.push(`<span class="tag">${card.product_label}</span>`);
-  document.getElementById('modal-tags').innerHTML = tags.join('');
-
-  // Stats
-  const statsEl = document.getElementById('modal-stats');
-  if (card.category === 'CHARACTER') {
-    const statDefs = [
-      ['srv', '發球', '#EAB308'], ['blk', '攔網', '#1C1C1C'],
-      ['rcv', '接球', '#2563EB'], ['tos', '舉球', '#16A34A'],
-      ['atk', '攻擊', '#DC2626']
-    ];
-    statsEl.innerHTML = statDefs.map(([k, label, color]) => {
-      const v = card[k];
-      const val = (v !== null && v !== undefined && v !== '') ? v : '—';
-      return `<div class="stat-box stat-box-${k}"><div class="label">${label}</div><div class="value" style="color:${color}">${val}</div></div>`;
-    }).join('');
-    statsEl.style.display = 'grid';
-  } else {
-    statsEl.style.display = 'none';
-    statsEl.innerHTML = '';
-  }
-
-  // Skill
-  const skill = card.skill_zh || card.skill || '';
-  const skillEl = document.getElementById('modal-skill');
-  if (skill && skill !== '—') {
-    skillEl.textContent = skill;
-    skillEl.style.display = 'block';
-    skillEl.previousElementSibling.style.display = 'block';
-  } else {
-    skillEl.style.display = 'none';
-    skillEl.previousElementSibling.style.display = 'none';
-  }
-
-  // Q&A
-  const qaEl = document.getElementById('modal-qa');
-  const qa = Array.isArray(card.qa) ? card.qa : [];
-  if (qa.length === 0) {
-    qaEl.innerHTML = '';
-  } else {
-    const toggleId = 'modal-qa-toggle';
-    const listId = 'modal-qa-list';
-    qaEl.innerHTML = `
-      <button class="modal-qa-toggle open" id="${toggleId}" aria-expanded="true">
-        <span class="modal-qa-arrow">▶</span> Q&amp;A（${qa.length} 件）
-      </button>
-      <div class="modal-qa-inner" id="${listId}">
-        <div class="modal-qa-list open" id="${listId}-inner">
-          ${qa.map(item => `
-            <div class="qa-item">
-              <div class="qa-date">${item.date || ''}</div>
-              <div class="qa-q"><span class="qa-prefix-q">Q</span>${escapeHtml(item.question || '')}</div>
-              <div class="qa-a"><span class="qa-prefix-a">A</span>${escapeHtml(item.answer || '').replace(/\n/g, '<br>')}</div>
-            </div>`).join('')}
-        </div>
-      </div>`;
-    document.getElementById(toggleId).addEventListener('click', function() {
-      const isOpen = this.classList.toggle('open');
-      this.setAttribute('aria-expanded', isOpen);
-      const wrapper = document.getElementById(listId);
-      const inner = document.getElementById(listId + '-inner');
-      if (isOpen) {
-        wrapper.style.display = 'block';
-        // force reflow then add open class for transition
-        requestAnimationFrame(() => inner.classList.add('open'));
-      } else {
-        inner.classList.remove('open');
-        inner.addEventListener('transitionend', () => { wrapper.style.display = 'none'; }, { once: true });
-      }
-    });
-  }
-
-  // Feedback button
-  const fbBtn = document.getElementById('modal-feedback-btn');
-  const feedbackTitle = `[翻譯] ${card.card_no || ''} ${card.name || ''}`.trim();
-  const currentSkill = card.skill_zh || card.skill || '（無）';
-  const feedbackBody = `## 卡號\n${card.card_no || ''}\n\n## 卡名\n${card.name || ''}\n\n## 當前技能文字\n${currentSkill}\n\n## 建議翻譯\n<!-- 請填寫您建議的翻譯 -->\n\n\n## 補充說明\n<!-- 選填 -->\n`;
-  fbBtn.href = `https://github.com/Weilun2022/haikyuu-cards/issues/new?labels=translation&title=${encodeURIComponent(feedbackTitle)}&body=${encodeURIComponent(feedbackBody)}`;
-
-  document.getElementById('modal-overlay').classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-
-function escapeHtml(str) {
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-function closeModal() {
-  document.getElementById('modal-overlay').classList.remove('open');
-  document.body.style.overflow = '';
-}
-
-// ── Start ──────────────────────────────────────────────────────────────
-// init() called asynchronously after cards.json loads
-
-// ══════════════════════════════════════════════════════
-// DECK MANAGEMENT (PR #2 + PR #3)
-// ══════════════════════════════════════════════════════
-
-// ── Persistence ────────────────────────────────────────
-function loadDecks() {
-  try { const r = localStorage.getItem(DECK_LS_KEY); decks = r ? JSON.parse(r) : []; if (!Array.isArray(decks)) decks = []; } catch { decks = []; }
-  // 確保每個牌組都有 owned 欄位（舊資料遷移）
-  decks.forEach(d => {
-    if (!d.owned) d.owned = {};
-    // 遷移：舊格式 { card_no, count } → 新格式 { image_file, card_no, count }
-    d.cards = d.cards.map(entry => {
-      if (entry.image_file) return entry;  // 已是新格式
-      const cardObj = cards.find(c => c.card_no === entry.card_no);
-      return {
-        image_file: cardObj?.image_file || entry.card_no,
-        card_no: entry.card_no,
-        count: entry.count
-      };
-    });
-    // 遷移 owned keys：舊格式用 card_no，新格式用 image_file
-    const newOwned = {};
-    Object.entries(d.owned).forEach(([key, val]) => {
-      if (key.includes('.webp')) {
-        newOwned[key] = val;  // 已是新格式
-      } else {
-        const c = cards.find(x => x.card_no === key);
-        if (c) newOwned[c.image_file] = val;
-      }
-    });
-    d.owned = newOwned;
-  });
-  // 確保快速查詢牌組永遠存在，且固定在第一位
-  let qd = decks.find(d => d.id === QUICK_DECK_ID);
-  if (!qd) {
-    qd = { id: QUICK_DECK_ID, name: '快速查詢', cards: [], owned: {} };
-    decks.unshift(qd);
-    saveDecks();
-  } else {
-    const idx = decks.indexOf(qd);
-    if (idx !== 0) { decks.splice(idx, 1); decks.unshift(qd); }
-  }
-  // 預設切到快速查詢
-  currentDeckId = QUICK_DECK_ID;
-}
-function saveDecks() { localStorage.setItem(DECK_LS_KEY, JSON.stringify(decks)); }
-
-// ── Color State Persistence ─────────────────────────────────────────────
-function loadColorState() {
-  try { const r = localStorage.getItem(COLOR_LS_KEY); deckColorState = r ? JSON.parse(r) : {}; }
-  catch { deckColorState = {}; }
-}
-function saveColorState() { localStorage.setItem(COLOR_LS_KEY, JSON.stringify(deckColorState)); }
-
-// ── Color State Helpers ─────────────────────────────────────────────────
-function getCardColorMap(deckId, imageFile) {
-  return (deckColorState[deckId] || {})[imageFile] || null;
-}
-function setCardColorMap(deckId, imageFile, colorMap) {
-  if (!deckColorState[deckId]) deckColorState[deckId] = {};
-  deckColorState[deckId][imageFile] = colorMap;
-  saveColorState();
-}
-function clearCardColorMap(deckId, imageFile) {
-  if (deckColorState[deckId]) {
-    delete deckColorState[deckId][imageFile];
-    saveColorState();
-  }
-}
-
-function trimCardColorMap(deckId, imageFile, newCount) {
-  const colorMap = getCardColorMap(deckId, imageFile);
-  if (!colorMap) return;
-  const assigned = COLOR_TAGS.reduce((s, { key }) => s + (colorMap[key] || 0), 0);
-  if (newCount >= assigned) return;
-  if (newCount <= 0) { clearCardColorMap(deckId, imageFile); return; }
-  let excess = assigned - newCount;
-  for (let i = COLOR_TAGS.length - 1; i >= 0 && excess > 0; i--) {
-    const key = COLOR_TAGS[i].key;
-    const trim = Math.min(colorMap[key] || 0, excess);
-    colorMap[key] = (colorMap[key] || 0) - trim;
-    excess -= trim;
-  }
-  const allZero = COLOR_TAGS.every(({ key }) => !colorMap[key]);
-  if (allZero) clearCardColorMap(deckId, imageFile);
-  else setCardColorMap(deckId, imageFile, colorMap);
-}
-
-// Hex color → rgba string for background tint
-function hexToRgba(hex, alpha) {
-  const r = parseInt(hex.slice(1,3),16);
-  const g = parseInt(hex.slice(3,5),16);
-  const b = parseInt(hex.slice(5,7),16);
-  return `rgba(${r},${g},${b},${alpha})`;
-}
-
-// Compute per-color totals for a deck (for stats row)
-function getColorStats(deck) {
-  const stats = { free: 0, receive: 0, set: 0, attack: 0, event: 0 };
-  const cs = deckColorState[deck.id] || {};
-  for (const entry of deck.cards) {
-    const card = cards.find(c => c.image_file === entry.image_file);
-    if (card && card.category === 'EVENT') { stats.event += entry.count; continue; }
-    const cm = cs[entry.image_file];
-    if (cm) {
-      for (const { key } of COLOR_TAGS) stats[key] += cm[key] || 0;
-    }
-  }
-  return stats;
-}
-
-// Expand deck.cards into canvas entries (each color group → separate slot)
-// Flat expansion in deck order (used internally)
-function expandEntriesForCanvas(deck) {
-  const cs = deckColorState[deck.id] || {};
-  const result = [];
-  for (const entry of deck.cards) {
-    const card = cards.find(c => c.image_file === entry.image_file);
-    const isEvent = card && card.category === 'EVENT';
-    if (isEvent) {
-      result.push({ ...entry, borderColor: EVENT_COLOR_HEX });
-    } else {
-      const cm = cs[entry.image_file];
-      if (!cm) {
-        result.push({ ...entry, borderColor: null });
-      } else {
-        const assignedTotal = COLOR_TAGS.reduce((s, { key }) => s + (cm[key] || 0), 0);
-        const unassigned = entry.count - assignedTotal;
-        if (unassigned > 0) result.push({ ...entry, count: unassigned, borderColor: null });
-        for (const { key, hex } of COLOR_TAGS) {
-          const cnt = cm[key] || 0;
-          if (cnt > 0) result.push({ ...entry, count: cnt, borderColor: hex });
-        }
-      }
-    }
-  }
-  return result;
-}
-
-// Grouped expansion for export: 未設定 → 自由 → 接球 → 舉球 → 攻擊 → 事件
-function expandEntriesForCanvasGrouped(deck) {
-  const cs = deckColorState[deck.id] || {};
-  const groups = { unassigned: [], free: [], receive: [], set: [], attack: [], event: [] };
-
-  for (const entry of deck.cards) {
-    const card = cards.find(c => c.image_file === entry.image_file);
-    const isEvent = card && card.category === 'EVENT';
-    if (isEvent) {
-      groups.event.push({ ...entry, borderColor: EVENT_COLOR_HEX });
-    } else {
-      const cm = cs[entry.image_file];
-      if (!cm) {
-        groups.unassigned.push({ ...entry, borderColor: null });
-      } else {
-        const assignedTotal = COLOR_TAGS.reduce((s, { key }) => s + (cm[key] || 0), 0);
-        const unassigned = entry.count - assignedTotal;
-        if (unassigned > 0) groups.unassigned.push({ ...entry, count: unassigned, borderColor: null });
-        for (const { key, hex } of COLOR_TAGS) {
-          const cnt = cm[key] || 0;
-          if (cnt > 0) groups[key].push({ ...entry, count: cnt, borderColor: hex });
-        }
-      }
-    }
-  }
-  return [
-    ...groups.unassigned,
-    ...groups.free,
-    ...groups.receive,
-    ...groups.set,
-    ...groups.attack,
-    ...groups.event,
-  ];
-}
-
-// 取得當前牌組的持有資料（per-deck）
-function getDeckOwned() {
-  const deck = getCurrentDeck();
-  if (!deck) return {};
-  if (!deck.owned) deck.owned = {};
-  return deck.owned;
-}
-
-// ── Deck helpers ───────────────────────────────────────
-function getCurrentDeck() { return decks.find(d => d.id === currentDeckId) || null; }
-function makeDeckId()     { return 'dk_' + Date.now() + '_' + Math.random().toString(36).slice(2,6); }
-
-function createDeck(name) {
-  const d = { id: makeDeckId(), name: name || '新牌組', cards: [], owned: {} };
-  decks.push(d);
-  currentDeckId = d.id;
-  saveDecks();
-  renderDeckSwitcher();
-  return d;
-}
-
-function duplicateDeck() {
-  const src = getCurrentDeck();
-  if (!src) { showToast('沒有選取的牌組'); return; }
-  const newName = src.name + '（副本）';
-  const d = {
-    id: makeDeckId(),
-    name: newName,
-    cards: JSON.parse(JSON.stringify(src.cards)),
-    owned: JSON.parse(JSON.stringify(src.owned || {}))
-  };
-  decks.push(d);
-  currentDeckId = d.id;
-  saveDecks();
-  renderDeckSwitcher(); renderDeckPanel(); updateTray(); renderGrid();
-  showToast(`已複製為「${newName}」`);
-}
-
-function getTotalCount(deck) { return deck.cards.reduce((s,c) => s + c.count, 0); }
-
-function getEventCount(deck) {
-  return deck.cards.reduce((s, c) => {
-    const card = cards.find(x => x.image_file === c.image_file);
-    return s + (card && card.category === 'EVENT' ? c.count : 0);
-  }, 0);
-}
-
-function getCardCountInDeck(image_file) {
-  const deck = getCurrentDeck();
-  if (!deck) return 0;
-  const e = deck.cards.find(c => c.image_file === image_file);
-  return e ? e.count : 0;
-}
-
-// ── Quick Deck Helpers ─────────────────────────────────
-function isCardInQuickDeck(image_file) {
-  const qd = decks.find(d => d.id === QUICK_DECK_ID);
-  return qd ? qd.cards.some(c => c.image_file === image_file) : false;
-}
-function toggleQuickDeck(image_file) {
-  const qd = decks.find(d => d.id === QUICK_DECK_ID);
-  if (!qd) return;
-  const idx = qd.cards.findIndex(c => c.image_file === image_file);
-  if (idx !== -1) {
-    qd.cards.splice(idx, 1);
-  } else {
-    const cardObj = cards.find(c => c.image_file === image_file);
-    qd.cards.push({ image_file, card_no: cardObj?.card_no || '', count: 1 });
-  }
-  saveDecks();
-  refreshStarButton(image_file);
-  if (currentDeckId === QUICK_DECK_ID) { updateTray(); renderDeckPanel(); }
-}
-function refreshStarButton(image_file) {
-  document.querySelectorAll(`.card-star-btn[data-img="${image_file}"]`).forEach(btn => {
-    const inQ = isCardInQuickDeck(image_file);
-    btn.textContent = inQ ? '★' : '☆';
-    btn.classList.toggle('starred', inQ);
-    btn.title = inQ ? '從快速查詢移除' : '加入快速查詢';
-  });
-}
-
-// ── Add / Remove ───────────────────────────────────────
-function addCardToDeck(image_file, quantity = 1) {
-  if (!image_file) { showToast('錯誤：image_file 無效'); return; }
-  if (!currentDeckId && decks.length === 0) createDeck('我的牌組1');
-  const deck = getCurrentDeck();
-  if (!deck) return;
-  const currentTotal = getTotalCount(deck);
-  const qty = quantity;
-  const cardObj = cards.find(c => c.image_file === image_file);
-  const entry = deck.cards.find(c => c.image_file === image_file);
-  if (entry) entry.count += qty;
-  else deck.cards.push({ image_file, card_no: cardObj?.card_no || '', count: qty });
-  saveDecks();
-  refreshCardBadge(image_file);
-  updateTray();
-  const nm = cardObj ? cardObj.name : image_file;
-  showToast(`＋${qty} ${nm}`);
-}
-
-function removeCardFromDeck(image_file) {
-  const deck = getCurrentDeck();
-  if (!deck) return;
-  const idx = deck.cards.findIndex(c => c.image_file === image_file);
-  if (idx === -1) return;
-  const newCount = deck.cards[idx].count - 1;
-  if (newCount <= 0) {
-    clearCardColorMap(deck.id, image_file);
-    deck.cards.splice(idx, 1);
-  } else {
-    trimCardColorMap(deck.id, image_file, newCount);
-    deck.cards[idx].count = newCount;
-  }
-  saveDecks();
-  refreshCardBadge(image_file);
-  refreshStarButton(image_file);
-  updateTray();
-}
-
-function refreshCardBadge(image_file) {
-  const inp = document.getElementById(`input-${image_file}`);
-  if (!inp) return;
-  const n = getCardCountInDeck(image_file);
-  inp.value = n > 0 ? n : '';
-  inp.classList.toggle('has-count', n > 0);
-}
-
-// ── Tray ───────────────────────────────────────────────
-function updateTray() {
-  const deck = getCurrentDeck();
-  const tray = document.getElementById('deck-tray');
-  if (!deck) { tray.classList.remove('visible'); document.body.classList.remove('deck-active'); return; }
-  tray.classList.add('visible');
-  document.body.classList.add('deck-active');
-
-  document.getElementById('tray-deck-select').value = currentDeckId;
-  const total = getTotalCount(deck);
-  const numEl = document.getElementById('tray-count-num');
-  numEl.textContent = total > 40 ? `⚠ ${total}` : total;
-  numEl.className = 'tray-count-num' + (total > 40 ? ' warn' : '');
-
-  const warnEl = document.getElementById('tray-warn-text');
-  const evCnt  = getEventCount(deck);
-  const warns  = [];
-  warnEl.textContent = '';
-  warnEl.style.display = 'none';
-}
-
-// ── Deck Panel ─────────────────────────────────────────
-function openDeckPanel() {
-  if (decks.length === 0) createDeck('我的牌組1');
-  renderDeckSwitcher();
-  renderDeckPanel();
-  document.getElementById('deck-panel-overlay').classList.add('open');
-}
-function closeDeckPanel() {
-  document.getElementById('deck-panel-overlay').classList.remove('open');
-  deckPreviewSelectedImg = null;
-  document.getElementById('deck-preview-float').classList.remove('show');
-  if (colorModeActive) {
-    colorModeActive = false;
-    colorModeSlots = [];
-    colorModeSelectedIndices.clear();
-    colorModeSortKey = 'card_no';
-    document.getElementById('deck-color-mode-btn').textContent = '🎨 上色';
-    document.getElementById('deck-color-mode-btn').classList.remove('active');
-    document.getElementById('deck-color-picker-bar').classList.remove('show');
-  }
-}
-
-function renderDeckSwitcher() {
-  // tray 下拉選單
-  const traySel = document.getElementById('tray-deck-select');
-  traySel.innerHTML = '';
-  decks.forEach(d => {
-    const o = document.createElement('option');
-    o.value = d.id; o.textContent = d.name; o.selected = d.id === currentDeckId;
-    traySel.appendChild(o);
-  });
-  // 管理面板的改名欄位
-  const deck = getCurrentDeck();
-  if (deck) document.getElementById('deck-name-input').value = deck.name;
-}
-
-function renderDeckPanel() {
-  const deck = getCurrentDeck();
-  const list = document.getElementById('deck-card-list');
-
-  if (!deck || deck.cards.length === 0) {
-    list.innerHTML = '<div class="deck-empty">牌組是空的，到卡片列表按「＋」加入卡片</div>';
-    document.getElementById('deck-panel-info-text').textContent = '';
-    // Remove stats row if present
-    const oldStats = document.getElementById('deck-color-stats');
-    if (oldStats) oldStats.remove();
-    return;
-  }
-
-  const total = getTotalCount(deck);
-  const evCntInfo = getEventCount(deck);
-  const infoHtml = (total > 40 ? `<span class="warn-orange">⚠ ${total} / 40</span>` : `${total} / 40`)
-    + `　事件 ${evCntInfo} / 8`;
-  document.getElementById('deck-panel-info-text').innerHTML = infoHtml;
-
-  // ── Color stats row ─────────────────────────────────────────────────
-  const stats = getColorStats(deck);
-  const statsRow = [
-    ...COLOR_TAGS.map(({ key, label, hex }) => ({ key, label, hex, count: stats[key] })),
-    { key: 'event', label: '事件', hex: EVENT_COLOR_HEX, count: stats.event }
-  ];
-  let statsEl = document.getElementById('deck-color-stats');
-  if (!statsEl) {
-    statsEl = document.createElement('div');
-    statsEl.id = 'deck-color-stats';
-    statsEl.className = 'deck-color-stats';
-    // Insert just before deck-panel-body
-    const body = document.querySelector('.deck-panel-body');
-    body.parentNode.insertBefore(statsEl, body);
-  }
-  statsEl.innerHTML = statsRow.map(({ label, hex, count }) =>
-    `<span class="deck-color-stat-item">
-       <span class="deck-color-dot" style="background:${hex}"></span>${label} ${count}
-     </span>`
-  ).join('');
-
-  // ── 上色模式：交由 renderColorModeGrid 接管 body ──────────────────
-  if (colorModeActive) {
-    renderColorModeGrid();
-    return;
-  }
-
-  // ── 縮圖格 ──────────────────────────────────────────────────────────
-  const existingGrid = document.getElementById('deck-color-grid');
-  if (existingGrid) existingGrid.remove();
-  list.style.display = '';
-  list.innerHTML = '';
-
-  deck.cards.forEach(entry => {
-    const card = cards.find(c => c.image_file === entry.image_file);
-    if (!card) return;
-    const isEvent = card.category === 'EVENT';
-    const colorMap = isEvent ? null : getCardColorMap(deck.id, entry.image_file);
-
-    const thumb = document.createElement('div');
-    thumb.className = 'deck-thumb-item' + (entry.image_file === deckPreviewSelectedImg ? ' selected' : '');
-    thumb.innerHTML = `
-      <img src="${cards.find(c=>c.image_file===entry.image_file)?.image_url||''}" alt="" onerror="this.style.background='var(--surface2)'">
-      <div class="deck-thumb-badge">×${entry.count}</div>`;
-    thumb.addEventListener('click', () => showDeckPreview(entry.image_file));
-    list.appendChild(thumb);
-  });
-
-  // 若 preview 選中的卡已不在牌組，隱藏 preview
-  if (deckPreviewSelectedImg && !deck.cards.find(c => c.image_file === deckPreviewSelectedImg)) {
-    hideDeckPreview();
-  }
-}
-
-let colorModeActive = false;
-let colorModeSlots = []; // { imageFile, slotIndex, color: key|null, isEvent }
-let colorModeSelectedIndices = new Set();
-let colorModeSortKey = 'card_no';
-
-// ── Deck Preview ───────────────────────────────────────
-let deckPreviewSelectedImg = null;
-
-function showDeckPreview(imageFile) {
-  deckPreviewSelectedImg = imageFile;
-  const deck = getCurrentDeck();
-  if (!deck) return;
-  const entry = deck.cards.find(c => c.image_file === imageFile);
-  const card  = cards.find(c => c.image_file === imageFile);
-  if (!entry || !card) return;
-
-  const isEvent = card.category === 'EVENT';
-  document.getElementById('deck-preview-img').src = cards.find(c=>c.image_file===imageFile)?.image_url||'';
-  document.getElementById('deck-preview-name').textContent = card.name || '（無名稱）';
-  const rc = RARITY_COLOR[card.rarity] || '#888';
-  document.getElementById('deck-preview-sub').textContent = `${RARITY_LABEL[card.rarity] || card.rarity || ''} · ${card.card_no || ''}`;
-  document.getElementById('deck-preview-sub').style.color = rc;
-
-  const STAT_LABELS = { atk:'攻', blk:'攔', rcv:'接', tos:'舉', srv:'發' };
-  if (isEvent) {
-    document.getElementById('deck-preview-stats').innerHTML =
-      `<span class="deck-preview-stat-chip" style="color:${EVENT_COLOR_HEX}">事件牌</span>`;
-  } else {
-    document.getElementById('deck-preview-stats').innerHTML =
-      ['srv','blk','rcv','tos','atk'].map(k =>
-        card[k] != null
-          ? `<span class="deck-preview-stat-chip">${STAT_LABELS[k]} <span>${card[k]}</span></span>`
-          : ''
-      ).join('');
-  }
-
-  const skillText = card.skill_zh || card.skill || '';
-  document.getElementById('deck-preview-skill').textContent = skillText;
-  document.getElementById('deck-preview-count').textContent = entry.count;
-  document.getElementById('deck-preview-float').classList.add('show');
-  renderDeckPanel();
-}
-
-function hideDeckPreview() {
-  deckPreviewSelectedImg = null;
-  document.getElementById('deck-preview-float').classList.remove('show');
-  renderDeckPanel();
-}
-
-function updateDeckInfoText() {
-  const deck = getCurrentDeck();
-  if (!deck) return;
-  const total = getTotalCount(deck);
-  const evCnt = getEventCount(deck);
-  const infoHtml = (total > 40 ? `<span class="warn-orange">⚠ ${total} / 40</span>` : `${total} / 40`)
-    + `　事件 ${evCnt} / 8`;
-  document.getElementById('deck-panel-info-text').innerHTML = infoHtml;
-}
-
-
-// ── Export / Import ────────────────────────────────────
-function exportDecks() {
-  const date = new Date().toISOString().slice(0,10);
-  const data = { version: 2, exported: new Date().toISOString(), decks, colors: deckColorState };
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url  = URL.createObjectURL(blob);
-  const a    = Object.assign(document.createElement('a'), { href: url, download: `HVBreak-decks-${date}.json` });
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-function doImport(mode) {
-  if (!pendingImport) return;
-  const { decks: iDecks = [], colors: importedColors = {} } = pendingImport;
-  pendingImport = null;
-  // 確保匯入的牌組都有 owned 欄位
-  iDecks.forEach(d => { if (!d.owned) d.owned = {}; });
-  if (mode === 'overwrite') {
-    decks = iDecks;
-    currentDeckId = decks.length ? decks[0].id : null;
-    deckColorState = importedColors;
-  } else {
-    iDecks.forEach(d => {
-      const existing = decks.find(x => x.id === d.id);
-      if (!existing) {
-        decks.push(d);
-      } else if (existing.name !== d.name) {
-        // 同 id 但名稱不同 → 視為新牌組，重新指派 id
-        const copy = { ...d, id: makeDeckId() };
-        decks.push(copy);
-      } else {
-        // 同 id 同名 → 只補 owned 資料（保留本地有而匯入沒有的）
-        Object.assign(existing.owned, d.owned || {});
-      }
-    });
-    if (!currentDeckId && decks.length) currentDeckId = decks[0].id;
-    Object.keys(importedColors).forEach(id => {
-      deckColorState[id] = importedColors[id];
-    });
-  }
-  saveColorState();
-  saveDecks();
-  renderDeckSwitcher(); renderDeckPanel(); updateTray(); renderGrid();
-  document.getElementById('import-confirm-overlay').classList.remove('open');
-  showToast('匯入成功！');
-}
-
-// ── Analysis (PR #3) ───────────────────────────────────
-function openAnalysis() {
-  const deck = getCurrentDeck();
-  if (!deck || deck.cards.length === 0) { showToast('牌組是空的！'); return; }
-  renderAnalysis();
-  document.getElementById('analysis-overlay').classList.add('open');
-}
-function closeAnalysis() { document.getElementById('analysis-overlay').classList.remove('open'); }
-
-function renderAnalysis() {
-  const deck = getCurrentDeck();
-  if (!deck) return;
-  document.getElementById('analysis-title').textContent = `庫存分析 — ${deck.name}`;
-
-  // 缺牌數 = Σ max(0, 牌組需要 − 此牌組的持有數)
-  const total = getTotalCount(deck);
-  const owned = getDeckOwned();   // 此牌組專屬持有資料（以 image_file 為 key）
-  let missing = 0;
-  deck.cards.forEach(e => {
-    missing += Math.max(0, e.count - (owned[e.image_file] || 0));
-  });
-  document.getElementById('analysis-total').textContent   = total;
-  document.getElementById('analysis-missing').textContent = missing;
-
-  const body = document.getElementById('analysis-body');
-  body.innerHTML = '';
-
-  // 先算出每張卡的 deficit，再排序
-  const entries = deck.cards.map(entry => {
-    const card = cards.find(c => c.image_file === entry.image_file);
-    if (!card) return null;
-    const have    = owned[entry.image_file] || 0;
-    const need    = entry.count;
-    const deficit = Math.max(0, need - have);
-    return { entry, card, have, need, deficit };
-  }).filter(Boolean);
-
-  // deficit > 0 排前面（降冪），deficit = 0 排後面
-  const incomplete = entries.filter(e => e.deficit > 0).sort((a, b) => b.deficit - a.deficit);
-  const complete   = entries.filter(e => e.deficit === 0);
-
-  const renderSection = (list, label) => {
-    if (list.length === 0) return;
-
-    // Section header
-    const header = document.createElement('div');
-    header.className = 'analysis-section-header';
-    header.textContent = `${label}（${list.length}張）`;
-    body.appendChild(header);
-
-    list.forEach(({ entry, card, have, need, deficit }) => {
-      const state  = have >= need ? 'owned' : have > 0 ? 'partial' : 'not-owned';
-      const imgSrc = card.image_file ? card.image_url : '';
-      const variant = getVariantCode(entry.image_file);
-      const displayName = (card.card_no || '') + (variant ? `-${variant}` : '');
-      const badgeText = deficit > 0 ? `缺${deficit}` : '✓';
-
-      const div = document.createElement('div');
-      div.className = `an-card ${state}`;
-      div.innerHTML = `
-        <img class="an-card-img" src="${imgSrc}" alt="" onerror="this.style.background='var(--surface2)'">
-        <div class="an-own-counter">
-          <input type="number" class="an-count-input" data-img="${entry.image_file}" data-need="${need}" value="${have}" min="0" title="持有數（需要 ${need} 張）">
-        </div>
-        <div class="an-need-badge">${badgeText}</div>
-        <div class="an-card-name">${displayName}</div>`;
-
-      div.querySelector('.an-count-input').addEventListener('click', e => e.stopPropagation());
-      div.querySelector('.an-count-input').addEventListener('focus', e => { e.stopPropagation(); e.target.value = ''; });
-
-      // 共用的儲存邏輯：change（含 Enter）或 blur（離開欄位）都觸發
-      const saveAnCount = e => {
-        e.stopPropagation();
-        const img = e.target.dataset.img;
-        const valStr = e.target.value.trim();
-        if (valStr === '') {
-          // focus 清空後未輸入就離開，還原原本持有數，不存 0
-          e.target.value = deck.owned[img] || 0;
-          return;
-        }
-        const val = parseInt(valStr, 10);
-        deck.owned[img] = isNaN(val) || val < 0 ? 0 : val;
-        e.target.value = deck.owned[img];   // 修正顯示（如輸入負數）
-        saveDecks();
-        // 更新此卡的 state class（不 re-render 整頁，避免失焦）
-        const have2 = deck.owned[img] || 0;
-        const need2 = parseInt(e.target.dataset.need, 10);
-        div.className = `an-card ${have2 >= need2 ? 'owned' : have2 > 0 ? 'partial' : 'not-owned'}`;
-        // 更新此卡的 badge 顯示
-        const deficit2 = Math.max(0, need2 - have2);
-        div.querySelector('.an-need-badge').textContent = deficit2 > 0 ? `缺${deficit2}` : '✓';
-        // 更新標頭統計
-        let missing2 = 0;
-        deck.cards.forEach(en => { missing2 += Math.max(0, en.count - (deck.owned[en.image_file] || 0)); });
-        document.getElementById('analysis-missing').textContent = missing2;
-      };
-      div.querySelector('.an-count-input').addEventListener('change', saveAnCount);
-      div.querySelector('.an-count-input').addEventListener('blur',   saveAnCount);
-      div.querySelector('.an-count-input').addEventListener('keydown', e => {
-        if (e.key === 'Enter') { e.preventDefault(); saveAnCount(e); e.target.blur(); }
-      });
-      div.addEventListener('click', () => openModal(card));
-      body.appendChild(div);
-    });
-  };
-
-  renderSection(incomplete, '未完成');
-  renderSection(complete,   '已完成');
-}
-
-// ── Toast ───────────────────────────────────────────────
-function showToast(msg) {
-  const t = document.getElementById('hv-toast');
-  t.textContent = msg; t.style.opacity = '1';
-  clearTimeout(t._tmr);
-  t._tmr = setTimeout(() => { t.style.opacity = '0'; }, 2200);
-}
-
-// ══════════════════════════════════════════════════════
-// PNG 圖片匯出 / 匯入
-// ══════════════════════════════════════════════════════
-
-const PNG_KEYWORD = 'HVBreakDeck';
-
-// CRC32 查表（PNG chunk 必需）
-const CRC32_TABLE = (() => {
-  const t = new Uint32Array(256);
-  for (let i = 0; i < 256; i++) {
-    let c = i;
-    for (let j = 0; j < 8; j++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
-    t[i] = c;
-  }
-  return t;
-})();
-
-function crc32(buf) {
-  let crc = 0xFFFFFFFF;
-  for (let i = 0; i < buf.length; i++) crc = CRC32_TABLE[(crc ^ buf[i]) & 0xFF] ^ (crc >>> 8);
-  return (crc ^ 0xFFFFFFFF) >>> 0;
-}
-
-// 把 tEXt chunk 注入 PNG bytes（插在第一個 IDAT 之前）
-function injectPngChunk(pngBytes, keyword, text) {
-  const enc = new TextEncoder();
-  const kw  = enc.encode(keyword);
-  const tx  = enc.encode(text);
-  const data = new Uint8Array(kw.length + 1 + tx.length);
-  data.set(kw); data[kw.length] = 0; data.set(tx, kw.length + 1);
-
-  const typeArr = new Uint8Array([116,69,88,116]); // 'tEXt'
-  const crcIn   = new Uint8Array(4 + data.length);
-  crcIn.set(typeArr); crcIn.set(data, 4);
-  const crcVal  = crc32(crcIn);
-
-  const chunk = new Uint8Array(12 + data.length);
-  const dv    = new DataView(chunk.buffer);
-  dv.setUint32(0, data.length, false);
-  chunk.set(typeArr, 4);
-  chunk.set(data, 8);
-  dv.setUint32(8 + data.length, crcVal, false);
-
-  // 找 IDAT 位置
-  let pos = 8;
-  while (pos + 8 <= pngBytes.length) {
-    const len  = new DataView(pngBytes.buffer, pngBytes.byteOffset + pos).getUint32(0, false);
-    const type = String.fromCharCode(pngBytes[pos+4], pngBytes[pos+5], pngBytes[pos+6], pngBytes[pos+7]);
-    if (type === 'IDAT') break;
-    pos += 12 + len;
-  }
-
-  const out = new Uint8Array(pngBytes.length + chunk.length);
-  out.set(pngBytes.slice(0, pos));
-  out.set(chunk, pos);
-  out.set(pngBytes.slice(pos), pos + chunk.length);
-  return out;
-}
-
-// 從 PNG bytes 讀取我們的 tEXt chunk
-function readPngChunk(pngBytes, keyword) {
-  const dec = new TextDecoder();
-  let pos = 8;
-  while (pos + 8 <= pngBytes.length) {
-    const dv   = new DataView(pngBytes.buffer, pngBytes.byteOffset + pos);
-    const len  = dv.getUint32(0, false);
-    const type = String.fromCharCode(pngBytes[pos+4], pngBytes[pos+5], pngBytes[pos+6], pngBytes[pos+7]);
-    if (type === 'IEND') break;
-    if (type === 'tEXt' && pos + 8 + len <= pngBytes.length) {
-      const data = pngBytes.slice(pos + 8, pos + 8 + len);
-      const sep  = data.indexOf(0);
-      if (sep !== -1 && dec.decode(data.slice(0, sep)) === keyword) {
-        return dec.decode(data.slice(sep + 1));
-      }
-    }
-    pos += 12 + len;
-  }
-  return null;
-}
-
-// 圓角矩形輔助（相容舊瀏覽器）
-function canvasRoundRect(ctx, x, y, w, h, r) {
-  const [tl, tr, br, bl] = typeof r === 'number' ? [r,r,r,r] : r;
-  ctx.beginPath();
-  ctx.moveTo(x + tl, y);
-  ctx.lineTo(x + w - tr, y);   ctx.quadraticCurveTo(x+w, y,   x+w, y+tr);
-  ctx.lineTo(x + w, y + h - br); ctx.quadraticCurveTo(x+w, y+h, x+w-br, y+h);
-  ctx.lineTo(x + bl, y + h);   ctx.quadraticCurveTo(x,   y+h, x,   y+h-bl);
-  ctx.lineTo(x, y + tl);       ctx.quadraticCurveTo(x,   y,   x+tl, y);
-  ctx.closePath();
-}
-
-// 畫牌組 Canvas（高解析度）
-async function drawDeckCanvas(deck) {
-  const SCALE  = 3;          // 3x 高解析度
-  const entries = expandEntriesForCanvasGrouped(deck);
-
-  // 欄數：≤5張用實際張數寬度，>5張固定5欄
-  const COLS   = Math.min(5, entries.length);
-
-  const CARD_W = 100;        // 邏輯尺寸（實際 ×SCALE）
-  const CARD_H = 140;
-  const GAP    = 10;
-  const PAD    = 20;
-  const HEAD_H = 56;         // 兩列：品牌名 + 牌組名/統計合併列
-  const FOOT_H = 34;
-
-  const rows = Math.ceil(entries.length / COLS);
-  const W    = PAD*2 + COLS*(CARD_W+GAP) - GAP;
-  const H    = HEAD_H + PAD + rows*(CARD_H+GAP) - GAP + PAD + FOOT_H;
-
-  const canvas  = document.createElement('canvas');
-  canvas.width  = W * SCALE;
-  canvas.height = H * SCALE;
-  const ctx     = canvas.getContext('2d');
-  ctx.scale(SCALE, SCALE);               // 之後所有座標用邏輯尺寸即可
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = 'high';
-
-  // 背景
-  ctx.fillStyle = '#0f0f13';
-  ctx.fillRect(0, 0, W, H);
-
-  // 標題列
-  ctx.fillStyle = '#13091f';
-  ctx.fillRect(0, 0, W, HEAD_H);
-  ctx.fillStyle = '#6c63ff';
-  ctx.fillRect(0, HEAD_H - 2, W, 2);
-
-  // 第一列：品牌名（左）
-  ctx.font = 'bold 15px "Segoe UI","Noto Sans TC",sans-serif';
-  ctx.fillStyle = '#6c63ff';
-  ctx.textAlign = 'left';
-  ctx.fillText('排球少年!! バボカ!!BREAK', PAD, 22);
-
-  // 第二列：牌組名（左）+ 統計＋共N張（右）
-  const ROW2_Y = 44;
-  ctx.font = 'bold 17px "Segoe UI","Noto Sans TC",sans-serif';
-  ctx.fillStyle = '#e8e8f0';
-  ctx.textAlign = 'left';
-  ctx.fillText(deck.name, PAD, ROW2_Y);
-
-  // 右側：先量「共 N 張」寬度，再左推統計列
-  const totalTxt = `共 ${getTotalCount(deck)} 張`;
-  ctx.font = '11px "Segoe UI",sans-serif';
-  const totalTxtW = ctx.measureText(totalTxt).width;
-
-  const colorStats = getColorStats(deck);
-  const evCnt = getEventCount(deck);
-  const statsItems = [
-    ...COLOR_TAGS.map(({ key, label, hex }) => ({ label, hex, val: String(colorStats[key]) })),
-    { label: '事件', hex: EVENT_COLOR_HEX, val: `${evCnt}/8` },
-  ];
-  const DOT_R    = 3.5;
-  const ITEM_GAP = 10;
-  const STATS_TOTAL_GAP = 8; // 統計列與「共 N 張」之間距
-
-  ctx.font = '10px "Segoe UI","Noto Sans TC",sans-serif';
-  // 量出所有 stats 總寬
-  const statsWidths = statsItems.map(({ label, val }) => {
-    const txt = `${label} ${val}`;
-    return DOT_R * 2 + 4 + ctx.measureText(txt).width;
-  });
-  const totalStatsW = statsWidths.reduce((s, w) => s + w, 0) + ITEM_GAP * (statsItems.length - 1);
-
-  // 統計列起始 X（由右往左算：PAD + totalTxtW + gap + totalStatsW）
-  let sx = W - PAD - totalTxtW - STATS_TOTAL_GAP - totalStatsW;
-  for (let i = 0; i < statsItems.length; i++) {
-    const { label, hex, val } = statsItems[i];
-    ctx.beginPath();
-    ctx.arc(sx + DOT_R, ROW2_Y - DOT_R - 1, DOT_R, 0, Math.PI * 2);
-    ctx.fillStyle = hex;
-    ctx.fill();
-    sx += DOT_R * 2 + 4;
-    const txt = `${label} ${val}`;
-    ctx.fillStyle = '#b0b0c8';
-    ctx.textAlign = 'left';
-    ctx.fillText(txt, sx, ROW2_Y);
-    sx += statsWidths[i] - (DOT_R * 2 + 4) + ITEM_GAP;
-  }
-
-  // 「共 N 張」最右
-  ctx.font = '11px "Segoe UI",sans-serif';
-  ctx.fillStyle = '#8888aa';
-  ctx.textAlign = 'right';
-  ctx.fillText(totalTxt, W - PAD, ROW2_Y);
-  ctx.textAlign = 'left';
-
-  // 載入圖片（快取避免重複請求）
-  const imgCache = {};
-  const loadImg  = src => {
-    if (imgCache[src]) return imgCache[src];
-    imgCache[src] = new Promise(res => {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload  = () => res(img);
-      img.onerror = () => res(null);
-      img.src = src;
-    });
-    return imgCache[src];
-  };
-
-  for (let i = 0; i < entries.length; i++) {
-    const entry = entries[i];
-    const card  = cards.find(c => c.image_file === entry.image_file);
-    if (!card) continue;
-
-    const col = i % COLS;
-    const row = Math.floor(i / COLS);
-    const x   = PAD + col * (CARD_W + GAP);
-    const y   = HEAD_H + PAD + row * (CARD_H + GAP);
-
-    // 卡片底色
-    ctx.fillStyle = '#1a1a24';
-    canvasRoundRect(ctx, x, y, CARD_W, CARD_H, 7); ctx.fill();
-
-    // 卡片圖片
-    if (card.image_file) {
-      const img = await loadImg(card.image_url);
-      if (img) {
-        ctx.save();
-        canvasRoundRect(ctx, x, y, CARD_W, CARD_H, 7); ctx.clip();
-        ctx.drawImage(img, x, y, CARD_W, CARD_H);
-        ctx.restore();
-      }
-    }
-
-    // 底部漸層＋卡名
-    const grad = ctx.createLinearGradient(x, y + CARD_H - 36, x, y + CARD_H);
-    grad.addColorStop(0, 'rgba(0,0,0,0)');
-    grad.addColorStop(1, 'rgba(0,0,0,0.9)');
-    ctx.fillStyle = grad;
-    canvasRoundRect(ctx, x, y + CARD_H - 36, CARD_W, 36, [0,0,7,7]); ctx.fill();
-
-    ctx.font = '10px "Segoe UI","Noto Sans TC",sans-serif';
-    ctx.fillStyle = '#fff';
-    ctx.textAlign = 'center';
-    const variant = getVariantCode(entry.image_file);
-    const nm = (card.card_no || '') + (variant ? `-${variant}` : '');
-    ctx.fillText(nm, x + CARD_W/2, y + CARD_H - 8);
-    ctx.textAlign = 'left';
-
-    // 數量徽章（>1 才顯示）
-    if (entry.count > 1) {
-      const bw = 22, bh = 17;
-      ctx.fillStyle = 'rgba(108,99,255,0.92)';
-      canvasRoundRect(ctx, x + CARD_W - bw - 4, y + 4, bw, bh, 5); ctx.fill();
-      ctx.font = 'bold 11px "Segoe UI",sans-serif';
-      ctx.fillStyle = '#fff';
-      ctx.textAlign = 'center';
-      ctx.fillText(`×${entry.count}`, x + CARD_W - bw/2 - 4, y + 15);
-      ctx.textAlign = 'left';
-    }
-
-    // 顏色外框
-    if (entry.borderColor) {
-      const brd = 3;
-      ctx.strokeStyle = entry.borderColor;
-      ctx.lineWidth = brd;
-      canvasRoundRect(ctx, x + brd/2, y + brd/2, CARD_W - brd, CARD_H - brd, 5.5);
-      ctx.stroke();
-    }
-  }
-
-  // 頁尾
-  ctx.fillStyle = '#2e2e40';
-  ctx.fillRect(0, H - FOOT_H, W, 1);
-  ctx.font = '10px "Segoe UI",sans-serif';
-  ctx.fillStyle = '#44445a';
-  ctx.textAlign = 'center';
-  ctx.fillText(
-    `weilun2022.github.io/haikyuu-cards  ·  ${new Date().toLocaleDateString('zh-TW')}`,
-    W/2, H - 11
   );
-  ctx.textAlign = 'left';
-
-  return canvas;
 }
 
-// 匯出圖片（PNG + 嵌入牌組資料）
-async function exportDeckAsImage() {
-  const deck = getCurrentDeck();
-  if (!deck || deck.cards.length === 0) { showToast('牌組是空的！'); return; }
+/* Deck panel */
+function DeckPanel({ deck, cards, add, remove, clear, onClose, onExport }) {
+  const deckCards = useMemo(() => {
+    return Object.entries(deck)
+      .map(([num, count]) => ({ card: cards.find(c => c.number === num), count }))
+      .filter(({ card }) => card);
+  }, [deck, cards]);
 
-  const total  = getTotalCount(deck);
-  const evCnt  = getEventCount(deck);
-  const errors = [];
-  if (total > 40)          errors.push(`總張數 ${total} 張（上限 40）`);
-  // 事件卡不限數量
-  if (errors.length) { showToast(`⚠️ 無法輸出：${errors.join('　')}`); return; }
+  const posOrder = ['MB','WS','S','Li','OP'];
+  const byPos = useMemo(() => {
+    const g = {};
+    deckCards.forEach(({ card, count }) => {
+      const p = card.position || '其他';
+      if (!g[p]) g[p] = [];
+      g[p].push({ card, count });
+    });
+    return g;
+  }, [deckCards]);
+  const sortedPos = [...posOrder.filter(p => byPos[p]), ...Object.keys(byPos).filter(p => !posOrder.includes(p))];
+  const total = Object.values(deck).reduce((a, b) => a + b, 0);
 
-  showToast('圖片生成中...');
-  try {
-    const canvas  = await drawDeckCanvas(deck);
-    const dataUrl = canvas.toDataURL('image/png');
-    const bin     = atob(dataUrl.split(',')[1]);
-    const bytes   = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-
-    const payload  = JSON.stringify({ name: deck.name, cards: deck.cards, colors: deckColorState[deck.id] || {} });
-    const injected = injectPngChunk(bytes, PNG_KEYWORD, payload);
-
-    const blob = new Blob([injected], { type: 'image/png' });
-    const url  = URL.createObjectURL(blob);
-    const safe = deck.name.replace(/[^\w\u4e00-\u9fff\-]/g, '_');
-    Object.assign(document.createElement('a'), {
-      href: url,
-      download: `HVBreak-${safe}-${new Date().toISOString().slice(0,19).replace('T','-').replace(/:/g,'')}.png`
-    }).click();
-    URL.revokeObjectURL(url);
-    showToast('圖片已下載！');
-  } catch(e) {
-    console.error(e);
-    showToast('圖片生成失敗，請確認主控台訊息');
-  }
+  return (
+    <div className="overlay" onClick={onClose}>
+      <div className="deck-panel-sheet" onClick={e => e.stopPropagation()}>
+        <div className="deck-panel-header">
+          <div className="deck-header-row">
+            <div>
+              <span className="deck-panel-title">牌組構築</span>
+              <span className="deck-panel-total" style={{color: total >= DECK_MAX ? '#e07070' : '#888'}}>{total} / {DECK_MAX} 張</span>
+            </div>
+            <div className="deck-actions">
+              <button className="deck-action-btn" onClick={onExport}>匯出</button>
+              <button className="deck-action-btn danger" onClick={clear}>清空</button>
+              <button className="sheet-close" onClick={onClose}>×</button>
+            </div>
+          </div>
+          <div className="pos-stats">
+            {sortedPos.map(pos => {
+              const cnt = byPos[pos].reduce((a, r) => a + r.count, 0);
+              return <div key={pos} className="pos-stat"><b>{cnt}</b>{POS_LABEL[pos] || pos}</div>;
+            })}
+          </div>
+        </div>
+        <div className="deck-list">
+          {deckCards.length === 0 && <div className="deck-empty">尚未加入任何卡片</div>}
+          {sortedPos.map(pos => (
+            <div key={pos}>
+              <div className="deck-section-title">{POS_LABEL[pos] || pos}</div>
+              {byPos[pos].map(({ card, count }) => (
+                <div key={card.number} className="deck-card-row">
+                  <img className="deck-card-img" src={card.image} alt={card.number} loading="lazy" />
+                  <div className="deck-card-info">
+                    <div className="deck-card-num">{card.number} <Badge r={card.rarity} /></div>
+                    <div className="deck-card-school">{card.school}</div>
+                  </div>
+                  <div className="deck-card-qty">
+                    <button className="deck-qty-sm-btn" disabled={count <= 0} onClick={() => remove(card.number)}>－</button>
+                    <span className="deck-qty-num">{count}</span>
+                    <button className="deck-qty-sm-btn" disabled={total >= DECK_MAX} onClick={() => add(card)}>＋</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }
 
-// 從圖片匯入牌組
-async function importDeckFromImage(file) {
-  try {
-    const buf      = await file.arrayBuffer();
-    const bytes    = new Uint8Array(buf);
-    const SIG      = [137,80,78,71,13,10,26,10];
-    const validPng = SIG.every((b,i) => bytes[i] === b);
-    if (!validPng) { showToast('不是有效的 PNG 圖片'); return; }
+function App() {
+  const [cards, setCards] = useState([]);
+  const [query, setQuery] = useState('');
+  const [filterSet, setFilterSet] = useState('');
+  const [filterSchool, setFilterSchool] = useState('');
+  const [filterPos, setFilterPos] = useState('');
+  const [filterRarity, setFilterRarity] = useState('');
+  const [filtersOpen, setFiltersOpen] = useState(true);
+  const [selected, setSelected] = useState(null);
+  const [deckOpen, setDeckOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [toast, setToast] = useState('');
+  const toastTimer = useRef(null);
+  const { deck, add, remove, clear, total } = useDeck();
 
-    const text = readPngChunk(bytes, PNG_KEYWORD);
-    if (!text) { showToast('此圖片不含牌組資料'); return; }
+  useEffect(() => {
+    fetch('cards.json').then(r => r.json()).then(data => {
+      setCards(data.map(c => ({
+        ...c,
+        _group: getSchoolGroup(c.school),
+        _set: getSet(c.number)
+      })));
+    });
+  }, []);
 
-    const data = JSON.parse(text);
-    if (!Array.isArray(data.cards)) { showToast('牌組資料格式錯誤'); return; }
+  const sets = useMemo(() => [...new Set(cards.map(c => c._set))].sort(), [cards]);
 
-    const newDeck = { id: makeDeckId(), name: data.name || '匯入的牌組', cards: data.cards, owned: {} };
-    decks.push(newDeck);
-    currentDeckId = newDeck.id;
-    saveDecks();
-    if (data.colors && typeof data.colors === 'object') {
-      deckColorState[newDeck.id] = data.colors;
-      saveColorState();
-    }
-    renderDeckSwitcher(); renderDeckPanel(); updateTray(); renderGrid();
-    showToast(`已匯入「${newDeck.name}」！`);
-  } catch(e) {
-    console.error(e);
-    showToast('匯入失敗');
-  }
-}
+  const schools = useMemo(() => {
+    const gs = new Set(cards.map(c => c._group).filter(Boolean));
+    return SCHOOL_GROUPS.filter(g => gs.has(g));
+  }, [cards]);
 
-// ── Variant Code Helper ─────────────────────────────────
-// 從 image_file 萃取變體碼，例如 HV-P01-004-KP.webp → "KP"
-// 若最後片段是純數字（非特殊版本）就回傳空字串
-function getVariantCode(image_file) {
-  if (!image_file) return '';
-  const m = image_file.match(/-([^-]+)\.webp$/i);
-  if (!m) return '';
-  const code = m[1];
-  return /^\d+$/.test(code) ? '' : code;  // 純數字表示無特殊版本
-}
+  const positions = useMemo(() => {
+    const STD = ['MB','WS','S','Li','OP','事件'];
+    const existing = new Set(cards.map(c => c.position));
+    const others = [...existing].filter(p => !STD.includes(p)).sort();
+    return [...STD.filter(p => existing.has(p)), ...others];
+  }, [cards]);
 
-// ── Qty Modal ───────────────────────────────────────────
-function openQtyModal(image_file) {
-  if (!image_file) return;
-  qtyPendingImageFile = image_file;
-  const cardObj = cards.find(c => c.image_file === image_file);
-  const variant = getVariantCode(image_file);
-  const nm = (cardObj ? cardObj.name : image_file) + (variant ? ` (${variant})` : '');
-  document.getElementById('qty-modal-name').textContent = nm;
-  const deck = getCurrentDeck();
-  const remaining = deck ? MAX_TOTAL - getTotalCount(deck) : MAX_TOTAL;
-  const input = document.getElementById('qty-input');
-  input.value = 1;
-  input.max = Math.max(1, remaining);
-  document.getElementById('qty-overlay').classList.add('open');
-  setTimeout(() => input.select(), 50);
-}
+  const rarities = useMemo(() => {
+    const rs = new Set(cards.map(c => c.rarity));
+    return RARITY_ORDER.filter(r => rs.has(r));
+  }, [cards]);
 
-function closeQtyModal() {
-  qtyPendingImageFile = null;
-  document.getElementById('qty-overlay').classList.remove('open');
-}
+  const activeFilters = [filterSet, filterSchool, filterPos, filterRarity].filter(Boolean).length;
 
-// ── Color Mode ──────────────────────────────────────────
-function buildColorModeSlots() {
-  const deck = getCurrentDeck();
-  if (!deck) return [];
-  const slots = [];
-  for (const entry of deck.cards) {
-    const card = cards.find(c => c.image_file === entry.image_file);
-    const isEvent = card && card.category === 'EVENT';
-    const colorMap = isEvent ? null : getCardColorMap(deck.id, entry.image_file);
-    const slotColors = Array(entry.count).fill(null);
-    if (isEvent) {
-      slotColors.fill('event');
-    } else if (colorMap) {
-      let idx = 0;
-      for (const { key } of COLOR_TAGS) {
-        const cnt = colorMap[key] || 0;
-        for (let i = 0; i < cnt && idx < slotColors.length; i++) slotColors[idx++] = key;
-      }
-    }
-    for (let i = 0; i < entry.count; i++)
-      slots.push({ imageFile: entry.image_file, slotIndex: i, color: slotColors[i], isEvent });
-  }
-  // 主鍵：顏色分組；次鍵：依 colorModeSortKey
-  const SLOT_COLOR_ORD = { free: 0, receive: 1, set: 2, attack: 3, event: 4 };
-  const RARITY_ORD = { NP:0, N:1, R:2, RP:3, S:4, SP:5, 極:6, '極P':7, 頂:8, '頂P':9, 秘:10 };
-  slots.sort((a, b) => {
-    const aO = a.color !== null ? (SLOT_COLOR_ORD[a.color] ?? 5) : 5;
-    const bO = b.color !== null ? (SLOT_COLOR_ORD[b.color] ?? 5) : 5;
-    if (aO !== bO) return aO - bO;
-    const ca = cards.find(x => x.image_file === a.imageFile);
-    const cb = cards.find(x => x.image_file === b.imageFile);
-    const sk = colorModeSortKey;
-    if (sk === 'rarity') {
-      const ra = RARITY_ORD[ca && ca.rarity] ?? 99;
-      const rb = RARITY_ORD[cb && cb.rarity] ?? 99;
-      if (ra !== rb) return rb - ra;
-    } else if (sk !== 'card_no') {
-      const av = (ca && ca[sk]) ?? -1;
-      const bv = (cb && cb[sk]) ?? -1;
-      if (av !== bv) return bv - av;
-    }
-    return ((ca && ca.card_no) || '').localeCompare((cb && cb.card_no) || '');
-  });
-  return slots;
-}
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return cards.filter(c => {
+      if (filterSet && c._set !== filterSet) return false;
+      if (filterSchool && c._group !== filterSchool) return false;
+      if (filterPos && c.position !== filterPos) return false;
+      if (filterRarity && c.rarity !== filterRarity) return false;
+      if (q && !c.number.toLowerCase().includes(q) && !c.school.includes(q) && !c.effect.includes(q)) return false;
+      return true;
+    });
+  }, [cards, query, filterSet, filterSchool, filterPos, filterRarity]);
 
-function renderColorModeGrid() {
-  const list = document.getElementById('deck-card-list');
-  list.style.display = 'none';
-
-  let grid = document.getElementById('deck-color-grid');
-  if (!grid) {
-    grid = document.createElement('div');
-    grid.id = 'deck-color-grid';
-    grid.className = 'color-mode-grid';
-    list.parentNode.insertBefore(grid, list.nextSibling);
-  }
-  grid.innerHTML = '';
-
-  // Pre-compute last index for each imageFile (where the ±N badge goes)
-  const lastIdxFor = {};
-  colorModeSlots.forEach((slot, idx) => { lastIdxFor[slot.imageFile] = idx; });
-
-  // Current count per imageFile from deck
-  const deck = getCurrentDeck();
-  const countFor = {};
-  if (deck) deck.cards.forEach(e => { countFor[e.image_file] = e.count; });
-
-  colorModeSlots.forEach((slot, idx) => {
-    const thumb = document.createElement('div');
-    const colorClass = slot.color ? `c-${slot.color}` : '';
-    thumb.className = ['color-mode-thumb', colorClass,
-      colorModeSelectedIndices.has(idx) ? 'selected' : ''].filter(Boolean).join(' ');
-    thumb.innerHTML = `<img src="${cards.find(c=>c.image_file===slot.imageFile)?.image_url||''}" alt="" onerror="this.style.background='var(--border)'">`;
-
-    if (!slot.isEvent) {
-      thumb.addEventListener('click', () => {
-        if (colorModeSelectedIndices.has(idx)) {
-          colorModeSelectedIndices.delete(idx);
-          thumb.classList.remove('selected');
-        } else {
-          colorModeSelectedIndices.add(idx);
-          thumb.classList.add('selected');
-        }
-        document.getElementById('color-pick-count').textContent = `已選 ${colorModeSelectedIndices.size} 張`;
-      });
-    }
-
-    // Badge on last slot of each imageFile
-    if (!slot.isEvent && idx === lastIdxFor[slot.imageFile] && deck) {
-      const cnt = countFor[slot.imageFile] || 1;
-      const badge = document.createElement('div');
-      badge.className = 'color-qty-badge';
-      badge.innerHTML = `
-        <button class="color-qty-btn" data-dir="-1" data-img="${slot.imageFile}" ${cnt <= 1 ? 'disabled' : ''}>－</button>
-        <span class="color-qty-num">${cnt}</span>
-        <button class="color-qty-btn" data-dir="1"  data-img="${slot.imageFile}">＋</button>
-      `;
-      badge.querySelectorAll('.color-qty-btn').forEach(btn => {
-        btn.addEventListener('click', e => {
-          e.stopPropagation(); // don't trigger thumb select
-          _colorModeAdjustCount(btn.dataset.img, parseInt(btn.dataset.dir));
-        });
-      });
-      thumb.appendChild(badge);
-    }
-
-    grid.appendChild(thumb);
-  });
-}
-
-function _colorModeAdjustCount(imageFile, dir) {
-  const deck = getCurrentDeck();
-  if (!deck) return;
-  const entry = deck.cards.find(e => e.image_file === imageFile);
-  if (!entry) return;
-  const newCount = Math.max(1, entry.count + dir);
-  if (newCount === entry.count) return;
-  entry.count = newCount;
-  saveDecks();
-  // Rebuild slots (preserve color assignments that still fit)
-  colorModeSlots = buildColorModeSlots();
-  // Clear selected indices that may now be out of range
-  colorModeSelectedIndices.clear();
-  document.getElementById('color-pick-count').textContent = '已選 0 張';
-  renderColorModeGrid();
-  updateDeckInfoText();
-  updateTray();
-}
-
-function toggleColorMode() {
-  colorModeActive = !colorModeActive;
-  if (colorModeActive) {
-    colorModeSlots = buildColorModeSlots();
-    colorModeSelectedIndices.clear();
-  } else {
-    colorModeSlots = [];
-    colorModeSelectedIndices.clear();
-  }
-  const btn = document.getElementById('deck-color-mode-btn');
-  btn.textContent = colorModeActive ? '✕ 結束上色' : '🎨 上色';
-  btn.classList.toggle('active', colorModeActive);
-  document.getElementById('deck-color-picker-bar').classList.toggle('show', colorModeActive);
-  document.getElementById('deck-panel').classList.toggle('color-mode-open', colorModeActive);
-  document.getElementById('color-pick-count').textContent = '已選 0 張';
-  renderDeckPanel();
-}
-
-function applyBatchColor(colorKey) {
-  if (colorModeSelectedIndices.size === 0) { showToast('請先選取卡片'); return; }
-  const deck = getCurrentDeck();
-  if (!deck) return;
-
-  // 套用顏色至選取的 slot
-  for (const idx of colorModeSelectedIndices) {
-    const slot = colorModeSlots[idx];
-    if (!slot || slot.isEvent) continue;
-    slot.color = colorKey || null;
-  }
-  colorModeSelectedIndices.clear();
-
-  // 從 slots 重新計算每張卡的 colorMap
-  const cardSlotColors = {};
-  for (const slot of colorModeSlots) {
-    if (slot.isEvent) continue;
-    if (!cardSlotColors[slot.imageFile]) cardSlotColors[slot.imageFile] = [];
-    cardSlotColors[slot.imageFile].push(slot.color);
-  }
-  for (const [imgFile, slotColors] of Object.entries(cardSlotColors)) {
-    const colorMap = {};
-    for (const { key } of COLOR_TAGS) colorMap[key] = 0;
-    let hasColor = false;
-    for (const c of slotColors) {
-      if (c && colorMap[c] !== undefined) { colorMap[c]++; hasColor = true; }
-    }
-    if (hasColor) setCardColorMap(deck.id, imgFile, colorMap);
-    else clearCardColorMap(deck.id, imgFile);
-  }
-  saveDecks();
-
-  // 套色後依顏色 + 卡號排序（多數決：數量最多的色決定排序位置）
-  function getColorOrder(entry) {
-    const c = cards.find(x => x.image_file === entry.image_file);
-    if (!c) return 99;
-    if (c.category === 'EVENT') return COLOR_TAGS.length;
-    const cm = getCardColorMap(deck.id, entry.image_file);
-    if (!cm) return COLOR_TAGS.length + 1;
-    let maxCnt = 0, maxIdx = COLOR_TAGS.length + 1;
-    for (let i = 0; i < COLOR_TAGS.length; i++) {
-      const cnt = cm[COLOR_TAGS[i].key] || 0;
-      if (cnt > maxCnt) { maxCnt = cnt; maxIdx = i; }
-    }
-    return maxIdx;
-  }
-  deck.cards.sort((a, b) => {
-    const diff = getColorOrder(a) - getColorOrder(b);
-    if (diff !== 0) return diff;
-    const ca = cards.find(x => x.image_file === a.image_file);
-    const cb = cards.find(x => x.image_file === b.image_file);
-    return ((ca && ca.card_no) || '').localeCompare((cb && cb.card_no) || '');
-  });
-  saveDecks();
-  colorModeSlots = buildColorModeSlots();
-
-  // 更新統計列
-  const stats = getColorStats(deck);
-  const statsEl = document.getElementById('deck-color-stats');
-  if (statsEl) {
-    const statsRow = [
-      ...COLOR_TAGS.map(({ key, label, hex }) => ({ label, hex, count: stats[key] })),
-      { label: '事件', hex: EVENT_COLOR_HEX, count: stats.event }
-    ];
-    statsEl.innerHTML = statsRow.map(({ label, hex, count }) =>
-      `<span class="deck-color-stat-item">
-         <span class="deck-color-dot" style="background:${hex}"></span>${label} ${count}
-       </span>`
-    ).join('');
+  function showToast(msg) {
+    setToast(msg);
+    clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(''), 1500);
   }
 
-  document.getElementById('color-pick-count').textContent = '已選 0 張';
-  renderColorModeGrid();
-}
-
-// ── Reorganize Deck ─────────────────────────────────────
-const RARITY_SORT_ORDER = { '秘':0, '頂P':1, '頂':2, 'S':3, 'R':4, 'N':5, 'D':6, 'P':7 };
-
-function reorganizeDeck(mode) {
-  const deck = getCurrentDeck();
-  if (!deck || deck.cards.length === 0) return;
-
-  function getCard(entry) { return cards.find(c => c.image_file === entry.image_file); }
-
-  function getColorOrder(entry) {
-    const card = getCard(entry);
-    if (!card) return 99;
-    if (card.category === 'EVENT') return COLOR_TAGS.length;
-    const colorMap = getCardColorMap(deck.id, entry.image_file);
-    if (!colorMap) return COLOR_TAGS.length + 1;
-    let maxCnt = 0, maxIdx = COLOR_TAGS.length + 1;
-    for (let i = 0; i < COLOR_TAGS.length; i++) {
-      const cnt = colorMap[COLOR_TAGS[i].key] || 0;
-      if (cnt > maxCnt) { maxCnt = cnt; maxIdx = i; }
-    }
-    return maxIdx;
-  }
-
-  const TOAST = { color:'已依顏色整理', srv:'已依發球值整理', blk:'已依攔網值整理',
-                  rcv:'已依接球值整理', tos:'已依舉球值整理', atk:'已依攻擊值整理',
-                  card_no:'已依卡號整理', rarity:'已依稀有度整理' };
-
-  deck.cards.sort((a, b) => {
-    const ca = getCard(a), cb = getCard(b);
-    if (mode === 'color') {
-      const diff = getColorOrder(a) - getColorOrder(b);
-      if (diff !== 0) return diff;
-      return ((ca && ca.card_no) || '').localeCompare((cb && cb.card_no) || '');
-    }
-    if (mode === 'card_no') {
-      return ((ca && ca.card_no) || '').localeCompare((cb && cb.card_no) || '');
-    }
-    if (mode === 'rarity') {
-      const ra = RARITY_SORT_ORDER[ca && ca.rarity] ?? 99;
-      const rb = RARITY_SORT_ORDER[cb && cb.rarity] ?? 99;
-      if (ra !== rb) return ra - rb;
-      return ((ca && ca.card_no) || '').localeCompare((cb && cb.card_no) || '');
-    }
-    // 數值排序：srv / blk / tos / atk — 事件牌沒有數值排最後
-    const av = (ca && ca[mode]) ?? -1;
-    const bv = (cb && cb[mode]) ?? -1;
-    if (av !== bv) return bv - av;
-    return ((ca && ca.card_no) || '').localeCompare((cb && cb.card_no) || '');
-  });
-
-  saveDecks();
-  renderDeckPanel();
-  showToast(TOAST[mode] || '已整理');
-}
-
-// ── Bind Deck Events ────────────────────────────────────
-function bindDeckEvents() {
-  document.getElementById('tray-open-btn').addEventListener('click', openDeckPanel);
-  document.getElementById('tray-analysis-btn').addEventListener('click', openAnalysis);
-
-  document.getElementById('deck-footer-toggle').addEventListener('click', () => {
-    const toggle = document.getElementById('deck-footer-toggle');
-    const footer = document.getElementById('deck-panel-footer');
-    const open = toggle.classList.toggle('open');
-    footer.classList.toggle('open', open);
-  });
-
-  document.getElementById('deck-panel-close').addEventListener('click', closeDeckPanel);
-  document.getElementById('deck-panel-overlay').addEventListener('click', e => {
-    if (e.target === document.getElementById('deck-panel-overlay')) closeDeckPanel();
-  });
-
-  // ── PREVIEW 按鈕 ──────────────────────────────────────
-  document.getElementById('deck-preview-img').addEventListener('click', () => {
-    if (!deckPreviewSelectedImg) return;
-    const card = cards.find(c => c.image_file === deckPreviewSelectedImg);
-    if (card) openModal(card);
-  });
-  document.getElementById('deck-preview-close').addEventListener('click', hideDeckPreview);
-  document.getElementById('deck-preview-inc').addEventListener('click', () => {
-    if (!deckPreviewSelectedImg) return;
-    addCardToDeck(deckPreviewSelectedImg, 1);
-    updateDeckInfoText(); updateTray(); renderDeckPanel();
-    document.getElementById('deck-preview-count').textContent =
-      getCurrentDeck()?.cards.find(c => c.image_file === deckPreviewSelectedImg)?.count ?? '';
-  });
-  document.getElementById('deck-preview-dec').addEventListener('click', () => {
-    if (!deckPreviewSelectedImg) return;
-    const deck = getCurrentDeck();
-    const entry = deck?.cards.find(c => c.image_file === deckPreviewSelectedImg);
-    if (!entry) return;
-    if (entry.count > 1) {
-      removeCardFromDeck(deckPreviewSelectedImg);
-      updateDeckInfoText(); updateTray(); renderDeckPanel();
-      document.getElementById('deck-preview-count').textContent =
-        getCurrentDeck()?.cards.find(c => c.image_file === deckPreviewSelectedImg)?.count ?? '';
-    }
-  });
-  document.getElementById('deck-preview-remove').addEventListener('click', () => {
-    if (!deckPreviewSelectedImg) return;
-    const deck = getCurrentDeck();
-    if (!deck) return;
-    const entry = deck.cards.find(c => c.image_file === deckPreviewSelectedImg);
-    if (!entry) return;
-    deck.cards = deck.cards.filter(c => c.image_file !== deckPreviewSelectedImg);
-    trimCardColorMap(deck.id, deckPreviewSelectedImg, 0);
-    saveDecks();
-    refreshCardBadge(deckPreviewSelectedImg);
-    hideDeckPreview();
-    updateTray(); renderGrid();
-  });
-
-  document.getElementById('tray-deck-select').addEventListener('change', e => {
-    currentDeckId = e.target.value;
-    const deck = getCurrentDeck();
-    if (deck) document.getElementById('deck-name-input').value = deck.name;
-    renderDeckPanel(); updateTray(); renderGrid();
-  });
-
-  document.getElementById('deck-rename-btn').addEventListener('click', () => {
-    const deck = getCurrentDeck(); if (!deck) return;
-    if (deck.id === QUICK_DECK_ID) {
-      const name = document.getElementById('deck-name-input').value.trim();
-      if (!name) { showToast('請輸入牌組名稱'); return; }
-      const newDeck = createDeck(name);
-      newDeck.cards = deck.cards.map(c => ({ ...c }));
-      deck.cards = [];
-      saveDecks(); renderDeckSwitcher(); renderDeckPanel(); updateTray(); renderGrid();
-      showToast(`已另存為「${name}」並清空快速查詢`);
-      return;
-    }
-    const name = document.getElementById('deck-name-input').value.trim();
-    if (!name) return;
-    deck.name = name; saveDecks(); updateTray(); renderDeckSwitcher(); showToast('已重新命名！');
-  });
-  document.getElementById('deck-name-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter') document.getElementById('deck-rename-btn').click();
-  });
-
-  document.getElementById('deck-new-btn').addEventListener('click', () => {
-    createDeck(`我的牌組${decks.length + 1}`);
-    renderDeckSwitcher(); renderDeckPanel(); updateTray(); renderGrid();
-  });
-
-  document.getElementById('deck-duplicate-btn').addEventListener('click', duplicateDeck);
-
-  document.getElementById('deck-delete-btn').addEventListener('click', () => {
-    const deck = getCurrentDeck(); if (!deck) return;
-    if (deck.id === QUICK_DECK_ID) { showToast('快速查詢牌組不可刪除'); return; }
-    if (decks.length <= 1) {
-      deck.cards = []; delete deckColorState[deck.id]; saveColorState(); saveDecks(); renderDeckPanel(); updateTray(); renderGrid();
-      showToast('牌組已清空'); return;
-    }
-    const idx = decks.findIndex(d => d.id === currentDeckId);
-    delete deckColorState[deck.id]; saveColorState();
-    decks.splice(idx, 1);
-    currentDeckId = decks[Math.max(0, idx - 1)].id;
-    saveDecks(); renderDeckSwitcher(); renderDeckPanel(); updateTray(); renderGrid();
-    showToast('已刪除牌組');
-  });
-
-  const shareOverlay = document.getElementById('share-modal-overlay');
-  const closeShare = () => { shareOverlay.style.display = 'none'; };
-
-  document.getElementById('deck-clear-btn').addEventListener('click', () => {
-    const deck = getCurrentDeck();
-    if (!deck) return;
-    if (deck.cards.length === 0) { showToast('牌組已經是空的'); return; }
-    if (!confirm(`確定要清空「${deck.name}」的所有卡片嗎？此動作無法復原。`)) return;
-    deck.cards = [];
-    deck.owned = {};
-    delete deckColorState[deck.id]; saveColorState();
-    saveDecks();
-    renderDeckPanel(); updateTray(); renderGrid();
-    showToast('已清空牌組');
-  });
-
-  document.getElementById('deck-share-btn').addEventListener('click', openShareModal);
-  document.getElementById('share-modal-close').addEventListener('click', closeShare);
-  shareOverlay.addEventListener('click', e => { if (e.target === shareOverlay) closeShare(); });
-  document.getElementById('share-copy-btn').addEventListener('click', e => {
+  function handleAdd(e, card) {
     e.stopPropagation();
-    navigator.clipboard.writeText(shareUrl)
-      .then(() => showToast('連結已複製'))
-      .catch(() => showToast('複製失敗，請手動複製'));
-  });
+    if (total >= DECK_MAX) { showToast(`牌組已達上限 ${DECK_MAX} 張`); return; }
+    add(card);
+    showToast(`已加入 ×${(deck[card.number] || 0) + 1}`);
+  }
 
-  document.getElementById('deck-reorganize-select').addEventListener('change', e => {
-    if (colorModeActive) {
-      colorModeSortKey = e.target.value === 'color' ? 'card_no' : e.target.value;
-      colorModeSlots = buildColorModeSlots();
-      renderColorModeGrid();
-    } else {
-      reorganizeDeck(e.target.value);
-    }
-  });
-  document.getElementById('deck-color-mode-btn').addEventListener('click', toggleColorMode);
-  document.getElementById('deck-color-picker-bar').querySelectorAll('.color-pick-btn').forEach(btn => {
-    btn.addEventListener('click', () => applyBatchColor(btn.dataset.colorkey));
-  });
+  function handleExport() {
+    setDeckOpen(false);
+    setExportOpen(true);
+  }
 
-  document.getElementById('deck-export-btn').addEventListener('click', exportDecks);
+  return (
+    <>
+      <div className="top-bar">
+        <div className="header">
+          <div className="title">排球少年!! バボカ!! BREAK 卡片查詢</div>
+          <input className="search" placeholder="搜尋卡號、學校、效果…" value={query} onChange={e => setQuery(e.target.value)} />
+        </div>
 
-  document.getElementById('deck-import-btn').addEventListener('click', () => {
-    document.getElementById('deck-import-file').click();
-  });
-  document.getElementById('deck-import-file').addEventListener('change', e => {
-    const file = e.target.files[0]; if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      try {
-        pendingImport = JSON.parse(ev.target.result);
-        document.getElementById('import-confirm-overlay').classList.add('open');
-      } catch { showToast('JSON 格式錯誤！'); }
-    };
-    reader.readAsText(file);
-    e.target.value = '';
-  });
-  document.getElementById('import-cancel-btn').addEventListener('click', () => {
-    pendingImport = null;
-    document.getElementById('import-confirm-overlay').classList.remove('open');
-  });
-  document.getElementById('import-merge-btn').addEventListener('click',     () => doImport('merge'));
-  document.getElementById('import-overwrite-btn').addEventListener('click', () => doImport('overwrite'));
+        {/* Filter toggle */}
+        <div className="filter-toggle" onClick={() => setFiltersOpen(o => !o)}>
+          <div className="filter-toggle-label">
+            篩選
+            {activeFilters > 0 && <span className="filter-toggle-dot" style={{background:'#4a8abf'}} />}
+            {activeFilters > 0 && <span style={{fontSize:11,color:'#4a8abf'}}>{activeFilters} 項已選</span>}
+          </div>
+          <span className={`filter-toggle-arrow${filtersOpen ? ' open' : ''}`}>▼</span>
+        </div>
 
-  document.getElementById('analysis-back-btn').addEventListener('click', closeAnalysis);
+        {filtersOpen && (
+          <div className="filters">
+            <div className="filter-row">
+              <span className="filter-label">位置</span>
+              {positions.map(p => (
+                <button key={p} className={`filter-btn${filterPos === p ? ' active' : ''}`}
+                  onClick={() => setFilterPos(filterPos === p ? '' : p)}>{p}</button>
+              ))}
+            </div>
+            <div className="filter-row">
+              <span className="filter-label">稀有</span>
+              {rarities.map(r => (
+                <button key={r} className={`filter-btn${filterRarity === r ? ' active' : ''}`}
+                  onClick={() => setFilterRarity(filterRarity === r ? '' : r)}>{r}</button>
+              ))}
+            </div>
+            <div className="filter-row">
+              <span className="filter-label">系列</span>
+              {sets.map(s => (
+                <button key={s} className={`filter-btn${filterSet === s ? ' active' : ''}`}
+                  onClick={() => setFilterSet(filterSet === s ? '' : s)}>{s}</button>
+              ))}
+            </div>
+            <div className="filter-row">
+              <span className="filter-label">學校</span>
+              {schools.map(s => (
+                <button key={s} className={`filter-btn${filterSchool === s ? ' active' : ''}`}
+                  onClick={() => setFilterSchool(filterSchool === s ? '' : s)}>{s}</button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
 
-  // 圖片匯出
-  document.getElementById('deck-export-img-btn').addEventListener('click', exportDeckAsImage);
+      <div className="count">{filtered.length} 張</div>
 
-  // 圖片匯入
-  document.getElementById('deck-import-img-btn').addEventListener('click', () => {
-    document.getElementById('deck-import-img-file').click();
-  });
-  document.getElementById('deck-import-img-file').addEventListener('change', e => {
-    const file = e.target.files[0]; if (!file) return;
-    importDeckFromImage(file);
-    e.target.value = '';
-  });
+      <div className="grid">
+        {filtered.map(c => (
+          <div key={c.number} className={`card${deck[c.number] ? ' in-deck' : ''}`} onClick={() => setSelected(c)}>
+            <img src={c.image} alt={c.number} loading="lazy" />
+            {deck[c.number] && <div className="card-deck-badge">×{deck[c.number]}</div>}
+            <button className="card-add-btn" onClick={e => handleAdd(e, c)}>＋</button>
+            <div className="card-foot">
+              <div className="card-num">{c.number}<Badge r={c.rarity} /></div>
+              <div className="card-school">{c.school}</div>
+            </div>
+          </div>
+        ))}
+      </div>
 
-  // ── Qty Modal events ──
-  document.getElementById('qty-cancel').addEventListener('click', closeQtyModal);
-  document.getElementById('qty-overlay').addEventListener('click', e => {
-    if (e.target === document.getElementById('qty-overlay')) closeQtyModal();
-  });
-  document.getElementById('qty-confirm').addEventListener('click', () => {
-    if (!qtyPendingImageFile) return;
-    const qty = Math.max(1, parseInt(document.getElementById('qty-input').value, 10) || 1);
-    addCardToDeck(qtyPendingImageFile, qty);
-    closeQtyModal();
-  });
-  document.getElementById('qty-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter') document.getElementById('qty-confirm').click();
-    if (e.key === 'Escape') closeQtyModal();
-  });
-  document.getElementById('qty-minus').addEventListener('click', () => {
-    const inp = document.getElementById('qty-input');
-    const v = parseInt(inp.value, 10) || 1;
-    if (v > 1) inp.value = v - 1;
-  });
-  document.getElementById('qty-plus').addEventListener('click', () => {
-    const inp = document.getElementById('qty-input');
-    const v = parseInt(inp.value, 10) || 1;
-    const max = parseInt(inp.max, 10) || 40;
-    if (v < max) inp.value = v + 1;
-  });
+      {/* Card detail sheet */}
+      {selected && (
+        <div className="overlay" onClick={() => setSelected(null)}>
+          <div className="sheet" onClick={e => e.stopPropagation()}>
+            <button className="sheet-close" onClick={() => setSelected(null)}>×</button>
+            <img src={selected.image} alt={selected.number} />
+            <div className="sheet-num">{selected.number} <Badge r={selected.rarity} /></div>
+            <div className="sheet-row">
+              <div className="chip"><span>所屬</span>{selected.school}</div>
+              <div className="chip"><span>位置</span>{selected.position}</div>
+              <div className="chip"><span>系列</span>{selected._set}</div>
+            </div>
+            <div className="effect-label">效果</div>
+            <div className="effect">{selected.effect}</div>
+            {selected.source && <div className="source">收錄：{selected.source}</div>}
+            <div className="deck-qty-wrap">
+              <span className="deck-qty-label">加入牌組</span>
+              <button className="qty-btn" disabled={(deck[selected.number] || 0) <= 0} onClick={() => remove(selected.number)}>－</button>
+              <span className="qty-count">
+                {deck[selected.number] || 0}
+              </span>
+              <button className="qty-btn" disabled={total >= DECK_MAX} onClick={() => add(selected)}>＋</button>
+            </div>
+          </div>
+        </div>
+      )}
 
-  // ── Tray 收合 / 展開 ──
-  document.getElementById('tray-toggle-btn').addEventListener('click', () => {
-    const tray = document.getElementById('deck-tray');
-    const isMini = tray.classList.toggle('mini');
-    document.getElementById('tray-toggle-btn').textContent = isMini ? '▲' : '▼';
-    document.body.classList.toggle('tray-mini', isMini);
-  });
+      {deckOpen && (
+        <DeckPanel deck={deck} cards={cards} add={add} remove={remove} clear={clear}
+          onClose={() => setDeckOpen(false)} onExport={handleExport} />
+      )}
+
+      {exportOpen && (
+        <ExportModal deck={deck} cards={cards} onClose={() => setExportOpen(false)} />
+      )}
+
+      <button className="deck-fab" onClick={() => setDeckOpen(true)}
+        style={{borderColor: total >= DECK_MAX ? '#e07070' : '#4a8abf'}}>
+        牌組 {total}/{DECK_MAX}
+      </button>
+
+      <Toast msg={toast} />
+    </>
+  );
 }
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
 </script>
 </body>
 </html>
