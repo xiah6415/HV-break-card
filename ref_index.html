@@ -1281,7 +1281,6 @@
       <option value="元監督">前任監督</option>
       <option value="マネージャー">球隊經理</option>
       <option value="応援団長">啦啦隊長</option>
-      <option value="事件">事件卡</option>
     </select>
   </div>
 
@@ -1649,66 +1648,7 @@
 
   ════════════════════════════════════════════════════════════════
 -->
-<script>
-const SCHOOL_MAP = {
-  '烏野':'烏野','音駒':'音駒',
-  '稲荷崎':'稻荷崎','稻荷崎':'稻荷崎',
-  '青葉城西':'青葉城西','梟谷':'梟谷',
-  '白鳥沢':'白鳥沢','伊達工業':'伊達工業',
-  '鴎台':'鷗台','鷗台':'鷗台',
-  '椿原':'椿原','早流川工業':'早流川',
-  '北川第一中':'北川','戸美':'戶美','戶美':'戶美',
-  '新山女子':'新山','常波':'常波','扇南':'扇南',
-  '角川':'角川','条善寺':'条善寺','和久谷南':'和久谷南',
-  '井闥山':'井闥山','森然':'森然','中立':'中立',
-};
-function _getSchoolGroup(school) {
-  const base = school.split(/[\/\u00B7\uFF65\s]/)[0].trim();
-  return SCHOOL_MAP[base] || '其他';
-}
-function _getProductType(number) {
-  const m = number.match(/^(HV-[A-Z0-9]+)-/);
-  return m ? m[1] : 'HV-PR';
-}
-const CARDS_DATA = { cards: [], product_labels: {
-  'HV-P01':'P01 第1彈',
-  'HV-P02':'P02 第2彈',
-  'HV-P03':'P03 第3彈',
-  'HV-D01':'D01 烏野',
-  'HV-D02':'D02 音駒',
-  'HV-D03':'D03 稻荷崎',
-  'HV-PR':'PR 促銷',
-}};
-fetch('cards.json').then(r=>r.json()).then(raw=>{
-  let id=1;
-  CARDS_DATA.cards = raw.map(c=>({
-    id: String(id++),
-    card_no: c.number,
-    image_file: c.number + '__' + c.rarity,
-    image_url: c.image,
-    product_type: _getProductType(c.number),
-    product_label: _getProductType(c.number),
-    name: '',
-    name_ruby: '',
-    category: c.type==='event'?'EVENT':'CHARACTER',
-    category_zh: c.type==='event'?'事件':'角色',
-    affiliation: c.school,
-    school: _getSchoolGroup(c.school),
-    rarity: c.rarity,
-    rarity_code: c.rarity,
-    position: c.position,
-    position_zh: '',
-    srv:null,blk:null,rcv:null,tos:null,atk:null,
-    skill_jp:'',
-    skill_zh: c.effect,
-    qa:[],
-  }));
-  init();
-}).catch(e=>{
-  document.getElementById('loading').textContent='錯誤：找不到 cards.json';
-  console.error(e);
-});
-</script>
+<script src="cards_data.js"></script>
 <script>
 // ── Constants ──────────────────────────────────────────────────────────
 const RARITY_COLOR = {
@@ -1756,8 +1696,8 @@ let searchText = '';
 // ── Deck State (宣告在 init 之前，避免 TDZ 錯誤) ──────────────────────
 const DECK_LS_KEY  = 'hv_decks';
 const QUICK_DECK_ID = 'dk_quick';
-const MAX_TOTAL    = 40;
-const MAX_EVENT    = Infinity;
+const MAX_TOTAL    = Infinity;
+const MAX_EVENT    = 8;
 let decks               = [];
 let currentDeckId       = null;
 let pendingImport       = null;
@@ -1874,7 +1814,7 @@ function buildFilters() {
   const seriesLabels = CARDS_DATA.product_labels || {};
   const seriesSel = document.getElementById('filter-series');
   // Use CARDS_DATA product order
-  const seriesOrder = ['HV-P01','HV-P02','HV-P03','HV-D01','HV-D02','HV-D03','HV-PR'];
+  const seriesOrder = ['HV-P01','HV-P02','HV-D01','HV-D02','HV-D03','HVBP','HV-PR'];
   seriesOrder.filter(s => seriesSet.includes(s)).forEach(s => {
     const opt = document.createElement('option');
     opt.value = s;
@@ -1891,7 +1831,7 @@ function buildFilters() {
 
   // School
   const schoolSet = [...new Set(cards.map(c => c.school).filter(Boolean))];
-  const schoolOrder = ['烏野','音駒','稻荷崎','白鳥沢','伊達工業','青葉城西','梟谷','鷗台','井闥山','椿原','早流川','北川','戶美','新山','常波','扇南','角川','条善寺','和久谷南','森然','中立','其他'];
+  const schoolOrder = ['烏野','音駒','稲荷崎','白鳥沢','伊達工業','青葉城西','梟谷','鴎台'];
   const schoolSel = document.getElementById('filter-school');
   [...schoolOrder.filter(s => schoolSet.includes(s)),
    ...schoolSet.filter(s => !schoolOrder.includes(s)).sort()
@@ -2096,7 +2036,7 @@ function buildCardEl(card) {
 
   const rarityColor = RARITY_COLOR[card.rarity] || '#888';
   const schoolColor = SCHOOL_COLOR[card.school] || '#64748b';
-  const imgSrc = card.image_file ? card.image_url : '';
+  const imgSrc = card.image_file ? `images/${card.image_file}` : '';
 
   // Stats for CHARACTER cards
   let statsHtml = '';
@@ -2210,7 +2150,7 @@ function openModal(card) {
 
   document.getElementById('modal-name').textContent = card.name || '（無名稱）';
   const modalImg = document.getElementById('modal-img');
-  modalImg.src = card.image_file ? card.image_url : '';
+  modalImg.src = card.image_file ? `images/${card.image_file}` : '';
   modalImg.onclick = () => {
     if (modalImg.src) {
       document.getElementById('lightbox-img').src = modalImg.src;
@@ -2317,7 +2257,11 @@ function closeModal() {
 }
 
 // ── Start ──────────────────────────────────────────────────────────────
-// init() called asynchronously after cards.json loads
+if (typeof CARDS_DATA !== 'undefined') {
+  init();
+} else {
+  document.getElementById('loading').textContent = '錯誤：找不到 cards_data.js，請先執行 build_data.py';
+}
 
 // ══════════════════════════════════════════════════════
 // DECK MANAGEMENT (PR #2 + PR #3)
@@ -2739,7 +2683,7 @@ function renderDeckPanel() {
     const thumb = document.createElement('div');
     thumb.className = 'deck-thumb-item' + (entry.image_file === deckPreviewSelectedImg ? ' selected' : '');
     thumb.innerHTML = `
-      <img src="${cards.find(c=>c.image_file===entry.image_file)?.image_url||''}" alt="" onerror="this.style.background='var(--surface2)'">
+      <img src="images/${entry.image_file}" alt="" onerror="this.style.background='var(--surface2)'">
       <div class="deck-thumb-badge">×${entry.count}</div>`;
     thumb.addEventListener('click', () => showDeckPreview(entry.image_file));
     list.appendChild(thumb);
@@ -2768,7 +2712,7 @@ function showDeckPreview(imageFile) {
   if (!entry || !card) return;
 
   const isEvent = card.category === 'EVENT';
-  document.getElementById('deck-preview-img').src = cards.find(c=>c.image_file===imageFile)?.image_url||'';
+  document.getElementById('deck-preview-img').src = `images/${imageFile}`;
   document.getElementById('deck-preview-name').textContent = card.name || '（無名稱）';
   const rc = RARITY_COLOR[card.rarity] || '#888';
   document.getElementById('deck-preview-sub').textContent = `${RARITY_LABEL[card.rarity] || card.rarity || ''} · ${card.card_no || ''}`;
@@ -2910,7 +2854,7 @@ function renderAnalysis() {
 
     list.forEach(({ entry, card, have, need, deficit }) => {
       const state  = have >= need ? 'owned' : have > 0 ? 'partial' : 'not-owned';
-      const imgSrc = card.image_file ? card.image_url : '';
+      const imgSrc = card.image_file ? `images/${card.image_file}` : '';
       const variant = getVariantCode(entry.image_file);
       const displayName = (card.card_no || '') + (variant ? `-${variant}` : '');
       const badgeText = deficit > 0 ? `缺${deficit}` : '✓';
@@ -3194,7 +3138,7 @@ async function drawDeckCanvas(deck) {
 
     // 卡片圖片
     if (card.image_file) {
-      const img = await loadImg(card.image_url);
+      const img = await loadImg(`images/${card.image_file}`);
       if (img) {
         ctx.save();
         canvasRoundRect(ctx, x, y, CARD_W, CARD_H, 7); ctx.clip();
@@ -3264,7 +3208,7 @@ async function exportDeckAsImage() {
   const evCnt  = getEventCount(deck);
   const errors = [];
   if (total > 40)          errors.push(`總張數 ${total} 張（上限 40）`);
-  // 事件卡不限數量
+  if (evCnt > MAX_EVENT)   errors.push(`事件卡 ${evCnt} 張（上限 8）`);
   if (errors.length) { showToast(`⚠️ 無法輸出：${errors.join('　')}`); return; }
 
   showToast('圖片生成中...');
@@ -3430,7 +3374,7 @@ function renderColorModeGrid() {
     const colorClass = slot.color ? `c-${slot.color}` : '';
     thumb.className = ['color-mode-thumb', colorClass,
       colorModeSelectedIndices.has(idx) ? 'selected' : ''].filter(Boolean).join(' ');
-    thumb.innerHTML = `<img src="${cards.find(c=>c.image_file===slot.imageFile)?.image_url||''}" alt="" onerror="this.style.background='var(--border)'">`;
+    thumb.innerHTML = `<img src="images/${slot.imageFile}" alt="" onerror="this.style.background='var(--border)'">`;
 
     if (!slot.isEvent) {
       thumb.addEventListener('click', () => {
