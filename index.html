@@ -631,38 +631,41 @@
     }
   }
 
-  /* ── Deck: Card Count Input ── */
-  .card-count-input {
+  /* ── Deck: Count Badge ── */
+  .card-deck-badge {
     position: absolute;
     top: 5px; left: 5px;
-    width: 38px;
-    padding: 2px 4px;
+    min-width: 22px;
+    padding: 2px 5px;
     text-align: center;
-    background: rgba(0,0,0,0.72);
-    border: 1px solid rgba(255,255,255,0.2);
+    background: #c0392b;
     color: #fff;
-    border-radius: 4px;
+    border-radius: 10px;
     font-size: 12px; font-weight: 700;
-    outline: none;
+    z-index: 3;
+    pointer-events: none;
+  }
+  .card-deck-badge.hidden { display: none; }
+
+  /* ── Deck: Add Button ── */
+  .card-add-btn {
+    position: absolute;
+    top: 5px; right: 5px;
+    width: 26px; height: 26px;
+    padding: 0;
+    background: rgba(0,0,0,0.65);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    font-size: 16px; line-height: 1;
+    cursor: pointer;
     z-index: 3;
     opacity: 0;
-    transition: opacity 0.15s, border-color 0.15s;
-    appearance: textfield;
-    -moz-appearance: textfield;
+    transition: opacity 0.15s, background 0.15s;
   }
-  .card-count-input::-webkit-inner-spin-button,
-  .card-count-input::-webkit-outer-spin-button { -webkit-appearance: none; }
-  /* 有值時常駐顯示，顏色高亮 */
-  .card-count-input.has-count {
-    opacity: 1;
-    color: var(--accent);
-    border-color: var(--accent);
-  }
-  /* 桌面 hover 時顯示（即使值為 0） */
-  .card:hover .card-count-input { opacity: 1; }
-  .card-count-input:focus { opacity: 1; border-color: var(--accent); }
-  /* 手機一律顯示 */
-  @media (max-width: 600px) { .card-count-input { opacity: 1; } }
+  .card:hover .card-add-btn { opacity: 1; }
+  .card-add-btn:hover { background: var(--accent); border-color: var(--accent); }
+  @media (max-width: 600px) { .card-add-btn { opacity: 1; } }
 
   /* ── Bottom Deck Tray ── */
   .deck-tray {
@@ -2076,16 +2079,8 @@ function buildCardEl(card) {
       <img src="${imgSrc}" alt="${card.name || ''}" loading="lazy" onerror="this.classList.add('error')">
       <div class="img-placeholder" style="display:none"></div>
       <div class="rarity-badge" style="color:${rarityColor}">${RARITY_LABEL[card.rarity] || card.rarity || ''}</div>
-      <input type="number" class="card-count-input${deckCount > 0 ? ' has-count' : ''}"
-        id="input-${card.image_file}"
-        data-img="${card.image_file}"
-        value="${deckCount > 0 ? deckCount : ''}"
-        min="0" placeholder="0">
-      <button class="card-star-btn ${isCardInQuickDeck(card.image_file) ? 'starred' : ''}"
-        data-img="${card.image_file}"
-        title="${isCardInQuickDeck(card.image_file) ? '從快速查詢移除' : '加入快速查詢'}">
-        ${isCardInQuickDeck(card.image_file) ? '★' : '☆'}
-      </button>
+      <div class="card-deck-badge${deckCount > 0 ? '' : ' hidden'}" id="badge-${card.image_file}">×${deckCount}</div>
+      <button class="card-add-btn" data-img="${card.image_file}">＋</button>
     </div>
     <div class="card-info">
       <div class="card-no">${card.card_no || ''}</div>
@@ -2094,43 +2089,10 @@ function buildCardEl(card) {
       ${statsHtml}
     </div>`;
 
-  const starBtn = div.querySelector('.card-star-btn');
-  starBtn.addEventListener('click', e => {
+  div.querySelector('.card-add-btn').addEventListener('click', e => {
     e.stopPropagation();
-    toggleQuickDeck(starBtn.dataset.img);
+    addCardToDeck(card.image_file);
   });
-
-  const inp = div.querySelector('.card-count-input');
-  inp.addEventListener('click',  e => e.stopPropagation());
-  inp.addEventListener('focus',  e => e.stopPropagation());
-  inp.addEventListener('keydown', e => { if (e.key === 'Enter') inp.blur(); e.stopPropagation(); });
-
-  const saveCount = () => {
-    if (!currentDeckId && decks.length === 0) createDeck('我的牌組1');
-    const deck = getCurrentDeck();
-    if (!deck) return;
-    const imgFile = inp.dataset.img;
-    const newCount = parseInt(inp.value, 10);
-    const cardObj  = cards.find(c => c.image_file === imgFile);
-    const existing = deck.cards.find(c => c.image_file === imgFile);
-
-    if (isNaN(newCount) || newCount <= 0) {
-      // 移除此卡
-      const idx = deck.cards.findIndex(c => c.image_file === imgFile);
-      if (idx !== -1) deck.cards.splice(idx, 1);
-      inp.value = '';
-      inp.classList.remove('has-count');
-    } else {
-      if (existing) existing.count = newCount;
-      else deck.cards.push({ image_file: imgFile, card_no: cardObj?.card_no || '', count: newCount });
-      inp.value = newCount;
-      inp.classList.add('has-count');
-    }
-    saveDecks();
-    updateTray();
-  };
-  inp.addEventListener('change', saveCount);
-  inp.addEventListener('blur',   saveCount);
 
   return div;
 }
@@ -3876,11 +3838,11 @@ function sUpdateFab() {
   fab.style.borderColor = total >= SDECK_MAX ? '#e07070' : '#4a8abf';
 }
 function sUpdateInput(imgFile) {
-  const inp = document.getElementById('input-' + imgFile);
-  if (!inp) return;
+  const badge = document.getElementById('badge-' + imgFile);
+  if (!badge) return;
   const count = sdeck[imgFile] || 0;
-  inp.value = count > 0 ? count : '';
-  inp.classList.toggle('has-count', count > 0);
+  badge.textContent = '×' + count;
+  badge.classList.toggle('hidden', count <= 0);
 }
 
 function sBindEvents() {
@@ -3899,18 +3861,6 @@ function sBindEvents() {
     if (e.target === document.getElementById('sexport-overlay')) sCloseExport();
   });
   document.getElementById('sexport-copy-btn').addEventListener('click', sCopyExport);
-  document.getElementById('card-grid').addEventListener('change', e => {
-    const inp = e.target.closest('.card-count-input');
-    if (!inp) return;
-    const imgFile = inp.dataset.img;
-    const newCount = Math.max(0, parseInt(inp.value) || 0);
-    const curCount = sdeck[imgFile] || 0;
-    const newTotal = sTotal() - curCount + newCount;
-    const clamped = newTotal > SDECK_MAX ? newCount - (newTotal - SDECK_MAX) : newCount;
-    if (clamped <= 0) delete sdeck[imgFile];
-    else sdeck[imgFile] = clamped;
-    sSaveDeck(); sUpdateFab(); sUpdateInput(imgFile);
-  });
   document.getElementById('card-grid').addEventListener('click', e => {
     if (e.target.closest('.card-star-btn')) e.stopPropagation();
   });
