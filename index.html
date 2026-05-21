@@ -594,7 +594,7 @@
       max-height: 85vh;
       padding: 14px 14px 14px 12px;
     }
-    .grid-container { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; }
+    .grid-container { grid-template-columns: repeat(3, 1fr); gap: 6px; }
     header, #search-row {
       transition: max-height 0.25s ease, padding 0.25s ease, opacity 0.2s ease;
       overflow: hidden;
@@ -1214,6 +1214,32 @@
     font-size: 13px; z-index: 999; opacity: 0;
     transition: opacity 0.3s; pointer-events: none; white-space: nowrap;
   }
+
+  /* ── Simple Deck System ── */
+  #simple-fab{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));right:16px;background:#1e3a5f;border:1px solid #4a8abf;border-radius:24px;color:#fff;font-size:14px;font-weight:bold;padding:10px 18px;cursor:pointer;z-index:200;white-space:nowrap;box-shadow:0 2px 12px rgba(0,0,0,.5);touch-action:manipulation}
+  #simple-fab:active{opacity:.8}
+  .sdeck-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;align-items:flex-end;justify-content:center}
+  .sdeck-overlay.open{display:flex}
+  .sdeck-sheet{background:#1a1a1a;border-radius:16px 16px 0 0;width:100%;max-width:600px;max-height:90vh;display:flex;flex-direction:column;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+  .sdeck-head{padding:14px 16px 10px;border-bottom:1px solid #2a2a2a;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+  .sdeck-title{font-size:16px;font-weight:bold;color:#eee}
+  .sdeck-total{font-size:13px;color:#888;margin-left:8px}
+  .sdeck-acts{display:flex;gap:8px;align-items:center}
+  .sdbtn{background:#252525;border:1px solid #444;border-radius:8px;color:#ccc;font-size:13px;padding:6px 12px;cursor:pointer;touch-action:manipulation}
+  .sdbtn.danger{border-color:#6b2a2a;color:#e07070}
+  .sdbtn.close{background:none;border:none;color:#888;font-size:26px;line-height:1;padding:2px 4px}
+  .sdeck-body{overflow-y:auto;padding:8px}
+  .sdeck-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+  .sdi{position:relative;border-radius:6px;overflow:hidden;background:#111}
+  .sdi img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block}
+  .sdi-badge{position:absolute;top:4px;right:4px;background:#e03030;color:#fff;font-size:12px;font-weight:bold;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px}
+  .sdi-ctrl{position:absolute;bottom:0;left:0;right:0;display:flex;background:rgba(0,0,0,.65)}
+  .sdi-btn{background:none;border:none;color:#fff;font-size:18px;padding:4px 0;cursor:pointer;flex:1;touch-action:manipulation;line-height:1}
+  .sdi-btn:active{background:rgba(255,255,255,.15)}
+  .sdi-btn:disabled{opacity:.3}
+  .sdeck-empty{grid-column:1/-1;text-align:center;color:#555;font-size:14px;padding:40px 0}
+  .sexport-copy{width:100%;background:#1e3a5f;border:1px solid #4a8abf;border-radius:10px;color:#fff;font-size:16px;font-weight:bold;padding:13px;cursor:pointer;touch-action:manipulation;margin-top:4px}
+  .sexport-copy.ok{background:#1a5a2a;border-color:#3a9a4a}
 </style>
 </head>
 <body>
@@ -1315,12 +1341,8 @@
 
 
 <!-- ── Deck Tray ── -->
-<div class="deck-tray" id="deck-tray">
-  <button class="tray-toggle-btn" id="tray-toggle-btn" title="收合／展開">▼</button>
-  <select class="tray-deck-select" id="tray-deck-select"></select>
-  <div class="tray-count-label">
-    <span class="tray-count-num" id="tray-count-num">0</span> 張
-  </div>
+<button id="simple-fab">牌組 0/40</button>
+
   <span class="tray-warn-text" id="tray-warn-text" style="display:none"></span>
   <div class="tray-spacer"></div>
   <button class="tray-btn" id="tray-analysis-btn">庫存分析</button>
@@ -1328,89 +1350,35 @@
 </div>
 
 <!-- ── Deck Panel ── -->
-<div class="deck-panel-overlay" id="deck-panel-overlay">
-  <!-- PREVIEW：浮在 DECK PANEL 外 -->
-  <div class="deck-preview-float" id="deck-preview-float">
-    <button class="deck-preview-close" id="deck-preview-close">✕</button>
-    <img class="deck-preview-img" id="deck-preview-img" src="" alt=""
-      onerror="this.style.background='var(--border)';this.removeAttribute('src')">
-    <div class="deck-preview-info">
-      <div class="deck-preview-name" id="deck-preview-name"></div>
-      <div class="deck-preview-sub" id="deck-preview-sub"></div>
-      <div class="deck-preview-stats" id="deck-preview-stats"></div>
-      <div class="deck-preview-skill" id="deck-preview-skill"></div>
-      <div class="deck-preview-count-row">
-        <span class="deck-preview-count-label">張數</span>
-        <button class="count-btn" id="deck-preview-dec">−</button>
-        <span class="count-num" id="deck-preview-count">1</span>
-        <button class="count-btn" id="deck-preview-inc">＋</button>
-        <button class="deck-preview-remove-btn" id="deck-preview-remove">從牌組移除</button>
+<!-- ── Simple Deck Panel ── -->
+<div class="sdeck-overlay" id="sdeck-overlay">
+  <div class="sdeck-sheet">
+    <div class="sdeck-head">
+      <div><span class="sdeck-title">牌組構築</span><span class="sdeck-total" id="sdeck-total">0/40 張</span></div>
+      <div class="sdeck-acts">
+        <button class="sdbtn" id="sdeck-export-btn">匯出</button>
+        <button class="sdbtn danger" id="sdeck-clear-btn">清空</button>
+        <button class="sdbtn close" id="sdeck-close-btn">×</button>
       </div>
     </div>
+    <div class="sdeck-body"><div class="sdeck-grid" id="sdeck-grid"></div></div>
   </div>
-  <div class="deck-panel" id="deck-panel">
-    <div class="deck-panel-header">
-      <div class="deck-panel-titlerow">
-        🃏 牌組管理
-        <button class="tray-btn" style="margin-left:auto;padding:3px 9px;font-size:11px" id="deck-panel-close">✕</button>
-      </div>
-      <div class="deck-selector-row">
-        <input type="text" class="deck-name-input" id="deck-name-input" placeholder="牌組名稱...">
-        <button class="tray-btn" id="deck-rename-btn">改名</button>
-        <button class="tray-btn" id="deck-new-btn">＋新增</button>
-        <button class="tray-btn" id="deck-duplicate-btn" title="複製目前牌組為新牌組">複製</button>
-        <button class="tray-btn danger" id="deck-delete-btn">刪除</button>
-        <button class="tray-btn danger" id="deck-clear-btn" style="margin-left:8px;border-left:1px solid var(--border);padding-left:8px">清空</button>
-      </div>
-      <div class="deck-panel-info" id="deck-panel-info" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-        <span id="deck-panel-info-text"></span>
-        <div style="display:flex;gap:4px;flex-shrink:0">
-          <select class="tray-btn" id="deck-reorganize-select" style="font-size:11px;padding:2px 6px;cursor:pointer">
-            <option value="color">🔀 顏色</option>
-            <option value="srv">發球↓</option>
-            <option value="blk">攔網↓</option>
-            <option value="rcv">接球↓</option>
-            <option value="tos">舉球↓</option>
-            <option value="atk">攻擊↓</option>
-            <option value="card_no">卡號</option>
-            <option value="rarity">稀有度</option>
-          </select>
-          <button class="tray-btn" id="deck-color-mode-btn" style="font-size:11px;padding:2px 8px">🎨 上色</button>
-        </div>
-      </div>
+</div>
+
+<!-- ── Simple Export Modal ── -->
+<div class="sdeck-overlay" id="sexport-overlay">
+  <div class="sdeck-sheet">
+    <div class="sdeck-head">
+      <div><span class="sdeck-title">匯出預覽</span><span class="sdeck-total" id="sexport-total"></span></div>
+      <div class="sdeck-acts"><button class="sdbtn close" id="sexport-close-btn">×</button></div>
     </div>
-    <div class="deck-panel-body">
-      <div class="deck-card-list" id="deck-card-list">
-        <div class="deck-empty">牌組是空的，到卡片列表按「＋」加入卡片</div>
-      </div>
-    </div>
-    <div class="deck-color-picker-bar" id="deck-color-picker-bar">
-      <span class="color-pick-label">套用至選取：</span>
-      <button class="color-pick-btn" data-colorkey="free"    style="background:#888888" title="自由"></button>
-      <button class="color-pick-btn" data-colorkey="receive" style="background:#3b82f6" title="接球"></button>
-      <button class="color-pick-btn" data-colorkey="set"     style="background:#22c55e" title="舉球"></button>
-      <button class="color-pick-btn" data-colorkey="attack"  style="background:#ef4444" title="攻擊"></button>
-      <button class="color-pick-btn color-pick-clear" data-colorkey="" title="清除顏色">✕</button>
-      <span class="color-pick-count" id="color-pick-count">已選 0 張</span>
-    </div>
-    <div class="deck-panel-footer-toggle" id="deck-footer-toggle">
-      <span class="toggle-arrow">▲</span><span>工具</span>
-    </div>
-    <div class="deck-panel-footer" id="deck-panel-footer">
-      <button class="tray-btn" id="deck-share-btn" style="width:100%">📲 QR Code 快速分享</button>
-      <div style="display:flex;gap:8px;width:100%">
-        <button class="tray-btn" id="deck-export-img-btn" style="flex:1">🖼️ 牌組轉圖片</button>
-        <button class="tray-btn" id="deck-import-img-btn" style="flex:1">📸 圖片轉牌組</button>
-      </div>
-      <div style="display:flex;gap:8px;width:100%">
-        <button class="tray-btn" id="deck-export-btn" style="flex:1">📤 匯出所有牌組</button>
-        <button class="tray-btn" id="deck-import-btn" style="flex:1">📥 匯入所有牌組</button>
-      </div>
-      <input type="file" id="deck-import-file" accept=".json" style="display:none">
-      <input type="file" id="deck-import-img-file" accept="image/png" style="display:none">
+    <div class="sdeck-body">
+      <div class="sdeck-grid" id="sexport-grid" style="margin-bottom:12px"></div>
+      <button class="sexport-copy" id="sexport-copy-btn">複製文字清單</button>
     </div>
   </div>
 </div>
+
 
 <!-- ── Analysis Overlay ── -->
 <div class="analysis-overlay" id="analysis-overlay">
@@ -3849,6 +3817,167 @@ function bindDeckEvents() {
     document.body.classList.toggle('tray-mini', isMini);
   });
 }
+</script>
+
+<script>
+// ═══════════════════════════════════════════════════
+// SIMPLE DECK SYSTEM — overrides complex ref-site deck
+// ═══════════════════════════════════════════════════
+const SDECK_KEY = 'hv-deck-simple';
+const SDECK_MAX = 40;
+let sdeck = {};
+
+function sLoadDeck() {
+  try { sdeck = JSON.parse(localStorage.getItem(SDECK_KEY) || '{}'); } catch { sdeck = {}; }
+}
+function sSaveDeck() { localStorage.setItem(SDECK_KEY, JSON.stringify(sdeck)); }
+function sTotal() { return Object.values(sdeck).reduce((a,b)=>a+b,0); }
+
+function getCardCountInDeck(imgFile) { return sdeck[imgFile] || 0; }
+function isCardInQuickDeck() { return false; }
+function addCardToDeck(imgFile, qty) {
+  qty = qty || 1;
+  const room = SDECK_MAX - sTotal();
+  if (room <= 0) { sToast('已達上限 ' + SDECK_MAX + ' 張'); return; }
+  sdeck[imgFile] = (sdeck[imgFile] || 0) + Math.min(qty, room);
+  sSaveDeck(); sUpdateFab(); sUpdateInput(imgFile);
+}
+function removeCardFromDeck(imgFile) {
+  if (!sdeck[imgFile]) return;
+  sdeck[imgFile]--;
+  if (!sdeck[imgFile]) delete sdeck[imgFile];
+  sSaveDeck(); sUpdateFab(); sUpdateInput(imgFile);
+}
+
+function loadDecks()          { sLoadDeck(); }
+function saveDecks()          {}
+function renderDeckPanel()    {}
+function renderDeckSwitcher() {}
+function updateTray()         { sUpdateFab(); }
+function checkSharedDeck()    {}
+function bindDeckEvents()     { sBindEvents(); }
+function toggleQuickDeck()    {}
+function getCardColorMap()    { return null; }
+function reorganizeDeck()     {}
+function toggleColorMode()    {}
+function applyBatchColor()    {}
+function openShareModal()     {}
+function exportDecks()        {}
+function exportDeckAsImage()  {}
+function importDeckFromImage(){}
+function openAnalysis()       {}
+function closeAnalysis()      {}
+
+function sUpdateFab() {
+  const total = sTotal();
+  const fab = document.getElementById('simple-fab');
+  if (!fab) return;
+  fab.textContent = '牌組 ' + total + '/' + SDECK_MAX;
+  fab.style.borderColor = total >= SDECK_MAX ? '#e07070' : '#4a8abf';
+}
+function sUpdateInput(imgFile) {
+  const inp = document.getElementById('input-' + imgFile);
+  if (!inp) return;
+  const count = sdeck[imgFile] || 0;
+  inp.value = count > 0 ? count : '';
+  inp.classList.toggle('has-count', count > 0);
+}
+
+function sBindEvents() {
+  document.getElementById('simple-fab').addEventListener('click', sOpenPanel);
+  document.getElementById('sdeck-close-btn').addEventListener('click', sClosePanel);
+  document.getElementById('sdeck-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('sdeck-overlay')) sClosePanel();
+  });
+  document.getElementById('sdeck-clear-btn').addEventListener('click', () => {
+    if (!confirm('確定清空牌組？')) return;
+    sdeck = {}; sSaveDeck(); sUpdateFab(); sRenderPanel(); applyFilters();
+  });
+  document.getElementById('sdeck-export-btn').addEventListener('click', sOpenExport);
+  document.getElementById('sexport-close-btn').addEventListener('click', sCloseExport);
+  document.getElementById('sexport-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('sexport-overlay')) sCloseExport();
+  });
+  document.getElementById('sexport-copy-btn').addEventListener('click', sCopyExport);
+  document.getElementById('card-grid').addEventListener('change', e => {
+    const inp = e.target.closest('.card-count-input');
+    if (!inp) return;
+    const imgFile = inp.dataset.img;
+    const newCount = Math.max(0, parseInt(inp.value) || 0);
+    const curCount = sdeck[imgFile] || 0;
+    const newTotal = sTotal() - curCount + newCount;
+    const clamped = newTotal > SDECK_MAX ? newCount - (newTotal - SDECK_MAX) : newCount;
+    if (clamped <= 0) delete sdeck[imgFile];
+    else sdeck[imgFile] = clamped;
+    sSaveDeck(); sUpdateFab(); sUpdateInput(imgFile);
+  });
+  document.getElementById('card-grid').addEventListener('click', e => {
+    if (e.target.closest('.card-star-btn')) e.stopPropagation();
+  });
+}
+
+function sOpenPanel() { sRenderPanel(); document.getElementById('sdeck-overlay').classList.add('open'); }
+function sClosePanel() { document.getElementById('sdeck-overlay').classList.remove('open'); }
+
+function sRenderPanel() {
+  const total = sTotal();
+  const totalEl = document.getElementById('sdeck-total');
+  totalEl.textContent = total + ' / ' + SDECK_MAX + ' 張';
+  totalEl.style.color = total >= SDECK_MAX ? '#e07070' : '#94a3b8';
+  const entries = Object.entries(sdeck)
+    .map(([imgFile, count]) => ({ card: cards.find(c => c.image_file === imgFile), imgFile, count }))
+    .filter(e => e.card)
+    .sort((a, b) => a.imgFile.localeCompare(b.imgFile));
+  const grid = document.getElementById('sdeck-grid');
+  if (!entries.length) { grid.innerHTML = '<div class="sdeck-empty">尚未加入任何卡片</div>'; return; }
+  grid.innerHTML = entries.map(({ card, imgFile, count }) =>
+    '<div class="sdi"><img src="' + card.image_url + '" alt="" loading="lazy" onerror="this.style.background=\'#222\'">' +
+    '<div class="sdi-badge">' + count + '</div>' +
+    '<div class="sdi-ctrl">' +
+    '<button class="sdi-btn" onclick="removeCardFromDeck(\'' + imgFile + '\');sRenderPanel()">－</button>' +
+    '<button class="sdi-btn"' + (total >= SDECK_MAX ? ' disabled' : '') + ' onclick="addCardToDeck(\'' + imgFile + '\');sRenderPanel()">＋</button>' +
+    '</div></div>'
+  ).join('');
+}
+
+function sOpenExport() {
+  const entries = Object.entries(sdeck)
+    .map(([imgFile, count]) => ({ card: cards.find(c => c.image_file === imgFile), count }))
+    .filter(e => e.card).sort((a,b) => a.card.card_no.localeCompare(b.card.card_no));
+  document.getElementById('sexport-total').textContent = '共 ' + sTotal() + ' 張';
+  document.getElementById('sexport-grid').innerHTML = entries.map(({ card, count }) =>
+    '<div class="sdi"><img src="' + card.image_url + '" alt="" loading="lazy" onerror="this.style.background=\'#222\'">' +
+    '<div class="sdi-badge">' + count + '</div></div>'
+  ).join('');
+  document.getElementById('sexport-copy-btn').textContent = '複製文字清單';
+  document.getElementById('sexport-copy-btn').classList.remove('ok');
+  document.getElementById('sexport-overlay').classList.add('open');
+}
+function sCloseExport() { document.getElementById('sexport-overlay').classList.remove('open'); }
+function sCopyExport() {
+  const entries = Object.entries(sdeck)
+    .map(([imgFile, count]) => ({ card: cards.find(c => c.image_file === imgFile), count }))
+    .filter(e => e.card).sort((a,b) => a.card.card_no.localeCompare(b.card.card_no));
+  const lines = ['排球少年!! バボカ!! BREAK 牌組', '共 ' + sTotal() + ' 張', ''];
+  entries.forEach(({ card, count }) => lines.push('×' + count + ' ' + card.card_no + ' ' + (card.name || '')));
+  navigator.clipboard.writeText(lines.join('\n')).then(() => {
+    const btn = document.getElementById('sexport-copy-btn');
+    btn.textContent = '✓ 已複製！'; btn.classList.add('ok');
+    setTimeout(() => { btn.textContent = '複製文字清單'; btn.classList.remove('ok'); }, 2000);
+  }).catch(() => {});
+}
+function sToast(msg) {
+  let t = document.getElementById('s-toast');
+  if (!t) { t = document.createElement('div'); t.id = 's-toast';
+    t.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#1e3a5f;color:#fff;font-size:13px;padding:8px 18px;border-radius:20px;z-index:500;pointer-events:none;transition:opacity .3s';
+    document.body.appendChild(t); }
+  t.textContent = msg; t.style.opacity = '1';
+  clearTimeout(t._tid); t._tid = setTimeout(() => t.style.opacity = '0', 1500);
+}
+
+// Wrap init() so FAB updates after cards load
+const _refInit = window.init;
+window.init = function() { _refInit(); sLoadDeck(); sUpdateFab(); };
 </script>
 </body>
 </html>
