@@ -13,7 +13,8 @@
     "blk": 2,
     "rcv": 2,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "烏野"
   },
   {
     "number": "HV-D01-002",
@@ -29,7 +30,8 @@
     "blk": 1,
     "rcv": 2,
     "tos": 1,
-    "atk": 1
+    "atk": 1,
+    "school_group": "烏野"
   },
   {
     "number": "HV-D01-003",
@@ -45,7 +47,8 @@
     "blk": 3,
     "rcv": 1,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "烏野"
   },
   {
     "number": "HV-D01-004",
@@ -61,7 +64,8 @@
     "blk": 3,
     "rcv": 3,
     "tos": 0,
-    "atk": 1
+    "atk": 1,
+    "school_group": "烏野"
   },
   {
     "number": "HV-D01-005",
@@ -77,7 +81,8 @@
     "blk": null,
     "rcv": 5,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "烏野"
   },
   {
     "number": "HV-D01-006",
@@ -93,7 +98,8 @@
     "blk": 2,
     "rcv": 2,
     "tos": 1,
-    "atk": 3
+    "atk": 3,
+    "school_group": "烏野"
   },
   {
     "number": "HV-D01-007",
@@ -109,7 +115,8 @@
     "blk": 1,
     "rcv": 2,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "烏野"
   },
   {
     "number": "HV-D01-008",
@@ -125,7 +132,8 @@
     "blk": 1,
     "rcv": 5,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "烏野"
   },
   {
     "number": "HV-D01-009",
@@ -141,7 +149,8 @@
     "blk": 1,
     "rcv": 2,
     "tos": 2,
-    "atk": 3
+    "atk": 3,
+    "school_group": "烏野"
   },
   {
     "number": "HV-D01-010",
@@ -157,7 +166,8 @@
     "blk": 2,
     "rcv": 4,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "烏野"
   },
   {
     "number": "HV-D01-012",
@@ -173,7 +183,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "烏野"
   },
   {
     "number": "HV-D02-001",
@@ -189,7 +200,8 @@
     "blk": 2,
     "rcv": 1,
     "tos": 1,
-    "atk": 0
+    "atk": 0,
+    "school_group": "音駒"
   },
   {
     "number": "HV-D02-002",
@@ -205,7 +217,8 @@
     "blk": 3,
     "rcv": 1,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "音駒"
   },
   {
     "number": "HV-D02-003",
@@ -221,7 +234,8 @@
     "blk": null,
     "rcv": 5,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "音駒"
   },
   {
     "number": "HV-D02-004",
@@ -237,7 +251,8 @@
     "blk": 2,
     "rcv": 1,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "音駒"
   },
   {
     "number": "HV-D02-005",
@@ -253,7 +268,8 @@
     "blk": 2,
     "rcv": 5,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "音駒"
   },
   {
     "number": "HV-D02-006",
@@ -269,7 +285,8 @@
     "blk": 2,
     "rcv": 2,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "音駒"
   },
   {
     "number": "HV-D02-007",
@@ -285,7 +302,8 @@
     "blk": 0,
     "rcv": 4,
     "tos": 1,
-    "atk": 3
+    "atk": 3,
+    "school_group": "音駒"
   },
   {
     "number": "HV-D02-008",
@@ -301,7 +319,8 @@
     "blk": 3,
     "rcv": 3,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "音駒"
   },
   {
     "number": "HV-D02-009",
@@ -317,7 +336,8 @@
     "blk": null,
     "rcv": 5,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "音駒"
   },
   {
     "number": "HV-D02-010",
@@ -333,7 +353,8 @@
     "blk": 1,
     "rcv": 4,
     "tos": 1,
-    "atk": 0
+    "atk": 0,
+    "school_group": "音駒"
   },
   {
     "number": "HV-D02-011",
@@ -349,7 +370,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "音駒"
   },
   {
     "number": "HV-D02-012",
@@ -365,7 +387,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "音駒"
   },
   {
     "number": "HV-D03-001",
@@ -381,7 +404,8 @@
     "blk": 2,
     "rcv": 0,
     "tos": 1,
-    "atk": 0
+    "atk": 0,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-D03-002",
@@ -397,7 +421,8 @@
     "blk": 1,
     "rcv": 1,
     "tos": 1,
-    "atk": 2
+    "atk": 2,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-D03-003",
@@ -413,7 +438,8 @@
     "blk": 0,
     "rcv": 0,
     "tos": 1,
-    "atk": 0
+    "atk": 0,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-D03-004",
@@ -429,7 +455,8 @@
     "blk": 0,
     "rcv": 0,
     "tos": 2,
-    "atk": 3
+    "atk": 3,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-D03-005",
@@ -445,7 +472,8 @@
     "blk": 3,
     "rcv": 0,
     "tos": 2,
-    "atk": 2
+    "atk": 2,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-D03-006",
@@ -461,7 +489,8 @@
     "blk": 0,
     "rcv": 5,
     "tos": 1,
-    "atk": 0
+    "atk": 0,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-D03-007",
@@ -477,7 +506,8 @@
     "blk": 3,
     "rcv": 3,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-D03-008",
@@ -493,7 +523,8 @@
     "blk": 0,
     "rcv": 1,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-D03-009",
@@ -509,7 +540,8 @@
     "blk": 2,
     "rcv": 4,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-D03-010",
@@ -525,7 +557,8 @@
     "blk": 3,
     "rcv": 2,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-D03-011",
@@ -541,7 +574,8 @@
     "blk": null,
     "rcv": 5,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-D03-012",
@@ -557,7 +591,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-D03-013",
@@ -573,7 +608,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P01-001",
@@ -589,7 +625,8 @@
     "blk": 3,
     "rcv": 4,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P01-002",
@@ -605,7 +642,8 @@
     "blk": 3,
     "rcv": 1,
     "tos": 0,
-    "atk": 1
+    "atk": 1,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P01-002",
@@ -621,7 +659,8 @@
     "blk": 3,
     "rcv": 1,
     "tos": 0,
-    "atk": 1
+    "atk": 1,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P01-003",
@@ -637,7 +676,8 @@
     "blk": 2,
     "rcv": 2,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P01-004",
@@ -653,7 +693,8 @@
     "blk": 0,
     "rcv": 5,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P01-004",
@@ -669,7 +710,8 @@
     "blk": 0,
     "rcv": 5,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P01-004",
@@ -685,7 +727,8 @@
     "blk": 0,
     "rcv": 5,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P01-005",
@@ -701,7 +744,8 @@
     "blk": 1,
     "rcv": 2,
     "tos": 2,
-    "atk": 1
+    "atk": 1,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P01-006",
@@ -717,7 +761,8 @@
     "blk": 1,
     "rcv": 1,
     "tos": 1,
-    "atk": 2
+    "atk": 2,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P01-006",
@@ -733,7 +778,8 @@
     "blk": 1,
     "rcv": 1,
     "tos": 1,
-    "atk": 2
+    "atk": 2,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P01-006",
@@ -749,7 +795,8 @@
     "blk": 1,
     "rcv": 1,
     "tos": 1,
-    "atk": 2
+    "atk": 2,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P01-006",
@@ -765,7 +812,8 @@
     "blk": 1,
     "rcv": 1,
     "tos": 1,
-    "atk": 2
+    "atk": 2,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P01-007",
@@ -781,7 +829,8 @@
     "blk": 2,
     "rcv": 1,
     "tos": 2,
-    "atk": 2
+    "atk": 2,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P01-009",
@@ -797,7 +846,8 @@
     "blk": 3,
     "rcv": 3,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P01-010",
@@ -813,7 +863,8 @@
     "blk": 2,
     "rcv": 0,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P01-011",
@@ -829,7 +880,8 @@
     "blk": null,
     "rcv": 6,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P01-011",
@@ -845,7 +897,8 @@
     "blk": null,
     "rcv": 6,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P01-012",
@@ -861,7 +914,8 @@
     "blk": 2,
     "rcv": 2,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P01-012",
@@ -877,7 +931,8 @@
     "blk": 2,
     "rcv": 2,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P01-013",
@@ -893,7 +948,8 @@
     "blk": 0,
     "rcv": 2,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P01-014",
@@ -909,7 +965,8 @@
     "blk": 3,
     "rcv": 5,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P01-014",
@@ -925,7 +982,8 @@
     "blk": 3,
     "rcv": 5,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P01-015",
@@ -941,7 +999,8 @@
     "blk": 0,
     "rcv": 2,
     "tos": 1,
-    "atk": 2
+    "atk": 2,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P01-015",
@@ -957,7 +1016,8 @@
     "blk": 0,
     "rcv": 2,
     "tos": 1,
-    "atk": 2
+    "atk": 2,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P01-016",
@@ -973,7 +1033,8 @@
     "blk": 0,
     "rcv": 1,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P01-017",
@@ -989,7 +1050,8 @@
     "blk": 2,
     "rcv": 2,
     "tos": 2,
-    "atk": 1
+    "atk": 1,
+    "school_group": "音駒"
   },
   {
     "number": "HV-P01-018",
@@ -1005,7 +1067,8 @@
     "blk": 2,
     "rcv": 0,
     "tos": 1,
-    "atk": 1
+    "atk": 1,
+    "school_group": "音駒"
   },
   {
     "number": "HV-P01-018",
@@ -1021,7 +1084,8 @@
     "blk": 2,
     "rcv": 0,
     "tos": 1,
-    "atk": 1
+    "atk": 1,
+    "school_group": "音駒"
   },
   {
     "number": "HV-P01-019",
@@ -1037,7 +1101,8 @@
     "blk": 1,
     "rcv": 2,
     "tos": 1,
-    "atk": 1
+    "atk": 1,
+    "school_group": "音駒"
   },
   {
     "number": "HV-P01-020",
@@ -1053,7 +1118,8 @@
     "blk": 2,
     "rcv": 2,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "音駒"
   },
   {
     "number": "HV-P01-021",
@@ -1069,7 +1135,8 @@
     "blk": 2,
     "rcv": 3,
     "tos": 0,
-    "atk": 1
+    "atk": 1,
+    "school_group": "音駒"
   },
   {
     "number": "HV-P01-021",
@@ -1085,7 +1152,8 @@
     "blk": 2,
     "rcv": 3,
     "tos": 0,
-    "atk": 1
+    "atk": 1,
+    "school_group": "音駒"
   },
   {
     "number": "HV-P01-022",
@@ -1101,7 +1169,8 @@
     "blk": 1,
     "rcv": 5,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "音駒"
   },
   {
     "number": "HV-P01-023",
@@ -1117,7 +1186,8 @@
     "blk": null,
     "rcv": 5,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "音駒"
   },
   {
     "number": "HV-P01-023",
@@ -1133,7 +1203,8 @@
     "blk": null,
     "rcv": 5,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "音駒"
   },
   {
     "number": "HV-P01-024",
@@ -1149,7 +1220,8 @@
     "blk": null,
     "rcv": 6,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "音駒"
   },
   {
     "number": "HV-P01-025",
@@ -1165,7 +1237,8 @@
     "blk": 3,
     "rcv": 1,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "音駒"
   },
   {
     "number": "HV-P01-025",
@@ -1181,7 +1254,8 @@
     "blk": 3,
     "rcv": 1,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "音駒"
   },
   {
     "number": "HV-P01-026",
@@ -1197,7 +1271,8 @@
     "blk": 3,
     "rcv": 3,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "音駒"
   },
   {
     "number": "HV-P01-027",
@@ -1213,7 +1288,8 @@
     "blk": 0,
     "rcv": 4,
     "tos": 1,
-    "atk": 3
+    "atk": 3,
+    "school_group": "音駒"
   },
   {
     "number": "HV-P01-027",
@@ -1229,7 +1305,8 @@
     "blk": 0,
     "rcv": 4,
     "tos": 1,
-    "atk": 3
+    "atk": 3,
+    "school_group": "音駒"
   },
   {
     "number": "HV-P01-028",
@@ -1245,7 +1322,8 @@
     "blk": 2,
     "rcv": 0,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "音駒"
   },
   {
     "number": "HV-P01-029",
@@ -1261,7 +1339,8 @@
     "blk": 1,
     "rcv": 5,
     "tos": 1,
-    "atk": 0
+    "atk": 0,
+    "school_group": "音駒"
   },
   {
     "number": "HV-P01-029",
@@ -1277,7 +1356,8 @@
     "blk": 1,
     "rcv": 5,
     "tos": 1,
-    "atk": 0
+    "atk": 0,
+    "school_group": "音駒"
   },
   {
     "number": "HV-P01-030",
@@ -1293,7 +1373,8 @@
     "blk": 3,
     "rcv": 5,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "音駒"
   },
   {
     "number": "HV-P01-031",
@@ -1309,7 +1390,8 @@
     "blk": null,
     "rcv": 4,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "音駒"
   },
   {
     "number": "HV-P01-033",
@@ -1325,7 +1407,8 @@
     "blk": 0,
     "rcv": 0,
     "tos": 1,
-    "atk": 0
+    "atk": 0,
+    "school_group": "青葉城西"
   },
   {
     "number": "HV-P01-033",
@@ -1341,7 +1424,8 @@
     "blk": 0,
     "rcv": 0,
     "tos": 1,
-    "atk": 0
+    "atk": 0,
+    "school_group": "青葉城西"
   },
   {
     "number": "HV-P01-034",
@@ -1357,7 +1441,8 @@
     "blk": 0,
     "rcv": 0,
     "tos": 1,
-    "atk": 0
+    "atk": 0,
+    "school_group": "青葉城西"
   },
   {
     "number": "HV-P01-034",
@@ -1373,7 +1458,8 @@
     "blk": 0,
     "rcv": 0,
     "tos": 1,
-    "atk": 0
+    "atk": 0,
+    "school_group": "青葉城西"
   },
   {
     "number": "HV-P01-034",
@@ -1389,7 +1475,8 @@
     "blk": 0,
     "rcv": 0,
     "tos": 1,
-    "atk": 0
+    "atk": 0,
+    "school_group": "青葉城西"
   },
   {
     "number": "HV-P01-036",
@@ -1405,7 +1492,8 @@
     "blk": 3,
     "rcv": 2,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "青葉城西"
   },
   {
     "number": "HV-P01-037",
@@ -1421,7 +1509,8 @@
     "blk": 3,
     "rcv": 1,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "青葉城西"
   },
   {
     "number": "HV-P01-038",
@@ -1437,7 +1526,8 @@
     "blk": 2,
     "rcv": 5,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "青葉城西"
   },
   {
     "number": "HV-P01-039",
@@ -1453,7 +1543,8 @@
     "blk": null,
     "rcv": 5,
     "tos": 1,
-    "atk": 0
+    "atk": 0,
+    "school_group": "青葉城西"
   },
   {
     "number": "HV-P01-040",
@@ -1469,7 +1560,8 @@
     "blk": 1,
     "rcv": 3,
     "tos": 2,
-    "atk": 2
+    "atk": 2,
+    "school_group": "青葉城西"
   },
   {
     "number": "HV-P01-041",
@@ -1485,7 +1577,8 @@
     "blk": 0,
     "rcv": 5,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "青葉城西"
   },
   {
     "number": "HV-P01-042",
@@ -1501,7 +1594,8 @@
     "blk": 0,
     "rcv": 4,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "青葉城西"
   },
   {
     "number": "HV-P01-043",
@@ -1517,7 +1611,8 @@
     "blk": 1,
     "rcv": 2,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "梟谷"
   },
   {
     "number": "HV-P01-043",
@@ -1533,7 +1628,8 @@
     "blk": 1,
     "rcv": 2,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "梟谷"
   },
   {
     "number": "HV-P01-044",
@@ -1549,7 +1645,8 @@
     "blk": 2,
     "rcv": 2,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "梟谷"
   },
   {
     "number": "HV-P01-045",
@@ -1565,7 +1662,8 @@
     "blk": 1,
     "rcv": 0,
     "tos": 1,
-    "atk": 2
+    "atk": 2,
+    "school_group": "梟谷"
   },
   {
     "number": "HV-P01-045",
@@ -1581,7 +1679,8 @@
     "blk": 1,
     "rcv": 0,
     "tos": 1,
-    "atk": 2
+    "atk": 2,
+    "school_group": "梟谷"
   },
   {
     "number": "HV-P01-046",
@@ -1597,7 +1696,8 @@
     "blk": 2,
     "rcv": 3,
     "tos": 2,
-    "atk": 1
+    "atk": 1,
+    "school_group": "梟谷"
   },
   {
     "number": "HV-P01-047",
@@ -1613,7 +1713,8 @@
     "blk": 0,
     "rcv": 5,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "梟谷"
   },
   {
     "number": "HV-P01-048",
@@ -1629,7 +1730,8 @@
     "blk": 2,
     "rcv": 2,
     "tos": 1,
-    "atk": 3
+    "atk": 3,
+    "school_group": "梟谷"
   },
   {
     "number": "HV-P01-048",
@@ -1645,7 +1747,8 @@
     "blk": 2,
     "rcv": 2,
     "tos": 1,
-    "atk": 3
+    "atk": 3,
+    "school_group": "梟谷"
   },
   {
     "number": "HV-P01-049",
@@ -1661,7 +1764,8 @@
     "blk": 3,
     "rcv": 0,
     "tos": 1,
-    "atk": 3
+    "atk": 3,
+    "school_group": "梟谷"
   },
   {
     "number": "HV-P01-050",
@@ -1677,7 +1781,8 @@
     "blk": null,
     "rcv": 6,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "梟谷"
   },
   {
     "number": "HV-P01-051",
@@ -1693,7 +1798,8 @@
     "blk": 3,
     "rcv": 1,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "梟谷"
   },
   {
     "number": "HV-P01-052",
@@ -1709,7 +1815,8 @@
     "blk": 3,
     "rcv": 3,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "梟谷"
   },
   {
     "number": "HV-P01-053",
@@ -1725,7 +1832,8 @@
     "blk": 2,
     "rcv": 5,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "常波"
   },
   {
     "number": "HV-P01-054",
@@ -1741,7 +1849,8 @@
     "blk": 2,
     "rcv": 1,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "伊達工業"
   },
   {
     "number": "HV-P01-054",
@@ -1757,7 +1866,8 @@
     "blk": 2,
     "rcv": 1,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "伊達工業"
   },
   {
     "number": "HV-P01-055",
@@ -1773,7 +1883,8 @@
     "blk": 3,
     "rcv": 0,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "伊達工業"
   },
   {
     "number": "HV-P01-055",
@@ -1789,7 +1900,8 @@
     "blk": 3,
     "rcv": 0,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "伊達工業"
   },
   {
     "number": "HV-P01-056",
@@ -1805,7 +1917,8 @@
     "blk": 0,
     "rcv": 3,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "白鳥沢"
   },
   {
     "number": "HV-P01-056",
@@ -1821,7 +1934,8 @@
     "blk": 0,
     "rcv": 3,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "白鳥沢"
   },
   {
     "number": "HV-P01-057",
@@ -1837,7 +1951,8 @@
     "blk": 3,
     "rcv": 0,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "白鳥沢"
   },
   {
     "number": "HV-P01-058",
@@ -1853,7 +1968,8 @@
     "blk": 2,
     "rcv": 2,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "白鳥沢"
   },
   {
     "number": "HV-P01-059",
@@ -1869,7 +1985,8 @@
     "blk": 1,
     "rcv": 5,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "扇南"
   },
   {
     "number": "HV-P01-060",
@@ -1885,7 +2002,8 @@
     "blk": 3,
     "rcv": 1,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "角川"
   },
   {
     "number": "HV-P01-061",
@@ -1901,7 +2019,8 @@
     "blk": 2,
     "rcv": 1,
     "tos": 1,
-    "atk": 3
+    "atk": 3,
+    "school_group": "条善寺"
   },
   {
     "number": "HV-P01-062",
@@ -1917,7 +2036,8 @@
     "blk": 2,
     "rcv": 5,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "和久谷南"
   },
   {
     "number": "HV-P01-063",
@@ -1933,7 +2053,8 @@
     "blk": 1,
     "rcv": 1,
     "tos": 2,
-    "atk": 1
+    "atk": 1,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P01-063",
@@ -1949,7 +2070,8 @@
     "blk": 1,
     "rcv": 1,
     "tos": 2,
-    "atk": 1
+    "atk": 1,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P01-064",
@@ -1965,7 +2087,8 @@
     "blk": 2,
     "rcv": 4,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P01-064",
@@ -1981,7 +2104,8 @@
     "blk": 2,
     "rcv": 4,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P01-065",
@@ -1997,7 +2121,8 @@
     "blk": 1,
     "rcv": 2,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P01-066",
@@ -2013,7 +2138,8 @@
     "blk": 2,
     "rcv": 1,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "鷗台"
   },
   {
     "number": "HV-P01-066",
@@ -2029,7 +2155,8 @@
     "blk": 2,
     "rcv": 1,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "鷗台"
   },
   {
     "number": "HV-P01-067",
@@ -2045,7 +2172,8 @@
     "blk": 3,
     "rcv": 2,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "鷗台"
   },
   {
     "number": "HV-P01-068",
@@ -2061,7 +2189,8 @@
     "blk": 0,
     "rcv": 3,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "井闥山"
   },
   {
     "number": "HV-P01-069",
@@ -2077,7 +2206,8 @@
     "blk": 2,
     "rcv": 3,
     "tos": 2,
-    "atk": 1
+    "atk": 1,
+    "school_group": "椿原"
   },
   {
     "number": "HV-P01-070",
@@ -2093,7 +2223,8 @@
     "blk": 0,
     "rcv": 4,
     "tos": 2,
-    "atk": 1
+    "atk": 1,
+    "school_group": "早流川"
   },
   {
     "number": "HV-P01-071",
@@ -2109,7 +2240,8 @@
     "blk": 1,
     "rcv": 5,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "戶美"
   },
   {
     "number": "HV-P01-071",
@@ -2125,7 +2257,8 @@
     "blk": 1,
     "rcv": 5,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "戶美"
   },
   {
     "number": "HV-P01-072",
@@ -2141,7 +2274,8 @@
     "blk": 0,
     "rcv": 0,
     "tos": 1,
-    "atk": 3
+    "atk": 3,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P01-074",
@@ -2157,7 +2291,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P01-074",
@@ -2173,7 +2308,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P01-075",
@@ -2189,7 +2325,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P01-076",
@@ -2205,7 +2342,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P01-077",
@@ -2221,7 +2359,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P01-078",
@@ -2237,7 +2376,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P01-078",
@@ -2253,7 +2393,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P01-079",
@@ -2269,7 +2410,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P01-079",
@@ -2285,7 +2427,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P01-080",
@@ -2301,7 +2444,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "音駒"
   },
   {
     "number": "HV-P01-080",
@@ -2317,7 +2461,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "音駒"
   },
   {
     "number": "HV-P01-081",
@@ -2333,7 +2478,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "音駒"
   },
   {
     "number": "HV-P01-082",
@@ -2349,7 +2495,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "音駒"
   },
   {
     "number": "HV-P01-083",
@@ -2365,7 +2512,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "音駒"
   },
   {
     "number": "HV-P01-084",
@@ -2381,7 +2529,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "音駒"
   },
   {
     "number": "HV-P01-085",
@@ -2397,7 +2546,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "青葉城西"
   },
   {
     "number": "HV-P01-086",
@@ -2413,7 +2563,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "青葉城西"
   },
   {
     "number": "HV-P01-087",
@@ -2429,7 +2580,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "青葉城西"
   },
   {
     "number": "HV-P01-088",
@@ -2445,7 +2597,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "青葉城西"
   },
   {
     "number": "HV-P01-089",
@@ -2461,7 +2614,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "梟谷"
   },
   {
     "number": "HV-P01-090",
@@ -2477,7 +2631,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "梟谷"
   },
   {
     "number": "HV-P01-091",
@@ -2493,7 +2648,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "梟谷"
   },
   {
     "number": "HV-P02-001",
@@ -2509,7 +2665,8 @@
     "blk": 2,
     "rcv": 0,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P02-002",
@@ -2525,7 +2682,8 @@
     "blk": 1,
     "rcv": 0,
     "tos": 1,
-    "atk": 0
+    "atk": 0,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P02-002",
@@ -2541,7 +2699,8 @@
     "blk": 1,
     "rcv": 0,
     "tos": 1,
-    "atk": 0
+    "atk": 0,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P02-003",
@@ -2557,7 +2716,8 @@
     "blk": 2,
     "rcv": 3,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P02-003",
@@ -2573,7 +2733,8 @@
     "blk": 2,
     "rcv": 3,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P02-004",
@@ -2589,7 +2750,8 @@
     "blk": 3,
     "rcv": 0,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P02-004",
@@ -2605,7 +2767,8 @@
     "blk": 3,
     "rcv": 0,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P02-006",
@@ -2621,7 +2784,8 @@
     "blk": null,
     "rcv": 4,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P02-007",
@@ -2637,7 +2801,8 @@
     "blk": 2,
     "rcv": 2,
     "tos": 0,
-    "atk": 1
+    "atk": 1,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P02-007",
@@ -2653,7 +2818,8 @@
     "blk": 2,
     "rcv": 2,
     "tos": 0,
-    "atk": 1
+    "atk": 1,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P02-009",
@@ -2669,7 +2835,8 @@
     "blk": 2,
     "rcv": 4,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P02-010",
@@ -2685,7 +2852,8 @@
     "blk": 0,
     "rcv": 1,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P02-010",
@@ -2701,7 +2869,8 @@
     "blk": 0,
     "rcv": 1,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P02-010",
@@ -2717,7 +2886,8 @@
     "blk": 0,
     "rcv": 1,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P02-010",
@@ -2733,7 +2903,8 @@
     "blk": 0,
     "rcv": 1,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P02-011",
@@ -2749,7 +2920,8 @@
     "blk": 2,
     "rcv": 0,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P02-012",
@@ -2765,7 +2937,8 @@
     "blk": 0,
     "rcv": 5,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P02-013",
@@ -2781,7 +2954,8 @@
     "blk": 2,
     "rcv": 2,
     "tos": 2,
-    "atk": 0
+    "atk": 0,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P02-014",
@@ -2797,7 +2971,8 @@
     "blk": 0,
     "rcv": 0,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P02-016",
@@ -2813,7 +2988,8 @@
     "blk": 0,
     "rcv": 0,
     "tos": 1,
-    "atk": 0
+    "atk": 0,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P02-016",
@@ -2829,7 +3005,8 @@
     "blk": 0,
     "rcv": 0,
     "tos": 1,
-    "atk": 0
+    "atk": 0,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P02-016",
@@ -2845,7 +3022,8 @@
     "blk": 0,
     "rcv": 0,
     "tos": 1,
-    "atk": 0
+    "atk": 0,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P02-017",
@@ -2861,7 +3039,8 @@
     "blk": 0,
     "rcv": 0,
     "tos": 1,
-    "atk": 1
+    "atk": 1,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P02-018",
@@ -2877,7 +3056,8 @@
     "blk": 1,
     "rcv": 1,
     "tos": 2,
-    "atk": 3
+    "atk": 3,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P02-018",
@@ -2893,7 +3073,8 @@
     "blk": 1,
     "rcv": 1,
     "tos": 2,
-    "atk": 3
+    "atk": 3,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P02-019",
@@ -2909,7 +3090,8 @@
     "blk": 1,
     "rcv": 3,
     "tos": 1,
-    "atk": 3
+    "atk": 3,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P02-020",
@@ -2925,7 +3107,8 @@
     "blk": 1,
     "rcv": 3,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P02-020",
@@ -2941,7 +3124,8 @@
     "blk": 1,
     "rcv": 3,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P02-021",
@@ -2957,7 +3141,8 @@
     "blk": 2,
     "rcv": 1,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P02-021",
@@ -2973,7 +3158,8 @@
     "blk": 2,
     "rcv": 1,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P02-022",
@@ -2989,7 +3175,8 @@
     "blk": 1,
     "rcv": 5,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P02-023",
@@ -3005,7 +3192,8 @@
     "blk": 0,
     "rcv": 5,
     "tos": 1,
-    "atk": 1
+    "atk": 1,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P02-024",
@@ -3021,7 +3209,8 @@
     "blk": 0,
     "rcv": 5,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P02-024",
@@ -3037,7 +3226,8 @@
     "blk": 0,
     "rcv": 5,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P02-025",
@@ -3053,7 +3243,8 @@
     "blk": 0,
     "rcv": 5,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P02-026",
@@ -3069,7 +3260,8 @@
     "blk": 3,
     "rcv": 2,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P02-027",
@@ -3085,7 +3277,8 @@
     "blk": 2,
     "rcv": 2,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P02-027",
@@ -3101,7 +3294,8 @@
     "blk": 2,
     "rcv": 2,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P02-028",
@@ -3117,7 +3311,8 @@
     "blk": 2,
     "rcv": 4,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P02-029",
@@ -3133,7 +3328,8 @@
     "blk": 0,
     "rcv": 2,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P02-029",
@@ -3149,7 +3345,8 @@
     "blk": 0,
     "rcv": 2,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P02-030",
@@ -3165,7 +3362,8 @@
     "blk": 0,
     "rcv": 4,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P02-031",
@@ -3181,7 +3379,8 @@
     "blk": 2,
     "rcv": 2,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P02-032",
@@ -3197,7 +3396,8 @@
     "blk": 3,
     "rcv": 5,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P02-033",
@@ -3213,7 +3413,8 @@
     "blk": 3,
     "rcv": 3,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P02-034",
@@ -3229,7 +3430,8 @@
     "blk": null,
     "rcv": 6,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P02-035",
@@ -3245,7 +3447,8 @@
     "blk": 0,
     "rcv": 0,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P02-036",
@@ -3261,7 +3464,8 @@
     "blk": 2,
     "rcv": 1,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "伊達工業"
   },
   {
     "number": "HV-P02-036",
@@ -3277,7 +3481,8 @@
     "blk": 2,
     "rcv": 1,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "伊達工業"
   },
   {
     "number": "HV-P02-036",
@@ -3293,7 +3498,8 @@
     "blk": 2,
     "rcv": 1,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "伊達工業"
   },
   {
     "number": "HV-P02-036",
@@ -3309,7 +3515,8 @@
     "blk": 2,
     "rcv": 1,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "伊達工業"
   },
   {
     "number": "HV-P02-036",
@@ -3325,7 +3532,8 @@
     "blk": 2,
     "rcv": 1,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "伊達工業"
   },
   {
     "number": "HV-P02-037",
@@ -3341,7 +3549,8 @@
     "blk": 2,
     "rcv": 2,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "伊達工業"
   },
   {
     "number": "HV-P02-040",
@@ -3357,7 +3566,8 @@
     "blk": 3,
     "rcv": 2,
     "tos": 1,
-    "atk": 1
+    "atk": 1,
+    "school_group": "伊達工業"
   },
   {
     "number": "HV-P02-040",
@@ -3373,7 +3583,8 @@
     "blk": 3,
     "rcv": 2,
     "tos": 1,
-    "atk": 1
+    "atk": 1,
+    "school_group": "伊達工業"
   },
   {
     "number": "HV-P02-041",
@@ -3389,7 +3600,8 @@
     "blk": null,
     "rcv": 5,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "伊達工業"
   },
   {
     "number": "HV-P02-042",
@@ -3405,7 +3617,8 @@
     "blk": 3,
     "rcv": 0,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "伊達工業"
   },
   {
     "number": "HV-P02-043",
@@ -3421,7 +3634,8 @@
     "blk": 3,
     "rcv": 1,
     "tos": 2,
-    "atk": 0
+    "atk": 0,
+    "school_group": "伊達工業"
   },
   {
     "number": "HV-P02-044",
@@ -3437,7 +3651,8 @@
     "blk": 3,
     "rcv": 3,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "伊達工業"
   },
   {
     "number": "HV-P02-045",
@@ -3453,7 +3668,8 @@
     "blk": 3,
     "rcv": 5,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "伊達工業"
   },
   {
     "number": "HV-P02-046",
@@ -3469,7 +3685,8 @@
     "blk": 1,
     "rcv": 3,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "白鳥沢"
   },
   {
     "number": "HV-P02-046",
@@ -3485,7 +3702,8 @@
     "blk": 1,
     "rcv": 3,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "白鳥沢"
   },
   {
     "number": "HV-P02-047",
@@ -3501,7 +3719,8 @@
     "blk": 1,
     "rcv": 5,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "白鳥沢"
   },
   {
     "number": "HV-P02-048",
@@ -3517,7 +3736,8 @@
     "blk": 2,
     "rcv": 1,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "白鳥沢"
   },
   {
     "number": "HV-P02-048",
@@ -3533,7 +3753,8 @@
     "blk": 2,
     "rcv": 1,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "白鳥沢"
   },
   {
     "number": "HV-P02-049",
@@ -3549,7 +3770,8 @@
     "blk": 3,
     "rcv": 0,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "白鳥沢"
   },
   {
     "number": "HV-P02-050",
@@ -3565,7 +3787,8 @@
     "blk": 0,
     "rcv": 0,
     "tos": 1,
-    "atk": 2
+    "atk": 2,
+    "school_group": "白鳥沢"
   },
   {
     "number": "HV-P02-050",
@@ -3581,7 +3804,8 @@
     "blk": 0,
     "rcv": 0,
     "tos": 1,
-    "atk": 2
+    "atk": 2,
+    "school_group": "白鳥沢"
   },
   {
     "number": "HV-P02-051",
@@ -3597,7 +3821,8 @@
     "blk": 2,
     "rcv": 0,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "白鳥沢"
   },
   {
     "number": "HV-P02-052",
@@ -3613,7 +3838,8 @@
     "blk": 0,
     "rcv": 5,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "白鳥沢"
   },
   {
     "number": "HV-P02-053",
@@ -3629,7 +3855,8 @@
     "blk": null,
     "rcv": 6,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "白鳥沢"
   },
   {
     "number": "HV-P02-054",
@@ -3645,7 +3872,8 @@
     "blk": 3,
     "rcv": 3,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "白鳥沢"
   },
   {
     "number": "HV-P02-055",
@@ -3661,7 +3889,8 @@
     "blk": 2,
     "rcv": 1,
     "tos": 2,
-    "atk": 0
+    "atk": 0,
+    "school_group": "白鳥沢"
   },
   {
     "number": "HV-P02-056",
@@ -3677,7 +3906,8 @@
     "blk": 2,
     "rcv": 1,
     "tos": 1,
-    "atk": 0
+    "atk": 0,
+    "school_group": "青葉城西"
   },
   {
     "number": "HV-P02-056",
@@ -3693,7 +3923,8 @@
     "blk": 2,
     "rcv": 1,
     "tos": 1,
-    "atk": 0
+    "atk": 0,
+    "school_group": "青葉城西"
   },
   {
     "number": "HV-P02-057",
@@ -3709,7 +3940,8 @@
     "blk": 2,
     "rcv": 1,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "青葉城西"
   },
   {
     "number": "HV-P02-058",
@@ -3725,7 +3957,8 @@
     "blk": 0,
     "rcv": 5,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "青葉城西"
   },
   {
     "number": "HV-P02-059",
@@ -3741,7 +3974,8 @@
     "blk": 2,
     "rcv": 4,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "青葉城西"
   },
   {
     "number": "HV-P02-059",
@@ -3757,7 +3991,8 @@
     "blk": 2,
     "rcv": 4,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "青葉城西"
   },
   {
     "number": "HV-P02-060",
@@ -3773,7 +4008,8 @@
     "blk": 1,
     "rcv": 1,
     "tos": 1,
-    "atk": 2
+    "atk": 2,
+    "school_group": "音駒"
   },
   {
     "number": "HV-P02-061",
@@ -3789,7 +4025,8 @@
     "blk": 0,
     "rcv": 3,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "音駒"
   },
   {
     "number": "HV-P02-062",
@@ -3805,7 +4042,8 @@
     "blk": null,
     "rcv": 5,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "音駒"
   },
   {
     "number": "HV-P02-063",
@@ -3821,7 +4059,8 @@
     "blk": 2,
     "rcv": 4,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "音駒"
   },
   {
     "number": "HV-P02-064",
@@ -3837,7 +4076,8 @@
     "blk": 3,
     "rcv": 6,
     "tos": 0,
-    "atk": 4
+    "atk": 4,
+    "school_group": "梟谷"
   },
   {
     "number": "HV-P02-065",
@@ -3853,7 +4093,8 @@
     "blk": 2,
     "rcv": 4,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "梟谷"
   },
   {
     "number": "HV-P02-066",
@@ -3869,7 +4110,8 @@
     "blk": 1,
     "rcv": 1,
     "tos": 1,
-    "atk": 1
+    "atk": 1,
+    "school_group": "梟谷"
   },
   {
     "number": "HV-P02-067",
@@ -3885,7 +4127,8 @@
     "blk": 0,
     "rcv": 1,
     "tos": 1,
-    "atk": 1
+    "atk": 1,
+    "school_group": "梟谷"
   },
   {
     "number": "HV-P02-068",
@@ -3901,7 +4144,8 @@
     "blk": 2,
     "rcv": 0,
     "tos": 1,
-    "atk": 3
+    "atk": 3,
+    "school_group": "鷗台"
   },
   {
     "number": "HV-P02-068",
@@ -3917,7 +4161,8 @@
     "blk": 2,
     "rcv": 0,
     "tos": 1,
-    "atk": 3
+    "atk": 3,
+    "school_group": "鷗台"
   },
   {
     "number": "HV-P02-069",
@@ -3933,7 +4178,8 @@
     "blk": 0,
     "rcv": 4,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "井闥山"
   },
   {
     "number": "HV-P02-070",
@@ -3949,7 +4195,8 @@
     "blk": null,
     "rcv": 5,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "井闥山"
   },
   {
     "number": "HV-P02-071",
@@ -3965,7 +4212,8 @@
     "blk": 0,
     "rcv": 3,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "椿原"
   },
   {
     "number": "HV-P02-072",
@@ -3981,7 +4229,8 @@
     "blk": 2,
     "rcv": 4,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "早流川"
   },
   {
     "number": "HV-P02-073",
@@ -3997,7 +4246,8 @@
     "blk": 1,
     "rcv": 3,
     "tos": 0,
-    "atk": 1
+    "atk": 1,
+    "school_group": "戶美"
   },
   {
     "number": "HV-P02-073",
@@ -4013,7 +4263,8 @@
     "blk": 1,
     "rcv": 3,
     "tos": 0,
-    "atk": 1
+    "atk": 1,
+    "school_group": "戶美"
   },
   {
     "number": "HV-P02-074",
@@ -4029,7 +4280,8 @@
     "blk": 1,
     "rcv": 0,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "戶美"
   },
   {
     "number": "HV-P02-075",
@@ -4045,7 +4297,8 @@
     "blk": 1,
     "rcv": 4,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "戶美"
   },
   {
     "number": "HV-P02-076",
@@ -4061,7 +4314,8 @@
     "blk": 0,
     "rcv": 0,
     "tos": 1,
-    "atk": 3
+    "atk": 3,
+    "school_group": "新山"
   },
   {
     "number": "HV-P02-077",
@@ -4077,7 +4331,8 @@
     "blk": 0,
     "rcv": 0,
     "tos": 1,
-    "atk": 3
+    "atk": 3,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P02-077",
@@ -4093,7 +4348,8 @@
     "blk": 0,
     "rcv": 0,
     "tos": 1,
-    "atk": 3
+    "atk": 3,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P02-077",
@@ -4109,7 +4365,8 @@
     "blk": 0,
     "rcv": 0,
     "tos": 1,
-    "atk": 3
+    "atk": 3,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P02-078",
@@ -4125,7 +4382,8 @@
     "blk": 1,
     "rcv": 5,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P02-078",
@@ -4141,7 +4399,8 @@
     "blk": 1,
     "rcv": 5,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P02-079",
@@ -4157,7 +4416,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P02-079",
@@ -4173,7 +4433,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P02-081",
@@ -4189,7 +4450,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P02-082",
@@ -4205,7 +4467,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P02-082",
@@ -4221,7 +4484,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P02-083",
@@ -4237,7 +4501,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P02-084",
@@ -4253,7 +4518,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P02-085",
@@ -4269,7 +4535,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P02-086",
@@ -4285,7 +4552,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P02-087",
@@ -4301,7 +4569,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P02-087",
@@ -4317,7 +4586,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P02-088",
@@ -4333,7 +4603,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P02-089",
@@ -4349,7 +4620,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P02-089",
@@ -4365,7 +4637,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P02-090",
@@ -4381,7 +4654,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "伊達工業"
   },
   {
     "number": "HV-P02-091",
@@ -4397,7 +4671,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "伊達工業"
   },
   {
     "number": "HV-P02-092",
@@ -4413,7 +4688,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "伊達工業"
   },
   {
     "number": "HV-P02-092",
@@ -4429,7 +4705,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "伊達工業"
   },
   {
     "number": "HV-P02-093",
@@ -4445,7 +4722,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "伊達工業"
   },
   {
     "number": "HV-P02-094",
@@ -4461,7 +4739,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "白鳥沢"
   },
   {
     "number": "HV-P02-095",
@@ -4477,7 +4756,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "白鳥沢"
   },
   {
     "number": "HV-P02-096",
@@ -4493,7 +4773,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "白鳥沢"
   },
   {
     "number": "HV-P02-096",
@@ -4509,7 +4790,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "白鳥沢"
   },
   {
     "number": "HV-P02-097",
@@ -4525,7 +4807,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "白鳥沢"
   },
   {
     "number": "HV-P02-098",
@@ -4541,7 +4824,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "白鳥沢"
   },
   {
     "number": "HV-P02-099",
@@ -4557,7 +4841,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "戶美"
   },
   {
     "number": "HV-P02-099",
@@ -4573,7 +4858,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "戶美"
   },
   {
     "number": "HV-P02-100",
@@ -4589,7 +4875,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "音駒"
   },
   {
     "number": "HV-P03-002",
@@ -4605,7 +4892,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P03-002",
@@ -4621,7 +4909,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P03-004",
@@ -4637,7 +4926,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "烏野"
   },
   {
     "number": "HV-P03-006",
@@ -4653,7 +4943,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "青葉城西"
   },
   {
     "number": "HV-P03-008",
@@ -4669,7 +4960,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "青葉城西"
   },
   {
     "number": "HV-P03-010",
@@ -4685,7 +4977,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "伊達工業"
   },
   {
     "number": "HV-P03-012",
@@ -4701,7 +4994,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "白鳥沢"
   },
   {
     "number": "HV-P03-017",
@@ -4717,7 +5011,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "角川"
   },
   {
     "number": "HV-P03-022",
@@ -4733,7 +5028,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-P03-025",
@@ -4749,7 +5045,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "鷗台"
   },
   {
     "number": "HV-P03-027",
@@ -4765,7 +5062,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "井闥山"
   },
   {
     "number": "HV-P03-029",
@@ -4781,7 +5079,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "井闥山"
   },
   {
     "number": "HV-P03-030",
@@ -4797,7 +5096,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "森然"
   },
   {
     "number": "HV-P03-067",
@@ -4813,7 +5113,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "白鳥沢"
   },
   {
     "number": "HV-P03-067",
@@ -4829,7 +5130,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "白鳥沢"
   },
   {
     "number": "HV-P03-067",
@@ -4845,7 +5147,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "白鳥沢"
   },
   {
     "number": "HV-P03-068",
@@ -4861,7 +5164,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "白鳥沢"
   },
   {
     "number": "HV-P03-068",
@@ -4877,7 +5181,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "白鳥沢"
   },
   {
     "number": "HV-PR-001",
@@ -4893,7 +5198,8 @@
     "blk": 1,
     "rcv": 3,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": null
   },
   {
     "number": "HV-PR-002",
@@ -4909,7 +5215,8 @@
     "blk": 1,
     "rcv": 1,
     "tos": 1,
-    "atk": 1
+    "atk": 1,
+    "school_group": null
   },
   {
     "number": "HV-PR-003",
@@ -4925,7 +5232,8 @@
     "blk": 1,
     "rcv": 1,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "烏野"
   },
   {
     "number": "HV-PR-004",
@@ -4941,7 +5249,8 @@
     "blk": 1,
     "rcv": 1,
     "tos": 1,
-    "atk": 2
+    "atk": 2,
+    "school_group": "烏野"
   },
   {
     "number": "HV-PR-005",
@@ -4957,7 +5266,8 @@
     "blk": 3,
     "rcv": 3,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "烏野"
   },
   {
     "number": "HV-PR-006",
@@ -4973,7 +5283,8 @@
     "blk": 3,
     "rcv": 2,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "梟谷"
   },
   {
     "number": "HV-PR-007",
@@ -4989,7 +5300,8 @@
     "blk": 2,
     "rcv": 0,
     "tos": 2,
-    "atk": 1
+    "atk": 1,
+    "school_group": "青葉城西"
   },
   {
     "number": "HV-PR-008",
@@ -5005,7 +5317,8 @@
     "blk": 1,
     "rcv": 4,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "青葉城西"
   },
   {
     "number": "HV-PR-009",
@@ -5021,7 +5334,8 @@
     "blk": 0,
     "rcv": 0,
     "tos": 1,
-    "atk": 0
+    "atk": 0,
+    "school_group": "青葉城西"
   },
   {
     "number": "HV-PR-010",
@@ -5037,7 +5351,8 @@
     "blk": 3,
     "rcv": 4,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "烏野"
   },
   {
     "number": "HV-PR-011",
@@ -5053,7 +5368,8 @@
     "blk": 2,
     "rcv": 3,
     "tos": 2,
-    "atk": 1
+    "atk": 1,
+    "school_group": "音駒"
   },
   {
     "number": "HV-PR-012",
@@ -5069,7 +5385,8 @@
     "blk": 2,
     "rcv": 0,
     "tos": 1,
-    "atk": 1
+    "atk": 1,
+    "school_group": "烏野"
   },
   {
     "number": "HV-PR-013",
@@ -5085,7 +5402,8 @@
     "blk": 0,
     "rcv": 0,
     "tos": 1,
-    "atk": 3
+    "atk": 3,
+    "school_group": "梟谷"
   },
   {
     "number": "HV-PR-014",
@@ -5101,7 +5419,8 @@
     "blk": 2,
     "rcv": 1,
     "tos": 1,
-    "atk": 0
+    "atk": 0,
+    "school_group": "音駒"
   },
   {
     "number": "HV-PR-015",
@@ -5117,7 +5436,8 @@
     "blk": 1,
     "rcv": 1,
     "tos": 1,
-    "atk": 1
+    "atk": 1,
+    "school_group": "北川"
   },
   {
     "number": "HV-PR-016",
@@ -5133,7 +5453,8 @@
     "blk": 3,
     "rcv": 0,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "烏野"
   },
   {
     "number": "HV-PR-017",
@@ -5149,7 +5470,8 @@
     "blk": 2,
     "rcv": 0,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "青葉城西"
   },
   {
     "number": "HV-PR-018",
@@ -5165,7 +5487,8 @@
     "blk": 0,
     "rcv": 0,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "白鳥沢"
   },
   {
     "number": "HV-PR-019",
@@ -5181,7 +5504,8 @@
     "blk": 2,
     "rcv": 4,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "烏野"
   },
   {
     "number": "HV-PR-020",
@@ -5197,7 +5521,8 @@
     "blk": 0,
     "rcv": 4,
     "tos": 2,
-    "atk": 0
+    "atk": 0,
+    "school_group": "音駒"
   },
   {
     "number": "HV-PR-021",
@@ -5213,7 +5538,8 @@
     "blk": 2,
     "rcv": 4,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "梟谷"
   },
   {
     "number": "HV-PR-022",
@@ -5229,7 +5555,8 @@
     "blk": 0,
     "rcv": 5,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "烏野"
   },
   {
     "number": "HV-PR-023",
@@ -5245,7 +5572,8 @@
     "blk": null,
     "rcv": 5,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "音駒"
   },
   {
     "number": "HV-PR-024",
@@ -5261,7 +5589,8 @@
     "blk": 1,
     "rcv": 1,
     "tos": 1,
-    "atk": 2
+    "atk": 2,
+    "school_group": "青葉城西"
   },
   {
     "number": "HV-PR-025",
@@ -5277,7 +5606,8 @@
     "blk": 2,
     "rcv": 2,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "青葉城西"
   },
   {
     "number": "HV-PR-026",
@@ -5293,7 +5623,8 @@
     "blk": 1,
     "rcv": 3,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "梟谷"
   },
   {
     "number": "HV-PR-027",
@@ -5309,7 +5640,8 @@
     "blk": 2,
     "rcv": 0,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "伊達工業"
   },
   {
     "number": "HV-PR-028",
@@ -5325,7 +5657,8 @@
     "blk": 1,
     "rcv": 1,
     "tos": 1,
-    "atk": 2
+    "atk": 2,
+    "school_group": "白鳥沢"
   },
   {
     "number": "HV-PR-029",
@@ -5341,7 +5674,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "烏野"
   },
   {
     "number": "HV-PR-030",
@@ -5357,7 +5691,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "音駒"
   },
   {
     "number": "HV-PR-031",
@@ -5373,7 +5708,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "梟谷"
   },
   {
     "number": "HV-PR-032",
@@ -5389,7 +5725,8 @@
     "blk": 1,
     "rcv": 2,
     "tos": 2,
-    "atk": 1
+    "atk": 1,
+    "school_group": "烏野"
   },
   {
     "number": "HV-PR-033",
@@ -5405,7 +5742,8 @@
     "blk": null,
     "rcv": 6,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "烏野"
   },
   {
     "number": "HV-PR-034",
@@ -5421,7 +5759,8 @@
     "blk": 2,
     "rcv": 2,
     "tos": 2,
-    "atk": 0
+    "atk": 0,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-PR-035",
@@ -5437,7 +5776,8 @@
     "blk": 1,
     "rcv": 4,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-PR-036",
@@ -5453,7 +5793,8 @@
     "blk": 1,
     "rcv": 0,
     "tos": 1,
-    "atk": 1
+    "atk": 1,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-PR-037",
@@ -5469,7 +5810,8 @@
     "blk": 1,
     "rcv": 1,
     "tos": 1,
-    "atk": 1
+    "atk": 1,
+    "school_group": "烏野"
   },
   {
     "number": "HV-PR-038",
@@ -5485,7 +5827,8 @@
     "blk": null,
     "rcv": 5,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "烏野"
   },
   {
     "number": "HV-PR-039",
@@ -5501,7 +5844,8 @@
     "blk": 3,
     "rcv": 1,
     "tos": 0,
-    "atk": 1
+    "atk": 1,
+    "school_group": "伊達工業"
   },
   {
     "number": "HV-PR-040",
@@ -5517,7 +5861,8 @@
     "blk": 1,
     "rcv": 1,
     "tos": 1,
-    "atk": 2
+    "atk": 2,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-PR-041",
@@ -5533,7 +5878,8 @@
     "blk": 0,
     "rcv": 0,
     "tos": 1,
-    "atk": 2
+    "atk": 2,
+    "school_group": "烏野"
   },
   {
     "number": "HV-PR-042",
@@ -5549,7 +5895,8 @@
     "blk": 0,
     "rcv": 0,
     "tos": 1,
-    "atk": 1
+    "atk": 1,
+    "school_group": "白鳥沢"
   },
   {
     "number": "HV-PR-043",
@@ -5565,7 +5912,8 @@
     "blk": 3,
     "rcv": 0,
     "tos": 2,
-    "atk": 0
+    "atk": 0,
+    "school_group": "烏野"
   },
   {
     "number": "HV-PR-044",
@@ -5581,7 +5929,8 @@
     "blk": 1,
     "rcv": 4,
     "tos": 0,
-    "atk": 2
+    "atk": 2,
+    "school_group": "音駒"
   },
   {
     "number": "HV-PR-045",
@@ -5597,7 +5946,8 @@
     "blk": 2,
     "rcv": 0,
     "tos": 1,
-    "atk": 0
+    "atk": 0,
+    "school_group": "伊達工業"
   },
   {
     "number": "HV-PR-046",
@@ -5613,7 +5963,8 @@
     "blk": 2,
     "rcv": 2,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "白鳥沢"
   },
   {
     "number": "HV-PR-047",
@@ -5629,7 +5980,8 @@
     "blk": null,
     "rcv": 5,
     "tos": 0,
-    "atk": 0
+    "atk": 0,
+    "school_group": "梟谷"
   },
   {
     "number": "HV-PR-048",
@@ -5645,7 +5997,8 @@
     "blk": 0,
     "rcv": 0,
     "tos": 1,
-    "atk": 2
+    "atk": 2,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-PR-049",
@@ -5661,7 +6014,8 @@
     "blk": 0,
     "rcv": 3,
     "tos": 0,
-    "atk": 3
+    "atk": 3,
+    "school_group": "稻荷崎"
   },
   {
     "number": "HV-PR-050",
@@ -5677,7 +6031,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "烏野"
   },
   {
     "number": "HV-PR-051",
@@ -5693,7 +6048,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "青葉城西"
   },
   {
     "number": "HV-PR-052",
@@ -5709,7 +6065,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "白鳥沢"
   },
   {
     "number": "HV-PR-053",
@@ -5725,7 +6082,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "烏野"
   },
   {
     "number": "HV-PR-054",
@@ -5741,7 +6099,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "烏野"
   },
   {
     "number": "HV-PR-055",
@@ -5757,7 +6116,8 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "井闥山"
   },
   {
     "number": "HV-PR-055",
@@ -5773,6 +6133,7 @@
     "blk": null,
     "rcv": null,
     "tos": null,
-    "atk": null
+    "atk": null,
+    "school_group": "井闥山"
   }
 ]

@@ -142,19 +142,6 @@ const { useState, useEffect, useMemo, useCallback, useRef } = React;
 
 const DECK_MAX = 40;
 
-// 直接對照表：原始學校名稱（base，分隔符前）→ 顯示群組名
-const SCHOOL_MAP = {
-  '烏野':'烏野','音駒':'音駒',
-  '稲荷崎':'稻荷崎','稻荷崎':'稻荷崎',
-  '青葉城西':'青葉城西','梟谷':'梟谷',
-  '白鳥沢':'白鳥沢','伊達工業':'伊達工業',
-  '鴎台':'鷗台','鷗台':'鷗台',
-  '椿原':'椿原','早流川工業':'早流川',
-  '北川第一中':'北川','戸美':'戶美','戶美':'戶美',
-  '新山女子':'新山','常波':'常波','扇南':'扇南',
-  '角川':'角川','条善寺':'条善寺','和久谷南':'和久谷南',
-  '井闥山':'井闥山','森然':'森然','中立':'中立',
-};
 const SCHOOL_GROUPS = [
   '烏野','音駒','稻荷崎','白鳥沢','伊達工業','青葉城西','梟谷','井闥山','鷗台',
   '椿原','早流川','北川','戶美','新山','常波','扇南','角川','条善寺','和久谷南','森然','中立'
@@ -193,11 +180,6 @@ function Stats({ card }) {
       ))}
     </div>
   );
-}
-
-function getSchoolGroup(school) {
-  const base = school.split(/[\/·･\s]/)[0].trim();
-  return SCHOOL_MAP[base] || null;
 }
 
 function getSet(number) {
@@ -416,7 +398,7 @@ function App() {
     fetch('cards.json').then(r => r.json()).then(data => {
       setCards(data.map(c => ({
         ...c,
-        _group: getSchoolGroup(c.school),
+        _group: c.school_group || null,
         _set: getSet(c.number)
       })));
     });
