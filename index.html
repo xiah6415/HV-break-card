@@ -135,26 +135,30 @@ const { useState, useEffect, useMemo, useCallback, useRef } = React;
 
 const DECK_MAX = 40;
 
+// 直接對照表：原始學校名稱（base，分隔符前）→ 顯示群組名
+const SCHOOL_MAP = {
+  '烏野':'烏野','音駒':'音駒',
+  '稲荷崎':'稻荷崎','稻荷崎':'稻荷崎',
+  '青葉城西':'青葉城西','梟谷':'梟谷',
+  '白鳥沢':'白鳥沢','伊達工業':'伊達工業',
+  '鴎台':'鷗台','鷗台':'鷗台',
+  '椿原':'椿原','早流川工業':'早流川',
+  '北川第一中':'北川','戸美':'戶美','戶美':'戶美',
+  '新山女子':'新山','常波':'常波','扇南':'扇南',
+  '角川':'角川','条善寺':'条善寺','和久谷南':'和久谷南',
+  '井闥山':'井闥山','森然':'森然','中立':'中立',
+};
 const SCHOOL_GROUPS = [
-  '烏野','音駒','稻荷崎','白鳥沢','伊達工業','青葉城西','梟谷','井闥山','鷗台','椿原','早流川','北川','戶美','新山',
-  '常波','扇南','角川','条善寺','和久谷南'
+  '烏野','音駒','稻荷崎','白鳥沢','伊達工業','青葉城西','梟谷','井闥山','鷗台',
+  '椿原','早流川','北川','戶美','新山','常波','扇南','角川','条善寺','和久谷南','森然','中立'
 ];
 
-const POS_LABEL = { MB:'中間攻擊', WS:'外側攻擊', S:'舉球手', Li:'自由球員', OP:'對角攻擊' };
-const RARITY_ORDER = ['N','NP','R','RP','S','SP','D','P','頂','頂P','秘','極','極P'];
-
-function normalizeSchool(s) {
-  return s
-    .replace(/稲荷崎/g,'稻荷崎')
-    .replace(/鴎台/g,'鷗台')
-    .replace(/戸美/g,'戶美')
-    .replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
-}
+const POS_LABEL = { MB:'中間攻擊', WS:'外側攻擊', S:'舉球手', Li:'自由球員', OP:'對角攻擊', '事件':'事件卡' };
+const RARITY_ORDER = ['N','NP','R','RP','RA','S','SP','D','P','頂','頂P','秘','極','極P'];
 
 function getSchoolGroup(school) {
-  const s = normalizeSchool(school);
-  for (const g of SCHOOL_GROUPS) { if (s.includes(g)) return g; }
-  return null;
+  const base = school.split(/[\/·･\s]/)[0].trim();
+  return SCHOOL_MAP[base] || null;
 }
 
 function getSet(number) {
@@ -374,7 +378,6 @@ function App() {
     fetch('cards.json').then(r => r.json()).then(data => {
       setCards(data.map(c => ({
         ...c,
-        school: normalizeSchool(c.school),
         _group: getSchoolGroup(c.school),
         _set: getSet(c.number)
       })));
@@ -389,9 +392,10 @@ function App() {
   }, [cards]);
 
   const positions = useMemo(() => {
-    const pos = ['MB','WS','S','Li','OP'];
-    const others = [...new Set(cards.map(c => c.position))].filter(p => !pos.includes(p));
-    return [...pos.filter(p => cards.some(c => c.position === p)), ...others.sort()];
+    const STD = ['MB','WS','S','Li','OP','事件'];
+    const existing = new Set(cards.map(c => c.position));
+    const others = [...existing].filter(p => !STD.includes(p)).sort();
+    return [...STD.filter(p => existing.has(p)), ...others];
   }, [cards]);
 
   const rarities = useMemo(() => {

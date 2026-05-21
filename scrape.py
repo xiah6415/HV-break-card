@@ -27,8 +27,14 @@ ARTICLES = [
     '/blog/posts/new-deck-share-02',
 ]
 
+# 角色卡：有位置欄位
 CARD_RE = re.compile(
     r'(HV-\S+-\d+\w*)\s+(\S+)\s+所[属屬][:：]\s*(.+?)\s+位置[:：]\s*(\S+)\s*(.*?)(?:收錄於[:：]\s*(.+))?$',
+    re.DOTALL
+)
+# 事件卡：無位置欄位
+EVENT_RE = re.compile(
+    r'(HV-\S+-\d+\w*)\s+(\S+)\s+所[属屬][:：]\s*(\S+)\s+(.*)',
     re.DOTALL
 )
 
@@ -53,17 +59,30 @@ def scrape(path):
             continue
         text = cells[1].get_text(separator=' ', strip=True)
         m = CARD_RE.match(text)
-        if not m:
-            continue
-        cards.append({
-            'number':   m.group(1),
-            'rarity':   m.group(2),
-            'school':   m.group(3),
-            'position': m.group(4),
-            'effect':   m.group(5).strip(),
-            'source':   (m.group(6) or '').strip(),
-            'image':    imgs[0]['src'].split('?')[0],
-        })
+        if m:
+            cards.append({
+                'number':   m.group(1),
+                'rarity':   m.group(2),
+                'school':   m.group(3),
+                'position': m.group(4),
+                'effect':   m.group(5).strip(),
+                'source':   (m.group(6) or '').strip(),
+                'image':    imgs[0]['src'].split('?')[0],
+                'type':     'character',
+            })
+        else:
+            m = EVENT_RE.match(text)
+            if m:
+                cards.append({
+                    'number':   m.group(1),
+                    'rarity':   m.group(2),
+                    'school':   m.group(3),
+                    'position': '事件',
+                    'effect':   m.group(4).strip(),
+                    'source':   '',
+                    'image':    imgs[0]['src'].split('?')[0],
+                    'type':     'event',
+                })
     return cards
 
 all_cards = []
