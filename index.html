@@ -133,7 +133,7 @@ body{background:#111;color:#eee;font-family:system-ui,-apple-system,sans-serif;m
 <script type="text/babel">
 const { useState, useEffect, useMemo, useCallback, useRef } = React;
 
-const MAX_COPIES = 3;
+const DECK_MAX = 40;
 
 const SCHOOL_GROUPS = [
   '烏野','音駒','稻荷崎','白鳥沢','伊達工業','青葉城西','梟谷','井闥山','鷗台','椿原','早流川','北川','戶美','新山',
@@ -184,7 +184,8 @@ function useDeck() {
   const add = useCallback((card) => {
     setDeck(d => {
       const cur = d[card.number] || 0;
-      if (cur >= MAX_COPIES) return d;
+      const tot = Object.values(d).reduce((a, b) => a + b, 0);
+      if (tot >= DECK_MAX) return d;
       return { ...d, [card.number]: cur + 1 };
     });
   }, []);
@@ -312,7 +313,7 @@ function DeckPanel({ deck, cards, add, remove, clear, onClose, onExport }) {
           <div className="deck-header-row">
             <div>
               <span className="deck-panel-title">牌組構築</span>
-              <span className="deck-panel-total">{total} 張</span>
+              <span className="deck-panel-total" style={{color: total >= DECK_MAX ? '#e07070' : '#888'}}>{total} / {DECK_MAX} 張</span>
             </div>
             <div className="deck-actions">
               <button className="deck-action-btn" onClick={onExport}>匯出</button>
@@ -342,7 +343,7 @@ function DeckPanel({ deck, cards, add, remove, clear, onClose, onExport }) {
                   <div className="deck-card-qty">
                     <button className="deck-qty-sm-btn" disabled={count <= 0} onClick={() => remove(card.number)}>－</button>
                     <span className="deck-qty-num">{count}</span>
-                    <button className="deck-qty-sm-btn" disabled={count >= MAX_COPIES} onClick={() => add(card)}>＋</button>
+                    <button className="deck-qty-sm-btn" disabled={total >= DECK_MAX} onClick={() => add(card)}>＋</button>
                   </div>
                 </div>
               ))}
@@ -420,10 +421,9 @@ function App() {
 
   function handleAdd(e, card) {
     e.stopPropagation();
-    const cur = deck[card.number] || 0;
-    if (cur >= MAX_COPIES) { showToast(`已達上限 ${MAX_COPIES} 張`); return; }
+    if (total >= DECK_MAX) { showToast(`牌組已達上限 ${DECK_MAX} 張`); return; }
     add(card);
-    showToast(`已加入 ×${cur + 1}`);
+    showToast(`已加入 ×${(deck[card.number] || 0) + 1}`);
   }
 
   function handleExport() {
@@ -519,9 +519,8 @@ function App() {
               <button className="qty-btn" disabled={(deck[selected.number] || 0) <= 0} onClick={() => remove(selected.number)}>－</button>
               <span className="qty-count">
                 {deck[selected.number] || 0}
-                <span style={{fontSize:13,color:'#555',fontWeight:'normal'}}>/{MAX_COPIES}</span>
               </span>
-              <button className="qty-btn" disabled={(deck[selected.number] || 0) >= MAX_COPIES} onClick={() => add(selected)}>＋</button>
+              <button className="qty-btn" disabled={total >= DECK_MAX} onClick={() => add(selected)}>＋</button>
             </div>
           </div>
         </div>
@@ -536,8 +535,9 @@ function App() {
         <ExportModal deck={deck} cards={cards} onClose={() => setExportOpen(false)} />
       )}
 
-      <button className="deck-fab" onClick={() => setDeckOpen(true)}>
-        牌組{total > 0 ? ` (${total})` : ''}
+      <button className="deck-fab" onClick={() => setDeckOpen(true)}
+        style={{borderColor: total >= DECK_MAX ? '#e07070' : '#4a8abf'}}>
+        牌組 {total}/{DECK_MAX}
       </button>
 
       <Toast msg={toast} />

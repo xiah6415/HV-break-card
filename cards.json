@@ -2214,6 +2214,168 @@
     "image": "https://img.shoplineapp.com/media/image_clips/6997d4891bfe888d054e08e5/original.png"
   },
   {
+    "number": "HV-P03-002",
+    "rarity": "R",
+    "school": "烏野·1年",
+    "position": "MB",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/6a0e640a3c5162cb31d732d2/original.png"
+  },
+  {
+    "number": "HV-P03-002",
+    "rarity": "RA",
+    "school": "烏野·1年",
+    "position": "MB",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/6a0e64242214731c0a19d253/original.png"
+  },
+  {
+    "number": "HV-P03-004",
+    "rarity": "N",
+    "school": "烏野/疑似ユース·1年",
+    "position": "MB",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/6a0d400d845e61ee3aa370a8/original.png"
+  },
+  {
+    "number": "HV-P03-006",
+    "rarity": "N",
+    "school": "青葉城西/疑似ユース·1年",
+    "position": "MB",
+    "effect": "對手總進攻值4或以上發動以下效果。 攔網階段立即結束，進入自己的抽牌階段。 獲得 One Touch 2 。 ________________________________ One Touch N ：對手的進攻總值 -N。 立即結束攔網階段，並進入自己的抽牌階段。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/6a0d4048d250d7c067e08913/original.png"
+  },
+  {
+    "number": "HV-P03-008",
+    "rarity": "R",
+    "school": "青葉城西/疑似ユース·1年",
+    "position": "WS",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/6a0d40f1b4d7a76bad60b783/original.png"
+  },
+  {
+    "number": "HV-P03-010",
+    "rarity": "N",
+    "school": "伊達工業/疑似ユース·1年",
+    "position": "S",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/6a0d410fd45854d8fd8b8745/original.png"
+  },
+  {
+    "number": "HV-P03-012",
+    "rarity": "R",
+    "school": "白鳥沢/疑似ユース·1年",
+    "position": "WS",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/6a0d5cf30066d9001271521d/original.png"
+  },
+  {
+    "number": "HV-P03-017",
+    "rarity": "N",
+    "school": "角川/疑似ユース·1年",
+    "position": "WS",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/6a0d5d1a50def4000a728aa7/original.png"
+  },
+  {
+    "number": "HV-P03-022",
+    "rarity": "R",
+    "school": "稻荷崎/ユース·2年",
+    "position": "S",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/6a0d3e2f325e2d1ab9e7a0bd/original.png"
+  },
+  {
+    "number": "HV-P03-025",
+    "rarity": "R",
+    "school": "鴎台/ユース·2年",
+    "position": "S",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/6a0d3e7aa7321388e0fde99f/original.png"
+  },
+  {
+    "number": "HV-P03-027",
+    "rarity": "R",
+    "school": "井闥山/ユース·2年",
+    "position": "WS",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/6a0d3fb839ae03c9ceaffbb7/original.png"
+  },
+  {
+    "number": "HV-P03-029",
+    "rarity": "R",
+    "school": "井闥山/ユース·2年",
+    "position": "Li",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/6a0d3fdf325e2d2780e79d8c/original.png"
+  },
+  {
+    "number": "HV-P03-030",
+    "rarity": "R",
+    "school": "森然/ユース·2年",
+    "position": "MB",
+    "effect": "自己角色全ユース，以及對手總進攻值8或以上發動以下效果。 攔網階段立即結束，進入自己的抽牌階段。 此回合中，自己的接球角色登場，該角色接球值+2。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/6a0d3ebce784c590982ac8d0/original.png"
+  },
+  {
+    "number": "HV-P03-067",
+    "rarity": "R",
+    "school": "白鳥沢·3年",
+    "position": "WS",
+    "effect": "支付2 Guts發動以下效果。 此角色接球值+4。 對手攻擊角色原始攻擊值1或以下時， 將自己1張白鳥沢攔網角色放置到棄牌區發動以下效果。 對手的總進攻值-2。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/6a0e643750efb92cfad669c9/original.png"
+  },
+  {
+    "number": "HV-P03-067",
+    "rarity": "RP",
+    "school": "白鳥沢·3年",
+    "position": "WS",
+    "effect": "支付2 Guts發動以下效果。 此角色接球值+4。 對手攻擊角色原始攻擊值1或以下時， 將自己1張白鳥沢攔網角色放置到棄牌區發動以下效果。 對手的總進攻值-2。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/6a0e67113f61984bca984716/original.png"
+  },
+  {
+    "number": "HV-P03-067",
+    "rarity": "RA",
+    "school": "白鳥沢·3年",
+    "position": "WS",
+    "effect": "支付2 Guts發動以下效果。 此角色接球值+4。 對手攻擊角色原始攻擊值1或以下時， 將自己1張白鳥沢攔網角色放置到棄牌區發動以下效果。 對手的總進攻值-2。",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/6a0e6465e38a2445a47e65e1/original.png"
+  },
+  {
+    "number": "HV-P03-068",
+    "rarity": "R",
+    "school": "白鳥沢·3年",
+    "position": "MB",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/6a0e647965b1f92c386feaf5/original.png"
+  },
+  {
+    "number": "HV-P03-068",
+    "rarity": "RA",
+    "school": "白鳥沢·3年",
+    "position": "MB",
+    "effect": "",
+    "source": "",
+    "image": "https://img.shoplineapp.com/media/image_clips/6a0e648d33a624b6e1a44d22/original.png"
+  },
+  {
     "number": "HV-PR-001",
     "rarity": "P",
     "school": "Asas São Paulo",

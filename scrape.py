@@ -20,6 +20,9 @@ ARTICLES = [
     '/blog/posts/hv-p02-date-kogyo-high-school',
     '/blog/posts/hv-p02-shiratorizawa',
     '/blog/posts/hv-p02-other-high-school',
+    '/blog/posts/hv-p03-1',
+    '/blog/posts/hv-p03-2',
+    '/blog/posts/hv-p03-3',
     '/blog/posts/new-deck-share-01',
     '/blog/posts/new-deck-share-02',
 ]
@@ -78,6 +81,6 @@ for path in ARTICLES:
     time.sleep(1)
 
 all_cards.sort(key=lambda c: c['number'])
-with open('D:/HV/cards.json', 'w', encoding='utf-8') as f:
+with open('cards.json', 'w', encoding='utf-8') as f:
     json.dump(all_cards, f, ensure_ascii=False, indent=2)
 print(f'\nTotal: {len(all_cards)} cards → cards.json')
