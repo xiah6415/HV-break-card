@@ -3901,8 +3901,6 @@ function sOpenExport() {
     '<div class="sdi"><img src="' + card.image_url + '" alt="" crossorigin="anonymous" onerror="this.style.background=\'#222\'">' +
     '<div class="sdi-badge">' + count + '</div></div>'
   ).join('');
-  const btn = document.getElementById('sexport-copy-btn');
-  btn.textContent = '下載圖片'; btn.disabled = false; btn.classList.remove('ok');
   document.getElementById('sexport-overlay').classList.add('open');
 }
 function sCloseExport() { document.getElementById('sexport-overlay').classList.remove('open'); }
