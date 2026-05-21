@@ -12,23 +12,28 @@
 body{background:#111;color:#eee;font-family:system-ui,-apple-system,sans-serif;min-height:100vh}
 #root{max-width:600px;margin:0 auto;padding-bottom:calc(80px + env(safe-area-inset-bottom,0px))}
 
-/* Top bar */
 .top-bar{position:sticky;top:0;z-index:10;background:#111}
 .header{padding:10px 12px 8px;padding-top:calc(10px + env(safe-area-inset-top,0px));border-bottom:1px solid #2a2a2a}
 .title{font-size:14px;color:#888;margin-bottom:8px}
 .search{width:100%;background:#1e1e1e;border:1px solid #333;border-radius:8px;padding:10px 12px;color:#eee;font-size:16px;outline:none;touch-action:manipulation}
 .search:focus{border-color:#555}
 
+/* Filter toggle bar */
+.filter-toggle{display:flex;align-items:center;justify-content:space-between;padding:7px 12px;border-bottom:1px solid #1e1e1e;cursor:pointer;user-select:none}
+.filter-toggle-label{font-size:12px;color:#666;display:flex;align-items:center;gap:6px}
+.filter-toggle-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#4a8abf}
+.filter-toggle-arrow{font-size:11px;color:#555;transition:transform .2s}
+.filter-toggle-arrow.open{transform:rotate(180deg)}
+
 /* Filters */
-.filters{padding:6px 12px;border-bottom:1px solid #1e1e1e;display:flex;flex-direction:column;gap:5px}
+.filters{padding:6px 12px 8px;border-bottom:1px solid #1e1e1e;display:flex;flex-direction:column;gap:5px}
 .filter-row{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
 .filter-label{font-size:11px;color:#555;flex-shrink:0;width:26px}
-.filter-btn{background:#1e1e1e;border:1px solid #333;border-radius:6px;color:#aaa;padding:6px 12px;font-size:13px;cursor:pointer;white-space:nowrap;transition:background .1s,color .1s,border-color .1s;touch-action:manipulation;min-height:34px;line-height:1.2}
+.filter-btn{background:#1e1e1e;border:1px solid #333;border-radius:6px;color:#aaa;padding:5px 10px;font-size:13px;cursor:pointer;white-space:nowrap;transition:background .1s,color .1s,border-color .1s;touch-action:manipulation;min-height:32px;line-height:1.2}
 .filter-btn.active{background:#1e3a5f;border-color:#4a8abf;color:#fff}
 .filter-btn:active{opacity:.7}
 
-/* Count */
-.count{padding:8px 12px;font-size:12px;color:#555}
+.count{padding:7px 12px;font-size:12px;color:#555}
 
 /* Grid */
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 12px}
@@ -38,8 +43,6 @@ body{background:#111;color:#eee;font-family:system-ui,-apple-system,sans-serif;m
 .card-foot{padding:5px 6px}
 .card-num{font-size:11px;color:#888}
 .card-school{font-size:11px;color:#bbb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
-/* Deck badge on grid card */
 .card-deck-badge{position:absolute;top:4px;left:4px;background:rgba(30,100,200,.9);color:#fff;font-size:12px;font-weight:bold;border-radius:5px;padding:1px 6px;pointer-events:none}
 .card-add-btn{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.65);border:1px solid #555;border-radius:5px;color:#eee;font-size:16px;line-height:1;padding:2px 7px;cursor:pointer;touch-action:manipulation}
 .card-add-btn:active{background:rgba(30,100,200,.8)}
@@ -85,22 +88,18 @@ body{background:#111;color:#eee;font-family:system-ui,-apple-system,sans-serif;m
 /* Deck panel */
 .deck-panel-sheet{background:#1a1a1a;border-radius:16px 16px 0 0;width:100%;max-width:600px;margin:0 auto;max-height:90vh;display:flex;flex-direction:column;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
 .deck-panel-header{padding:14px 16px 10px;border-bottom:1px solid #2a2a2a;flex-shrink:0}
-.deck-panel-title{font-size:16px;font-weight:bold;display:inline}
+.deck-panel-title{font-size:16px;font-weight:bold}
 .deck-panel-total{font-size:13px;color:#888;margin-left:8px}
 .deck-header-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.deck-actions{display:flex;gap:8px}
+.deck-actions{display:flex;gap:8px;align-items:center}
 .deck-action-btn{background:#252525;border:1px solid #444;border-radius:8px;color:#ccc;font-size:13px;padding:6px 12px;cursor:pointer;touch-action:manipulation}
 .deck-action-btn:active{opacity:.7}
 .deck-action-btn.danger{border-color:#6b2a2a;color:#e07070}
-
-/* Position stats bar */
-.pos-stats{display:flex;gap:6px;flex-wrap:wrap;padding:0 16px 10px;flex-shrink:0;border-bottom:1px solid #1e1e1e}
+.pos-stats{display:flex;gap:6px;flex-wrap:wrap;padding:0 0 10px;flex-shrink:0;border-bottom:1px solid #1e1e1e}
 .pos-stat{background:#252525;border-radius:6px;padding:4px 10px;font-size:12px;color:#aaa}
 .pos-stat b{color:#fff;margin-right:3px}
-
-/* Deck card list */
 .deck-list{overflow-y:auto;padding:8px 16px}
-.deck-section-title{font-size:12px;color:#555;margin:10px 0 5px;text-transform:uppercase;letter-spacing:.5px}
+.deck-section-title{font-size:12px;color:#555;margin:10px 0 5px;letter-spacing:.5px}
 .deck-card-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #1e1e1e}
 .deck-card-row:last-child{border-bottom:none}
 .deck-card-img{width:36px;height:48px;object-fit:cover;border-radius:4px;background:#222;flex-shrink:0}
@@ -114,8 +113,19 @@ body{background:#111;color:#eee;font-family:system-ui,-apple-system,sans-serif;m
 .deck-qty-num{font-size:14px;font-weight:bold;min-width:18px;text-align:center}
 .deck-empty{text-align:center;color:#555;font-size:14px;padding:40px 0}
 
+/* Export preview */
+.export-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px}
+.export-card-item{background:#252525;border-radius:6px;overflow:hidden;text-align:center}
+.export-card-item img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block;background:#1a1a1a}
+.export-card-item-foot{padding:4px;font-size:11px;color:#aaa}
+.export-card-count{font-weight:bold;color:#fff}
+.export-section{margin-bottom:12px}
+.export-section-title{font-size:12px;color:#555;margin-bottom:6px}
+.export-copy-btn{width:100%;background:#1e3a5f;border:1px solid #4a8abf;border-radius:10px;color:#fff;font-size:16px;font-weight:bold;padding:13px;cursor:pointer;touch-action:manipulation;transition:background .2s}
+.export-copy-btn.ok{background:#1a5a2a;border-color:#3a9a4a}
+
 /* Toast */
-.toast{position:fixed;bottom:calc(90px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:#1e3a5f;color:#fff;font-size:13px;padding:8px 18px;border-radius:20px;z-index:200;pointer-events:none;transition:opacity .3s}
+.toast{position:fixed;bottom:calc(90px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:#1e3a5f;color:#fff;font-size:13px;padding:8px 18px;border-radius:20px;z-index:200;pointer-events:none}
 </style>
 </head>
 <body>
@@ -126,20 +136,32 @@ const { useState, useEffect, useMemo, useCallback, useRef } = React;
 const MAX_COPIES = 3;
 
 const SCHOOL_GROUPS = [
-  '烏野','音駒','稻荷崎','白鳥沢','伊達工業','青葉城西','梟谷','井闥山','鷗台','椿原','早流川','北川','戶美','新山'
+  '烏野','音駒','稻荷崎','白鳥沢','伊達工業','青葉城西','梟谷','井闥山','鷗台','椿原','早流川','北川','戶美','新山',
+  '常波','扇南','角川','条善寺','和久谷南'
 ];
 
 const POS_LABEL = { MB:'中間攻擊', WS:'外側攻擊', S:'舉球手', Li:'自由球員', OP:'對角攻擊' };
+const RARITY_ORDER = ['N','NP','R','RP','S','SP','D','P','頂','頂P','秘','極','極P'];
+
+function normalizeSchool(s) {
+  return s
+    .replace(/稲荷崎/g,'稻荷崎')
+    .replace(/鴎台/g,'鷗台')
+    .replace(/戸美/g,'戶美')
+    .replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
+}
 
 function getSchoolGroup(school) {
-  const s = school.replace('稲荷崎','稻荷崎');
+  const s = normalizeSchool(school);
   for (const g of SCHOOL_GROUPS) { if (s.includes(g)) return g; }
-  return '其他';
+  return null;
 }
+
 function getSet(number) {
   const m = number.match(/^(HV-[A-Z0-9]+)-/);
   return m ? m[1] : '?';
 }
+
 function rarityClass(r) {
   if (r.startsWith('頂')) return 'r-top';
   if (r.startsWith('極')) return 'r-極';
@@ -147,6 +169,7 @@ function rarityClass(r) {
   const base = r.replace(/P$/,'');
   return ['S','R','N','D','P'].includes(base) ? `r-${base}` : 'r-default';
 }
+
 function Badge({ r }) {
   return <span className={`badge ${rarityClass(r)}`}>{r}</span>;
 }
@@ -178,9 +201,7 @@ function useDeck() {
   }, []);
 
   const clear = useCallback(() => setDeck({}), []);
-
   const total = Object.values(deck).reduce((a, b) => a + b, 0);
-
   return { deck, add, remove, clear, total };
 }
 
@@ -189,32 +210,30 @@ function Toast({ msg }) {
   return <div className="toast">{msg}</div>;
 }
 
-function DeckPanel({ deck, cards, add, remove, clear, onClose }) {
+/* Export preview modal */
+function ExportModal({ deck, cards, onClose }) {
+  const [copied, setCopied] = useState(false);
+
   const deckCards = useMemo(() => {
     return Object.entries(deck)
       .map(([num, count]) => ({ card: cards.find(c => c.number === num), count }))
       .filter(({ card }) => card);
   }, [deck, cards]);
 
-  const byPos = useMemo(() => {
-    const groups = {};
-    deckCards.forEach(({ card, count }) => {
-      const pos = card.position || '其他';
-      if (!groups[pos]) groups[pos] = [];
-      groups[pos].push({ card, count });
-    });
-    return groups;
-  }, [deckCards]);
-
   const posOrder = ['MB','WS','S','Li','OP'];
-  const sortedPos = [
-    ...posOrder.filter(p => byPos[p]),
-    ...Object.keys(byPos).filter(p => !posOrder.includes(p))
-  ];
-
+  const byPos = useMemo(() => {
+    const g = {};
+    deckCards.forEach(({ card, count }) => {
+      const p = card.position || '其他';
+      if (!g[p]) g[p] = [];
+      g[p].push({ card, count });
+    });
+    return g;
+  }, [deckCards]);
+  const sortedPos = [...posOrder.filter(p => byPos[p]), ...Object.keys(byPos).filter(p => !posOrder.includes(p))];
   const total = Object.values(deck).reduce((a, b) => a + b, 0);
 
-  function exportDeck() {
+  function buildText() {
     const lines = ['排球少年!! バボカ!! BREAK 牌組構築表', `總張數：${total}`, ''];
     sortedPos.forEach(pos => {
       lines.push(`【${POS_LABEL[pos] || pos}】`);
@@ -223,8 +242,68 @@ function DeckPanel({ deck, cards, add, remove, clear, onClose }) {
       });
       lines.push('');
     });
-    navigator.clipboard.writeText(lines.join('\n')).catch(() => {});
+    return lines.join('\n');
   }
+
+  function copy() {
+    navigator.clipboard.writeText(buildText()).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  return (
+    <div className="overlay" onClick={onClose}>
+      <div className="sheet" onClick={e => e.stopPropagation()}>
+        <button className="sheet-close" onClick={onClose}>×</button>
+        <div style={{fontWeight:'bold',fontSize:16,marginBottom:14}}>匯出預覽 <span style={{fontSize:13,color:'#888',fontWeight:'normal'}}>共 {total} 張</span></div>
+
+        {sortedPos.map(pos => (
+          <div key={pos} className="export-section">
+            <div className="export-section-title">{POS_LABEL[pos] || pos}</div>
+            <div className="export-grid">
+              {byPos[pos].map(({ card, count }) => (
+                <div key={card.number} className="export-card-item">
+                  <img src={card.image} alt={card.number} loading="lazy" />
+                  <div className="export-card-item-foot">
+                    <span className="export-card-count">×{count}</span>
+                    <div style={{fontSize:10,color:'#666',marginTop:2,overflow:'hidden',whiteSpace:'nowrap',textOverflow:'ellipsis'}}>{card.school}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+
+        {deckCards.length === 0 && <div style={{textAlign:'center',color:'#555',padding:'30px 0'}}>牌組是空的</div>}
+
+        <button className={`export-copy-btn${copied ? ' ok' : ''}`} onClick={copy}>
+          {copied ? '✓ 已複製！' : '複製文字清單'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* Deck panel */
+function DeckPanel({ deck, cards, add, remove, clear, onClose, onExport }) {
+  const deckCards = useMemo(() => {
+    return Object.entries(deck)
+      .map(([num, count]) => ({ card: cards.find(c => c.number === num), count }))
+      .filter(({ card }) => card);
+  }, [deck, cards]);
+
+  const posOrder = ['MB','WS','S','Li','OP'];
+  const byPos = useMemo(() => {
+    const g = {};
+    deckCards.forEach(({ card, count }) => {
+      const p = card.position || '其他';
+      if (!g[p]) g[p] = [];
+      g[p].push({ card, count });
+    });
+    return g;
+  }, [deckCards]);
+  const sortedPos = [...posOrder.filter(p => byPos[p]), ...Object.keys(byPos).filter(p => !posOrder.includes(p))];
+  const total = Object.values(deck).reduce((a, b) => a + b, 0);
 
   return (
     <div className="overlay" onClick={onClose}>
@@ -236,7 +315,7 @@ function DeckPanel({ deck, cards, add, remove, clear, onClose }) {
               <span className="deck-panel-total">{total} 張</span>
             </div>
             <div className="deck-actions">
-              <button className="deck-action-btn" onClick={exportDeck}>複製清單</button>
+              <button className="deck-action-btn" onClick={onExport}>匯出</button>
               <button className="deck-action-btn danger" onClick={clear}>清空</button>
               <button className="sheet-close" onClick={onClose}>×</button>
             </div>
@@ -248,7 +327,6 @@ function DeckPanel({ deck, cards, add, remove, clear, onClose }) {
             })}
           </div>
         </div>
-
         <div className="deck-list">
           {deckCards.length === 0 && <div className="deck-empty">尚未加入任何卡片</div>}
           {sortedPos.map(pos => (
@@ -282,25 +360,45 @@ function App() {
   const [filterSet, setFilterSet] = useState('');
   const [filterSchool, setFilterSchool] = useState('');
   const [filterPos, setFilterPos] = useState('');
+  const [filterRarity, setFilterRarity] = useState('');
+  const [filtersOpen, setFiltersOpen] = useState(true);
   const [selected, setSelected] = useState(null);
   const [deckOpen, setDeckOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
   const [toast, setToast] = useState('');
   const toastTimer = useRef(null);
   const { deck, add, remove, clear, total } = useDeck();
 
   useEffect(() => {
     fetch('cards.json').then(r => r.json()).then(data => {
-      setCards(data.map(c => ({ ...c, _group: getSchoolGroup(c.school), _set: getSet(c.number) })));
+      setCards(data.map(c => ({
+        ...c,
+        school: normalizeSchool(c.school),
+        _group: getSchoolGroup(c.school),
+        _set: getSet(c.number)
+      })));
     });
   }, []);
 
   const sets = useMemo(() => [...new Set(cards.map(c => c._set))].sort(), [cards]);
-  const schools = useMemo(() => [...new Set(cards.map(c => c._group))].sort(), [cards]);
+
+  const schools = useMemo(() => {
+    const gs = new Set(cards.map(c => c._group).filter(Boolean));
+    return SCHOOL_GROUPS.filter(g => gs.has(g));
+  }, [cards]);
+
   const positions = useMemo(() => {
     const pos = ['MB','WS','S','Li','OP'];
     const others = [...new Set(cards.map(c => c.position))].filter(p => !pos.includes(p));
     return [...pos.filter(p => cards.some(c => c.position === p)), ...others.sort()];
   }, [cards]);
+
+  const rarities = useMemo(() => {
+    const rs = new Set(cards.map(c => c.rarity));
+    return RARITY_ORDER.filter(r => rs.has(r));
+  }, [cards]);
+
+  const activeFilters = [filterSet, filterSchool, filterPos, filterRarity].filter(Boolean).length;
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -308,10 +406,11 @@ function App() {
       if (filterSet && c._set !== filterSet) return false;
       if (filterSchool && c._group !== filterSchool) return false;
       if (filterPos && c.position !== filterPos) return false;
+      if (filterRarity && c.rarity !== filterRarity) return false;
       if (q && !c.number.toLowerCase().includes(q) && !c.school.includes(q) && !c.effect.includes(q)) return false;
       return true;
     });
-  }, [cards, query, filterSet, filterSchool, filterPos]);
+  }, [cards, query, filterSet, filterSchool, filterPos, filterRarity]);
 
   function showToast(msg) {
     setToast(msg);
@@ -327,6 +426,11 @@ function App() {
     showToast(`已加入 ×${cur + 1}`);
   }
 
+  function handleExport() {
+    setDeckOpen(false);
+    setExportOpen(true);
+  }
+
   return (
     <>
       <div className="top-bar">
@@ -334,29 +438,49 @@ function App() {
           <div className="title">排球少年!! バボカ!! BREAK 卡片查詢</div>
           <input className="search" placeholder="搜尋卡號、學校、效果…" value={query} onChange={e => setQuery(e.target.value)} />
         </div>
-        <div className="filters">
-          <div className="filter-row">
-            <span className="filter-label">位置</span>
-            {positions.map(p => (
-              <button key={p} className={`filter-btn${filterPos === p ? ' active' : ''}`}
-                onClick={() => setFilterPos(filterPos === p ? '' : p)}>{p}</button>
-            ))}
+
+        {/* Filter toggle */}
+        <div className="filter-toggle" onClick={() => setFiltersOpen(o => !o)}>
+          <div className="filter-toggle-label">
+            篩選
+            {activeFilters > 0 && <span className="filter-toggle-dot" style={{background:'#4a8abf'}} />}
+            {activeFilters > 0 && <span style={{fontSize:11,color:'#4a8abf'}}>{activeFilters} 項已選</span>}
           </div>
-          <div className="filter-row">
-            <span className="filter-label">系列</span>
-            {sets.map(s => (
-              <button key={s} className={`filter-btn${filterSet === s ? ' active' : ''}`}
-                onClick={() => setFilterSet(filterSet === s ? '' : s)}>{s}</button>
-            ))}
-          </div>
-          <div className="filter-row">
-            <span className="filter-label">學校</span>
-            {schools.map(s => (
-              <button key={s} className={`filter-btn${filterSchool === s ? ' active' : ''}`}
-                onClick={() => setFilterSchool(filterSchool === s ? '' : s)}>{s}</button>
-            ))}
-          </div>
+          <span className={`filter-toggle-arrow${filtersOpen ? ' open' : ''}`}>▼</span>
         </div>
+
+        {filtersOpen && (
+          <div className="filters">
+            <div className="filter-row">
+              <span className="filter-label">位置</span>
+              {positions.map(p => (
+                <button key={p} className={`filter-btn${filterPos === p ? ' active' : ''}`}
+                  onClick={() => setFilterPos(filterPos === p ? '' : p)}>{p}</button>
+              ))}
+            </div>
+            <div className="filter-row">
+              <span className="filter-label">稀有</span>
+              {rarities.map(r => (
+                <button key={r} className={`filter-btn${filterRarity === r ? ' active' : ''}`}
+                  onClick={() => setFilterRarity(filterRarity === r ? '' : r)}>{r}</button>
+              ))}
+            </div>
+            <div className="filter-row">
+              <span className="filter-label">系列</span>
+              {sets.map(s => (
+                <button key={s} className={`filter-btn${filterSet === s ? ' active' : ''}`}
+                  onClick={() => setFilterSet(filterSet === s ? '' : s)}>{s}</button>
+              ))}
+            </div>
+            <div className="filter-row">
+              <span className="filter-label">學校</span>
+              {schools.map(s => (
+                <button key={s} className={`filter-btn${filterSchool === s ? ' active' : ''}`}
+                  onClick={() => setFilterSchool(filterSchool === s ? '' : s)}>{s}</button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="count">{filtered.length} 張</div>
@@ -393,21 +517,27 @@ function App() {
             <div className="deck-qty-wrap">
               <span className="deck-qty-label">加入牌組</span>
               <button className="qty-btn" disabled={(deck[selected.number] || 0) <= 0} onClick={() => remove(selected.number)}>－</button>
-              <span className="qty-count">{deck[selected.number] || 0}<span style={{fontSize:13,color:'#555',fontWeight:'normal'}}>/{MAX_COPIES}</span></span>
+              <span className="qty-count">
+                {deck[selected.number] || 0}
+                <span style={{fontSize:13,color:'#555',fontWeight:'normal'}}>/{MAX_COPIES}</span>
+              </span>
               <button className="qty-btn" disabled={(deck[selected.number] || 0) >= MAX_COPIES} onClick={() => add(selected)}>＋</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Deck panel */}
       {deckOpen && (
-        <DeckPanel deck={deck} cards={cards} add={add} remove={remove} clear={clear} onClose={() => setDeckOpen(false)} />
+        <DeckPanel deck={deck} cards={cards} add={add} remove={remove} clear={clear}
+          onClose={() => setDeckOpen(false)} onExport={handleExport} />
       )}
 
-      {/* Floating deck button */}
+      {exportOpen && (
+        <ExportModal deck={deck} cards={cards} onClose={() => setExportOpen(false)} />
+      )}
+
       <button className="deck-fab" onClick={() => setDeckOpen(true)}>
-        牌組 {total > 0 ? `(${total})` : ''}
+        牌組{total > 0 ? ` (${total})` : ''}
       </button>
 
       <Toast msg={toast} />
