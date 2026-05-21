@@ -3921,40 +3921,31 @@ function sExportImage() {
   const setBtn = t => { btn.textContent = t; };
   setBtn('載入中 0/' + uniqueUrls.length + '…');
 
-  // Fetch image → blob URL (same-origin, no canvas CORS taint)
-  const fetchWithTimeout = (url, ms = 10000) => {
-    const ctrl = new AbortController();
-    const tid = setTimeout(() => ctrl.abort(), ms);
-    return fetch(url, { signal: ctrl.signal }).finally(() => clearTimeout(tid));
-  };
-  const loadViaProxy = async url => {
+  // Load via CORS-enabled proxy with crossOrigin='anonymous' so canvas can draw
+  const loadImg = url => {
+    // wsrv.nl is a CDN image proxy that always adds Access-Control-Allow-Origin: *
     const proxies = [
+      'https://wsrv.nl/?url=' + encodeURIComponent(url),
       'https://corsproxy.io/?' + encodeURIComponent(url),
-      'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
     ];
-    for (const purl of proxies) {
-      try {
-        const res = await fetchWithTimeout(purl);
-        if (!res.ok) continue;
-        const blob = await res.blob();
-        return await new Promise((resolve, reject) => {
-          const img = new Image();
-          const bu = URL.createObjectURL(blob);
-          img.onload = () => { URL.revokeObjectURL(bu); resolve(img); };
-          img.onerror = () => { URL.revokeObjectURL(bu); reject(); };
-          img.src = bu;
-        });
-      } catch (e) {}
-    }
-    return null;
+    const tryIdx = (idx, resolve) => {
+      if (idx >= proxies.length) { resolve(null); return; }
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      const tid = setTimeout(() => { img.src = ''; tryIdx(idx + 1, resolve); }, 10000);
+      img.onload  = () => { clearTimeout(tid); resolve(img); };
+      img.onerror = () => { clearTimeout(tid); tryIdx(idx + 1, resolve); };
+      img.src = proxies[idx];
+    };
+    return new Promise(resolve => tryIdx(0, resolve));
   };
 
   const imgCache = {};
   Promise.all(uniqueUrls.map(url =>
-    loadViaProxy(url).then(img => {
+    loadImg(url).then(img => {
       imgCache[url] = img; loaded++;
       setBtn('載入中 ' + loaded + '/' + uniqueUrls.length + '…');
-    }).catch(() => { imgCache[url] = null; loaded++; setBtn('載入中 ' + loaded + '/' + uniqueUrls.length + '…'); })
+    })
   )).then(() => {
     const COLS = 10, CW = 64, CH = 90, GAP = 3, PAD = 10, HEAD_H = 38;
     const rows = Math.ceil(total / COLS);
