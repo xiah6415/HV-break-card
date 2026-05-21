@@ -121,13 +121,10 @@ body{background:#111;color:#eee;font-family:system-ui,-apple-system,sans-serif;m
 .deck-empty{text-align:center;color:#555;font-size:14px;padding:40px 0}
 
 /* Export preview */
-.export-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px}
-.export-card-item{background:#252525;border-radius:6px;overflow:hidden;text-align:center}
-.export-card-item img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block;background:#1a1a1a}
-.export-card-item-foot{padding:4px;font-size:11px;color:#aaa}
-.export-card-count{font-weight:bold;color:#fff}
-.export-section{margin-bottom:12px}
-.export-section-title{font-size:12px;color:#555;margin-bottom:6px}
+.export-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:14px}
+.export-card-item{position:relative;border-radius:6px;overflow:hidden;background:#1a1a1a}
+.export-card-item img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block}
+.export-badge{position:absolute;top:4px;right:4px;background:#e03030;color:#fff;font-size:12px;font-weight:bold;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;line-height:1;box-shadow:0 1px 4px rgba(0,0,0,.5)}
 .export-copy-btn{width:100%;background:#1e3a5f;border:1px solid #4a8abf;border-radius:10px;color:#fff;font-size:16px;font-weight:bold;padding:13px;cursor:pointer;touch-action:manipulation;transition:background .2s}
 .export-copy-btn.ok{background:#1a5a2a;border-color:#3a9a4a}
 
@@ -243,30 +240,16 @@ function ExportModal({ deck, cards, onClose }) {
   const deckCards = useMemo(() => {
     return Object.entries(deck)
       .map(([num, count]) => ({ card: cards.find(c => c.number === num), count }))
-      .filter(({ card }) => card);
+      .filter(({ card }) => card)
+      .sort((a, b) => a.card.number.localeCompare(b.card.number));
   }, [deck, cards]);
 
-  const posOrder = ['MB','WS','S','Li','OP'];
-  const byPos = useMemo(() => {
-    const g = {};
-    deckCards.forEach(({ card, count }) => {
-      const p = card.position || '其他';
-      if (!g[p]) g[p] = [];
-      g[p].push({ card, count });
-    });
-    return g;
-  }, [deckCards]);
-  const sortedPos = [...posOrder.filter(p => byPos[p]), ...Object.keys(byPos).filter(p => !posOrder.includes(p))];
   const total = Object.values(deck).reduce((a, b) => a + b, 0);
 
   function buildText() {
     const lines = ['排球少年!! バボカ!! BREAK 牌組構築表', `總張數：${total}`, ''];
-    sortedPos.forEach(pos => {
-      lines.push(`【${POS_LABEL[pos] || pos}】`);
-      byPos[pos].forEach(({ card, count }) => {
-        lines.push(`×${count} ${card.number} ${card.school}`);
-      });
-      lines.push('');
+    deckCards.forEach(({ card, count }) => {
+      lines.push(`×${count} ${card.number} ${card.school}`);
     });
     return lines.join('\n');
   }
@@ -283,24 +266,17 @@ function ExportModal({ deck, cards, onClose }) {
         <button className="sheet-close" onClick={onClose}>×</button>
         <div style={{fontWeight:'bold',fontSize:16,marginBottom:14}}>匯出預覽 <span style={{fontSize:13,color:'#888',fontWeight:'normal'}}>共 {total} 張</span></div>
 
-        {sortedPos.map(pos => (
-          <div key={pos} className="export-section">
-            <div className="export-section-title">{POS_LABEL[pos] || pos}</div>
-            <div className="export-grid">
-              {byPos[pos].map(({ card, count }) => (
+        {deckCards.length === 0
+          ? <div style={{textAlign:'center',color:'#555',padding:'30px 0'}}>牌組是空的</div>
+          : <div className="export-grid">
+              {deckCards.map(({ card, count }) => (
                 <div key={card.number} className="export-card-item">
                   <img src={card.image} alt={card.number} loading="lazy" />
-                  <div className="export-card-item-foot">
-                    <span className="export-card-count">×{count}</span>
-                    <div style={{fontSize:10,color:'#666',marginTop:2,overflow:'hidden',whiteSpace:'nowrap',textOverflow:'ellipsis'}}>{card.school}</div>
-                  </div>
+                  <div className="export-badge">{count}</div>
                 </div>
               ))}
             </div>
-          </div>
-        ))}
-
-        {deckCards.length === 0 && <div style={{textAlign:'center',color:'#555',padding:'30px 0'}}>牌組是空的</div>}
+        }
 
         <button className={`export-copy-btn${copied ? ' ok' : ''}`} onClick={copy}>
           {copied ? '✓ 已複製！' : '複製文字清單'}
