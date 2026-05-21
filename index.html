@@ -1381,7 +1381,7 @@
         </div>
         <div class="sdeck-grid" id="sexport-grid"></div>
       </div>
-      <button class="sexport-copy" id="sexport-copy-btn">截圖模式</button>
+      <button class="sexport-copy" id="sexport-copy-btn">下載圖片</button>
     </div>
   </div>
 </div>
@@ -3905,30 +3905,98 @@ function sOpenExport() {
 }
 function sCloseExport() { document.getElementById('sexport-overlay').classList.remove('open'); }
 function sExportImage() {
-  const overlay = document.getElementById('sexport-overlay');
-  const sheet = overlay.querySelector('.sdeck-sheet');
-  const head = overlay.querySelector('.sdeck-head');
   const btn = document.getElementById('sexport-copy-btn');
+  btn.disabled = true;
 
-  // hide chrome, go fullscreen
-  head.style.display = 'none';
-  btn.style.display = 'none';
-  sheet.style.cssText += ';position:fixed;inset:0;width:100%;max-width:100%;height:100%;max-height:100%;border-radius:0;overflow-y:auto';
+  const entries = Object.entries(sdeck)
+    .map(([imgFile, count]) => ({ card: cards.find(c => c.image_file === imgFile), count }))
+    .filter(e => e.card).sort((a, b) => a.card.card_no.localeCompare(b.card.card_no));
 
-  const tip = document.createElement('div');
-  tip.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.75);color:#fff;font-size:13px;padding:9px 20px;border-radius:20px;z-index:9999;pointer-events:none';
-  tip.textContent = '截圖完成後點擊畫面結束';
-  document.body.appendChild(tip);
+  // Expand by count (×3 → 3 copies in grid, like reference)
+  const expanded = [];
+  entries.forEach(({ card, count }) => { for (let i = 0; i < count; i++) expanded.push(card); });
+  const total = expanded.length;
+  const uniqueUrls = [...new Set(expanded.map(c => c.image_url))];
+  let loaded = 0;
+  const setBtn = t => { btn.textContent = t; };
+  setBtn('載入中 0/' + uniqueUrls.length + '…');
 
-  const exit = () => {
-    head.style.display = '';
-    btn.style.display = '';
-    sheet.style.cssText = sheet.style.cssText
-      .replace(/;position:fixed.*?overflow-y:auto/, '');
-    tip.remove();
-    overlay.removeEventListener('click', exit);
+  // Fetch image → blob URL (same-origin, no canvas CORS taint)
+  const fetchWithTimeout = (url, ms = 10000) => {
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), ms);
+    return fetch(url, { signal: ctrl.signal }).finally(() => clearTimeout(tid));
   };
-  setTimeout(() => overlay.addEventListener('click', exit), 200);
+  const loadViaProxy = async url => {
+    const proxies = [
+      'https://corsproxy.io/?' + encodeURIComponent(url),
+      'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
+    ];
+    for (const purl of proxies) {
+      try {
+        const res = await fetchWithTimeout(purl);
+        if (!res.ok) continue;
+        const blob = await res.blob();
+        return await new Promise((resolve, reject) => {
+          const img = new Image();
+          const bu = URL.createObjectURL(blob);
+          img.onload = () => { URL.revokeObjectURL(bu); resolve(img); };
+          img.onerror = () => { URL.revokeObjectURL(bu); reject(); };
+          img.src = bu;
+        });
+      } catch (e) {}
+    }
+    return null;
+  };
+
+  const imgCache = {};
+  Promise.all(uniqueUrls.map(url =>
+    loadViaProxy(url).then(img => {
+      imgCache[url] = img; loaded++;
+      setBtn('載入中 ' + loaded + '/' + uniqueUrls.length + '…');
+    }).catch(() => { imgCache[url] = null; loaded++; setBtn('載入中 ' + loaded + '/' + uniqueUrls.length + '…'); })
+  )).then(() => {
+    const COLS = 10, CW = 64, CH = 90, GAP = 3, PAD = 10, HEAD_H = 38;
+    const rows = Math.ceil(total / COLS);
+    const actCols = Math.min(total, COLS);
+    const W = PAD * 2 + actCols * CW + (actCols - 1) * GAP;
+    const H = HEAD_H + rows * CH + (rows - 1) * GAP + PAD;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d');
+
+    ctx.fillStyle = '#192036';
+    ctx.fillRect(0, 0, W, H);
+
+    // Header □ 牌組：N 張
+    ctx.strokeStyle = '#7ab4d8'; ctx.lineWidth = 1.5;
+    ctx.strokeRect(PAD + 1, 9, 14, 14);
+    ctx.fillStyle = '#ddeeff';
+    ctx.font = 'bold 14px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(' 牌組：' + total + ' 張', PAD + 17, 22);
+
+    expanded.forEach((card, i) => {
+      const col = i % COLS, row = Math.floor(i / COLS);
+      const x = PAD + col * (CW + GAP);
+      const y = HEAD_H + row * (CH + GAP);
+      const img = imgCache[card.image_url];
+      if (img) {
+        ctx.drawImage(img, x, y, CW, CH);
+      } else {
+        ctx.fillStyle = '#2a3a5a'; ctx.fillRect(x, y, CW, CH);
+        ctx.strokeStyle = '#3a4a6a'; ctx.lineWidth = 1; ctx.strokeRect(x, y, CW, CH);
+      }
+    });
+
+    const link = document.createElement('a');
+    link.download = 'hv-deck-' + new Date().toISOString().slice(0, 10) + '.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    setBtn('✓ 已下載！'); btn.classList.add('ok');
+    setTimeout(() => { setBtn('下載圖片'); btn.disabled = false; btn.classList.remove('ok'); }, 2500);
+  });
 }
 function sToast(msg) {
   let t = document.getElementById('s-toast');
