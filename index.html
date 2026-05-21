@@ -3914,20 +3914,30 @@ function sExportImage() {
     .map(([imgFile, count]) => ({ card: cards.find(c => c.image_file === imgFile), count }))
     .filter(e => e.card).sort((a,b) => a.card.card_no.localeCompare(b.card.card_no));
 
-  const PROXY = 'https://corsproxy.io/?';
   const COLS = 5, CARD_W = 110, CARD_H = 154, PAD = 14, GAP = 8, TITLE_H = 36;
   const rows = Math.ceil(entries.length / COLS);
   const usedCols = Math.min(entries.length, COLS);
   const W = PAD * 2 + usedCols * CARD_W + (usedCols - 1) * GAP;
   const H = TITLE_H + PAD * 2 + rows * CARD_H + (rows - 1) * GAP;
 
-  const loadImg = url => new Promise(resolve => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => resolve(img);
-    img.onerror = () => resolve(null);
-    img.src = PROXY + encodeURIComponent(url);
-  });
+  const PROXIES = [
+    u => u,
+    u => 'https://corsproxy.io/?' + encodeURIComponent(u),
+    u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u),
+  ];
+  const loadImg = url => {
+    const attempt = (idx) => {
+      if (idx >= PROXIES.length) return Promise.resolve(null);
+      return new Promise(res => {
+        const img = new Image(); img.crossOrigin = 'anonymous';
+        const tid = setTimeout(() => { img.src = ''; res(attempt(idx + 1)); }, 6000);
+        img.onload = () => { clearTimeout(tid); res(img); };
+        img.onerror = () => { clearTimeout(tid); res(attempt(idx + 1)); };
+        img.src = PROXIES[idx](url);
+      });
+    };
+    return attempt(0);
+  };
 
   Promise.all(entries.map(e => loadImg(e.card.image_url))).then(imgs => {
     const canvas = document.createElement('canvas');
