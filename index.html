@@ -3898,7 +3898,7 @@ function sOpenExport() {
   document.getElementById('sexport-total').textContent = '共 ' + sTotal() + ' 張';
   document.getElementById('sexport-cap-count').textContent = '共 ' + sTotal() + ' 張';
   document.getElementById('sexport-grid').innerHTML = entries.map(({ card, count }) =>
-    '<div class="sdi"><img src="' + card.image_url + '" alt="" crossorigin="anonymous" onerror="this.style.background=\'#222\'">' +
+    '<div class="sdi"><img src="' + card.image_url + '" alt="" onerror="this.style.background=\'#222\'">' +
     '<div class="sdi-badge">' + count + '</div></div>'
   ).join('');
   document.getElementById('sexport-overlay').classList.add('open');
