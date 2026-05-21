@@ -7,7 +7,13 @@
     "effect": "支付 2 Guts 發動以下效果。 此角色的攻擊值+2。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f1a90a9b7ff300163c794a/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "日向 翔陽",
+    "srv": 2,
+    "blk": 2,
+    "rcv": 2,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-D01-002",
@@ -17,7 +23,13 @@
     "effect": "支付 2 Guts 發動以下效果。 此角色的托球值+2。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f1a92cb2ae2c000ae82493/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "影山 飛雄",
+    "srv": 1,
+    "blk": 1,
+    "rcv": 2,
+    "tos": 1,
+    "atk": 1
   },
   {
     "number": "HV-D01-003",
@@ -27,7 +39,13 @@
     "effect": "對手進攻總值4或以下時，支付 1 Guts發動以下效果。 抽1張卡。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f1a978e496030012cbed6e/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "月島 蛍",
+    "srv": 1,
+    "blk": 3,
+    "rcv": 1,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-D01-004",
@@ -37,7 +55,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f1a9b14c9efd001202f6c6/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "山口　忠",
+    "srv": 5,
+    "blk": 3,
+    "rcv": 3,
+    "tos": 0,
+    "atk": 1
   },
   {
     "number": "HV-D01-005",
@@ -47,7 +71,13 @@
     "effect": "支付 3 Guts 發動以下效果。 抽1張卡，此角色接球值+2。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f1a9bd4c9efd001002f853/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "西谷 夕",
+    "srv": null,
+    "blk": null,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-D01-006",
@@ -57,7 +87,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f1a9fe5481f900163a4310/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "田中 龍之介",
+    "srv": 1,
+    "blk": 2,
+    "rcv": 2,
+    "tos": 1,
+    "atk": 3
   },
   {
     "number": "HV-D01-007",
@@ -67,7 +103,13 @@
     "effect": "掉棄自己的1張手牌發動以下效果。 此角色接球值+3。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f1aa0e4c1f38001831ca04/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "縁下 力",
+    "srv": 2,
+    "blk": 1,
+    "rcv": 2,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-D01-008",
@@ -77,7 +119,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f1aa3daf02db0b01046e80/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "澤村 大地",
+    "srv": 3,
+    "blk": 1,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-D01-009",
@@ -87,7 +135,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f1aa6df889f000186c9212/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "菅原 孝支",
+    "srv": 1,
+    "blk": 1,
+    "rcv": 2,
+    "tos": 2,
+    "atk": 3
   },
   {
     "number": "HV-D01-010",
@@ -97,7 +151,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f1aa780e89540012fd5bf6/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "東峰 旭",
+    "srv": 2,
+    "blk": 2,
+    "rcv": 4,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-D01-012",
@@ -107,7 +167,13 @@
     "effect": "抽1張卡，然後自己1個烏野角色的攻擊值+1。 自己的 托球角色 是「 影山飛雄 」及 攻擊角色 是「 日向翔陽 」時， 下一個對手回合中，對手只能登場1個 攔網角色 。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f1aae229a13a001233e83d/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "ブロード攻撃",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-D02-001",
@@ -117,7 +183,13 @@
     "effect": "支付 2 Guts 發動以下效果。 此角色的托球值+1，下一個對手回合中，對手的 攻擊角色 登場時，該角色攻擊值-2。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f1ad648314c10010552959/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "孤爪 研磨",
+    "srv": 1,
+    "blk": 2,
+    "rcv": 1,
+    "tos": 1,
+    "atk": 0
   },
   {
     "number": "HV-D02-002",
@@ -127,7 +199,13 @@
     "effect": "支付 1 Guts 發動以下效果。 這個回合中，攔網成功時，獲得 Block Kill 5 。 ___________________________ Block Kill N ：這個回合結束時，進攻總值為N 。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f1ade71d61310016629d4a/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "黒尾 鉄朗",
+    "srv": 1,
+    "blk": 3,
+    "rcv": 1,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-D02-003",
@@ -137,7 +215,13 @@
     "effect": "掉棄自己1張手牌發動以下效果。 此角色接球值+2。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f1af9455409d00147e03d5/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "夜久 衛輔",
+    "srv": null,
+    "blk": null,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-D02-004",
@@ -147,7 +231,13 @@
     "effect": "自己 攔網角色 登場時，此卡是 攻擊角色 時，支付 2 Guts 發動以下效果 。 將此角色移至 側攔網區 。 (如果攔網區已有「 灰羽 リエーフ 」或三人時，此角色則不能移至攔網區。)",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f1afee03aeeb00165a0a37/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "灰羽 リエーフ",
+    "srv": 1,
+    "blk": 2,
+    "rcv": 1,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-D02-005",
@@ -157,7 +247,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f1b1ad536e65000e5eff10/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "海 信行",
+    "srv": 1,
+    "blk": 2,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-D02-006",
@@ -167,7 +263,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f1b1b8d557c4000c81e4b0/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "山本 猛虎",
+    "srv": 5,
+    "blk": 2,
+    "rcv": 2,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-D02-007",
@@ -177,7 +279,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f1b1c1f46293000cb10181/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "福永 招平",
+    "srv": 1,
+    "blk": 0,
+    "rcv": 4,
+    "tos": 1,
+    "atk": 3
   },
   {
     "number": "HV-D02-008",
@@ -187,7 +295,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f1b1d5ae45be0012c0affd/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "犬岡 走",
+    "srv": 2,
+    "blk": 3,
+    "rcv": 3,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-D02-009",
@@ -197,7 +311,13 @@
     "effect": "支付 2 Guts 發動以下效果。 抽一張卡。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f1b1e094a60a0014116ffa/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "芝山 優生",
+    "srv": null,
+    "blk": null,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-D02-010",
@@ -207,7 +327,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f1b20279997e00106b53d7/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "手白 球彦",
+    "srv": 4,
+    "blk": 1,
+    "rcv": 4,
+    "tos": 1,
+    "atk": 0
   },
   {
     "number": "HV-D02-011",
@@ -217,7 +343,13 @@
     "effect": "抽1張卡。選擇以下1個效果發動。 ▶自己的1個 攔網角色 「 黒尾 鉄朗 」攔網值+1。 ▶自己的1個角色接球值+1。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f1b2105523b000140bc880/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "手は前っつったでしょ ノブカツくん",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-D02-012",
@@ -227,7 +359,13 @@
     "effect": "抽1張卡。查看自己牌組頂3張牌，公開1張「 灰羽 リエーフ 」或 「 犬岡走 」，並加入手牌。 其餘的卡牌以任意順序放置到牌組底。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f1b2e9bdba1100109662b3/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "物理攻撃でブン殴ればいい だよね",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-D03-001",
@@ -237,7 +375,13 @@
     "effect": "支付 2 Guts 發動以下效果。 此角色的托球值+1，並且從自己的Event區選擇最多1張「 今日何をする? 」加入手牌。 如果成功加入，則將1張手牌放置到牌組底部。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69702ea9b8dc90001084c7da/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "宮 侑",
+    "srv": 2,
+    "blk": 2,
+    "rcv": 0,
+    "tos": 1,
+    "atk": 0
   },
   {
     "number": "HV-D03-002",
@@ -247,7 +391,13 @@
     "effect": "如果自己的 托球角色 是「宮侑」， 可以透過將自己一張手牌放置到牌組底部發動。 此角色的攻擊值+2。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69702ec136b3d52b02086e9e/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "宮 治",
+    "srv": 1,
+    "blk": 1,
+    "rcv": 1,
+    "tos": 1,
+    "atk": 2
   },
   {
     "number": "HV-D03-003",
@@ -257,7 +407,13 @@
     "effect": "將自己手牌中的一張事件卡放置到事件區發動以下效果。 抽取一張牌，並選擇以下其中一個選項： ▶ 該角色的發球值+1。 ▶ 在對手的下一個回合中，對手的 托球角色 登場時，該角色的托球值- 2。 （此技能放置的事件卡的技能無法發動效果。）",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69702ec69c4a1f45fb0c1e4b/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "宮 侑",
+    "srv": 5,
+    "blk": 0,
+    "rcv": 0,
+    "tos": 1,
+    "atk": 0
   },
   {
     "number": "HV-D03-004",
@@ -267,7 +423,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69702eccfb4f5808528e130d/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "宮 侑",
+    "srv": 4,
+    "blk": 0,
+    "rcv": 0,
+    "tos": 2,
+    "atk": 3
   },
   {
     "number": "HV-D03-005",
@@ -277,7 +439,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69702ed1da76b4001847ad9e/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "宮 治",
+    "srv": 1,
+    "blk": 3,
+    "rcv": 0,
+    "tos": 2,
+    "atk": 2
   },
   {
     "number": "HV-D03-006",
@@ -287,7 +455,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6970a59b96edf954046b4391/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "北 信介",
+    "srv": 2,
+    "blk": 0,
+    "rcv": 5,
+    "tos": 1,
+    "atk": 0
   },
   {
     "number": "HV-D03-007",
@@ -297,7 +471,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6970a5b2c0929a71f54e0be9/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "角名 倫太郎",
+    "srv": 2,
+    "blk": 3,
+    "rcv": 3,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-D03-008",
@@ -307,7 +487,13 @@
     "effect": "支付 5 Guts 發動以下效果。 此角色攻擊值+2。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6970a5c7b4137b9170793af9/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "尾白 アラン",
+    "srv": 4,
+    "blk": 0,
+    "rcv": 1,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-D03-009",
@@ -317,7 +503,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6970a5dd0140f75fcabe94ce/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "銀島 結",
+    "srv": 2,
+    "blk": 2,
+    "rcv": 4,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-D03-010",
@@ -327,7 +519,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6972d6faf79778b73be98b10/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "大耳 練",
+    "srv": 3,
+    "blk": 3,
+    "rcv": 2,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-D03-011",
@@ -337,7 +535,13 @@
     "effect": "支付 2 Guts 發動以下效果。 此角色接球值+2。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6972d71aec2c0d00184c4d87/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "赤木 路成",
+    "srv": null,
+    "blk": null,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-D03-012",
@@ -347,7 +551,13 @@
     "effect": "抽1張卡，自己1個稲荷崎角色的接球值+1。 支付接球區 4 Guts 發動以下效果。 再抽1張卡。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6972d7657123c33ae88bdf5e/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "優勝候補ってやつだ",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-D03-013",
@@ -357,7 +567,13 @@
     "effect": "自己的 托球角色 是「宮侑」或「宮治」時發動以下效果。 抽1張卡，該角色的托球值+1。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6972d7cc4c316d95e2312514/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "今日 何をする？",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P01-001",
@@ -367,7 +583,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/691aaa93c5fd4700163df615/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "日向 翔陽",
+    "srv": 2,
+    "blk": 3,
+    "rcv": 4,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-P01-002",
@@ -377,7 +599,13 @@
     "effect": "支付 3 Guts 發動以下效果。 此 角色 的攻擊值+4，對手下一回合中，對手原始接球值6或以上的 角色 在接球區不能登場。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f06f3d4db76b00105023ac/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "日向 翔陽",
+    "srv": 2,
+    "blk": 3,
+    "rcv": 1,
+    "tos": 0,
+    "atk": 1
   },
   {
     "number": "HV-P01-002",
@@ -387,7 +615,13 @@
     "effect": "支付 3 Guts 發動以下效果。 此 角色 的攻擊值+4，對手下一回合中，對手原始接球值6或以上的 角色 在接球區不能登場。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f077034db76b0014502734/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "日向 翔陽",
+    "srv": 2,
+    "blk": 3,
+    "rcv": 1,
+    "tos": 0,
+    "atk": 1
   },
   {
     "number": "HV-P01-003",
@@ -397,7 +631,13 @@
     "effect": "當角色從手牌中登場，自己的手牌 3 張或以下， 自己的托球角色是「影山飛雄」時 發動以下效果， 此 角色 的攻擊值+2，並且在對手下一回合中，只能打出最多 2 個 阻擋角色 。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f07e3a4e269d001017ae92/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "日向 翔陽",
+    "srv": 1,
+    "blk": 2,
+    "rcv": 2,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-P01-004",
@@ -407,7 +647,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0824cb8e1920012ff65de/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "日向 翔陽",
+    "srv": 2,
+    "blk": 0,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P01-004",
@@ -417,7 +663,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6916e1c806826c000a3cd342/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "日向 翔陽",
+    "srv": 2,
+    "blk": 0,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P01-004",
@@ -427,7 +679,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6916e1d9ef93e7000ebd0ac1/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "日向 翔陽",
+    "srv": 2,
+    "blk": 0,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P01-005",
@@ -437,7 +695,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f89fdea5bf37000ef2639d/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "影山 飛雄",
+    "srv": 4,
+    "blk": 1,
+    "rcv": 2,
+    "tos": 2,
+    "atk": 1
   },
   {
     "number": "HV-P01-006",
@@ -447,7 +711,13 @@
     "effect": "支付 3 Guts 發動以下效果。 自己牌庫頂公開1張，將最多1張「 日向翔陽 」或「 オープン攻撃 」加入手牌， 並將剩餘的卡放置於牌組底。 此外，在本回合中，「 日向翔陽 」登場，該 角色 的攻擊值+2。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f082966bc17610d631ae64/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "影山 飛雄",
+    "srv": 1,
+    "blk": 1,
+    "rcv": 1,
+    "tos": 1,
+    "atk": 2
   },
   {
     "number": "HV-P01-006",
@@ -457,7 +727,13 @@
     "effect": "支付 3 Guts 發動以下效果。 自己牌庫頂公開1張，將最多1張「 日向翔陽 」或「 オープン攻撃 」加入手牌， 並將剩餘的卡放置於牌組底。 此外，在本回合中，「 日向翔陽 」登場，該 角色 的攻擊值+2。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f084d523e5f8000a116a46/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "影山 飛雄",
+    "srv": 1,
+    "blk": 1,
+    "rcv": 1,
+    "tos": 1,
+    "atk": 2
   },
   {
     "number": "HV-P01-006",
@@ -467,7 +743,13 @@
     "effect": "支付 2 Guts 發動以下2個效果。 ▶自己場上有「 山口 忠 」時，此 角色 攔網+2。 ▶此回合中，攔網成功時，獲得 Block Kill 6 。 _____________________________ Block Kill N ：這個回合結束時，進攻總值為N 。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/691aaadb4399f100101c5c4d/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "影山 飛雄",
+    "srv": 1,
+    "blk": 1,
+    "rcv": 1,
+    "tos": 1,
+    "atk": 2
   },
   {
     "number": "HV-P01-006",
@@ -477,7 +759,13 @@
     "effect": "支付 2 Guts 發動以下2個效果。 ▶自己場上有「 山口 忠 」時，此 角色 攔網+2。 ▶此回合中，攔網成功時，獲得 Block Kill 6 。 ______________________________ Block Kill N ：這個回合結束時，進攻總值為N 。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f6e421ffaefd000e4be061/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "影山 飛雄",
+    "srv": 1,
+    "blk": 1,
+    "rcv": 1,
+    "tos": 1,
+    "atk": 2
   },
   {
     "number": "HV-P01-007",
@@ -487,7 +775,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f084ff64d97a00140bc717/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "影山 飛雄",
+    "srv": 2,
+    "blk": 2,
+    "rcv": 1,
+    "tos": 2,
+    "atk": 2
   },
   {
     "number": "HV-P01-009",
@@ -497,7 +791,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/691aab06ee9c2b00125bf8e5/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "月島 蛍",
+    "srv": 2,
+    "blk": 3,
+    "rcv": 3,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P01-010",
@@ -507,7 +807,13 @@
     "effect": "公開自己牌庫頂1張牌，該卡是烏野時， 下一個對手回合中，對手 托球角色 登場時，該 角色 托球值-2。 公開的卡放置到牌庫底。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/691aab7bb31b78000c3d4d80/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "山口 忠",
+    "srv": 2,
+    "blk": 2,
+    "rcv": 0,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P01-011",
@@ -517,7 +823,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/691aab9161227100140272c5/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "西谷 夕",
+    "srv": null,
+    "blk": null,
+    "rcv": 6,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-P01-011",
@@ -527,7 +839,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f08d3ad690580012e7a827/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "西谷 夕",
+    "srv": null,
+    "blk": null,
+    "rcv": 6,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-P01-012",
@@ -537,7 +855,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/691aac01880c0200163d8814/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "田中 龍之介",
+    "srv": 5,
+    "blk": 2,
+    "rcv": 2,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P01-012",
@@ -547,7 +871,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f08d65a0debb000e8f1c43/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "田中 龍之介",
+    "srv": 5,
+    "blk": 2,
+    "rcv": 2,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P01-013",
@@ -557,7 +887,13 @@
     "effect": "(從手牌中掉棄此卡牌)： 自己的1個 烏野角色 的接球值+2。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f08d6f1737c40012a8f386/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "縁下 力",
+    "srv": 1,
+    "blk": 0,
+    "rcv": 2,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-P01-014",
@@ -567,7 +903,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/691aac3e5ea6f500121cce00/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "澤村 大地",
+    "srv": 1,
+    "blk": 3,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-P01-014",
@@ -577,7 +919,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f08fdcb45522000c42c4a1/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "澤村 大地",
+    "srv": 1,
+    "blk": 3,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-P01-015",
@@ -587,7 +935,13 @@
     "effect": "支付 2 Guts 發動以下效果。 抽1張牌，此 角色 的托球值+1。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/691aac50129cb9000ebc63c4/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "菅原 孝支",
+    "srv": 1,
+    "blk": 0,
+    "rcv": 2,
+    "tos": 1,
+    "atk": 2
   },
   {
     "number": "HV-P01-015",
@@ -597,7 +951,13 @@
     "effect": "支付 2 Guts 發動以下效果。 抽1張牌，此 角色 的托球值+1。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/691aac690c11a5000a8740ac/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "菅原 孝支",
+    "srv": 1,
+    "blk": 0,
+    "rcv": 2,
+    "tos": 1,
+    "atk": 2
   },
   {
     "number": "HV-P01-016",
@@ -607,7 +967,13 @@
     "effect": "自己的托球角色是烏野的S 時，支付 4 Guts 發動以下效果。 此 角色 的攻擊值+2。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/691aac7ac66d9e0014acd7c8/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "東峰 旭",
+    "srv": 3,
+    "blk": 0,
+    "rcv": 1,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P01-017",
@@ -617,7 +983,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/690c444c1a65f4000ab5ddc7/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "孤爪 研磨",
+    "srv": 2,
+    "blk": 2,
+    "rcv": 2,
+    "tos": 2,
+    "atk": 1
   },
   {
     "number": "HV-P01-018",
@@ -627,7 +999,13 @@
     "effect": "支付 3 Guts 發動以下效果。 此 角色 的托球值+1，如果自己的 角色 只有音駒時，從自己EVENT區將最多1張的卡牌加到手牌。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0931dcdc528000a02705f/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "孤爪 研磨",
+    "srv": 1,
+    "blk": 2,
+    "rcv": 0,
+    "tos": 1,
+    "atk": 1
   },
   {
     "number": "HV-P01-018",
@@ -637,7 +1015,13 @@
     "effect": "支付 3 Guts 發動以下效果。 此 角色 的托球值+1，如果自己的 角色 只有音駒時，從自己EVENT區將最多1張的卡牌加到手牌。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f1c9b5af856400129e4c41/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "孤爪 研磨",
+    "srv": 1,
+    "blk": 2,
+    "rcv": 0,
+    "tos": 1,
+    "atk": 1
   },
   {
     "number": "HV-P01-019",
@@ -647,7 +1031,13 @@
     "effect": "自己原始攻擊值3的 攻擊角色 登場，而此角色是 托球角色 時，支付2 Guts 發動以下效果。 可從自己攻擊區最多1張的 音駒Guts 在攻擊區登場，該角色的攻擊值+2。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f09598e8ebd30014bb8b7c/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "孤爪 研磨",
+    "srv": 1,
+    "blk": 1,
+    "rcv": 2,
+    "tos": 1,
+    "atk": 1
   },
   {
     "number": "HV-P01-020",
@@ -657,7 +1047,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/691aadcd4399f100161c5f7d/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "黒尾 鉄朗",
+    "srv": 5,
+    "blk": 2,
+    "rcv": 2,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P01-021",
@@ -667,7 +1063,13 @@
     "effect": "支付3 Guts 發動以下效果。 此角色的攻擊值+3，從自己區域的 Guts ，將2張不同卡名的音駒卡加到手牌中。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f097ddae94ca000ada7fc1/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "黒尾 鉄朗",
+    "srv": 2,
+    "blk": 2,
+    "rcv": 3,
+    "tos": 0,
+    "atk": 1
   },
   {
     "number": "HV-P01-021",
@@ -677,7 +1079,13 @@
     "effect": "支付3 Guts 發動以下效果。 此角色的攻擊值+3，從自己區域的 Guts ，將2張不同卡名的音駒卡加到手牌中。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6916e224386016000c908971/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "黒尾 鉄朗",
+    "srv": 2,
+    "blk": 2,
+    "rcv": 3,
+    "tos": 0,
+    "atk": 1
   },
   {
     "number": "HV-P01-022",
@@ -687,7 +1095,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/691aaddf4c6cec00163fc923/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "黒尾 鉄朗",
+    "srv": 1,
+    "blk": 1,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P01-023",
@@ -697,7 +1111,13 @@
     "effect": "當有「夜久衛輔」以外的 音駒角色 在此角色上登場接球區時， 將此角色放置到廢棄區發動以下效果。 該角色的接球值+2。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/691aadf063e6690010a1dd8a/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "夜久 衛輔",
+    "srv": null,
+    "blk": null,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-P01-023",
@@ -707,7 +1127,13 @@
     "effect": "當有「夜久衛輔」以外的 音駒角色 在此角色上登場接球區時， 將此角色放置到廢棄區發動以下效果。 該角色的接球值+2。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f09a4c3d17730016bc95da/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "夜久 衛輔",
+    "srv": null,
+    "blk": null,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-P01-024",
@@ -717,7 +1143,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/691aae03b31b78000c3d4fc4/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "夜久 衛輔",
+    "srv": null,
+    "blk": null,
+    "rcv": 6,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-P01-025",
@@ -727,7 +1159,13 @@
     "effect": "支付2 Guts 發動以下2個效果。 ▶此角色因為「 孤爪研磨 」的效果登場時，此角色的攻擊值+2。 ▶下一個對手回合中，對手的 主攔網角色 登場時，該角色攔網值-3。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f09a76b93f4b000c820096/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "灰羽 リエーフ",
+    "srv": 1,
+    "blk": 3,
+    "rcv": 1,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-P01-025",
@@ -737,7 +1175,13 @@
     "effect": "下一個對手回合中，對手的 接球角色 和 托球角色 效果無效。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/691aae90acf0b600186a0840/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "灰羽 リエーフ",
+    "srv": 1,
+    "blk": 3,
+    "rcv": 1,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-P01-026",
@@ -747,7 +1191,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f09b715d116f000aef8ef6/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "灰羽 リエーフ",
+    "srv": 2,
+    "blk": 3,
+    "rcv": 3,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P01-027",
@@ -757,7 +1207,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/691aae17e75471000c6799eb/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "海 信行",
+    "srv": 1,
+    "blk": 0,
+    "rcv": 4,
+    "tos": 1,
+    "atk": 3
   },
   {
     "number": "HV-P01-027",
@@ -767,7 +1223,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/691aae3a5ad0300012056219/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "海 信行",
+    "srv": 1,
+    "blk": 0,
+    "rcv": 4,
+    "tos": 1,
+    "atk": 3
   },
   {
     "number": "HV-P01-028",
@@ -777,7 +1239,13 @@
     "effect": "在攻擊區域，「灰羽リエーフ」登場於此卡之上時， 從自己手牌掉棄1張音駒的卡發動以下效果， 該角色攻擊值+1。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/691aae495dc59c000c193f32/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "山本 猛虎",
+    "srv": 1,
+    "blk": 2,
+    "rcv": 0,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P01-029",
@@ -787,7 +1255,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/691aae58d6de4d0016129d2c/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "福永 招平",
+    "srv": 1,
+    "blk": 1,
+    "rcv": 5,
+    "tos": 1,
+    "atk": 0
   },
   {
     "number": "HV-P01-029",
@@ -797,7 +1271,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f09c883d17730010bc9682/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "福永 招平",
+    "srv": 1,
+    "blk": 1,
+    "rcv": 5,
+    "tos": 1,
+    "atk": 0
   },
   {
     "number": "HV-P01-030",
@@ -807,7 +1287,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/691aae6d0e6b1e6181d522aa/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "犬岡 走",
+    "srv": 1,
+    "blk": 3,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-P01-031",
@@ -817,7 +1303,13 @@
     "effect": "(從手牌中掉棄此卡牌)： 自己的1個音駒角色的接球值+2。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/691aae7a8d2625001699d04b/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "芝山 優生",
+    "srv": null,
+    "blk": null,
+    "rcv": 4,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-P01-033",
@@ -827,7 +1319,13 @@
     "effect": "從自己手牌掉棄1張 青葉城西的卡 發動以下效果。 此角色能力值+1，對手手牌4張或以上時，掉棄對手1張手牌。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0a813367f55000c28d15a/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "及川 徹",
+    "srv": 5,
+    "blk": 0,
+    "rcv": 0,
+    "tos": 1,
+    "atk": 0
   },
   {
     "number": "HV-P01-033",
@@ -837,7 +1335,13 @@
     "effect": "從自己手牌掉棄1張 青葉城西的卡 發動以下效果。 此角色能力值+1，對手手牌4張或以上時，掉棄對手1張手牌。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0a81bd45ac5000e80961a/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "及川 徹",
+    "srv": 5,
+    "blk": 0,
+    "rcv": 0,
+    "tos": 1,
+    "atk": 0
   },
   {
     "number": "HV-P01-034",
@@ -847,7 +1351,13 @@
     "effect": "支付 1Guts 發動以下效果。 支付的卡是青葉城西時，對手全部手牌放回牌組並洗牌，之後抽6張卡。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0a82262e603001655602e/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "及川 徹",
+    "srv": 5,
+    "blk": 0,
+    "rcv": 0,
+    "tos": 1,
+    "atk": 0
   },
   {
     "number": "HV-P01-034",
@@ -857,7 +1367,13 @@
     "effect": "從自己手牌掉棄1張青葉城西的卡發動以下效果。 此角色攻擊值+2，對手手牌4張或以下時，下一個回合中，對手不能因卡牌效果將牌加入手牌。 ※「因卡牌效果將牌加入手牌」包括: 從棄牌區加入手牌 、 從Guts加入手牌 、 卡牌效果的抽1張牌 、 查看自己牌組頂3張牌，選1張並加入手牌 等等。 (Ref Q&A)",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0a8295f945d0012658d09/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "及川 徹",
+    "srv": 5,
+    "blk": 0,
+    "rcv": 0,
+    "tos": 1,
+    "atk": 0
   },
   {
     "number": "HV-P01-034",
@@ -867,7 +1383,13 @@
     "effect": "從自己手牌掉棄1張青葉城西的卡發動以下效果。 此角色攻擊值+2，對手手牌4張或以下時，下一個回合中，對手不能因卡牌效果將牌加入手牌。 ※「因卡牌效果將牌加入手牌」包括: 從棄牌區加入手牌 、 從Guts加入手牌 、 卡牌效果的抽1張牌 、 查看自己牌組頂3張牌，選1張並加入手牌 等等。 (Ref Q&A)",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6916e2769ea1800016b0122c/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "及川 徹",
+    "srv": 5,
+    "blk": 0,
+    "rcv": 0,
+    "tos": 1,
+    "atk": 0
   },
   {
     "number": "HV-P01-036",
@@ -877,7 +1399,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/691aaeb09450540016b6c99b/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "金田一 勇太郎",
+    "srv": 3,
+    "blk": 3,
+    "rcv": 2,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P01-037",
@@ -887,7 +1415,13 @@
     "effect": "對手進攻總值8或以上時，支付1Guts 發動以下效果。 立即結束攔網階段，進入抽牌階段。 此回合中，自己的青葉城西的 接球角色 登場，該角色接球值+3。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0a8362e36310016819e38/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "松川 一静",
+    "srv": 1,
+    "blk": 3,
+    "rcv": 1,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-P01-038",
@@ -897,7 +1431,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0a83ca0cd2b001488a174/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "花巻 貴大 ",
+    "srv": 1,
+    "blk": 2,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-P01-039",
@@ -907,7 +1447,13 @@
     "effect": "對手進攻總值6或以上時，從自己手牌掉棄1張青葉城西的卡發動以下效果。 此角色的接球值+1，場上只有 青葉城西角色 時，抽1張卡。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/691aaee6e3a0e900164e4d84/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "渡 親治",
+    "srv": null,
+    "blk": null,
+    "rcv": 5,
+    "tos": 1,
+    "atk": 0
   },
   {
     "number": "HV-P01-040",
@@ -917,7 +1463,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0a8463b13da00180236b0/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "矢巾 秀",
+    "srv": 2,
+    "blk": 1,
+    "rcv": 3,
+    "tos": 2,
+    "atk": 2
   },
   {
     "number": "HV-P01-041",
@@ -927,7 +1479,13 @@
     "effect": "自己場上只有青葉城西角色，對手手牌3張或以下時，支付1 Guts 發動以下效果。 獲得 吊球4 。 ________________________________ 吊球N ： 此回合結束時，自己的進攻總值N，下一個對手回合中， 對手不能登場攔網角度。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/691aaed4e3a0e9000a4e4f57/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "国見 英",
+    "srv": 1,
+    "blk": 0,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-P01-042",
@@ -937,7 +1495,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/691aaec6e75471000e679ccb/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "京谷 賢太郎",
+    "srv": 5,
+    "blk": 0,
+    "rcv": 4,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P01-043",
@@ -947,7 +1511,13 @@
     "effect": "此角色從手牌登場時，自己場上的角色全是梟谷， 自己的 攻擊區域的Guts 是單數時發動以下效果， 此角色攻擊值+5。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0adef2e3631001281a34a/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "木兎 光太郎",
+    "srv": 4,
+    "blk": 1,
+    "rcv": 2,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-P01-043",
@@ -957,7 +1527,13 @@
     "effect": "此角色從手牌登場時，自己場上的角色全是梟谷， 自己的 攻擊區域的Guts 是單數時發動以下效果， 此角色攻擊值+5。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0aee3ca0fdb000a5ea447/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "木兎 光太郎",
+    "srv": 4,
+    "blk": 1,
+    "rcv": 2,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-P01-044",
@@ -967,7 +1543,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0aef3125a7e001046bd4a/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "木兎 光太郎",
+    "srv": 5,
+    "blk": 2,
+    "rcv": 2,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P01-045",
@@ -977,7 +1559,13 @@
     "effect": "支付自己的托球區與攻擊區合計4張Guts發動以下效果。 此角色托球值+2，並從棄牌區將「 木兎光太郎 」加入手牌。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0aeff898caa000eb254e6/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "赤葦 京治",
+    "srv": 2,
+    "blk": 1,
+    "rcv": 0,
+    "tos": 1,
+    "atk": 2
   },
   {
     "number": "HV-P01-045",
@@ -987,7 +1575,13 @@
     "effect": "支付自己的托球區與攻擊區合計4張Guts發動以下效果。 此角色托球值+2，並從棄牌區將「 木兎光太郎 」加入手牌。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0afdea0cd2b001088a6d1/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "赤葦 京治",
+    "srv": 2,
+    "blk": 1,
+    "rcv": 0,
+    "tos": 1,
+    "atk": 2
   },
   {
     "number": "HV-P01-046",
@@ -997,7 +1591,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0afe65ac0f50010e848d5/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "赤葦 京治",
+    "srv": 1,
+    "blk": 2,
+    "rcv": 3,
+    "tos": 2,
+    "atk": 1
   },
   {
     "number": "HV-P01-047",
@@ -1007,7 +1607,13 @@
     "effect": "當有梟谷角色在攻擊區的此角色之上登場時，自己棄掉1張手牌發動以下效果。 該角色攻擊值+1。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0aff132670600147574cc/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "木葉 秋紀",
+    "srv": 1,
+    "blk": 0,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-P01-048",
@@ -1017,7 +1623,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0b0b42e3631000c81a5fb/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "木葉 秋紀",
+    "srv": 1,
+    "blk": 2,
+    "rcv": 2,
+    "tos": 1,
+    "atk": 3
   },
   {
     "number": "HV-P01-048",
@@ -1027,7 +1639,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0b0c617ccb9000e2f2f7a/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "木葉 秋紀",
+    "srv": 1,
+    "blk": 2,
+    "rcv": 2,
+    "tos": 1,
+    "atk": 3
   },
   {
     "number": "HV-P01-049",
@@ -1037,7 +1655,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0b0d112fb79000ca6ea2c/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "猿杙 大和",
+    "srv": 1,
+    "blk": 3,
+    "rcv": 0,
+    "tos": 1,
+    "atk": 3
   },
   {
     "number": "HV-P01-050",
@@ -1047,7 +1671,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0b0e062e603000e556805/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "小見 春樹",
+    "srv": null,
+    "blk": null,
+    "rcv": 6,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-P01-051",
@@ -1057,7 +1687,13 @@
     "effect": "對手的進攻總值4或以上時，棄掉1張自己牌組頂的卡牌發動以下效果。 該卡是梟谷時，獲得 One Touch 3 。 ________________________________ One Touch N ：對手的進攻總值-N。 立即結束攔網階段，並進入自己的抽牌階段。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0b0f0cdc528000a02801c/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "鷲尾 辰生",
+    "srv": 3,
+    "blk": 3,
+    "rcv": 1,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-P01-052",
@@ -1067,7 +1703,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0b176ba582c00108e7b3f/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "尾長 渉",
+    "srv": 2,
+    "blk": 3,
+    "rcv": 3,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P01-053",
@@ -1077,7 +1719,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0b197b222a80018ea1e22/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "池尻 隼人",
+    "srv": 1,
+    "blk": 2,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-P01-054",
@@ -1087,7 +1735,13 @@
     "effect": "支付3 Guts發動以下效果。 此角色攔網值+5。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0b1a3ed4e6b0014011e47/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "青根 高伸",
+    "srv": 1,
+    "blk": 2,
+    "rcv": 1,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P01-054",
@@ -1097,7 +1751,13 @@
     "effect": "支付3 Guts發動以下效果。 此角色攔網值+5。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6916e7b679d4b30018bc5a2f/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "青根 高伸",
+    "srv": 1,
+    "blk": 2,
+    "rcv": 1,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P01-055",
@@ -1107,7 +1767,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0b1da77a3970012567f1f/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "二口 堅治",
+    "srv": 5,
+    "blk": 3,
+    "rcv": 0,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P01-055",
@@ -1117,7 +1783,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6916e7cd32234500100db4e8/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "二口 堅治",
+    "srv": 5,
+    "blk": 3,
+    "rcv": 0,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P01-056",
@@ -1127,7 +1799,13 @@
     "effect": "棄掉1張自己手牌的EVENT卡發動以下效果。 抽1張卡，此角色1項能力值+2。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0b1e6a0cd2b001888a729/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "牛島 若利",
+    "srv": 4,
+    "blk": 0,
+    "rcv": 3,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-P01-056",
@@ -1137,7 +1815,13 @@
     "effect": "棄掉1張自己手牌的EVENT卡發動以下效果。 抽1張卡，此角色1項能力值+2。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0b29e35210e001464343c/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "牛島 若利",
+    "srv": 4,
+    "blk": 0,
+    "rcv": 3,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-P01-057",
@@ -1147,7 +1831,13 @@
     "effect": "下一個對手回合中，對手 抽牌以外的方法 將卡加入手牌時，自己抽1張卡。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0b2a83ae7790012db50ab/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "天童 覚",
+    "srv": 1,
+    "blk": 3,
+    "rcv": 0,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-P01-058",
@@ -1157,7 +1847,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0b2f1f13ef50018584dc9/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "五色 工",
+    "srv": 5,
+    "blk": 2,
+    "rcv": 2,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P01-059",
@@ -1167,7 +1863,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0b2fd3ae7790016db514a/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "十和田 良樹",
+    "srv": 3,
+    "blk": 1,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-P01-060",
@@ -1177,7 +1879,13 @@
     "effect": "對手的進攻總值4或以上時發動以下效果。 獲得 One Touch 2 。 ________________________________ One Touch N ：對手的進攻總值-N。 立即結束攔網階段，並進入自己的抽牌階段。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0b31145e7240014e594e3/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "百沢 雄大",
+    "srv": 1,
+    "blk": 3,
+    "rcv": 1,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-P01-061",
@@ -1187,7 +1895,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0b5a4602461000c5ca90b/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "照島 遊児",
+    "srv": 2,
+    "blk": 2,
+    "rcv": 1,
+    "tos": 1,
+    "atk": 3
   },
   {
     "number": "HV-P01-062",
@@ -1197,7 +1911,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0b5ae91c850000c4d71a6/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "中島 猛",
+    "srv": 1,
+    "blk": 2,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-P01-063",
@@ -1207,7 +1927,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0b5b6b4e731000e860d07/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "宮 侑",
+    "srv": 5,
+    "blk": 1,
+    "rcv": 1,
+    "tos": 2,
+    "atk": 1
   },
   {
     "number": "HV-P01-063",
@@ -1217,7 +1943,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0b5c091c850000c4d71a9/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "宮 侑",
+    "srv": 5,
+    "blk": 1,
+    "rcv": 1,
+    "tos": 2,
+    "atk": 1
   },
   {
     "number": "HV-P01-064",
@@ -1227,7 +1959,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0b5d2bbf2730012941091/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "宮 治",
+    "srv": 2,
+    "blk": 2,
+    "rcv": 4,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P01-064",
@@ -1237,7 +1975,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0b5dbd487bc00147bed7f/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "宮 治",
+    "srv": 2,
+    "blk": 2,
+    "rcv": 4,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P01-065",
@@ -1247,7 +1991,13 @@
     "effect": "對手的EVENT區 托球 及 攻擊 卡合計5張或以上時，此角色接球值+6。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0b5e6bbf2730010940e9f/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "北 信介",
+    "srv": 2,
+    "blk": 1,
+    "rcv": 2,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P01-066",
@@ -1257,7 +2007,13 @@
     "effect": "自己角色全是鴎台，或 四位或以上不同所屬的角色時，支付 3 Guts發動以下效果。 此角色的攻擊值+3。 然後，掉棄對手2張Event區的卡，如果該區域不足2張卡時，攻擊值再+1。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f6e74fbb4dfe001051d349/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "星海 光来",
+    "srv": 3,
+    "blk": 2,
+    "rcv": 1,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-P01-066",
@@ -1267,7 +2023,13 @@
     "effect": "自己角色全是鴎台，或 四位或以上不同所屬的角色時，支付 3 Guts發動以下效果。 此角色的攻擊值+3。 然後，掉棄對手2張Event區的卡，如果該區域不足2張卡時，攻擊值再+1。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f6e747047a3c0018019162/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "星海 光来",
+    "srv": 3,
+    "blk": 2,
+    "rcv": 1,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-P01-067",
@@ -1277,7 +2039,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f6e73fb5ec390010e157f5/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "昼神 幸郎",
+    "srv": 5,
+    "blk": 3,
+    "rcv": 2,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-P01-068",
@@ -1287,7 +2055,13 @@
     "effect": "自己手牌3張或以下時，自己有四位或以上不同所屬的角色時發動以下效果。 此角色攻擊值+2，獲得 Blockout 2 。 ________________________________ Blockout N ：下個對手回合中，原始攔網值N或以下攔網角色登場時， 對手失敗。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f6e73823fc06a17afd9c35/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "佐久早 聖臣",
+    "srv": 4,
+    "blk": 0,
+    "rcv": 3,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-P01-069",
@@ -1297,7 +2071,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0b674d487bc00187bed5d/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "越後 栄",
+    "srv": 1,
+    "blk": 2,
+    "rcv": 3,
+    "tos": 2,
+    "atk": 1
   },
   {
     "number": "HV-P01-070",
@@ -1307,7 +2087,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0b67ea0cd2b000c88aa97/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "白峰 周",
+    "srv": 2,
+    "blk": 0,
+    "rcv": 4,
+    "tos": 2,
+    "atk": 1
   },
   {
     "number": "HV-P01-071",
@@ -1317,7 +2103,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0b6894b71970016fdc86b/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "大将 優",
+    "srv": 1,
+    "blk": 1,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P01-071",
@@ -1327,7 +2119,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0b693ba582c00128e7e52/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "大将 優",
+    "srv": 1,
+    "blk": 1,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P01-072",
@@ -1337,7 +2135,13 @@
     "effect": "所屬: 音駒·2年 位置: S 此角登場時，此卡的名稱由「 日向．孤爪 」改為「 日向翔陽 」或「 孤爪研磨 」。 (放置此卡時選擇的名稱在本回合結束前有效。計算場上角色數量時，此卡計為1個角色。)",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f1cb768dafac001453fbf7/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "日向・孤爪",
+    "srv": 1,
+    "blk": 0,
+    "rcv": 0,
+    "tos": 1,
+    "atk": 3
   },
   {
     "number": "HV-P01-074",
@@ -1347,7 +2151,13 @@
     "effect": "抽1張卡，自己的1個角色的攻擊值+1。 對手EVENT區的 抽牌 或 接球 卡合計5張時，攻擊值+2。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0b789c6cf8100142ca7ea/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "烏養 一繋",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P01-074",
@@ -1357,7 +2167,13 @@
     "effect": "抽1張卡，自己的1個角色的攻擊值+1。 對手EVENT區的 抽牌 或 接球 卡合計5張時，攻擊值+2。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0b818b4e731000a860e29/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "烏養 一繋",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P01-075",
@@ -1367,7 +2183,13 @@
     "effect": "(經理人) 自己的1個烏野角色1項能力值+1， 如果處於接球階段時，抽1張卡。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0b83b704868000e60e898/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "清水 潔子",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P01-076",
@@ -1377,7 +2199,13 @@
     "effect": "自己手牌4張以下時，自己1個區域的 2張相同所屬的Guts 加入手牌。 ※必須是2張相同所屬的Guts，不能只有1張。 Ref: Q&A",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0b897a2e351000e898a41/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "がんばれ",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P01-077",
@@ -1387,7 +2215,13 @@
     "effect": "自己的1名烏野接球角色接球值+2， 該角色是「 西谷夕 」時，抽1張卡。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0b8f9acc882000eafce83/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "前のめりで行くぜ",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P01-078",
@@ -1397,7 +2231,13 @@
     "effect": "抽2張卡，然後棄掉1張自己的手牌。 如果自己Event區有兩張 「オープン攻撃」 或以下時， 自己棄牌區的1張 「日向翔陽」 在攻擊區登場，該角色攻擊值+1。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f5f5a167f7680018ce141b/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "オープン攻撃",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P01-078",
@@ -1407,7 +2247,13 @@
     "effect": "抽2張卡，然後棄掉1張自己的手牌。 如果自己Event區有兩張 「オープン攻撃」 或以下時， 自己棄牌區的1張 「日向翔陽」 在攻擊區登場，該角色攻擊值+1。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f5f5a783324200100e82e8/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "オープン攻撃",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P01-079",
@@ -1417,7 +2263,13 @@
     "effect": "抽1張卡，然後自己的 烏野攔網角色 攔網值+1。 如果該角色是 「月島蛍」 時，自己的發球區的1張 「山口忠」 加入手牌， 下一個對手回合中，對手的接球角色登場時，該角色接球值-2。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f5f5b2c784b5000aa1c814/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "僕一人で勝とうなんて1mmも思ってません",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P01-079",
@@ -1427,7 +2279,13 @@
     "effect": "抽1張卡，然後自己的 烏野攔網角色 攔網值+1。 如果該角色是 「月島蛍」 時，自己的發球區的1張 「山口忠」 加入手牌， 下一個對手回合中，對手的接球角色登場時，該角色接球值-2。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f5f5ba7a917a000e83de60/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "僕一人で勝とうなんて1mmも思ってません",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P01-080",
@@ -1437,7 +2295,13 @@
     "effect": "抽1張卡，自己1名角色的接球值+1，對手EVENT區的 托球 或 攻擊 卡合計5張時，接球值再+2。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0b963252c970016229f0b/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "猫又 育史",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P01-080",
@@ -1447,7 +2311,13 @@
     "effect": "抽1張卡，自己1名角色的接球值+1，對手EVENT區的 托球 或 攻擊 卡合計5張時，接球值再+2。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0b9e535210e0016643aee/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "猫又 育史",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P01-081",
@@ -1457,7 +2327,13 @@
     "effect": "抽1張卡，自己1名音駒角色的攻擊值+1。 自己場上只有音駒角色時，支付自己的接球區3 Guts時發動以下效果， 攻擊值+1。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0b9f3e4b78f0010197d87/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "山本 あかね",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P01-082",
@@ -1467,7 +2343,13 @@
     "effect": "抽1張卡。選擇以下1個效果發動。 ▶自己的1位音駒角色接球值+1。 ▶自己的1位接球值5或以上的音駒角色，接球值轉為7。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f9a7ab5e7cf6000c2a3700/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "これが \"繋ぐ\"ということだ",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P01-083",
@@ -1477,7 +2359,13 @@
     "effect": "抽1張卡。 自己場上只有音駒角色時，自己區域支付合計 6 Guts發動以下效果。 自己的1個角色，進攻值+3。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f1caf1da24d9001669f9c0/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "1stテンポの同時多発位置差攻撃",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P01-084",
@@ -1487,7 +2375,13 @@
     "effect": "自己的 托球角色 「孤爪研磨」時發動以下效果。 抽1張卡，然後自己的1個 托球角色 的托球值+1。 下一個對手回合中，對手不從手牌打出MB的 攻擊角色 。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f1ca182490020012412e2b/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "\"助走\"は 翔陽の翼だね",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P01-085",
@@ -1497,7 +2391,13 @@
     "effect": "抽1張卡， 自己區域支付合計8 Guts發動以下效果。 本回合中，自己的青葉城西的角色登場時，該角色的1項能力值+1。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0ba6fb2bd70000ce19731/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "入畑 伸照",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P01-086",
@@ -1507,7 +2407,13 @@
     "effect": "自己棄牌區的1張青葉城西的角色卡加入手牌。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f5f590e3956a000e471463/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "\"指揮者\"が代われば \"音\"が変わる",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P01-087",
@@ -1517,7 +2423,13 @@
     "effect": "自己的 發球角色 或 托球角色 是「及川徹」時發動以下效果。 抽1張卡，然後自己的1張 「及川徹」 的托球值+1。 下一個對手回合中，對手抽卡以外的方法將卡加入手時，對手掉棄1張手牌。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f5f58437880e00169a94d7/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "俺も思った☆",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P01-088",
@@ -1527,7 +2439,13 @@
     "effect": "抽1張卡，然後自己的1張青葉城西的角色接球值+1。 自己手牌3張或以下時，接球值再+1。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f5f57c52f9b4001448fc05/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "お前達は 強いよ",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P01-089",
@@ -1537,7 +2455,13 @@
     "effect": "查看自己牌組頂3張牌，公開1張梟谷的卡，並加入手牌。 其餘的卡牌以任意順序放置到牌組底。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f0baec255f2700169ddbae/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "闇路 建行",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P01-090",
@@ -1547,7 +2471,13 @@
     "effect": "抽1張卡。自己的1張梟谷角色攻擊值+1。 自己場上只有梟谷角色時，下一個對手回合中，如果對手失敗， 自己的手牌補至7張。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f5f56d9907600014298bd0/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "—\"その瞬間\"が 有るか、 無いかだ",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P01-091",
@@ -1557,7 +2487,13 @@
     "effect": "抽1張卡。自己的1張梟谷角色的接球值+1。 棄掉自己的 梟谷攔網角色 發動以下效果， 對手進攻總值-1。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/68f5f5614a1db8000eda6db2/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "音駒の専売特許じゃねえぞォ！",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P02-001",
@@ -1567,7 +2503,13 @@
     "effect": "互相局數區(血量) 合計1張或以下時，支付 3 Guts 發動以下效果。 此角色的接球值+6，自己棄牌區最多1張烏野角色卡加入手牌。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/697c74e3aca307c2d7f890cd/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "日向 翔陽",
+    "srv": 2,
+    "blk": 2,
+    "rcv": 0,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P02-002",
@@ -1577,7 +2519,13 @@
     "effect": "自己的1張手牌放到棄牌區，支付 2 Guts 發動以下效果。 此角色托球值+2，自己棄牌區最多1張「 田中 龍之介 」加入手牌。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/697c750c13dae70d1c871933/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "影山 飛雄",
+    "srv": 4,
+    "blk": 1,
+    "rcv": 0,
+    "tos": 1,
+    "atk": 0
   },
   {
     "number": "HV-P02-002",
@@ -1587,7 +2535,13 @@
     "effect": "自己的1張手牌放到棄牌區，支付 2 Guts 發動以下效果。 此角色托球值+2，自己棄牌區最多1張「 田中 龍之介 」加入手牌。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/697c751c039cf3d334ca8e23/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "影山 飛雄",
+    "srv": 4,
+    "blk": 1,
+    "rcv": 0,
+    "tos": 1,
+    "atk": 0
   },
   {
     "number": "HV-P02-003",
@@ -1597,7 +2551,13 @@
     "effect": "對手的Event區有2張卡或以上時，自己手牌的1張Event卡放置到Event區發動以下效果。 抽1張牌，此角色攔網值+6。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69800158dc1f083a20318774/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "月島 蛍",
+    "srv": 1,
+    "blk": 2,
+    "rcv": 3,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-P02-003",
@@ -1607,7 +2567,13 @@
     "effect": "對手的Event區有2張卡或以上時，自己手牌的1張Event卡放置到Event區發動以下效果。 抽1張牌，此角色攔網值+6。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69800225a74a5700184d16aa/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "月島 蛍",
+    "srv": 1,
+    "blk": 2,
+    "rcv": 3,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-P02-004",
@@ -1617,7 +2583,13 @@
     "effect": "此角色在烏野角色上登場時，對手手牌的1張Event卡放到棄置區。 否則，在下個對手回合中，當對手加入手牌時，自己抽1張牌。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69800240dd0d911a7d2084b6/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "山口 忠",
+    "srv": 2,
+    "blk": 3,
+    "rcv": 0,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-P02-004",
@@ -1627,7 +2599,13 @@
     "effect": "此角色在烏野角色上登場時，對手手牌的1張Event卡放到棄置區。 否則，在下個對手回合中，當對手加入手牌時，自己抽1張牌。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69800319f59b3ae5e414f00b/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "山口 忠",
+    "srv": 2,
+    "blk": 3,
+    "rcv": 0,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-P02-006",
@@ -1637,7 +2615,13 @@
     "effect": "對手的Event區有3張或以上 發球 的Event卡時，抽1張卡， 此角色接球值+3。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6991fabe9a1bb400161f8b0f/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "西谷 夕",
+    "srv": null,
+    "blk": null,
+    "rcv": 4,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-P02-007",
@@ -1647,7 +2631,13 @@
     "effect": "當自己的「超インナークロス!!!」發動時，此角色是攻擊 角色 時，支付 3 Guts 發動以下效果。 此角色攻擊值+4，下個對手回合中，對手 接球角色 登場時，該角色接球值-2。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/698068c7949f949c3b3d8683/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "田中 龍之介",
+    "srv": 3,
+    "blk": 2,
+    "rcv": 2,
+    "tos": 0,
+    "atk": 1
   },
   {
     "number": "HV-P02-007",
@@ -1657,7 +2647,13 @@
     "effect": "當自己的「超インナークロス!!!」發動時，此角色是攻擊 角色 時，支付 3 Guts 發動以下效果。 此角色攻擊值+4，下個對手回合中，對手 接球角色 登場時，該角色接球值-2。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/698069d5e3805032a13b4546/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "田中 龍之介",
+    "srv": 3,
+    "blk": 2,
+    "rcv": 2,
+    "tos": 0,
+    "atk": 1
   },
   {
     "number": "HV-P02-009",
@@ -1667,7 +2663,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6981bc7f9c236f4177c55002/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "縁下 力",
+    "srv": 2,
+    "blk": 2,
+    "rcv": 4,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P02-010",
@@ -1677,7 +2679,13 @@
     "effect": "此角色因「助けてもらう!!!」效果登場時，支付2 Guts 發動效果以下效果。 此角色接球值+2，自己棄牌區的最多1張「 木下 久志 」加入手牌。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6991fc7c1047c7d1fec2c2fd/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "木下 久志",
+    "srv": 4,
+    "blk": 0,
+    "rcv": 1,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P02-010",
@@ -1687,7 +2695,13 @@
     "effect": "此角色因「助けてもらう!!!」效果登場時，支付2 Guts 發動效果以下效果。 此角色接球值+2，自己棄牌區的最多1張「 木下 久志 」加入手牌。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6991fd3d48aab5e4bb2c9447/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "木下 久志",
+    "srv": 4,
+    "blk": 0,
+    "rcv": 1,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P02-010",
@@ -1697,7 +2711,13 @@
     "effect": "自己接球區「西谷 夕」登場時， 此角色是發球角色 時，此 角色 放置到棄牌區發動以下效果。 自己1名角色「 西谷 夕 」接球值+1。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6991fb5943aac800125775eb/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "木下 久志",
+    "srv": 4,
+    "blk": 0,
+    "rcv": 1,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P02-010",
@@ -1707,7 +2727,13 @@
     "effect": "自己接球區「西谷 夕」登場時， 此角色是發球角色 時，此 角色 放置到棄牌區發動以下效果。 自己1名「 西谷 夕 」角色接球值+1。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6991fc63260257755deb08d8/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "木下 久志",
+    "srv": 4,
+    "blk": 0,
+    "rcv": 1,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P02-011",
@@ -1717,7 +2743,13 @@
     "effect": "(從手牌將此卡放置到棄牌區): 自己1名烏野角色能力+1。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6981bc9611616958f080c110/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "成田 一仁",
+    "srv": 0,
+    "blk": 2,
+    "rcv": 0,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-P02-012",
@@ -1727,7 +2759,13 @@
     "effect": "互相局數區(血量) 合計1張或以下時，支付 3 Guts 發動以下效果。 此角色接球值+3。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6980033adc1f083a20318863/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "澤村 大地",
+    "srv": 1,
+    "blk": 0,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-P02-013",
@@ -1737,7 +2775,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6980045c347ab2cbe6a13024/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "菅原 孝支",
+    "srv": 3,
+    "blk": 2,
+    "rcv": 2,
+    "tos": 2,
+    "atk": 0
   },
   {
     "number": "HV-P02-014",
@@ -1747,7 +2791,13 @@
     "effect": "自己的Event區有4張或以上烏野的Event卡時，此角色發球值+2， 如果是6張或以上時，發球值再+1。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6980046cdf696ed77d9d6911/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "東峰 旭",
+    "srv": 4,
+    "blk": 0,
+    "rcv": 0,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P02-016",
@@ -1757,7 +2807,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6948bfdc98839bad1552f87f/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "宮 侑",
+    "srv": 5,
+    "blk": 0,
+    "rcv": 0,
+    "tos": 1,
+    "atk": 0
   },
   {
     "number": "HV-P02-016",
@@ -1767,7 +2823,13 @@
     "effect": "支付 3 Guts 發動以下效果。 抽1張牌，此角色的托球值+2。此角色因「 どん ぴしゃり 」的技能登場時，下個對手回合中，對手的 One Touch (N) 和 接球階段 手牌 的技能無效。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/697421763b02fa383657fc80/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "宮 侑",
+    "srv": 5,
+    "blk": 0,
+    "rcv": 0,
+    "tos": 1,
+    "atk": 0
   },
   {
     "number": "HV-P02-016",
@@ -1777,7 +2839,13 @@
     "effect": "支付 3 Guts 發動以下效果。 抽1張牌，此角色的托球值+2。此角色因「 どん ぴしゃり 」的技能登場時，下個對手回合中，對手的 One Touch (N) 和 接球階段 手牌 的技能無效。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/697421bf1d73a9549eaeff80/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "宮 侑",
+    "srv": 5,
+    "blk": 0,
+    "rcv": 0,
+    "tos": 1,
+    "atk": 0
   },
   {
     "number": "HV-P02-017",
@@ -1787,7 +2855,13 @@
     "effect": "支付 3 Guts 發動以下效果。 自己的棄牌區合計有6張或以上不同名的稲荷崎角色卡時，此角色托球值+2，自己棄牌區最多1張的稲荷崎WS或MB角色卡加上手牌。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6974225773cbd733e4009687/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "宮 侑",
+    "srv": 4,
+    "blk": 0,
+    "rcv": 0,
+    "tos": 1,
+    "atk": 1
   },
   {
     "number": "HV-P02-018",
@@ -1797,7 +2871,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6974225d26741a56181b7c21/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "宮 侑",
+    "srv": 2,
+    "blk": 1,
+    "rcv": 1,
+    "tos": 2,
+    "atk": 3
   },
   {
     "number": "HV-P02-018",
@@ -1807,7 +2887,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/697422623b02fa21bc580137/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "宮 侑",
+    "srv": 2,
+    "blk": 1,
+    "rcv": 1,
+    "tos": 2,
+    "atk": 3
   },
   {
     "number": "HV-P02-019",
@@ -1817,7 +2903,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6948c011bf9eaa17bf3da74a/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "宮 治",
+    "srv": 2,
+    "blk": 1,
+    "rcv": 3,
+    "tos": 1,
+    "atk": 3
   },
   {
     "number": "HV-P02-020",
@@ -1827,7 +2919,13 @@
     "effect": "支付 3 Guts 發動以下效果。 抽1張牌，此角色的攻擊值+3。此角色因「 どん ぴしゃり 」的技能登場時，攻擊值+1,下個對手回合中，對手只能從手牌登場最多2個 攔網角色 。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6976c6c6eda6221fc1c4f4dd/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "宮 治",
+    "srv": 3,
+    "blk": 1,
+    "rcv": 3,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-P02-020",
@@ -1837,7 +2935,13 @@
     "effect": "支付 3 Guts 發動以下效果。 抽1張牌，此角色的攻擊值+3。此角色因「 どん ぴしゃり 」的技能登場時，攻擊值+1,下個對手回合中，對手只能從手牌登場最多2個 攔網角色 。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6976c6d0d00d20356df141bc/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "宮 治",
+    "srv": 3,
+    "blk": 1,
+    "rcv": 3,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-P02-021",
@@ -1847,7 +2951,13 @@
     "effect": "自己手牌2張或以下時，此角色攻擊值+2。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6976c6f6b3275f4b068e5ef2/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "宮 治",
+    "srv": 3,
+    "blk": 2,
+    "rcv": 1,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-P02-021",
@@ -1857,7 +2967,13 @@
     "effect": "自己手牌2張或以下時，此角色攻擊值+2。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6976c738c9d61d19528b7dcd/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "宮 治",
+    "srv": 3,
+    "blk": 2,
+    "rcv": 1,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-P02-022",
@@ -1867,7 +2983,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6976c75fe85718253d376759/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "宮 治",
+    "srv": 1,
+    "blk": 1,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P02-023",
@@ -1877,7 +2999,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6948c032f300ebab7823d6a5/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "北 信介",
+    "srv": 1,
+    "blk": 0,
+    "rcv": 5,
+    "tos": 1,
+    "atk": 1
   },
   {
     "number": "HV-P02-024",
@@ -1887,7 +3015,13 @@
     "effect": "棄掉自己1張手牌，並支付 3 Guts 發動以下效果。 此角色的接球值+1，從自己Event區最多1張的稲荷崎卡牌加入手牌。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6948b2d27cb62614b9171c5e/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "北 信介",
+    "srv": 1,
+    "blk": 0,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-P02-024",
@@ -1897,7 +3031,13 @@
     "effect": "棄掉自己1張手牌，並支付 3 Guts 發動以下效果。 此角色的接球值+1，從自己Event區最多1張的稲荷崎卡牌加入手牌。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69afa32359c731001880918f/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "北 信介",
+    "srv": 1,
+    "blk": 0,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-P02-025",
@@ -1907,7 +3047,13 @@
     "effect": "支付 2 Guts 發動以下效果。 抽1張卡，然後自己手牌棄1張卡到棄牌區。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69772ecc34393fc9d902e69b/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "北 信介",
+    "srv": 1,
+    "blk": 0,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-P02-026",
@@ -1917,7 +3063,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6948c04e06a9d98060188da6/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "角名 倫太郎",
+    "srv": 3,
+    "blk": 3,
+    "rcv": 2,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P02-027",
@@ -1927,7 +3079,13 @@
     "effect": "自己棄牌區合計6款或以上不同卡名的稲荷崎角色卡時，斜放此卡發動以下效果。 此角色攻擊值+2，下個對手回合中，無視對手 中間攔網角色 的攔網值。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6976c78ef2ca8b16f85b7988/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "角名 倫太郎",
+    "srv": 2,
+    "blk": 2,
+    "rcv": 2,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-P02-027",
@@ -1937,7 +3095,13 @@
     "effect": "自己棄牌區合計6款或以上不同卡名的稲荷崎角色卡時，斜放此卡發動以下效果。 此角色攻擊值+2，下個對手回合中，無視對手 中間攔網角色 的攔網值。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6976c797b81c87e7e5a263d6/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "角名 倫太郎",
+    "srv": 2,
+    "blk": 2,
+    "rcv": 2,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-P02-028",
@@ -1947,7 +3111,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6976c7ae20fc201105c67fcd/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "角名 倫太郎",
+    "srv": 2,
+    "blk": 2,
+    "rcv": 4,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P02-029",
@@ -1957,7 +3127,13 @@
     "effect": "支付 3 Guts 發動以下效果。 自己棄牌區合計6款或以上不同卡名的稲荷崎角色卡時，此角色攻擊值+3，下個對手回合中，對手 接球角色 的技能無效。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69788037f6114867da113d3e/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "尾白 アラン",
+    "srv": 5,
+    "blk": 0,
+    "rcv": 2,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-P02-029",
@@ -1967,7 +3143,13 @@
     "effect": "支付 3 Guts 發動以下效果。 自己棄牌區合計6款或以上不同卡名的稲荷崎角色卡時，此角色攻擊值+3，下個對手回合中，對手 接球角色 的技能無效。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69788041ef4d7ac661830339/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "尾白 アラン",
+    "srv": 5,
+    "blk": 0,
+    "rcv": 2,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-P02-030",
@@ -1977,7 +3159,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69788059348a5c99d6de6877/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "尾白 アラン",
+    "srv": 5,
+    "blk": 0,
+    "rcv": 4,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P02-031",
@@ -1987,7 +3175,13 @@
     "effect": "支付 1 Guts 發動以下效果。 如支付的 Guts 卡 是「 理石 平介 」此角色的發球值+6。下個對手回合中，對手的 托球角色 不可以登場 [S] 。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6978806ada243b1634bec5e4/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "理石 平介",
+    "srv": 0,
+    "blk": 2,
+    "rcv": 2,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P02-032",
@@ -1997,7 +3191,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69788235ef4d7ad22d8302b5/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "銀島 結",
+    "srv": 1,
+    "blk": 3,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-P02-033",
@@ -2007,7 +3207,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69afa364e3f4c21344ff946d/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "大耳 練",
+    "srv": 2,
+    "blk": 3,
+    "rcv": 3,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P02-034",
@@ -2017,7 +3223,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69afa39459c731001480915a/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "赤木 路成",
+    "srv": null,
+    "blk": null,
+    "rcv": 6,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-P02-035",
@@ -2027,7 +3239,13 @@
     "effect": "(從手牌中掉棄此卡牌)： 自己的1個稲荷崎角色的接球值+2。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69afa3d82f7921000a8f9da2/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "小作 裕渡",
+    "srv": 3,
+    "blk": 0,
+    "rcv": 0,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-P02-036",
@@ -2037,7 +3255,13 @@
     "effect": "自己攔網區的有3名伊達工業角色時，支付 2 Guts 發動以下效果。 該回合中，攔網成功時，獲得 Block Kill 7 。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69830e23c42e5cc078fc2875/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "青根 高伸",
+    "srv": 1,
+    "blk": 2,
+    "rcv": 1,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P02-036",
@@ -2047,7 +3271,13 @@
     "effect": "自己攔網區的有3名伊達工業角色時，支付 2 Guts 發動以下效果。 該回合中，攔網成功時，獲得 Block Kill 7 。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69830e2db6a0492b20dee731/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "青根 高伸",
+    "srv": 1,
+    "blk": 2,
+    "rcv": 1,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P02-036",
@@ -2057,7 +3287,13 @@
     "effect": "本回合中，攔網成功時，獲得 Block Kill 4 ，此角色為側攔網時， 下一個對手回合中，對手 接球角色 登場，該角色接球值-1。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/698460a4a0c8f8ce72ef8906/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "青根 高伸",
+    "srv": 1,
+    "blk": 2,
+    "rcv": 1,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P02-036",
@@ -2067,7 +3303,13 @@
     "effect": "本回合中，攔網成功時，獲得 Block Kill 4 ，此角色為側攔網時， 下一個對手回合中，對手 接球角色 登場，該角色接球值-1。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6984614b079b587f1ecc239a/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "青根 高伸",
+    "srv": 1,
+    "blk": 2,
+    "rcv": 1,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P02-036",
@@ -2077,7 +3319,13 @@
     "effect": "自己 托球角色 是伊達工業、位置是S時， 下個對手回合中，對手攔網的防禦總值少於6或以下時， 對手攔網失敗。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/698461621b11524596e19b6e/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "青根 高伸",
+    "srv": 1,
+    "blk": 2,
+    "rcv": 1,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P02-037",
@@ -2087,7 +3335,13 @@
     "effect": "此角色從手牌作為側攔網登場時，此角色放置到牌庫底發動以下效果。 自己棄牌區1名「 青根 高伸 」登場側攔網，該角色攔網值變為3。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69830e3aace004320f15429c/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "青根 高伸",
+    "srv": 2,
+    "blk": 2,
+    "rcv": 2,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-P02-040",
@@ -2097,7 +3351,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6985af4dc884dd4408f12208/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "黄金川 貫至",
+    "srv": 2,
+    "blk": 3,
+    "rcv": 2,
+    "tos": 1,
+    "atk": 1
   },
   {
     "number": "HV-P02-040",
@@ -2107,7 +3367,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6985af633581c76bbda5e778/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "黄金川 貫至",
+    "srv": 2,
+    "blk": 3,
+    "rcv": 2,
+    "tos": 1,
+    "atk": 1
   },
   {
     "number": "HV-P02-041",
@@ -2117,7 +3383,13 @@
     "effect": "(從手牌將此卡放置到棄牌區): 自己牌庫頂3張放置到棄牌區，如3張都是伊達工業的話， 自己棄牌區1名沒有效果的伊達工業角色以側攔網登場。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6985af6f9be4bb5abc075a45/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "作並 浩輔",
+    "srv": null,
+    "blk": null,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-P02-042",
@@ -2127,7 +3399,13 @@
     "effect": "對手Event區中 托球 或 攻擊 卡合計4張或以上時，此角色攔網值+5。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/698af616c420b651257f66a4/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "鎌先 靖志",
+    "srv": 1,
+    "blk": 3,
+    "rcv": 0,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-P02-043",
@@ -2137,7 +3415,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/698af6cfa175e6638a865e5b/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "茂庭 要",
+    "srv": 2,
+    "blk": 3,
+    "rcv": 1,
+    "tos": 2,
+    "atk": 0
   },
   {
     "number": "HV-P02-044",
@@ -2147,7 +3431,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/698af6ded900d8633b4f0fb9/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "笹谷 武仁",
+    "srv": 2,
+    "blk": 3,
+    "rcv": 3,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P02-045",
@@ -2157,7 +3447,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6985af7713d6f02053491b72/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "小原 豊",
+    "srv": 1,
+    "blk": 3,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-P02-046",
@@ -2167,7 +3463,13 @@
     "effect": "自己托球角色是白鳥沢的 S 時，支付 3 Guts發動以下效果。 此角色攻擊值+3，對手接球區的2張 Guts 放置到棄牌區。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69893dc892026b0cb9b76e83/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "牛島 若利",
+    "srv": 3,
+    "blk": 1,
+    "rcv": 3,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-P02-046",
@@ -2177,7 +3479,13 @@
     "effect": "自己托球角色是白鳥沢的 S 時，支付 3 Guts發動以下效果。 此角色攻擊值+3，對手接球區的2張 Guts 放置到棄牌區。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69893dd0f9bb5b00182961d9/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "牛島 若利",
+    "srv": 3,
+    "blk": 1,
+    "rcv": 3,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-P02-047",
@@ -2187,7 +3495,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69893deb5e424b0014d60e4f/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "牛島 若利",
+    "srv": 1,
+    "blk": 1,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P02-048",
@@ -2197,7 +3511,13 @@
     "effect": "投擲1次Token發動以下效果。 如果是正面的話，此角色攔網值+4。 反面的話，自己牌庫頂3張放置到棄牌區。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6989a625e1ba8b90f55ad13a/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "天童 覚",
+    "srv": 1,
+    "blk": 2,
+    "rcv": 1,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P02-048",
@@ -2207,7 +3527,13 @@
     "effect": "投擲1次Token發動以下效果。 如果是正面的話，此角色攔網值+4。 反面的話，自己牌庫頂3張放置到棄牌區。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6989a6e2d300fc653f341d2d/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "天童 覚",
+    "srv": 1,
+    "blk": 2,
+    "rcv": 1,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P02-049",
@@ -2217,7 +3543,13 @@
     "effect": "對手總進攻值4或以上時發動以下效果。 獲得 One Touch 2 。 ________________________________ One Touch N ：對手的進攻總值-N。 立即結束攔網階段，並進入自己的抽牌階段。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6989a6fca638a3470527f76f/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "天童 覚",
+    "srv": 2,
+    "blk": 3,
+    "rcv": 0,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-P02-050",
@@ -2227,7 +3559,13 @@
     "effect": "自己所有角色都是白鳥沢時，支付 2 Guts 發動以下效果 。 此角色的托球值+2，如果支付的所有 Guts 都是 S 時，將自己白鳥沢的一張 Guts 加到攻擊區的 Guts 。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/698c47db9c22fa49341510b5/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "白布 賢二郎",
+    "srv": 2,
+    "blk": 0,
+    "rcv": 0,
+    "tos": 1,
+    "atk": 2
   },
   {
     "number": "HV-P02-050",
@@ -2237,7 +3575,13 @@
     "effect": "自己所有角色都是白鳥沢時，支付2 Guts 發動以下效果 。 此角色的托球值+2，如果支付的所有 Guts 都是 S 時，將自己白鳥沢的一張 Guts 加到攻擊區的 Guts 。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/698c48bddc00766f355b8e1c/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "白布 賢二郎",
+    "srv": 2,
+    "blk": 0,
+    "rcv": 0,
+    "tos": 1,
+    "atk": 2
   },
   {
     "number": "HV-P02-051",
@@ -2247,7 +3591,13 @@
     "effect": "此角色在手牌中登場在「 牛島 若利 」之上，自己手牌3張或以下時，此角色攻擊值+2。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/698d99205d78ca1660bee7f6/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "五色 工",
+    "srv": 4,
+    "blk": 2,
+    "rcv": 0,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-P02-052",
@@ -2257,7 +3607,13 @@
     "effect": "支付 3 Guts 發動以下效果。 此角色接球值+2。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6991f5212e85304a187a5290/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "大平 獅音",
+    "srv": 1,
+    "blk": 0,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-P02-053",
@@ -2267,7 +3623,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6991f5c679d27c93ff9c86b3/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "山形 隼人",
+    "srv": null,
+    "blk": null,
+    "rcv": 6,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-P02-054",
@@ -2277,7 +3639,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/698d99929233a999fed4bba8/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "川西 太一",
+    "srv": 2,
+    "blk": 3,
+    "rcv": 3,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P02-055",
@@ -2287,7 +3655,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/698d99a54ac2a30dbe23b343/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "瀬見 英太",
+    "srv": 4,
+    "blk": 2,
+    "rcv": 1,
+    "tos": 2,
+    "atk": 0
   },
   {
     "number": "HV-P02-056",
@@ -2297,7 +3671,13 @@
     "effect": "支付3 Guts 發動以下效果。 此角色托球值+2，自己棄牌區的最多1張「 岩泉 一 」加入手牌。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6991fe850809ad3ba8cebf81/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "及川 徹",
+    "srv": 1,
+    "blk": 2,
+    "rcv": 1,
+    "tos": 1,
+    "atk": 0
   },
   {
     "number": "HV-P02-056",
@@ -2307,7 +3687,13 @@
     "effect": "支付3 Guts 發動以下效果。 此角色托球值+2，自己棄牌區的最多1張「 岩泉 一 」加入手牌。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6991ff5ba3f8a11f36309ef6/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "及川 徹",
+    "srv": 1,
+    "blk": 2,
+    "rcv": 1,
+    "tos": 1,
+    "atk": 0
   },
   {
     "number": "HV-P02-057",
@@ -2317,7 +3703,13 @@
     "effect": "對手手牌3張或以下時，支付 3 Guts 發動以下效果。 此角色接球值+7。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6991ff6f27276305d5f5162b/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "岩泉 一",
+    "srv": 1,
+    "blk": 2,
+    "rcv": 1,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P02-058",
@@ -2327,7 +3719,13 @@
     "effect": "支付2 Guts 發動效果以下效果。 自己手牌抽至3張。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6991ffbbeb55e01d135353c0/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "国見 英",
+    "srv": 1,
+    "blk": 0,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-P02-059",
@@ -2337,7 +3735,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69920000a28e70a80f6f134d/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "京谷 賢太郎",
+    "srv": 2,
+    "blk": 2,
+    "rcv": 4,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P02-059",
@@ -2347,7 +3751,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/699200213ac1c05b4fb26acf/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "京谷 賢太郎",
+    "srv": 2,
+    "blk": 2,
+    "rcv": 4,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P02-060",
@@ -2357,7 +3767,13 @@
     "effect": "自己從手牌登場原始攻擊值3的角色時， 此角色是托球角色的話 ，自己牌庫頂1張放置到棄牌區發動以下效果。 此 角色 的托球值+1，自己攻擊區的1張 Guts 發場。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6997bccdba1a2a209bf9f3e2/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "孤爪 研磨",
+    "srv": 1,
+    "blk": 1,
+    "rcv": 1,
+    "tos": 1,
+    "atk": 2
   },
   {
     "number": "HV-P02-061",
@@ -2367,7 +3783,13 @@
     "effect": "支付2 Guts 發動以下效果。 此角色接球值+3，對手 攻擊角色 是原始攻擊值0時，此角色接球值再+3。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6997bfb46d2e91166ce74725/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "黒尾 鉄朗",
+    "srv": 1,
+    "blk": 0,
+    "rcv": 3,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P02-062",
@@ -2377,7 +3799,13 @@
     "effect": "支付2 Guts 發動以下效果。 從自己的牌庫頂查看2張卡，公開最多1張音駒角色，並加入手牌。 之後，將其餘卡牌依任意順序放到卡組下面。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6997c51d4558d635affcdcf7/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "夜久 衛輔",
+    "srv": null,
+    "blk": null,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-P02-063",
@@ -2387,7 +3815,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6997c5c90dd67224039cd5ae/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "灰羽 リエーフ",
+    "srv": 2,
+    "blk": 2,
+    "rcv": 4,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P02-064",
@@ -2397,7 +3831,13 @@
     "effect": "自己2張手牌放到棄置區。否則，此角色所有能力值變成0。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6997c5e28c539766a7646a39/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "木兎 光太郎",
+    "srv": 5,
+    "blk": 3,
+    "rcv": 6,
+    "tos": 0,
+    "atk": 4
   },
   {
     "number": "HV-P02-065",
@@ -2407,7 +3847,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6997ca3e4d5e6918afa129f8/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "木兎 光太郎",
+    "srv": 2,
+    "blk": 2,
+    "rcv": 4,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P02-066",
@@ -2417,7 +3863,13 @@
     "effect": "自己牌庫頂3張放置到棄牌區，支付2 Guts 發動以下效果。 此角色托球值+2，本回合中，自己角色「 木兎光太郎 」的技能無效。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6997ca56485d6e8370f88722/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "赤葦 京治",
+    "srv": 2,
+    "blk": 1,
+    "rcv": 1,
+    "tos": 1,
+    "atk": 1
   },
   {
     "number": "HV-P02-067",
@@ -2427,7 +3879,13 @@
     "effect": "自己牌庫頂1張放置到棄牌區，如果該卡是梟谷的角色卡時，自己1張手牌放置到棄牌區發動以下效果。 獲得 Second-hit Attack 3 。 ________________________________ Second-hit Attack N ：自己的進攻總值 N。 自己回合立即結束，下個對手回合中，對手攔網角色不能登場。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6997ce555878194a0d4ff4a5/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "赤葦 京治",
+    "srv": 3,
+    "blk": 0,
+    "rcv": 1,
+    "tos": 1,
+    "atk": 1
   },
   {
     "number": "HV-P02-068",
@@ -2437,7 +3895,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69998dc0aa643dcdddf1f06f/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "星海 光来",
+    "srv": 3,
+    "blk": 2,
+    "rcv": 0,
+    "tos": 1,
+    "atk": 3
   },
   {
     "number": "HV-P02-068",
@@ -2447,7 +3911,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69998e07b39ce8c3f0ae26e8/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "星海 光来",
+    "srv": 3,
+    "blk": 2,
+    "rcv": 0,
+    "tos": 1,
+    "atk": 3
   },
   {
     "number": "HV-P02-069",
@@ -2457,7 +3927,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69998e181189b1000cb593df/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "佐久早 聖臣",
+    "srv": 5,
+    "blk": 0,
+    "rcv": 4,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P02-070",
@@ -2467,7 +3943,13 @@
     "effect": "支付4 Guts 發動以下效果。 抽2張牌，然後將1張自己手牌放置到牌庫頂或底，此角色接球值+3。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69998e41f961f4226abc8322/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "古森 元也",
+    "srv": null,
+    "blk": null,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-P02-071",
@@ -2477,7 +3959,13 @@
     "effect": "支付2 Guts 發動以下效果。 抽1張牌，此角色接球值+2。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69998ef817c5c4caef9eedc3/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "丸山 一喜",
+    "srv": 1,
+    "blk": 0,
+    "rcv": 3,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-P02-072",
@@ -2487,7 +3975,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69998f59fbba4dc23fb05e19/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "金沢 伊織",
+    "srv": 2,
+    "blk": 2,
+    "rcv": 4,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P02-073",
@@ -2497,7 +3991,13 @@
     "effect": "支付 3 Guts 發動以下效果。 此角色攻擊值+4，自己Event區的1張戶美的卡加入手牌。 如果有加入的話，自己手牌放置1張卡到棄牌區。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69998fbbf9c6870012c92cc7/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "大将 優",
+    "srv": 4,
+    "blk": 1,
+    "rcv": 3,
+    "tos": 0,
+    "atk": 1
   },
   {
     "number": "HV-P02-073",
@@ -2507,7 +4007,13 @@
     "effect": "支付 3 Guts 發動以下效果。 此角色攻擊值+4，自己Event區的1張戶美的卡加入手牌。 如果有加入的話，自己手牌放置1張卡到棄牌區。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69998fc4f82acbc69f8ac23f/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "大将 優",
+    "srv": 4,
+    "blk": 1,
+    "rcv": 3,
+    "tos": 0,
+    "atk": 1
   },
   {
     "number": "HV-P02-074",
@@ -2517,7 +4023,13 @@
     "effect": "支付 1Guts 以下效果。 如果支付的卡是戶美時，此角色發球值+2， 下一個對手回合中，對手的 S 以 托球角色 登場時，該角色托球值-1。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69998fd6a94151ce83b86359/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "沼井 和馬",
+    "srv": 4,
+    "blk": 1,
+    "rcv": 0,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P02-075",
@@ -2527,7 +4039,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69998fdfdc990c1a7dad8e23/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "潜 尚保",
+    "srv": 4,
+    "blk": 1,
+    "rcv": 4,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-P02-076",
@@ -2537,7 +4055,13 @@
     "effect": "此角色登場在「田中 龍之介」上時，支付 4 Guts 發動以下效果。 此角色攻擊值+2。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6997d09b58f36ed90b6d7a10/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "天内 叶歌",
+    "srv": 1,
+    "blk": 0,
+    "rcv": 0,
+    "tos": 1,
+    "atk": 3
   },
   {
     "number": "HV-P02-077",
@@ -2547,7 +4071,13 @@
     "effect": "所屬: 稲荷崎·2年 位置: WS 此卡登場時，此卡的名稱由「宮兄弟」改為「宫侑」或「宮治」。 (此卡登場時選擇的名稱在本回合結束前有效。計算場上角色數量時，此卡計為1個角色。)",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/699bf9102a86b6fbbec74cdf/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "宮兄弟",
+    "srv": 1,
+    "blk": 0,
+    "rcv": 0,
+    "tos": 1,
+    "atk": 3
   },
   {
     "number": "HV-P02-077",
@@ -2557,7 +4087,13 @@
     "effect": "所屬: 稲荷崎·2年 位置: WS 此卡登場時，此卡的名稱由「宮兄弟」改為「宫侑」或「宮治」。 (此卡登場時選擇的名稱在本回合結束前有效。計算場上角色數量時，此卡計為1個角色。)",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/699bf98b199872c40f076291/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "宮兄弟",
+    "srv": 1,
+    "blk": 0,
+    "rcv": 0,
+    "tos": 1,
+    "atk": 3
   },
   {
     "number": "HV-P02-077",
@@ -2567,7 +4103,13 @@
     "effect": "所屬: 稲荷崎·2年 位置: WS 此卡登場時，此卡的名稱由「宮兄弟」改為「宫侑」或「宮治」。 (此卡登場時選擇的名稱在本回合結束前有效。計算場上角色數量時，此卡計為1個角色。)",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69d73264489b0166a122d802/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "宮兄弟",
+    "srv": 1,
+    "blk": 0,
+    "rcv": 0,
+    "tos": 1,
+    "atk": 3
   },
   {
     "number": "HV-P02-078",
@@ -2577,7 +4119,13 @@
     "effect": "所属: 音駒·3年 位置: MB 此卡登場時，此卡的名稱由「 澤村．黑尾 」改為「 澤村 大地 」或「 黒尾 鉄朗 」。 (放置此卡時選擇的名稱在本回合結束前有效。計算場上角色數量時，此卡計為1個角色。)",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6997d5feb8ca9df141d458f9/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "澤村・黒尾",
+    "srv": 0,
+    "blk": 1,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-P02-078",
@@ -2587,7 +4135,13 @@
     "effect": "所属: 音駒·3年 位置: MB 此卡登場時，此卡的名稱由「 澤村．黑尾 」改為「 澤村 大地 」或「 黒尾 鉄朗 」。 (放置此卡時選擇的名稱在本回合結束前有效。計算場上角色數量時，此卡計為1個角色。)",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6997d664d849de2dedd3af60/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "澤村・黒尾",
+    "srv": 0,
+    "blk": 1,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-P02-079",
@@ -2597,7 +4151,13 @@
     "effect": "(經理人) 自己的1名烏野角色攻擊值+1。 下一個對手回合中，對手Lose時，自己手牌中的1張烏野角色卡作為 Guts 放置到場上其中一個區域。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6981bde4d77f6205ba9a93e9/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "谷地 仁花",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P02-079",
@@ -2607,7 +4167,13 @@
     "effect": "抽1張牌。 對手Event區域的1張 監督卡 或 元監督卡 或 コーチ(教練) 放置到對手牌庫底發動以下效果。 查看自己牌庫頂3張，選擇其中一張烏野角色卡並公開，該卡牌加入手牌。其餘的按喜好順次序放入牌庫底。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6981bdce76536e6ee5478fa8/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "谷地 仁花",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P02-081",
@@ -2617,7 +4183,13 @@
     "effect": "| 応援団(應緩團) 抽1張卡。可使自己的1名烏野 接球角色 的接球值變成為原接球值。自己的1名烏野 接球角色 的接球值+1。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69806b8165fd4c81e72cbe97/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "田中 冴子",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P02-082",
@@ -2627,7 +4199,13 @@
     "effect": "抽1張卡，自己1個「 田中 龍之介 」角色的攻擊值+1。如果自己 攻擊角色 是「 田中 龍之介 」時，下個對手回合中，對手側攔網登場時，可將該角色放到棄牌區一次。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/698069f3a7e0987dc7e9d5ad/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "超インナークロス!!!",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P02-082",
@@ -2637,7 +4215,13 @@
     "effect": "抽1張卡，自己1個「 田中 龍之介 」角色的攻擊值+1。如果自己 攻擊角色 是「 田中 龍之介 」時，下個對手回合中，對手側攔網登場時，可將該角色放到棄牌區一次。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69806af894d2b559fc2595c7/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "超インナークロス!!!",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P02-083",
@@ -2647,7 +4231,13 @@
     "effect": "抽1張卡，自己接球區的 Guts 的 Li 在接球區登場。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6991fd560cc5bb0014c00cc2/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "助けてもらう!!!",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P02-084",
@@ -2657,7 +4247,13 @@
     "effect": "| 監督 抽1張卡，自己1名稲荷崎角色的接球值+1。自己的EVENT區的 發球 或 托球 或 攻擊 的稲荷崎卡合計2張時，接球值+1。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6979d3f58b3f44ebfd658a6d/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "黒須 法宗",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P02-085",
@@ -2667,7 +4263,13 @@
     "effect": "| コーチ (教練) 自己1名稲荷崎角色的接球值+1。 自己1張稲荷崎手牌放到棄牌區發動以下效果。 抽2張牌。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6979d3ff1fed7f8337e95e31/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "大見 太郎",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P02-086",
@@ -2677,7 +4279,13 @@
     "effect": "| 応援団 自己所有角色均為稲荷崎時發動以下效果。 抽1張牌。在發球階段時，下一個對手回合中，對手登場沒有效果的 接球角色 時，該角色接球值-1，自己 發球角色 是「 宮侑 」時，接球值再-1。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6979d4068a863667f1712888/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "稲荷崎応援団",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P02-087",
@@ -2687,7 +4295,13 @@
     "effect": "抽1張卡，自己的 托球角色 是「宮侑」 及 攻擊角色 是「宮治」 時，可以發動以下三個效果。 ▶自己 Guts 的最多1張「宮侑」在托球區登場。 ▶自己 Guts 的最多1張「宮治」在攻擊區登場。 ▶自己的1名稲荷崎角色1項能力值+1。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/697c08c614b0039cd020647e/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "どん ぴしゃり",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P02-087",
@@ -2697,7 +4311,13 @@
     "effect": "抽1張卡，自己的 托球角色 是「宮侑」 及 攻擊角色 是「宮治」 時，可以發動以下三個效果。 ▶自己 Guts 的最多1張「宮侑」在托球區登場。 ▶自己 Guts 的最多1張「宮治」在攻擊區登場。 ▶自己的1名稲荷崎角色1項能力值+1。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/697c08ff1dc5aa31e26e0cb6/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "どん ぴしゃり",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P02-088",
@@ -2707,7 +4327,13 @@
     "effect": "抽1張卡，自己的1名稲荷崎角色攻擊值+1。自己的 托球角色 是「宮治」 及 攻擊角色 是「宮侑」 時，下個對手回合中，對手不能使用 攔網 Event卡。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/697c08d9bd58156747a34235/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "双子速攻 マイナス・テンポ \"裏\"!!!",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P02-089",
@@ -2717,7 +4343,13 @@
     "effect": "自己棄牌區的最多1張「 宮侑 」和最多1張「 宮治 」和最多1張「 宮兄弟 」加到手牌。如果出現加3張時，自己手牌棄1張到棄牌區。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69772f2564bae0b83e58e62b/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "どや俺の仲間すごいやろって もっと言いたかったわ",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P02-089",
@@ -2727,7 +4359,13 @@
     "effect": "自己棄牌區的最多1張「 宮侑 」和最多1張「 宮治 」和最多1張「 宮兄弟 」加到手牌。如果3張加入手牌時，自己手牌棄1張到棄牌區。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6977308d2823aac84028a907/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "どや俺の仲間すごいやろって もっと言いたかったわ",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P02-090",
@@ -2737,7 +4375,13 @@
     "effect": "抽一張牌。選擇以下1項效果發動。 ▶自己1名攔網值3的伊達工業角色攔網值+1。 ▶自己1名伊達工業角色接球值+1。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/698937d140a83421a95942da/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "追分 拓朗",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P02-091",
@@ -2747,7 +4391,13 @@
     "effect": "抽一張牌，自己1名伊達工業角色攔網值+1。 對手EVENT區的 托球 或 攻擊 卡合計4張時，攔網值再+6， 此回合中，攔網成功時，獲得 Block Kill 7 。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/698938e0c8ce403dfda8152e/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "最強の防御で最速の攻撃 それが \"ブロック\"。",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P02-092",
@@ -2757,7 +4407,13 @@
     "effect": "抽一張牌， 自己中間攔網是伊達工業 · 3年 時， 自己區域內最多1名伊達工業1年或2年角色加入手牌。 如果有加入時，自己將1張手牌放到棄牌區。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69893b174048a93ef827cce6/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "来年の\"鉄壁\"は 絶対崩れねぇよ",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P02-092",
@@ -2767,7 +4423,13 @@
     "effect": "抽一張牌， 自己中間攔網是伊達工業 · 3年 時， 自己區域內最多1名伊達工業1年或2年角色加入手牌。 如果有加入時，自己將1張手牌放到棄牌區。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69893b1ff9bb5b00122960a4/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "来年の\"鉄壁\"は 絶対崩れねぇよ",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P02-093",
@@ -2777,7 +4439,13 @@
     "effect": "抽一張牌，自己1名伊達工業角色攔網值+1。 自己攔網區有2名或以上伊達工業角色時，此回合中，攔網成功時，獲得 Block Kill 5 。 如果攔網區有3名或以上伊達工業角色時，下個對手回合中，對手 接球角色 登場時，該角色接球值-1。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69893b389a2c5a12ea7aba8f/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "バンチ・リード・ブロック",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P02-094",
@@ -2787,7 +4455,13 @@
     "effect": "抽1張卡，自己1名白鳥沢角色接球值+1。 自己手牌將1張沒有技能的白鳥沢 角色 卡放置到棄牌發動以下效果。 接球值再+2。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6991f6492d7d3d000ad927df/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "鷲匠 鍛治",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P02-095",
@@ -2797,7 +4471,13 @@
     "effect": "(教練) 自己棄牌區最多2張沒有技能的白鳥沢角色卡加入手牌。 如果加入兩張到手牌時，自己１張手牌放置到棄牌區。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6991f70b4c0906fa82aacca8/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "斉藤 明",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P02-096",
@@ -2807,7 +4487,13 @@
     "effect": "抽1張卡，自己1名白鳥沢角色攻擊值+1。 自己的托球角色是「白布 賢二郎」 及攻擊角色原始攻擊值為3時發動以下效果。 自己攻擊區的一張 Guts 「 牛島 若利 」登場。該角色攻擊值+1。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/698c48d7d153fc9ff12cc5d3/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "うちのスパイカーに 道を空けろ",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P02-096",
@@ -2817,7 +4503,13 @@
     "effect": "抽1張卡，自己1名白鳥沢角色攻擊值+1。 自己的托球角色是「白布 賢二郎」 及攻擊角色原始攻擊值為3時發動以下效果。 自己攻擊區的一張 Guts 「 牛島 若利 」登場。該角色攻擊值+1。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/698c49e2d153fca69a2cc585/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "うちのスパイカーに 道を空けろ",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P02-097",
@@ -2827,7 +4519,13 @@
     "effect": "抽1張卡，自己1名白鳥沢角色攻擊值+1。 自己的 攻擊角色 是「 牛島 若利 」 時， 下一個對手回合中，對手不能從手牌中將MB以 攔網角色 登場。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6991f7ca3886a14aadfa14c6/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "クソ かっけえええ…!!!",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P02-098",
@@ -2837,7 +4535,13 @@
     "effect": "抽1張卡，自己1名白鳥沢角色攻擊值+1。 自己的攻擊角色是「五色 工」 時，自己手牌1張「牛島 若利」放置到棄牌區發動以下效果 ， 攻擊值再+1。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/698d99c82ff7fd56af0344e8/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "頼むぞ",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P02-099",
@@ -2847,7 +4551,13 @@
     "effect": "自己手牌4張以下時，自己棄牌區的最多1張「 大将 優 」加入手牌。 如果有加入的話，自己場上的最多1張戶美的 Guts 加入手牌。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/699990041693b2a00f04e959/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "山架 美華",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P02-099",
@@ -2857,7 +4567,13 @@
     "effect": "自己手牌4張以下時，自己棄牌區的最多1張「 大将 優 」加入手牌。 如果有加入的話，自己場上的最多1張戶美的 Guts 加入手牌。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6999900c1b2d99c317884e39/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "山架 美華",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P02-100",
@@ -2867,7 +4583,13 @@
     "effect": "(應緩團) 抽1張卡，自己最多1名角色「 灰羽 リエーフ 」1項能力值+1。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6997d4891bfe888d054e08e5/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "灰羽 アリサ",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P03-002",
@@ -2877,7 +4599,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6a0e640a3c5162cb31d732d2/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P03-002",
@@ -2887,7 +4615,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6a0e64242214731c0a19d253/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P03-004",
@@ -2897,7 +4631,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6a0d400d845e61ee3aa370a8/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P03-006",
@@ -2907,7 +4647,13 @@
     "effect": "對手總進攻值4或以上發動以下效果。 攔網階段立即結束，進入自己的抽牌階段。 獲得 One Touch 2 。 ________________________________ One Touch N ：對手的進攻總值 -N。 立即結束攔網階段，並進入自己的抽牌階段。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6a0d4048d250d7c067e08913/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P03-008",
@@ -2917,7 +4663,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6a0d40f1b4d7a76bad60b783/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P03-010",
@@ -2927,7 +4679,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6a0d410fd45854d8fd8b8745/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P03-012",
@@ -2937,7 +4695,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6a0d5cf30066d9001271521d/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P03-017",
@@ -2947,7 +4711,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6a0d5d1a50def4000a728aa7/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P03-022",
@@ -2957,7 +4727,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6a0d3e2f325e2d1ab9e7a0bd/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P03-025",
@@ -2967,7 +4743,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6a0d3e7aa7321388e0fde99f/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P03-027",
@@ -2977,7 +4759,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6a0d3fb839ae03c9ceaffbb7/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P03-029",
@@ -2987,7 +4775,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6a0d3fdf325e2d2780e79d8c/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P03-030",
@@ -2997,7 +4791,13 @@
     "effect": "自己角色全ユース，以及對手總進攻值8或以上發動以下效果。 攔網階段立即結束，進入自己的抽牌階段。 此回合中，自己的接球角色登場，該角色接球值+2。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6a0d3ebce784c590982ac8d0/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P03-067",
@@ -3007,7 +4807,13 @@
     "effect": "支付2 Guts發動以下效果。 此角色接球值+4。 對手攻擊角色原始攻擊值1或以下時， 將自己1張白鳥沢攔網角色放置到棄牌區發動以下效果。 對手的總進攻值-2。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6a0e643750efb92cfad669c9/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P03-067",
@@ -3017,7 +4823,13 @@
     "effect": "支付2 Guts發動以下效果。 此角色接球值+4。 對手攻擊角色原始攻擊值1或以下時， 將自己1張白鳥沢攔網角色放置到棄牌區發動以下效果。 對手的總進攻值-2。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6a0e67113f61984bca984716/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P03-067",
@@ -3027,7 +4839,13 @@
     "effect": "支付2 Guts發動以下效果。 此角色接球值+4。 對手攻擊角色原始攻擊值1或以下時， 將自己1張白鳥沢攔網角色放置到棄牌區發動以下效果。 對手的總進攻值-2。",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6a0e6465e38a2445a47e65e1/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P03-068",
@@ -3037,7 +4855,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6a0e647965b1f92c386feaf5/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-P03-068",
@@ -3047,7 +4871,13 @@
     "effect": "",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/6a0e648d33a624b6e1a44d22/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-PR-001",
@@ -3057,7 +4887,13 @@
     "effect": "此角色在「 日向 翔陽 」上登場時，此角色的1項能力值+1。",
     "source": "ハイキュー!! magazine 2025 AUGUST",
     "image": "https://img.shoplineapp.com/media/image_clips/692d368ce5921a55523543a4/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "日向 翔陽",
+    "srv": 3,
+    "blk": 1,
+    "rcv": 3,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-PR-002",
@@ -3067,7 +4903,13 @@
     "effect": "此角色在「 影山 飛雄 」上登場時，此角色的1項能力值+1。",
     "source": "ハイキュー!! magazine 2025 AUGUST",
     "image": "https://img.shoplineapp.com/media/image_clips/692d37262baac60016431c33/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "影山 飛雄",
+    "srv": 2,
+    "blk": 1,
+    "rcv": 1,
+    "tos": 1,
+    "atk": 1
   },
   {
     "number": "HV-PR-003",
@@ -3077,7 +4919,13 @@
     "effect": "掉棄1張手牌發動以下效果 。 此角色的攻擊值+2。",
     "source": "【HV-P01】BOX特典プロモパック (黑卡包)",
     "image": "https://img.shoplineapp.com/media/image_clips/692d3769eaae605bbdaf8608/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "日向 翔陽",
+    "srv": 1,
+    "blk": 1,
+    "rcv": 1,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-PR-004",
@@ -3087,7 +4935,13 @@
     "effect": "使用 2 Guts發動以下效果。 抽1張牌。",
     "source": "【HV-P01】BOX特典プロモパック (黑卡包)",
     "image": "https://img.shoplineapp.com/media/image_clips/692d3817e69a67a4e7c61140/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "影山 飛雄",
+    "srv": 3,
+    "blk": 1,
+    "rcv": 1,
+    "tos": 1,
+    "atk": 2
   },
   {
     "number": "HV-PR-005",
@@ -3097,7 +4951,13 @@
     "effect": "",
     "source": "【HV-P01】BOX特典プロモパック (黑卡包)",
     "image": "https://img.shoplineapp.com/media/image_clips/692d3877d56c790016943347/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "日向 翔陽",
+    "srv": 2,
+    "blk": 3,
+    "rcv": 3,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-PR-006",
@@ -3107,7 +4967,13 @@
     "effect": "",
     "source": "【HV-P01】BOX特典プロモパック (黑卡包)",
     "image": "https://img.shoplineapp.com/media/image_clips/692d38937fff76001675937e/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "木兎 光太郎",
+    "srv": 3,
+    "blk": 3,
+    "rcv": 2,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-PR-007",
@@ -3117,7 +4983,13 @@
     "effect": "",
     "source": "【HV-P01】BOX特典プロモパック (黑卡包)",
     "image": "https://img.shoplineapp.com/media/image_clips/692d38b3126e3a4c666a702b/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "及川 徹",
+    "srv": 4,
+    "blk": 2,
+    "rcv": 0,
+    "tos": 2,
+    "atk": 1
   },
   {
     "number": "HV-PR-008",
@@ -3127,7 +4999,13 @@
     "effect": "",
     "source": "【HV-P01】BOX特典プロモパック (黑卡包)",
     "image": "https://img.shoplineapp.com/media/image_clips/692d38c9545a1225cd7e0e97/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "岩泉 一",
+    "srv": 4,
+    "blk": 1,
+    "rcv": 4,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-PR-009",
@@ -3137,7 +5015,13 @@
     "effect": "所属: 青葉城西·3年 位置: WS 此卡登場時，此卡的名稱由「 及川・岩泉 」改為「 及川 徹 」或「 岩泉 一 」。 (放置此卡時選擇的名稱在本回合結束前有效。計算場上角色數量時，此卡計為1個角色。)",
     "source": "ジャンプGIGA2025 AUTUMN",
     "image": "https://img.shoplineapp.com/media/image_clips/692d38dd6b47dd3dff533778/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "及川・岩泉",
+    "srv": 5,
+    "blk": 0,
+    "rcv": 0,
+    "tos": 1,
+    "atk": 0
   },
   {
     "number": "HV-PR-010",
@@ -3147,7 +5031,13 @@
     "effect": "",
     "source": "2025年12 月交流會入場賞",
     "image": "https://img.shoplineapp.com/media/image_clips/692d39b319205f8b7b4e733b/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "日向 翔陽",
+    "srv": 2,
+    "blk": 3,
+    "rcv": 4,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-PR-011",
@@ -3157,7 +5047,13 @@
     "effect": "",
     "source": "2025年12 月交流會入場賞",
     "image": "https://img.shoplineapp.com/media/image_clips/692d39d0d9a11592b4cbd04c/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "孤爪 研磨",
+    "srv": 1,
+    "blk": 2,
+    "rcv": 3,
+    "tos": 2,
+    "atk": 1
   },
   {
     "number": "HV-PR-012",
@@ -3167,7 +5063,13 @@
     "effect": "所属: 烏野·1年 位置: S 此卡登場時，此卡的名稱由「 日向・影山 」改為「 日向 翔陽 」或「 影山 飛雄 」。 (放置此卡時選擇的名稱在本回合結束前有效。計算場上角色數量時，此卡計為1個角色。)",
     "source": "発売記念スペシャルイベント",
     "image": "https://img.shoplineapp.com/media/image_clips/692d39f1006a43000e13ac6c/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "日向・影山",
+    "srv": 1,
+    "blk": 2,
+    "rcv": 0,
+    "tos": 1,
+    "atk": 1
   },
   {
     "number": "HV-PR-013",
@@ -3177,7 +5079,13 @@
     "effect": "所属: 梟谷2·年 位置: S 此卡登場時，此卡的名稱由「 木兎・赤葦 」改為「 木兎 光太郎 」或「 赤葦 京治 」。 (放置此卡時選擇的名稱在本回合結束前有效。計算場上角色數量時，此卡計為1個角色。)",
     "source": "最強ジャンプ12月号",
     "image": "https://img.shoplineapp.com/media/image_clips/692d3a30458e8d309da3db02/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "木兎・赤葦",
+    "srv": 1,
+    "blk": 0,
+    "rcv": 0,
+    "tos": 1,
+    "atk": 3
   },
   {
     "number": "HV-PR-014",
@@ -3187,7 +5095,13 @@
     "effect": "所属: 音駒·3年 位置: MB 此卡登場時，此卡的名稱由「 孤爪・黒尾 」改為「 孤爪 研磨 」或「 孤爪 研磨 」。 (放置此卡時選擇的名稱在本回合結束前有效。計算場上角色數量時，此卡計為1個角色。)",
     "source": "Vジャンプ1月特大号",
     "image": "https://img.shoplineapp.com/media/image_clips/692d3a57a0057c472beff876/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "孤爪・黒尾",
+    "srv": 1,
+    "blk": 2,
+    "rcv": 1,
+    "tos": 1,
+    "atk": 0
   },
   {
     "number": "HV-PR-015",
@@ -3197,7 +5111,13 @@
     "effect": "所属: 北川第一中·3年 位置: WS 此卡登場時，此卡的名稱由「 及川・岩泉 」改為「 及川 徹 」或「 岩泉 一 」。 (放置此卡時選擇的名稱在本回合結束前有效。計算場上角色數量時，此卡計為1個角色。)",
     "source": "ハイキュー!!まんがノベライズ VS“大王様\"ひきいる青葉城西 特装版",
     "image": "https://img.shoplineapp.com/media/image_clips/692d3aaa16e68fe2afe69936/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "及川・岩泉",
+    "srv": 2,
+    "blk": 1,
+    "rcv": 1,
+    "tos": 1,
+    "atk": 1
   },
   {
     "number": "HV-PR-016",
@@ -3207,7 +5127,13 @@
     "effect": "所属: 烏野·1年 位置: MB 此卡登場時，此卡的名稱由「 月島・山口 」改為「 月島 蛍 」或「 山口 忠 」。 (放置此卡時選擇的名稱在本回合結束前有效。計算場上角色數量時，此卡計為1個角色。)",
     "source": "2025年12 月交流會入場賞(日本限定)",
     "image": "https://img.shoplineapp.com/media/image_clips/692d3ae30a45120014e5cd00/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "月島・山口",
+    "srv": 4,
+    "blk": 3,
+    "rcv": 0,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-PR-017",
@@ -3217,7 +5143,13 @@
     "effect": "所属: 青葉城西･1年 位置: WS 此卡登場時，此卡的名稱由「 金田一・国見 」改為「 金田一 勇太郎 」或「 国見 英 」。 (放置此卡時選擇的名稱在本回合結束前有效。計算場上角色數量時，此卡計為1個角色。)",
     "source": "2025年12 月交流會入場賞(日本限定)",
     "image": "https://img.shoplineapp.com/media/image_clips/692d3b225103179fadfb64f9/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "金田一・国見",
+    "srv": 2,
+    "blk": 2,
+    "rcv": 0,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-PR-018",
@@ -3227,7 +5159,13 @@
     "effect": "所属: 白鳥沢･1年 位置: WS 此卡登場時，此卡的名稱由「 牛島・五色 」改為「 牛島 若利 」或「 五色 工 」。 (放置此卡時選擇的名稱在本回合結束前有效。計算場上角色數量時，此卡計為1個角色。)",
     "source": "2025年12 月交流會入場賞(日本限定)",
     "image": "https://img.shoplineapp.com/media/image_clips/692d3b56e5921a46623551b3/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "牛島・五色",
+    "srv": 5,
+    "blk": 0,
+    "rcv": 0,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-PR-019",
@@ -3237,7 +5175,13 @@
     "effect": "",
     "source": "ジャンプフェスタ2026",
     "image": "https://img.shoplineapp.com/media/image_clips/695ca86c6accb3b53380026f/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "日向 翔陽",
+    "srv": 2,
+    "blk": 2,
+    "rcv": 4,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-PR-020",
@@ -3247,7 +5191,13 @@
     "effect": "",
     "source": "ジャンプフェスタ2026",
     "image": "https://img.shoplineapp.com/media/image_clips/695ca8a40a1c79895c11287a/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "孤爪 研磨",
+    "srv": 3,
+    "blk": 0,
+    "rcv": 4,
+    "tos": 2,
+    "atk": 0
   },
   {
     "number": "HV-PR-021",
@@ -3257,7 +5207,13 @@
     "effect": "",
     "source": "ジャンプフェスタ2026",
     "image": "https://img.shoplineapp.com/media/image_clips/695ca8cd0b3a252f50a08e79/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "木兎 光太郎",
+    "srv": 2,
+    "blk": 2,
+    "rcv": 4,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-PR-022",
@@ -3267,7 +5223,13 @@
     "effect": "如果對手的『 發球 』或『 攻擊 』的進攻總值低於或等於2時，你可以發動以下兩項效果。 ▶ 獲得 A PASS (1) 。 ▶ 可以支付 1 Guts 發動以下效果 。抽1張牌。 A PASS (N) ：此回合中，自己的 托球角色 登場時，該角色的托球值+N。",
     "source": "プロモパック Vol.2 (2026年1月-3月交流會橙包入場包)",
     "image": "https://img.shoplineapp.com/media/image_clips/695ca8ecdb8822d1aeef730b/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "澤村 大地",
+    "srv": 1,
+    "blk": 0,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-PR-023",
@@ -3277,7 +5239,13 @@
     "effect": "當「灰羽 リエーフ」出現在你的攻擊區時，如果此角色是 接球角色 時，你可以支付 2 Guts 發動以下效果 。 該角色的攻擊值+1。",
     "source": "プロモパック Vol.2 (2026年1月-3月交流會橙包入場包)",
     "image": "https://img.shoplineapp.com/media/image_clips/695caac6979ac93654ebf11d/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "芝山 優生",
+    "srv": null,
+    "blk": null,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-PR-024",
@@ -3287,7 +5255,13 @@
     "effect": "你可以支付 3 Guts 發動以下效果。 此角色的托球值+2，你的對手將全部手牌洗回牌組，然後抽 4 張。",
     "source": "プロモパック Vol.2 (2026年1月-3月交流會橙包入場包)",
     "image": "https://img.shoplineapp.com/media/image_clips/695cac7e33bc9cf413e885ee/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "及川 徹",
+    "srv": 1,
+    "blk": 1,
+    "rcv": 1,
+    "tos": 1,
+    "atk": 2
   },
   {
     "number": "HV-PR-025",
@@ -3297,7 +5271,13 @@
     "effect": "如果你的 托球角色 是「及川 徹」，你可以支付 3 Guts 發動以下效果。 此角色的攻擊值+2， 如果你的對手手牌有3張或更多，對手必須棄掉1張手牌。",
     "source": "プロモパック Vol.2 (2026年1月-3月交流會橙包入場包)",
     "image": "https://img.shoplineapp.com/media/image_clips/695cadb2c5b40a4ab8cd21d7/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "京谷 賢太郎",
+    "srv": 2,
+    "blk": 2,
+    "rcv": 2,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-PR-026",
@@ -3307,7 +5287,13 @@
     "effect": "支付 4 Guts 發動以下效果。 此角色接球值+4。",
     "source": "プロモパック Vol.2 (2026年1月-3月交流會橙包入場包)",
     "image": "https://img.shoplineapp.com/media/image_clips/695cb0a9054eb6b770cc7e49/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "猿杙 大和",
+    "srv": 1,
+    "blk": 1,
+    "rcv": 3,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-PR-027",
@@ -3317,7 +5303,13 @@
     "effect": "在對手的下一個回合中，對手每當 以抽牌以外 的任何方式將卡牌加入手牌時， 丟棄對手牌庫頂的3張牌。",
     "source": "プロモパック Vol.2 (2026年1月-3月交流會橙包入場包)",
     "image": "https://img.shoplineapp.com/media/image_clips/695cb11179d9b6b3ba14782d/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "二口 堅治",
+    "srv": 2,
+    "blk": 2,
+    "rcv": 0,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-PR-028",
@@ -3327,7 +5319,13 @@
     "effect": "你可以支付 2 Guts發動以下效果。 從對手的Event區移除最多 1 張卡牌，並在對手的下一個回合中，當對手的 接球角色 登場時，該角色的接球值-2。",
     "source": "プロモパック Vol.2 (2026年1月-3月交流會橙包入場包)",
     "image": "https://img.shoplineapp.com/media/image_clips/695cb3188e1093b7cb068f88/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "白布　賢二郎",
+    "srv": 1,
+    "blk": 1,
+    "rcv": 1,
+    "tos": 1,
+    "atk": 2
   },
   {
     "number": "HV-PR-029",
@@ -3337,7 +5335,13 @@
     "effect": "從自己的棄牌區加入最多1張「 日向翔陽 」和最多1張「 影山飛雄 」到手牌。 收錄於: プロモパック Vol.2 (2026年1月-3月交流會橙包入場包)",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/695cb3a2c7b1ffe40b6e386b/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "鬼と 鬼だな",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-PR-030",
@@ -3347,7 +5351,13 @@
     "effect": "自己的一名音駒 接球角色 的接球值+2， 如果該角色是「 芝山 優生 」，則再抽1張牌。 收錄於: プロモパック Vol.2 (2026年1月-3月交流會橙包入場包)",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/695cb4427af309ff1baf29f0/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "護りの音駒でリベロやるって チョー名誉だろ",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-PR-031",
@@ -3357,7 +5367,13 @@
     "effect": "抽一張牌，自己的1名 梟谷角色 攻擊值+1。 如果你的 托球角色 是「 赤葦 京治 」， 攻擊角色 是「 木兎 光太郎 」， 對手的下一個回合中，對手的 中央攔網角色 登場時，該角色的攔網值-2。 收錄於: プロモパック Vol.2 (2026年1月-3月交流會橙包入場包)",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/695cb5bf15f989e59e9a0d95/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "全員があなたを見ていますよ",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-PR-032",
@@ -3367,7 +5383,13 @@
     "effect": "",
     "source": "【HV-P02】BOX特典プロモパック(黑卡包)",
     "image": "https://img.shoplineapp.com/media/image_clips/69b2706995426da02a8cdfc2/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "影山 飛雄",
+    "srv": 4,
+    "blk": 1,
+    "rcv": 2,
+    "tos": 2,
+    "atk": 1
   },
   {
     "number": "HV-PR-033",
@@ -3377,7 +5399,13 @@
     "effect": "",
     "source": "【HV-P02】BOX特典プロモパック(黑卡包)",
     "image": "https://img.shoplineapp.com/media/image_clips/69b270632a3de26ae9bd63ad/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "西谷 夕",
+    "srv": null,
+    "blk": null,
+    "rcv": 6,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-PR-034",
@@ -3387,7 +5415,13 @@
     "effect": "",
     "source": "【HV-P02】BOX特典プロモパック(黑卡包)",
     "image": "https://img.shoplineapp.com/media/image_clips/69b2705df18f5c7aaab8a1dc/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "宮 侑",
+    "srv": 3,
+    "blk": 2,
+    "rcv": 2,
+    "tos": 2,
+    "atk": 0
   },
   {
     "number": "HV-PR-035",
@@ -3397,7 +5431,13 @@
     "effect": "",
     "source": "【HV-P02】BOX特典プロモパック(黑卡包)",
     "image": "https://img.shoplineapp.com/media/image_clips/69b27058236abc976fbf9e18/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "宮 治",
+    "srv": 4,
+    "blk": 1,
+    "rcv": 4,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-PR-036",
@@ -3407,7 +5447,13 @@
     "effect": "所属: 稻荷崎·2年 位置: WS 此卡登場時，此卡的名稱由「 宮兄弟 」改為「 宫侑 」或「 宮治 」。 (放置此卡時選擇的名稱在本回合結束前有效。計算場上角色數量時，此卡計為1個角色。)",
     "source": "Vジャンプ4月特大号",
     "image": "https://img.shoplineapp.com/media/image_clips/697304d09861792f25583455/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "宮兄弟",
+    "srv": 3,
+    "blk": 1,
+    "rcv": 0,
+    "tos": 1,
+    "atk": 1
   },
   {
     "number": "HV-PR-037",
@@ -3417,7 +5463,13 @@
     "effect": "自己1張手牌放置到棄牌區，說出「巣立て ヒナガラス (Sudate hinagarasu)」發動以下效果。 此角色攻擊值+3。",
     "source": "最強ジャンプ4月号",
     "image": "https://img.shoplineapp.com/media/image_clips/69841224e8dda169a67e21c8/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "ヒナガラス",
+    "srv": 1,
+    "blk": 1,
+    "rcv": 1,
+    "tos": 1,
+    "atk": 1
   },
   {
     "number": "HV-PR-038",
@@ -3427,7 +5479,13 @@
     "effect": "所属: 烏野·3年 位置: WS 此卡登場時，此卡的名稱由「 西谷．東峰 」改為「 西谷 夕 」或「 東峰 旭 」。 (放置此卡時選擇的名稱在本回合結束前有效。計算場上角色數量時，此卡計為1個角色。)",
     "source": "2026年 3月交流會入場賞",
     "image": "https://img.shoplineapp.com/media/image_clips/699200c248aab5fca42c914e/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "西谷・東峰",
+    "srv": null,
+    "blk": null,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-PR-039",
@@ -3437,7 +5495,13 @@
     "effect": "所属: 伊達工業·2年 位置: WS 此卡登場時，此卡的名稱由「 青根．二口 」改為「 青根 高伸 」或「 二口 堅治 」。 (放置此卡時選擇的名稱在本回合結束前有效。計算場上角色數量時，此卡計為1個角色。)",
     "source": "2026年 3月交流會入場賞",
     "image": "https://img.shoplineapp.com/media/image_clips/699200cd7a9ae567a90bc4ba/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "青根・二口",
+    "srv": 2,
+    "blk": 3,
+    "rcv": 1,
+    "tos": 0,
+    "atk": 1
   },
   {
     "number": "HV-PR-040",
@@ -3447,7 +5511,13 @@
     "effect": "所属: 稻荷崎·2年 位置: WS 此卡登場時，此卡的名稱由「 宮兄弟 」改為「 宫侑 」或「 宮治 」。 (放置此卡時選擇的名稱在本回合結束前有效。計算場上角色數量時，此卡計為1個角色。)",
     "source": "2026年 3月交流會入場賞",
     "image": "https://img.shoplineapp.com/media/image_clips/69b26fe22d11e78ffbd4499e/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "宮兄弟",
+    "srv": 1,
+    "blk": 1,
+    "rcv": 1,
+    "tos": 1,
+    "atk": 2
   },
   {
     "number": "HV-PR-041",
@@ -3457,7 +5527,13 @@
     "effect": "所属: 烏野·3年 位置: S 此卡登場時，此卡的名稱由「 影山．菅原 」改為「 影山 飛雄 」或「 菅原 孝支 」。 (放置此卡時選擇的名稱在本回合結束前有效。計算場上角色數量時，此卡計為1個角色。)",
     "source": "2026年 4月交流會入場賞",
     "image": "https://img.shoplineapp.com/media/image_clips/69b26e79b048cc6a433cb5e9/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "影山・菅原",
+    "srv": 3,
+    "blk": 0,
+    "rcv": 0,
+    "tos": 1,
+    "atk": 2
   },
   {
     "number": "HV-PR-042",
@@ -3467,7 +5543,13 @@
     "effect": "所属: 白鳥沢·3年 位置: S 此卡登場時，此卡的名稱由「 白布．瀬見 」改為「 白布 賢二郎 」或「 瀬見 英太 」。 (放置此卡時選擇的名稱在本回合結束前有效。計算場上角色數量時，此卡計為1個角色。)",
     "source": "2026年 4月交流會入場賞",
     "image": "https://img.shoplineapp.com/media/image_clips/69b26e8183f8a36de0bc1397/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "白布・瀬見",
+    "srv": 4,
+    "blk": 0,
+    "rcv": 0,
+    "tos": 1,
+    "atk": 1
   },
   {
     "number": "HV-PR-043",
@@ -3477,7 +5559,13 @@
     "effect": "",
     "source": "プロモパック Vol.2 (2026年5月交流會橙包入場包)",
     "image": "https://img.shoplineapp.com/media/image_clips/69dc6950314b32683a5657af/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "影山 飛雄",
+    "srv": 3,
+    "blk": 3,
+    "rcv": 0,
+    "tos": 2,
+    "atk": 0
   },
   {
     "number": "HV-PR-044",
@@ -3487,7 +5575,13 @@
     "effect": "自己手牌的1張音駒Event卡放置到Event區發動以下效果。 抽1張牌，此角色1項能力+3。",
     "source": "プロモパック Vol.2 (2026年5月交流會橙包入場包)",
     "image": "https://img.shoplineapp.com/media/image_clips/69dc6b55eefb2a001838c6b9/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "犬岡 走",
+    "srv": 1,
+    "blk": 1,
+    "rcv": 4,
+    "tos": 0,
+    "atk": 2
   },
   {
     "number": "HV-PR-045",
@@ -3497,7 +5591,13 @@
     "effect": "(從手牌將此卡放置到棄牌區): 自己牌庫頂2張卡放置到棄牌區，如果所有卡都是伊達工業時，自己 伊達工業的1名角色攔網值+2。",
     "source": "プロモパック Vol.2 (2026年5月交流會橙包入場包)",
     "image": "https://img.shoplineapp.com/media/image_clips/69dc6cee251b238474c6aa7a/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "茂庭 要",
+    "srv": 0,
+    "blk": 2,
+    "rcv": 0,
+    "tos": 1,
+    "atk": 0
   },
   {
     "number": "HV-PR-046",
@@ -3507,7 +5607,13 @@
     "effect": "自己手牌1張白鳥沢卡放置到棄牌區發動以下效果。 此角色攔網值+3，對手手牌2張或以下時，攔網值再+2。",
     "source": "プロモパック Vol.2 (2026年5月交流會橙包入場包)",
     "image": "https://img.shoplineapp.com/media/image_clips/69dc6d85478f0ea4481486f3/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "天童 覚",
+    "srv": 0,
+    "blk": 2,
+    "rcv": 2,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-PR-047",
@@ -3517,7 +5623,13 @@
     "effect": "自己手牌1張卡放置到棄牌區發動以下效果。 此角色接球值+2。",
     "source": "プロモパック Vol.2 (2026年5月交流會橙包入場包)",
     "image": "https://img.shoplineapp.com/media/image_clips/69dc6df34145090010848a07/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "小見 春樹",
+    "srv": null,
+    "blk": null,
+    "rcv": 5,
+    "tos": 0,
+    "atk": 0
   },
   {
     "number": "HV-PR-048",
@@ -3527,7 +5639,13 @@
     "effect": "支付2 Guts發動以下效果。 自己的棄牌區合計有6張或以上不同名的稲荷崎角色卡時，此角色攻擊值+3。",
     "source": "プロモパック Vol.2 (2026年5月交流會橙包入場包)",
     "image": "https://img.shoplineapp.com/media/image_clips/69dc6e35d0a9449c2fe3697e/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "宮 治",
+    "srv": 3,
+    "blk": 0,
+    "rcv": 0,
+    "tos": 1,
+    "atk": 2
   },
   {
     "number": "HV-PR-049",
@@ -3537,7 +5655,13 @@
     "effect": "支付2 Guts發動以下效果。 此角色接球值+3，對手發球的總進攻值2或以下時，自己棄牌區的1張稲荷崎角色卡加入手牌。",
     "source": "プロモパック Vol.2 (2026年5月交流會橙包入場包)",
     "image": "https://img.shoplineapp.com/media/image_clips/69dc6eb44fbc7183bfe5404b/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "尾白 アラン",
+    "srv": 2,
+    "blk": 0,
+    "rcv": 3,
+    "tos": 0,
+    "atk": 3
   },
   {
     "number": "HV-PR-050",
@@ -3547,7 +5671,13 @@
     "effect": "雙手握住這張牌，喊出“ ただーし！(Tadashi！) ”，然後將其放置在你的事件區。 抽一張牌。如果在發球階段你的 發球角色 是「 山口 忠 」，則再抽一張牌，並將該角色的發球值增加至6。 收錄於: プロモパック Vol.2 (2026年5月交流會橙包入場包)",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69dc6f23b4cbae2c08ab9b8a/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "ただーし！",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-PR-051",
@@ -3557,7 +5687,13 @@
     "effect": "抽一張牌，在對手的下一個回合中，自己的總進攻值不會減少。 如果自己的 攻擊角色 是「岩泉 一」，支付攻擊區 2 Guts 發動以下效果。 該角色的攻擊值+2。 收錄於: プロモパック Vol.2 (2026年5月交流會橙包入場包)",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69dc700ac476ea8ad74bbda2/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "いつも通りでいい 俺に勝負させろ",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-PR-052",
@@ -3567,7 +5703,13 @@
     "effect": "自己所有角色都是白鳥澤時，抽一張牌，自己的一名角色「 天童 覚 」的攔網值+1， 如果你的攔網區有角色「 天童 覚 」，對手手牌2張或以下，此回合成功攔網時， 獲得 Block Kill 8 。 收錄於: プロモパック Vol.2 (2026年5月交流會橙包入場包)",
     "source": "",
     "image": "https://img.shoplineapp.com/media/image_clips/69dc70b1033d73c0ec6cd721/original.png",
-    "type": "event"
+    "type": "event",
+    "name": "若利君を倒したければ俺を倒してから行け～ ってな～",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-PR-053",
@@ -3577,7 +5719,13 @@
     "effect": "",
     "source": "【HV-P03】BOX特典プロモパック(黑卡包)",
     "image": "https://img.shoplineapp.com/media/image_clips/69fd4b4b2545ce1242d11ad8/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-PR-054",
@@ -3587,7 +5735,13 @@
     "effect": "",
     "source": "【HV-P03】BOX特典プロモパック(黑卡包)",
     "image": "https://img.shoplineapp.com/media/image_clips/69fd4b8aee2e9a4b1f1eb631/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-PR-055",
@@ -3597,7 +5751,13 @@
     "effect": "",
     "source": "【HV-P03】BOX特典プロモパック(黑卡包)",
     "image": "https://img.shoplineapp.com/media/image_clips/69fd4b9aee2e9a1b6c1ec26b/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   },
   {
     "number": "HV-PR-055",
@@ -3607,6 +5767,12 @@
     "effect": "",
     "source": "【HV-P03】BOX特典プロモパック(黑卡包)",
     "image": "https://img.shoplineapp.com/media/image_clips/69fd4bca7aaee464a055575d/original.png",
-    "type": "character"
+    "type": "character",
+    "name": "",
+    "srv": null,
+    "blk": null,
+    "rcv": null,
+    "tos": null,
+    "atk": null
   }
 ]

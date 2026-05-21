@@ -68,6 +68,13 @@ body{background:#111;color:#eee;font-family:system-ui,-apple-system,sans-serif;m
 .sheet-row{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
 .chip{background:#252525;border-radius:5px;padding:4px 10px;font-size:13px;color:#ccc}
 .chip span{color:#888;margin-right:4px}
+.sheet-name{text-align:center;font-size:15px;font-weight:bold;color:#eee;margin-bottom:10px}
+.stats-row{display:flex;gap:6px;justify-content:center;margin-bottom:10px;flex-wrap:wrap}
+.stat{display:flex;flex-direction:column;align-items:center;gap:3px;background:#252525;border-radius:6px;padding:6px 10px;min-width:44px}
+.stat-label{font-size:10px;color:#666;letter-spacing:.5px}
+.stat-dots{display:flex;gap:2px}
+.stat-dot{width:7px;height:7px;border-radius:50%;background:#333}
+.stat-dot.on{background:#4a8abf}
 .effect-label{font-size:12px;color:#666;margin-bottom:4px;margin-top:4px}
 .effect{font-size:14px;color:#ddd;line-height:1.7;white-space:pre-wrap}
 .source{font-size:11px;color:#555;margin-top:8px}
@@ -155,6 +162,38 @@ const SCHOOL_GROUPS = [
 
 const POS_LABEL = { MB:'中間攻擊', WS:'外側攻擊', S:'舉球手', Li:'自由球員', OP:'對角攻擊', '事件':'事件卡' };
 const RARITY_ORDER = ['N','NP','R','RP','RA','S','SP','D','P','頂','頂P','秘','極','極P'];
+const STAT_MAX = 6;
+const STAT_KEYS = [
+  { key:'srv', label:'SRV' },
+  { key:'blk', label:'BLK' },
+  { key:'rcv', label:'RCV' },
+  { key:'tos', label:'TOS' },
+  { key:'atk', label:'ATK' },
+];
+
+function StatDots({ value }) {
+  return (
+    <div className="stat-dots">
+      {Array.from({length: STAT_MAX}, (_, i) => (
+        <div key={i} className={`stat-dot${i < value ? ' on' : ''}`} />
+      ))}
+    </div>
+  );
+}
+
+function Stats({ card }) {
+  if (card.srv === null || card.srv === undefined) return null;
+  return (
+    <div className="stats-row">
+      {STAT_KEYS.map(({ key, label }) => (
+        <div key={key} className="stat">
+          <span className="stat-label">{label}</span>
+          <StatDots value={card[key]} />
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function getSchoolGroup(school) {
   const base = school.split(/[\/·･\s]/)[0].trim();
@@ -364,8 +403,7 @@ function App() {
   const [query, setQuery] = useState('');
   const [filterSet, setFilterSet] = useState('');
   const [filterSchool, setFilterSchool] = useState('');
-  const [filterPos, setFilterPos] = useState('');
-  const [filterRarity, setFilterRarity] = useState('');
+  const [filterEvent, setFilterEvent] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(true);
   const [selected, setSelected] = useState(null);
   const [deckOpen, setDeckOpen] = useState(false);
@@ -391,31 +429,19 @@ function App() {
     return SCHOOL_GROUPS.filter(g => gs.has(g));
   }, [cards]);
 
-  const positions = useMemo(() => {
-    const STD = ['MB','WS','S','Li','OP','事件'];
-    const existing = new Set(cards.map(c => c.position));
-    const others = [...existing].filter(p => !STD.includes(p)).sort();
-    return [...STD.filter(p => existing.has(p)), ...others];
-  }, [cards]);
 
-  const rarities = useMemo(() => {
-    const rs = new Set(cards.map(c => c.rarity));
-    return RARITY_ORDER.filter(r => rs.has(r));
-  }, [cards]);
-
-  const activeFilters = [filterSet, filterSchool, filterPos, filterRarity].filter(Boolean).length;
+  const activeFilters = [filterSet, filterSchool, filterEvent].filter(Boolean).length;
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return cards.filter(c => {
       if (filterSet && c._set !== filterSet) return false;
       if (filterSchool && c._group !== filterSchool) return false;
-      if (filterPos && c.position !== filterPos) return false;
-      if (filterRarity && c.rarity !== filterRarity) return false;
+      if (filterEvent && c.type !== 'event') return false;
       if (q && !c.number.toLowerCase().includes(q) && !c.school.includes(q) && !c.effect.includes(q)) return false;
       return true;
     });
-  }, [cards, query, filterSet, filterSchool, filterPos, filterRarity]);
+  }, [cards, query, filterSet, filterSchool, filterEvent]);
 
   function showToast(msg) {
     setToast(msg);
@@ -456,20 +482,6 @@ function App() {
         {filtersOpen && (
           <div className="filters">
             <div className="filter-row">
-              <span className="filter-label">位置</span>
-              {positions.map(p => (
-                <button key={p} className={`filter-btn${filterPos === p ? ' active' : ''}`}
-                  onClick={() => setFilterPos(filterPos === p ? '' : p)}>{p}</button>
-              ))}
-            </div>
-            <div className="filter-row">
-              <span className="filter-label">稀有</span>
-              {rarities.map(r => (
-                <button key={r} className={`filter-btn${filterRarity === r ? ' active' : ''}`}
-                  onClick={() => setFilterRarity(filterRarity === r ? '' : r)}>{r}</button>
-              ))}
-            </div>
-            <div className="filter-row">
               <span className="filter-label">系列</span>
               {sets.map(s => (
                 <button key={s} className={`filter-btn${filterSet === s ? ' active' : ''}`}
@@ -482,6 +494,11 @@ function App() {
                 <button key={s} className={`filter-btn${filterSchool === s ? ' active' : ''}`}
                   onClick={() => setFilterSchool(filterSchool === s ? '' : s)}>{s}</button>
               ))}
+            </div>
+            <div className="filter-row">
+              <span className="filter-label">類型</span>
+              <button className={`filter-btn${filterEvent ? ' active' : ''}`}
+                onClick={() => setFilterEvent(v => !v)}>事件卡</button>
             </div>
           </div>
         )}
@@ -509,7 +526,9 @@ function App() {
           <div className="sheet" onClick={e => e.stopPropagation()}>
             <button className="sheet-close" onClick={() => setSelected(null)}>×</button>
             <img src={selected.image} alt={selected.number} />
+            {selected.name && <div className="sheet-name">{selected.name}</div>}
             <div className="sheet-num">{selected.number} <Badge r={selected.rarity} /></div>
+            <Stats card={selected} />
             <div className="sheet-row">
               <div className="chip"><span>所屬</span>{selected.school}</div>
               <div className="chip"><span>位置</span>{selected.position}</div>
