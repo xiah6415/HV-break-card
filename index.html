@@ -1381,7 +1381,7 @@
         </div>
         <div class="sdeck-grid" id="sexport-grid"></div>
       </div>
-      <button class="sexport-copy" id="sexport-copy-btn">下載圖片</button>
+      <button class="sexport-copy" id="sexport-copy-btn">截圖模式</button>
     </div>
   </div>
 </div>
@@ -3907,84 +3907,30 @@ function sOpenExport() {
 }
 function sCloseExport() { document.getElementById('sexport-overlay').classList.remove('open'); }
 function sExportImage() {
+  const overlay = document.getElementById('sexport-overlay');
+  const sheet = overlay.querySelector('.sdeck-sheet');
+  const head = overlay.querySelector('.sdeck-head');
   const btn = document.getElementById('sexport-copy-btn');
-  btn.textContent = '生成中…'; btn.disabled = true;
 
-  const entries = Object.entries(sdeck)
-    .map(([imgFile, count]) => ({ card: cards.find(c => c.image_file === imgFile), count }))
-    .filter(e => e.card).sort((a,b) => a.card.card_no.localeCompare(b.card.card_no));
+  // hide chrome, go fullscreen
+  head.style.display = 'none';
+  btn.style.display = 'none';
+  sheet.style.cssText += ';position:fixed;inset:0;width:100%;max-width:100%;height:100%;max-height:100%;border-radius:0;overflow-y:auto';
 
-  const COLS = 5, CARD_W = 110, CARD_H = 154, PAD = 14, GAP = 8, TITLE_H = 36;
-  const rows = Math.ceil(entries.length / COLS);
-  const usedCols = Math.min(entries.length, COLS);
-  const W = PAD * 2 + usedCols * CARD_W + (usedCols - 1) * GAP;
-  const H = TITLE_H + PAD * 2 + rows * CARD_H + (rows - 1) * GAP;
+  const tip = document.createElement('div');
+  tip.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.75);color:#fff;font-size:13px;padding:9px 20px;border-radius:20px;z-index:9999;pointer-events:none';
+  tip.textContent = '截圖完成後點擊畫面結束';
+  document.body.appendChild(tip);
 
-  const PROXIES = [
-    u => u,
-    u => 'https://corsproxy.io/?' + encodeURIComponent(u),
-    u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u),
-  ];
-  const loadImg = url => {
-    const attempt = (idx) => {
-      if (idx >= PROXIES.length) return Promise.resolve(null);
-      return new Promise(res => {
-        const img = new Image(); img.crossOrigin = 'anonymous';
-        const tid = setTimeout(() => { img.src = ''; res(attempt(idx + 1)); }, 6000);
-        img.onload = () => { clearTimeout(tid); res(img); };
-        img.onerror = () => { clearTimeout(tid); res(attempt(idx + 1)); };
-        img.src = PROXIES[idx](url);
-      });
-    };
-    return attempt(0);
+  const exit = () => {
+    head.style.display = '';
+    btn.style.display = '';
+    sheet.style.cssText = sheet.style.cssText
+      .replace(/;position:fixed.*?overflow-y:auto/, '');
+    tip.remove();
+    overlay.removeEventListener('click', exit);
   };
-
-  Promise.all(entries.map(e => loadImg(e.card.image_url))).then(imgs => {
-    const canvas = document.createElement('canvas');
-    canvas.width = W; canvas.height = H;
-    const ctx = canvas.getContext('2d');
-
-    // background
-    ctx.fillStyle = '#0f1923';
-    ctx.fillRect(0, 0, W, H);
-
-    // title
-    ctx.fillStyle = '#8ab4d8';
-    ctx.font = 'bold 13px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('排球少年!! バボカ!! BREAK　共 ' + sTotal() + ' 張', W / 2, 24);
-
-    entries.forEach(({ count }, i) => {
-      const col = i % COLS, row = Math.floor(i / COLS);
-      const x = PAD + col * (CARD_W + GAP);
-      const y = TITLE_H + PAD + row * (CARD_H + GAP);
-      const img = imgs[i];
-      if (img) {
-        ctx.drawImage(img, x, y, CARD_W, CARD_H);
-      } else {
-        ctx.fillStyle = '#1a2a3a';
-        ctx.fillRect(x, y, CARD_W, CARD_H);
-      }
-      if (count > 1) {
-        const bx = x + CARD_W - 13, by = y + 13;
-        ctx.fillStyle = '#c0392b';
-        ctx.beginPath(); ctx.arc(bx, by, 13, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#fff';
-        ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center';
-        ctx.fillText('×' + count, bx, by + 4);
-      }
-    });
-
-    const link = document.createElement('a');
-    link.download = 'hv-deck-' + new Date().toISOString().slice(0, 10) + '.png';
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-    btn.textContent = '✓ 已下載！'; btn.classList.add('ok');
-    setTimeout(() => { btn.textContent = '下載圖片'; btn.disabled = false; btn.classList.remove('ok'); }, 2000);
-  }).catch(() => {
-    sToast('圖片生成失敗，請截圖');
-    btn.textContent = '下載圖片'; btn.disabled = false;
-  });
+  setTimeout(() => overlay.addEventListener('click', exit), 200);
 }
 function sToast(msg) {
   let t = document.getElementById('s-toast');
