@@ -160,3 +160,15 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 獨立 clone 初始工作目錄乾淨；origin 為 xiah6415/HV-break-card，master 基準 3716bff9e387e1514654f5b143463848ff26d14f。gh 帳號 xiah6415 具 ADMIN 權限；Pages 仍為 master 根目錄，不需修改設定。
 - 公開網址驗證與瀏覽器操作結果待部署後補入；尚未宣稱 iPhone Safari 真機測試完成。
 - 本機瀏覽器已實際點擊「開始對戰」，成功進入擲骰畫面；點擊「開始調度」後，顯示 6 張起手牌與「全部保留」，確認 JavaScript 初始化與基本開局互動正常。尚未進行完整瀏覽器終局測試；本次沒有 UI 改動。
+
+## GitHub Pages 部署完成（2026-10-19，Codex）
+- 公開遊戲網址：https://xiah6415.github.io/HV-break-card/break-v9.5/ 。請以 iPhone Safari 開啟測試。
+- repo：https://github.com/xiah6415/HV-break-card ，分支 master，Pages 來源 master 根目錄；本專案位於 break-v9.5/。
+- 部署提交：7afd811fde77ab3f20b0ad5237c74d1674b0c44f，已正常推送；Pages build / deploy 工作 39193863578 成功：https://github.com/xiah6415/HV-break-card/actions/runs/39193863578 。
+- CLI GET 公開網址得到 HTTP 200；線上 HTML 與原始 ZIP、重新建置產物逐 byte 一致，SHA-256：3dd675e47cc4e7f34338b6866c6e96ab00553ca95797d92b3eb31f0b04deec35。
+- 公開 HTTPS 頁面實際瀏覽器操作：雙方六套預設牌組正常顯示；開始對戰 → 擲骰 → 開始調度 → 6 張起手牌與全部保留按鈕，均正常出現。
+- 原 repo 首頁 index.html 與原基準 3716bff 內容一致；本次只新增 break-v9.5/，沒有改卡牌規則、UI、引擎或既有網站。
+- 原始 ZIP 與完整 Git checkout 將保存於 /Users/suyan/Library/Mobile Documents/com~apple~CloudDocs/01_Projects/BREAK-v9.5/；checkout 名稱 HV-break-card，專案在 HV-break-card/break-v9.5/。根目錄 memory.md 記錄此任務交接與最終提交資訊。
+- 本部署結果另以文件提交推送；其提交 hash 由 git log 查閱（文件不嵌入自身 hash）。
+- 後續：iPhone Safari 真機開啟與操作由使用者驗證；本次沒有執行完整瀏覽器終局 E2E，未宣稱全部操作或 iOS 相容性已驗證。
+- 下次修改前先讀本檔與 HANDOFF.md、AGENTS.md；檢查 git status、目前分支與遠端最新版本，再寫計畫。勿手改 index.html，勿 force push，勿把其他專案工作混入提交。
