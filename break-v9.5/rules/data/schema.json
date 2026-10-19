@@ -1,0 +1,5614 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BREAK skill program contract v2",
+  "$ref": "#/$defs/skill_contract",
+  "$defs": {
+    "filters": {
+      "type": "object",
+      "properties": {
+        "names": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "exclude_names": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "covered_names": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "tags_any": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "positions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "positions_any": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "position_has_any_other_than": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "exclude_operations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "entry_origins": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "play_icons_any": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "serve",
+              "block",
+              "draw",
+              "receive",
+              "toss",
+              "attack",
+              "end",
+              "interval"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "play_icons_exact": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "serve",
+              "block",
+              "draw",
+              "receive",
+              "toss",
+              "attack",
+              "end",
+              "interval"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "years": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "years_any": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "printed_attack": {
+          "type": "integer"
+        },
+        "printed_attack_eq": {
+          "type": "integer"
+        },
+        "printed_block_gte": {
+          "type": "integer"
+        },
+        "printed_receive_gte": {
+          "type": "integer"
+        },
+        "current_receive_gte": {
+          "type": "integer"
+        },
+        "current_block_eq": {
+          "type": "integer"
+        },
+        "role": {
+          "enum": [
+            "serve",
+            "block",
+            "receive",
+            "toss",
+            "attack",
+            "center_blocker",
+            "side_blocker",
+            "character"
+          ]
+        },
+        "role_any": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "serve",
+              "block",
+              "receive",
+              "toss",
+              "attack",
+              "center_blocker",
+              "side_blocker",
+              "character"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "type": {
+          "enum": [
+            "character",
+            "event"
+          ]
+        },
+        "skillless": {
+          "type": "boolean"
+        },
+        "phase": {
+          "enum": [
+            "serve",
+            "block",
+            "draw",
+            "receive",
+            "toss",
+            "attack",
+            "end",
+            "interval"
+          ]
+        },
+        "entry_keyword_family": {
+          "type": "string",
+          "minLength": 1
+        },
+        "from_zone": {
+          "enum": [
+            "hand",
+            "deck",
+            "drop",
+            "event",
+            "serve",
+            "block",
+            "receive",
+            "toss",
+            "attack",
+            "court",
+            "court.guts",
+            "receive.guts",
+            "attack.guts",
+            "block.guts",
+            "toss.guts",
+            "serve.guts",
+            "event_or_drop",
+            "$milled",
+            "entering_card"
+          ]
+        },
+        "to_zone": {
+          "enum": [
+            "hand",
+            "deck",
+            "drop",
+            "event",
+            "serve",
+            "block",
+            "receive",
+            "toss",
+            "attack",
+            "court",
+            "court.guts",
+            "receive.guts",
+            "attack.guts",
+            "block.guts",
+            "toss.guts",
+            "serve.guts",
+            "event_or_drop",
+            "$milled",
+            "entering_card"
+          ]
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "target_scope": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "const": "single"
+            },
+            "binding": {
+              "enum": [
+                "reference",
+                "choose"
+              ]
+            },
+            "membership": {
+              "const": "snapshot_on_resolution"
+            }
+          },
+          "required": [
+            "mode",
+            "binding",
+            "membership"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "const": "multiple"
+            },
+            "binding": {
+              "const": "choose"
+            },
+            "membership": {
+              "const": "snapshot_on_resolution"
+            },
+            "count": {
+              "type": "integer",
+              "minimum": 2
+            },
+            "count_mode": {
+              "enum": [
+                "exact",
+                "upto"
+              ]
+            }
+          },
+          "required": [
+            "mode",
+            "binding",
+            "membership",
+            "count",
+            "count_mode"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "const": "all"
+            },
+            "binding": {
+              "const": "all_matches"
+            },
+            "membership": {
+              "enum": [
+                "snapshot_on_resolution",
+                "continuous_matching",
+                "unresolved"
+              ]
+            }
+          },
+          "required": [
+            "mode",
+            "binding",
+            "membership"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "sequence": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "sequence"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/node"
+          },
+          "minItems": 0
+        }
+      },
+      "required": [
+        "kind",
+        "steps"
+      ],
+      "additionalProperties": false
+    },
+    "conditional": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "conditional"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "condition": {
+          "$ref": "#/$defs/predicate"
+        },
+        "then": {
+          "$ref": "#/$defs/sequence"
+        },
+        "evaluate_once": {
+          "const": true
+        }
+      },
+      "required": [
+        "kind",
+        "condition",
+        "then",
+        "evaluate_once"
+      ],
+      "additionalProperties": false
+    },
+    "all": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "all"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/predicate"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "kind",
+        "conditions"
+      ],
+      "additionalProperties": false
+    },
+    "any": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "any"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/predicate"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "kind",
+        "conditions"
+      ],
+      "additionalProperties": false
+    },
+    "compare": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "compare"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "field": {
+          "type": "string",
+          "minLength": 1
+        },
+        "op": {
+          "enum": [
+            "eq",
+            "gte",
+            "lte",
+            "in",
+            "contains",
+            "odd",
+            "lt_field"
+          ]
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 0
+            }
+          ]
+        },
+        "checkpoint": {
+          "const": "when_condition_reached"
+        }
+      },
+      "required": [
+        "kind",
+        "field",
+        "op",
+        "value",
+        "checkpoint"
+      ],
+      "additionalProperties": false
+    },
+    "equal_fields": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "equal_fields"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 2,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "kind",
+        "fields"
+      ],
+      "additionalProperties": false
+    },
+    "selector": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "selector"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actor": {
+          "enum": [
+            "self",
+            "opponent",
+            "owner",
+            "controller",
+            "affected_player"
+          ]
+        },
+        "zone": {
+          "enum": [
+            "hand",
+            "deck",
+            "drop",
+            "event",
+            "serve",
+            "block",
+            "receive",
+            "toss",
+            "attack",
+            "court",
+            "court.guts",
+            "receive.guts",
+            "attack.guts",
+            "block.guts",
+            "toss.guts",
+            "serve.guts",
+            "event_or_drop",
+            "$milled",
+            "entering_card"
+          ]
+        },
+        "filters": {
+          "$ref": "#/$defs/filters"
+        }
+      },
+      "required": [
+        "kind",
+        "actor",
+        "zone",
+        "filters"
+      ],
+      "additionalProperties": false
+    },
+    "count_compare": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "count_compare"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pool": {
+          "$ref": "#/$defs/selector"
+        },
+        "op": {
+          "enum": [
+            "eq",
+            "gte",
+            "lte"
+          ]
+        },
+        "value": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "distinct_by": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "pool",
+        "op",
+        "value",
+        "distinct_by"
+      ],
+      "additionalProperties": false
+    },
+    "uniform_affiliation": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "uniform_affiliation"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pool": {
+          "$ref": "#/$defs/selector"
+        },
+        "pools": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/selector"
+          },
+          "minItems": 1
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "require_nonempty": {
+          "const": true
+        },
+        "quantifier": {
+          "const": "one_tag_shared_by_all"
+        },
+        "nonempty_policy": {
+          "const": "union_not_each_pool"
+        }
+      },
+      "required": [
+        "kind",
+        "options",
+        "require_nonempty"
+      ],
+      "additionalProperties": false
+    },
+    "all_result_cards_match": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "all_result_cards_match"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "result": {
+          "type": "string",
+          "minLength": 1
+        },
+        "filters": {
+          "$ref": "#/$defs/filters"
+        },
+        "require_nonempty": {
+          "const": true
+        }
+      },
+      "required": [
+        "kind",
+        "result",
+        "filters",
+        "require_nonempty"
+      ],
+      "additionalProperties": false
+    },
+    "numeric": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "numeric"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "operation": {
+          "enum": [
+            "add",
+            "set"
+          ]
+        },
+        "parameter": {
+          "anyOf": [
+            {
+              "enum": [
+                "serve",
+                "block",
+                "receive",
+                "toss",
+                "attack",
+                "offense",
+                "attack_offense",
+                "defense",
+                "all",
+                "chosen"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "choose_from": {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "serve",
+                      "block",
+                      "receive",
+                      "toss",
+                      "attack",
+                      "offense",
+                      "attack_offense",
+                      "defense",
+                      "all",
+                      "chosen"
+                    ]
+                  },
+                  "minItems": 1,
+                  "uniqueItems": true
+                }
+              },
+              "required": [
+                "choose_from"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "$ref": "#/$defs/printed_parameter"
+            },
+            {
+              "$ref": "#/$defs/sum_result_parameter"
+            },
+            {
+              "$ref": "#/$defs/result_count"
+            }
+          ]
+        },
+        "target": {
+          "anyOf": [
+            {
+              "enum": [
+                "source",
+                "$target",
+                "$entered",
+                "$event.character",
+                "self_ball",
+                "opponent_ball",
+                "opponent.center_blocker"
+              ]
+            },
+            {
+              "$ref": "#/$defs/selector"
+            }
+          ]
+        },
+        "target_scope": {
+          "$ref": "#/$defs/target_scope"
+        },
+        "bind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "duration": {
+          "enum": [
+            "this_turn",
+            "next_opponent_turn",
+            "this_draw_phase",
+            "current_turn_cleanup_or_role_exit",
+            "this_turn_or_role_exit",
+            "unspecified_in_this_print"
+          ]
+        },
+        "evaluation_order": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "depends_on_result": {
+          "type": "string",
+          "minLength": 1
+        },
+        "if_result_has_no_target": {
+          "const": "skip_this_step_only"
+        },
+        "increase_guard": {
+          "$ref": "#/$defs/source_skill_maximum"
+        },
+        "proposed_shared_rule_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "kind",
+        "operation",
+        "parameter",
+        "value",
+        "target",
+        "target_scope",
+        "bind",
+        "duration"
+      ],
+      "additionalProperties": false
+    },
+    "payment_branch": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "payment_branch"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "payment": {
+          "$ref": "#/$defs/sequence"
+        },
+        "then": {
+          "$ref": "#/$defs/sequence"
+        },
+        "optional": {
+          "const": true
+        },
+        "require_complete": {
+          "const": true
+        },
+        "bind_payment_result": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "kind",
+        "payment",
+        "then",
+        "optional",
+        "require_complete",
+        "bind_payment_result"
+      ],
+      "additionalProperties": false
+    },
+    "pay_guts": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "pay_guts"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "count": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "const": "all"
+            }
+          ]
+        },
+        "count_mode": {
+          "enum": [
+            "exact",
+            "upto",
+            "all",
+            "one_of_exact",
+            "exact_each",
+            "exact_or_zero"
+          ]
+        },
+        "allowed_counts": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "count_each": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "areas": {
+          "anyOf": [
+            {
+              "enum": [
+                "source_area",
+                "court"
+              ]
+            },
+            {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "serve",
+                  "block",
+                  "receive",
+                  "toss",
+                  "attack"
+                ]
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            }
+          ]
+        },
+        "bind": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "kind",
+        "areas",
+        "count_mode",
+        "bind"
+      ],
+      "additionalProperties": false
+    },
+    "draw": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "draw"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "count_mode": {
+          "enum": [
+            "exact",
+            "upto"
+          ]
+        },
+        "actor": {
+          "enum": [
+            "self",
+            "opponent",
+            "owner",
+            "controller",
+            "affected_player"
+          ]
+        },
+        "bind": {
+          "const": "drawn"
+        }
+      },
+      "required": [
+        "kind",
+        "count",
+        "count_mode",
+        "actor",
+        "bind"
+      ],
+      "additionalProperties": false
+    },
+    "mill": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "mill"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "count_mode": {
+          "enum": [
+            "exact",
+            "upto"
+          ]
+        },
+        "actor": {
+          "enum": [
+            "self",
+            "opponent",
+            "owner",
+            "controller",
+            "affected_player"
+          ]
+        },
+        "bind": {
+          "const": "milled"
+        }
+      },
+      "required": [
+        "kind",
+        "count",
+        "count_mode",
+        "actor",
+        "bind"
+      ],
+      "additionalProperties": false
+    },
+    "reveal_top": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "reveal_top"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "count_mode": {
+          "enum": [
+            "exact",
+            "upto"
+          ]
+        },
+        "actor": {
+          "enum": [
+            "self",
+            "opponent",
+            "owner",
+            "controller",
+            "affected_player"
+          ]
+        },
+        "bind": {
+          "const": "revealed"
+        }
+      },
+      "required": [
+        "kind",
+        "count",
+        "count_mode",
+        "actor",
+        "bind"
+      ],
+      "additionalProperties": false
+    },
+    "draw_to_hand_size": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "draw_to_hand_size"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actor": {
+          "enum": [
+            "self",
+            "opponent",
+            "owner",
+            "controller",
+            "affected_player"
+          ]
+        },
+        "hand_size": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bind": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "kind",
+        "actor",
+        "hand_size",
+        "bind"
+      ],
+      "additionalProperties": false
+    },
+    "move": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "move"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "count": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "const": "all"
+            }
+          ]
+        },
+        "count_mode": {
+          "enum": [
+            "exact",
+            "upto",
+            "all",
+            "one_of_exact",
+            "exact_each",
+            "exact_or_zero"
+          ]
+        },
+        "allowed_counts": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "count_each": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "pool": {
+          "$ref": "#/$defs/selector"
+        },
+        "destination": {
+          "type": "string",
+          "minLength": 1
+        },
+        "bind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reason": {
+          "enum": [
+            "effect",
+            "effect_placement_not_play"
+          ]
+        },
+        "requires_character_at_destination": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "kind",
+        "pool",
+        "destination",
+        "count_mode"
+      ],
+      "additionalProperties": false
+    },
+    "move_self": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "move_self"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "destination": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reason": {
+          "enum": [
+            "declaration_cost",
+            "effect"
+          ]
+        },
+        "bind": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "kind",
+        "destination",
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+    "move_result": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "move_result"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "result": {
+          "type": "string",
+          "minLength": 1
+        },
+        "destination": {
+          "type": "string",
+          "minLength": 1
+        },
+        "order": {
+          "enum": [
+            "chooser"
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "result",
+        "destination",
+        "order"
+      ],
+      "additionalProperties": false
+    },
+    "retrieve": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "retrieve"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "count_mode": {
+          "enum": [
+            "exact",
+            "upto"
+          ]
+        },
+        "pool": {
+          "$ref": "#/$defs/selector"
+        },
+        "destination": {
+          "type": "string",
+          "minLength": 1
+        },
+        "bind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "group_constraints": {
+          "type": "object",
+          "properties": {
+            "single_area": {
+              "type": "boolean"
+            },
+            "distinct_names": {
+              "type": "boolean"
+            },
+            "shared_affiliation": {
+              "type": "boolean"
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "kind",
+        "count",
+        "count_mode",
+        "pool",
+        "destination",
+        "bind"
+      ],
+      "additionalProperties": false
+    },
+    "retrieve_slots": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "retrieve_slots"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "slots": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/retrieve"
+          },
+          "minItems": 1
+        },
+        "destination": {
+          "type": "string",
+          "minLength": 1
+        },
+        "bind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "distinct_instances": {
+          "const": true
+        }
+      },
+      "required": [
+        "kind",
+        "slots",
+        "destination",
+        "bind",
+        "distinct_instances"
+      ],
+      "additionalProperties": false
+    },
+    "enter": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "enter"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "count_mode": {
+          "enum": [
+            "exact",
+            "upto"
+          ]
+        },
+        "pool": {
+          "$ref": "#/$defs/selector"
+        },
+        "destination": {
+          "enum": [
+            "serve",
+            "block",
+            "receive",
+            "toss",
+            "attack"
+          ]
+        },
+        "as_side_blocker": {
+          "type": "boolean"
+        },
+        "bind": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "kind",
+        "count",
+        "count_mode",
+        "pool",
+        "destination",
+        "as_side_blocker",
+        "bind"
+      ],
+      "additionalProperties": false
+    },
+    "enter_self": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "enter_self"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "destination": {
+          "enum": [
+            "serve",
+            "block",
+            "receive",
+            "toss",
+            "attack"
+          ]
+        },
+        "as_side_blocker": {
+          "type": "boolean"
+        },
+        "bind": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "kind",
+        "destination",
+        "as_side_blocker",
+        "bind"
+      ],
+      "additionalProperties": false
+    },
+    "deck_selection": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "deck_selection"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actor": {
+          "enum": [
+            "self",
+            "opponent",
+            "owner",
+            "controller",
+            "affected_player"
+          ]
+        },
+        "top_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "visibility": {
+          "enum": [
+            "look",
+            "reveal"
+          ]
+        },
+        "selection": {
+          "type": "object",
+          "properties": {
+            "filters": {
+              "$ref": "#/$defs/filters"
+            },
+            "count": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "const": "all"
+                }
+              ]
+            },
+            "count_mode": {
+              "enum": [
+                "exact",
+                "upto",
+                "all"
+              ]
+            },
+            "reveal_selected": {
+              "type": "boolean"
+            },
+            "bind": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "filters",
+            "count",
+            "count_mode",
+            "reveal_selected",
+            "bind"
+          ],
+          "additionalProperties": false
+        },
+        "secondary_selection": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "when_primary_added": {
+                  "type": "boolean"
+                },
+                "filters": {
+                  "$ref": "#/$defs/filters"
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "count_mode": {
+                  "enum": [
+                    "exact",
+                    "upto"
+                  ]
+                },
+                "from_remaining": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "when_primary_added",
+                "filters",
+                "count",
+                "count_mode",
+                "from_remaining"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "remainder": {
+          "type": "object",
+          "properties": {
+            "destination": {
+              "enum": [
+                "deck_bottom",
+                "choose_deck_top_or_bottom"
+              ]
+            },
+            "order": {
+              "const": "chooser"
+            },
+            "choice_applies_to": {
+              "const": "whole_remainder"
+            }
+          },
+          "required": [
+            "destination",
+            "order",
+            "choice_applies_to"
+          ],
+          "additionalProperties": false
+        },
+        "bind": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "kind",
+        "actor",
+        "top_count",
+        "visibility",
+        "selection",
+        "secondary_selection",
+        "remainder",
+        "bind"
+      ],
+      "additionalProperties": false
+    },
+    "watch": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "watch"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "event": {
+          "enum": [
+            "character_entry",
+            "block_success",
+            "hand_added",
+            "loss",
+            "source_moved"
+          ]
+        },
+        "actor": {
+          "enum": [
+            "self",
+            "opponent",
+            "owner",
+            "controller",
+            "affected_player"
+          ]
+        },
+        "filters": {
+          "$ref": "#/$defs/filters"
+        },
+        "duration": {
+          "enum": [
+            "this_turn",
+            "next_opponent_turn",
+            "this_draw_phase",
+            "current_turn_cleanup_or_role_exit",
+            "this_turn_or_role_exit",
+            "unspecified_in_this_print"
+          ]
+        },
+        "per_object": {
+          "const": true
+        },
+        "remaining_uses": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "then": {
+          "$ref": "#/$defs/sequence"
+        }
+      },
+      "required": [
+        "kind",
+        "event",
+        "actor",
+        "filters",
+        "duration",
+        "per_object",
+        "remaining_uses",
+        "then"
+      ],
+      "additionalProperties": false
+    },
+    "keyword": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "keyword"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "keyword": {
+          "enum": [
+            "doshat",
+            "one_touch",
+            "feint",
+            "blockout",
+            "a_pass",
+            "two_attack",
+            "back_attack",
+            "multi_attack"
+          ]
+        },
+        "N": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "affiliation": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "kind",
+        "keyword",
+        "N",
+        "parameters"
+      ],
+      "additionalProperties": false
+    },
+    "ban_action": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "ban_action"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "action": {
+          "enum": [
+            "enter_character",
+            "play_event",
+            "add_hand"
+          ]
+        },
+        "actor": {
+          "enum": [
+            "self",
+            "opponent",
+            "owner",
+            "controller",
+            "affected_player"
+          ]
+        },
+        "duration": {
+          "enum": [
+            "this_turn",
+            "next_opponent_turn",
+            "this_draw_phase",
+            "current_turn_cleanup_or_role_exit",
+            "this_turn_or_role_exit",
+            "unspecified_in_this_print"
+          ]
+        },
+        "scope": {
+          "type": "object",
+          "properties": {
+            "names": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "exclude_names": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "covered_names": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "tags_any": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "positions": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "positions_any": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "position_has_any_other_than": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "exclude_operations": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "entry_origins": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "play_icons_any": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "serve",
+                  "block",
+                  "draw",
+                  "receive",
+                  "toss",
+                  "attack",
+                  "end",
+                  "interval"
+                ]
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "play_icons_exact": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "serve",
+                  "block",
+                  "draw",
+                  "receive",
+                  "toss",
+                  "attack",
+                  "end",
+                  "interval"
+                ]
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "years": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 3
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "years_any": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 3
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "printed_attack": {
+              "type": "integer"
+            },
+            "printed_attack_eq": {
+              "type": "integer"
+            },
+            "printed_block_gte": {
+              "type": "integer"
+            },
+            "printed_receive_gte": {
+              "type": "integer"
+            },
+            "current_receive_gte": {
+              "type": "integer"
+            },
+            "current_block_eq": {
+              "type": "integer"
+            },
+            "role": {
+              "enum": [
+                "serve",
+                "block",
+                "receive",
+                "toss",
+                "attack",
+                "center_blocker",
+                "side_blocker",
+                "character"
+              ]
+            },
+            "role_any": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "serve",
+                  "block",
+                  "receive",
+                  "toss",
+                  "attack",
+                  "center_blocker",
+                  "side_blocker",
+                  "character"
+                ]
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "type": {
+              "enum": [
+                "character",
+                "event"
+              ]
+            },
+            "skillless": {
+              "type": "boolean"
+            },
+            "phase": {
+              "enum": [
+                "serve",
+                "block",
+                "draw",
+                "receive",
+                "toss",
+                "attack",
+                "end",
+                "interval"
+              ]
+            },
+            "entry_keyword_family": {
+              "type": "string",
+              "minLength": 1
+            },
+            "from_zone": {
+              "enum": [
+                "hand",
+                "deck",
+                "drop",
+                "event",
+                "serve",
+                "block",
+                "receive",
+                "toss",
+                "attack",
+                "court",
+                "court.guts",
+                "receive.guts",
+                "attack.guts",
+                "block.guts",
+                "toss.guts",
+                "serve.guts",
+                "event_or_drop",
+                "$milled",
+                "entering_card"
+              ]
+            },
+            "to_zone": {
+              "enum": [
+                "hand",
+                "deck",
+                "drop",
+                "event",
+                "serve",
+                "block",
+                "receive",
+                "toss",
+                "attack",
+                "court",
+                "court.guts",
+                "receive.guts",
+                "attack.guts",
+                "block.guts",
+                "toss.guts",
+                "serve.guts",
+                "event_or_drop",
+                "$milled",
+                "entering_card"
+              ]
+            },
+            "max_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "origins": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "rule",
+                  "skill"
+                ]
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "phases": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "serve",
+                  "block",
+                  "draw",
+                  "receive",
+                  "toss",
+                  "attack",
+                  "end",
+                  "interval"
+                ]
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "kind",
+        "action",
+        "actor",
+        "duration",
+        "scope"
+      ],
+      "additionalProperties": false
+    },
+    "skill_selector": {
+      "type": "object",
+      "properties": {
+        "roles": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "serve",
+              "block",
+              "receive",
+              "toss",
+              "attack",
+              "center_blocker",
+              "side_blocker",
+              "character"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "keyword_families": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "names": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "type": {
+          "enum": [
+            "event",
+            "character"
+          ]
+        },
+        "play_icons_any": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "serve",
+              "block",
+              "draw",
+              "receive",
+              "toss",
+              "attack",
+              "end",
+              "interval"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "phase_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "serve",
+              "block",
+              "draw",
+              "receive",
+              "toss",
+              "attack",
+              "end",
+              "interval"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "source_zones": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "hand",
+              "deck",
+              "drop",
+              "event",
+              "serve",
+              "block",
+              "receive",
+              "toss",
+              "attack",
+              "court",
+              "court.guts",
+              "receive.guts",
+              "attack.guts",
+              "block.guts",
+              "toss.guts",
+              "serve.guts",
+              "event_or_drop",
+              "$milled",
+              "entering_card"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "union_with": {
+          "type": "object",
+          "properties": {
+            "roles": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "serve",
+                  "block",
+                  "receive",
+                  "toss",
+                  "attack",
+                  "center_blocker",
+                  "side_blocker",
+                  "character"
+                ]
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "keyword_families": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "names": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "type": {
+              "enum": [
+                "event",
+                "character"
+              ]
+            },
+            "play_icons_any": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "serve",
+                  "block",
+                  "draw",
+                  "receive",
+                  "toss",
+                  "attack",
+                  "end",
+                  "interval"
+                ]
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "phase_tags": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "serve",
+                  "block",
+                  "draw",
+                  "receive",
+                  "toss",
+                  "attack",
+                  "end",
+                  "interval"
+                ]
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "source_zones": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "hand",
+                  "deck",
+                  "drop",
+                  "event",
+                  "serve",
+                  "block",
+                  "receive",
+                  "toss",
+                  "attack",
+                  "court",
+                  "court.guts",
+                  "receive.guts",
+                  "attack.guts",
+                  "block.guts",
+                  "toss.guts",
+                  "serve.guts",
+                  "event_or_drop",
+                  "$milled",
+                  "entering_card"
+                ]
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "invalidate_skill": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "invalidate_skill"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actor": {
+          "enum": [
+            "self",
+            "opponent",
+            "owner",
+            "controller",
+            "affected_player"
+          ]
+        },
+        "duration": {
+          "enum": [
+            "this_turn",
+            "next_opponent_turn",
+            "this_draw_phase",
+            "current_turn_cleanup_or_role_exit",
+            "this_turn_or_role_exit",
+            "unspecified_in_this_print"
+          ]
+        },
+        "selector": {
+          "$ref": "#/$defs/skill_selector"
+        }
+      },
+      "required": [
+        "kind",
+        "actor",
+        "duration",
+        "selector"
+      ],
+      "additionalProperties": false
+    },
+    "protect_numeric_decrease": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "protect_numeric_decrease"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "target": {
+          "anyOf": [
+            {
+              "enum": [
+                "source",
+                "$target",
+                "$entered",
+                "$event.character",
+                "self_ball",
+                "opponent_ball",
+                "opponent.center_blocker"
+              ]
+            },
+            {
+              "$ref": "#/$defs/selector"
+            }
+          ]
+        },
+        "target_scope": {
+          "$ref": "#/$defs/target_scope"
+        },
+        "duration": {
+          "enum": [
+            "this_turn",
+            "next_opponent_turn",
+            "this_draw_phase",
+            "current_turn_cleanup_or_role_exit",
+            "this_turn_or_role_exit",
+            "unspecified_in_this_print"
+          ]
+        },
+        "parameter": {
+          "enum": [
+            "serve",
+            "block",
+            "receive",
+            "toss",
+            "attack",
+            "offense",
+            "attack_offense",
+            "defense",
+            "all",
+            "chosen"
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "target",
+        "target_scope",
+        "duration",
+        "parameter"
+      ],
+      "additionalProperties": false
+    },
+    "exchange": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "exchange"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sides": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/selector"
+          },
+          "minItems": 2
+        },
+        "count_each": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "count_mode": {
+          "const": "upto"
+        },
+        "requires_both": {
+          "const": true
+        },
+        "atomic_movement": {
+          "const": true
+        }
+      },
+      "required": [
+        "kind",
+        "sides",
+        "count_each",
+        "count_mode",
+        "requires_both",
+        "atomic_movement"
+      ],
+      "additionalProperties": false
+    },
+    "phase_jump": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "phase_jump"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actor": {
+          "enum": [
+            "self",
+            "opponent",
+            "owner",
+            "controller",
+            "affected_player"
+          ]
+        },
+        "destination": {
+          "const": "draw"
+        },
+        "position": {
+          "const": "start"
+        },
+        "skip_current": {
+          "const": true
+        }
+      },
+      "required": [
+        "kind",
+        "actor",
+        "destination",
+        "position",
+        "skip_current"
+      ],
+      "additionalProperties": false
+    },
+    "external_action": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "external_action"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "action": {
+          "type": "string",
+          "minLength": 1
+        },
+        "bind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "alternative_requires_both_consent": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "kind",
+        "action",
+        "bind"
+      ],
+      "additionalProperties": false
+    },
+    "optional": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "optional"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "then": {
+          "$ref": "#/$defs/sequence"
+        },
+        "bind": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "kind",
+        "then",
+        "bind"
+      ],
+      "additionalProperties": false
+    },
+    "choose_modes": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "choose_modes"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "count": {
+          "const": 1
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/sequence"
+          },
+          "minItems": 1
+        },
+        "required": {
+          "const": true
+        }
+      },
+      "required": [
+        "kind",
+        "count",
+        "options",
+        "required"
+      ],
+      "additionalProperties": false
+    },
+    "parameter_absent": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "parameter_absent"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "target": {
+          "anyOf": [
+            {
+              "enum": [
+                "source",
+                "$target",
+                "$entered",
+                "$event.character",
+                "self_ball",
+                "opponent_ball",
+                "opponent.center_blocker"
+              ]
+            },
+            {
+              "$ref": "#/$defs/selector"
+            }
+          ]
+        },
+        "target_scope": {
+          "$ref": "#/$defs/target_scope"
+        },
+        "parameter": {
+          "enum": [
+            "serve",
+            "block",
+            "receive",
+            "toss",
+            "attack",
+            "offense",
+            "attack_offense",
+            "defense",
+            "all",
+            "chosen"
+          ]
+        },
+        "duration": {
+          "enum": [
+            "this_turn",
+            "next_opponent_turn",
+            "this_draw_phase",
+            "current_turn_cleanup_or_role_exit",
+            "this_turn_or_role_exit",
+            "unspecified_in_this_print"
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "target",
+        "target_scope",
+        "parameter",
+        "duration"
+      ],
+      "additionalProperties": false
+    },
+    "force_judgment_failure": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "force_judgment_failure"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "judge": {
+          "enum": [
+            "serve",
+            "block",
+            "receive",
+            "toss",
+            "attack"
+          ]
+        },
+        "actor": {
+          "enum": [
+            "self",
+            "opponent",
+            "owner",
+            "controller",
+            "affected_player"
+          ]
+        },
+        "duration": {
+          "enum": [
+            "this_turn",
+            "next_opponent_turn",
+            "this_draw_phase",
+            "current_turn_cleanup_or_role_exit",
+            "this_turn_or_role_exit",
+            "unspecified_in_this_print"
+          ]
+        },
+        "condition": {
+          "$ref": "#/$defs/predicate"
+        }
+      },
+      "required": [
+        "kind",
+        "judge",
+        "actor",
+        "duration",
+        "condition"
+      ],
+      "additionalProperties": false
+    },
+    "cover_source_with_guts": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "cover_source_with_guts"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pool": {
+          "$ref": "#/$defs/selector"
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "count_mode": {
+          "const": "exact"
+        }
+      },
+      "required": [
+        "kind",
+        "pool",
+        "count",
+        "count_mode"
+      ],
+      "additionalProperties": false
+    },
+    "simultaneous_entry_group": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "simultaneous_entry_group"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/enter"
+          },
+          "minItems": 1
+        },
+        "complete_group_before_triggers": {
+          "const": true
+        }
+      },
+      "required": [
+        "kind",
+        "entries",
+        "complete_group_before_triggers"
+      ],
+      "additionalProperties": false
+    },
+    "shuffle": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "shuffle"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actor": {
+          "enum": [
+            "self",
+            "opponent",
+            "owner",
+            "controller",
+            "affected_player"
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "actor"
+      ],
+      "additionalProperties": false
+    },
+    "reveal_and_retrieve": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "reveal_and_retrieve"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "top_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "count_mode": {
+          "enum": [
+            "exact",
+            "upto"
+          ]
+        },
+        "filters": {
+          "$ref": "#/$defs/filters"
+        },
+        "remainder": {
+          "const": "deck_bottom"
+        },
+        "bind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "retrieved_bind": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "kind",
+        "top_count",
+        "count_mode",
+        "filters",
+        "remainder",
+        "bind",
+        "retrieved_bind"
+      ],
+      "additionalProperties": false
+    },
+    "each_player_optional_draw": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "each_player_optional_draw"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "count_mode": {
+          "const": "exact_or_zero"
+        },
+        "chooser": {
+          "const": "each_affected_player"
+        }
+      },
+      "required": [
+        "kind",
+        "count",
+        "count_mode",
+        "chooser"
+      ],
+      "additionalProperties": false
+    },
+    "rename_before_entry": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "rename_before_entry"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "target": {
+          "anyOf": [
+            {
+              "enum": [
+                "source",
+                "$target",
+                "$entered",
+                "$event.character",
+                "self_ball",
+                "opponent_ball",
+                "opponent.center_blocker"
+              ]
+            },
+            {
+              "$ref": "#/$defs/selector"
+            }
+          ]
+        },
+        "target_scope": {
+          "$ref": "#/$defs/target_scope"
+        },
+        "original_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "choose_name": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "duration": {
+          "enum": [
+            "this_turn",
+            "next_opponent_turn",
+            "this_draw_phase",
+            "current_turn_cleanup_or_role_exit",
+            "this_turn_or_role_exit",
+            "unspecified_in_this_print"
+          ]
+        },
+        "character_count": {
+          "const": 1
+        }
+      },
+      "required": [
+        "kind",
+        "target",
+        "target_scope",
+        "original_name",
+        "choose_name",
+        "duration",
+        "character_count"
+      ],
+      "additionalProperties": false
+    },
+    "printed_parameter": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "printed_parameter"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "parameter": {
+          "enum": [
+            "serve",
+            "block",
+            "receive",
+            "toss",
+            "attack",
+            "offense",
+            "attack_offense",
+            "defense",
+            "all",
+            "chosen"
+          ]
+        },
+        "of": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "kind",
+        "parameter",
+        "of"
+      ],
+      "additionalProperties": false
+    },
+    "sum_result_parameter": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "sum_result_parameter"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "result": {
+          "type": "string",
+          "minLength": 1
+        },
+        "parameter": {
+          "enum": [
+            "serve",
+            "block",
+            "receive",
+            "toss",
+            "attack",
+            "offense",
+            "attack_offense",
+            "defense",
+            "all",
+            "chosen"
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "result",
+        "parameter"
+      ],
+      "additionalProperties": false
+    },
+    "result_count": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "result_count"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "result": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "kind",
+        "result"
+      ],
+      "additionalProperties": false
+    },
+    "source_skill_maximum": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "source_skill_maximum"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "max_result": {
+          "type": "integer"
+        },
+        "only_this_skill": {
+          "const": true
+        },
+        "never_reduce_other_source_value": {
+          "const": true
+        }
+      },
+      "required": [
+        "kind",
+        "max_result",
+        "only_this_skill",
+        "never_reduce_other_source_value"
+      ],
+      "additionalProperties": false
+    },
+    "formal_declaration_cost": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "formal_declaration_cost"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "category_tags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "數值",
+              "資源與移動",
+              "角色與身分",
+              "行動權限",
+              "技能權限",
+              "流程與觸發"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "classification_role": {
+          "enum": [
+            "payment",
+            "effect"
+          ]
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "enum": [
+                "beneficial",
+                "adverse",
+                "neutral",
+                "contextual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/node"
+          },
+          "minItems": 1
+        },
+        "must_be_complete": {
+          "const": true
+        },
+        "performed_for_this_skill_only": {
+          "const": true
+        }
+      },
+      "required": [
+        "kind",
+        "steps",
+        "must_be_complete",
+        "performed_for_this_skill_only"
+      ],
+      "additionalProperties": false
+    },
+    "predicate": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/all"
+        },
+        {
+          "$ref": "#/$defs/any"
+        },
+        {
+          "$ref": "#/$defs/compare"
+        },
+        {
+          "$ref": "#/$defs/equal_fields"
+        },
+        {
+          "$ref": "#/$defs/count_compare"
+        },
+        {
+          "$ref": "#/$defs/uniform_affiliation"
+        },
+        {
+          "$ref": "#/$defs/all_result_cards_match"
+        }
+      ]
+    },
+    "node": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/sequence"
+        },
+        {
+          "$ref": "#/$defs/conditional"
+        },
+        {
+          "$ref": "#/$defs/all"
+        },
+        {
+          "$ref": "#/$defs/any"
+        },
+        {
+          "$ref": "#/$defs/compare"
+        },
+        {
+          "$ref": "#/$defs/equal_fields"
+        },
+        {
+          "$ref": "#/$defs/selector"
+        },
+        {
+          "$ref": "#/$defs/count_compare"
+        },
+        {
+          "$ref": "#/$defs/uniform_affiliation"
+        },
+        {
+          "$ref": "#/$defs/all_result_cards_match"
+        },
+        {
+          "$ref": "#/$defs/numeric"
+        },
+        {
+          "$ref": "#/$defs/payment_branch"
+        },
+        {
+          "$ref": "#/$defs/pay_guts"
+        },
+        {
+          "$ref": "#/$defs/draw"
+        },
+        {
+          "$ref": "#/$defs/mill"
+        },
+        {
+          "$ref": "#/$defs/reveal_top"
+        },
+        {
+          "$ref": "#/$defs/draw_to_hand_size"
+        },
+        {
+          "$ref": "#/$defs/move"
+        },
+        {
+          "$ref": "#/$defs/move_self"
+        },
+        {
+          "$ref": "#/$defs/move_result"
+        },
+        {
+          "$ref": "#/$defs/retrieve"
+        },
+        {
+          "$ref": "#/$defs/retrieve_slots"
+        },
+        {
+          "$ref": "#/$defs/enter"
+        },
+        {
+          "$ref": "#/$defs/enter_self"
+        },
+        {
+          "$ref": "#/$defs/deck_selection"
+        },
+        {
+          "$ref": "#/$defs/watch"
+        },
+        {
+          "$ref": "#/$defs/keyword"
+        },
+        {
+          "$ref": "#/$defs/ban_action"
+        },
+        {
+          "$ref": "#/$defs/invalidate_skill"
+        },
+        {
+          "$ref": "#/$defs/protect_numeric_decrease"
+        },
+        {
+          "$ref": "#/$defs/exchange"
+        },
+        {
+          "$ref": "#/$defs/phase_jump"
+        },
+        {
+          "$ref": "#/$defs/external_action"
+        },
+        {
+          "$ref": "#/$defs/optional"
+        },
+        {
+          "$ref": "#/$defs/choose_modes"
+        },
+        {
+          "$ref": "#/$defs/parameter_absent"
+        },
+        {
+          "$ref": "#/$defs/force_judgment_failure"
+        },
+        {
+          "$ref": "#/$defs/cover_source_with_guts"
+        },
+        {
+          "$ref": "#/$defs/simultaneous_entry_group"
+        },
+        {
+          "$ref": "#/$defs/shuffle"
+        },
+        {
+          "$ref": "#/$defs/reveal_and_retrieve"
+        },
+        {
+          "$ref": "#/$defs/each_player_optional_draw"
+        },
+        {
+          "$ref": "#/$defs/rename_before_entry"
+        },
+        {
+          "$ref": "#/$defs/printed_parameter"
+        },
+        {
+          "$ref": "#/$defs/sum_result_parameter"
+        },
+        {
+          "$ref": "#/$defs/result_count"
+        },
+        {
+          "$ref": "#/$defs/source_skill_maximum"
+        },
+        {
+          "$ref": "#/$defs/formal_declaration_cost"
+        }
+      ]
+    },
+    "trigger": {
+      "type": "object",
+      "properties": {
+        "event": {
+          "enum": [
+            "before_entry",
+            "self_entry",
+            "self_entry_cover",
+            "source_covered",
+            "character_entry",
+            "event_played"
+          ]
+        },
+        "actor": {
+          "enum": [
+            "self",
+            "opponent",
+            "owner",
+            "controller",
+            "affected_player"
+          ]
+        },
+        "source_role": {
+          "anyOf": [
+            {
+              "enum": [
+                "serve",
+                "block",
+                "receive",
+                "toss",
+                "attack",
+                "center_blocker",
+                "side_blocker",
+                "character"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_role_checkpoint": {
+          "enum": [
+            "before_coverage",
+            "at_trigger"
+          ]
+        },
+        "destination_any": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "hand",
+              "deck",
+              "drop",
+              "event",
+              "serve",
+              "block",
+              "receive",
+              "toss",
+              "attack",
+              "court",
+              "court.guts",
+              "receive.guts",
+              "attack.guts",
+              "block.guts",
+              "toss.guts",
+              "serve.guts",
+              "event_or_drop",
+              "$milled",
+              "entering_card"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "filters": {
+          "$ref": "#/$defs/filters"
+        }
+      },
+      "required": [
+        "event"
+      ],
+      "additionalProperties": false
+    },
+    "activation": {
+      "type": "object",
+      "properties": {
+        "skill_type": {
+          "enum": [
+            "event",
+            "permanent_entry_name",
+            "active",
+            "passive"
+          ]
+        },
+        "activation_phases": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "serve",
+              "block",
+              "draw",
+              "receive",
+              "toss",
+              "attack",
+              "end",
+              "interval"
+            ]
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "source_zones": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "hand",
+              "deck",
+              "drop",
+              "event",
+              "serve",
+              "block",
+              "receive",
+              "toss",
+              "attack",
+              "court",
+              "court.guts",
+              "receive.guts",
+              "attack.guts",
+              "block.guts",
+              "toss.guts",
+              "serve.guts",
+              "event_or_drop",
+              "$milled",
+              "entering_card"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "trigger": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/trigger"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "window": {
+          "enum": [
+            "free_step_after_required_draw_and_entry_checks",
+            "trigger_check_process"
+          ]
+        },
+        "reveal_source_on_declaration": {
+          "type": "boolean"
+        },
+        "explicit_phase_gate_only": {
+          "const": true
+        }
+      },
+      "required": [
+        "skill_type",
+        "activation_phases",
+        "source_zones",
+        "trigger",
+        "window",
+        "reveal_source_on_declaration",
+        "explicit_phase_gate_only"
+      ],
+      "additionalProperties": false
+    },
+    "skill_contract": {
+      "type": "object",
+      "properties": {
+        "program": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/sequence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "formal_cost": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/formal_declaration_cost"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "activation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/activation"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "program",
+        "formal_cost",
+        "activation"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

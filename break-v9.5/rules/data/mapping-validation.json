@@ -1,0 +1,409 @@
+{
+  "status": "DATA_MAPPING_CHECKS_NOT_FULL_GAME_SIMULATION",
+  "passed": 79,
+  "failed": 0,
+  "cards": 541,
+  "skill_profiles": 362,
+  "source_records": 713,
+  "checks": [
+    {
+      "title": "541卡號與來源集合完全一致",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "713筆來源紀錄逐筆保留且ID不重複",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "實際707個卡圖檔名與來源相符",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "362個技能卡文版本均有結構資料",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "183無技能卡不建立虛構技能",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "545個資料組通過嚴格技能欄位與組合檢查",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "PR-081可選1／2張數量位於支付動作，未混入篩選",
+      "passed": true,
+      "qa_id": "1957"
+    },
+    {
+      "title": "P04-070全體保護範圍明示且成員界線未定時不能放行",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "全部直接作用目標明示單體／多人／全體",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "被動觸發的精確名稱與卡片識別統一",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "未將任何初稿標為引擎可執行",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "全部共用規則引用存在",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "分段節點ID在各技能內唯一",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "全部來源卡文SHA吻合",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "15張正式費用卡保留16個印刷卡文版本",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "費用節點未誤標為負面效果",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "每段數值依存對象不存在時只略過該段",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "全部角色版本的serve原始參數保留零與橫線",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "全部角色版本的block原始參數保留零與橫線",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "全部角色版本的receive原始參數保留零與橫線",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "全部角色版本的toss原始參數保留零與橫線",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "全部角色版本的attack原始參數保留零與橫線",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "事件卡不建立虛構的橫線角色參數",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "P03-001橫線參數不被轉成零",
+      "passed": true,
+      "qa_id": "1741"
+    },
+    {
+      "title": "音駒中不再當成音駒",
+      "passed": true,
+      "qa_id": "1798"
+    },
+    {
+      "title": "白鳥沢中不再當成白鳥沢",
+      "passed": true,
+      "qa_id": "1817"
+    },
+    {
+      "title": "多重所屬卡保留高中與中學兩個精確標籤",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "無所屬橫線不變成可匹配標籤",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "搜尋用海外分組不冒充印刷俱樂部所屬",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "PR-013官方卡圖核對二年及三年",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "PR-013修正保存官方圖檔指紋",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "所有同名限次資料以有效名稱而非卡號追蹤",
+      "passed": true,
+      "qa_id": "1746"
+    },
+    {
+      "title": "相同卡文跨卡號引用同一效果結構",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "四個官方卡文差異保留各自版本",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "P04-072角色卡與一般卡目標差異未合併",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "P02-077缺少期限文字的印刷不擅自補期限",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "P02-035所屬校正有官方問答依據",
+      "passed": true,
+      "qa_id": "1299"
+    },
+    {
+      "title": "赤木：serve／2的分段效果",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "赤木：serve／6的分段效果",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "赤木：serve／9的分段效果",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "赤木：serve／5的分段效果",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "赤木：attack／6的分段效果",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "赤木：block／6的分段效果",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "赤木：attack／2的分段效果",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "赤木缺少球種時回待釐清，不推定發球",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "抽牌階段事件可另套對練窗口，官方階段不改",
+      "passed": true,
+      "qa_id": "12"
+    },
+    {
+      "title": "抽牌階段手牌主動技能不自動取得事件延伸窗口",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "登場區域不是使用階段門檻",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "手牌主動技能宣告須公開來源卡",
+      "passed": true,
+      "qa_id": "1958"
+    },
+    {
+      "title": "來源被覆蓋的技能讀覆蓋前角色資訊",
+      "passed": true,
+      "qa_id": "1144"
+    },
+    {
+      "title": "P01-035只禁止技能加牌",
+      "passed": true,
+      "qa_id": "1158"
+    },
+    {
+      "title": "P04-087抽牌階段禁止含規則及技能",
+      "passed": true,
+      "qa_id": "1933"
+    },
+    {
+      "title": "P03-063封鎖事件技能，沒有偷改成禁止放卡",
+      "passed": true,
+      "qa_id": "1814"
+    },
+    {
+      "title": "P01-006翻牌失敗不取消獨立日向監聽",
+      "passed": true,
+      "qa_id": "1123"
+    },
+    {
+      "title": "P03-087可選任一角色攻擊加一",
+      "passed": true,
+      "qa_id": "1836"
+    },
+    {
+      "title": "P03-087六Guts從全場合計支付",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "P03-087後段仍是原角色任一參數加二",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "P03-096日向可選任一參數而非固定當前階段",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "P02-087兩角色登場成組且先完成原技能",
+      "passed": true,
+      "qa_id": "1368"
+    },
+    {
+      "title": "P02-041正式費用與送棄牌分段分離",
+      "passed": true,
+      "qa_id": "1312"
+    },
+    {
+      "title": "P02-066前段送三張與兩Guts是完整效果支付",
+      "passed": true,
+      "qa_id": "1335"
+    },
+    {
+      "title": "P04-100雙方各選抽兩張或不抽，之後才禁自己加牌",
+      "passed": true,
+      "qa_id": "1948"
+    },
+    {
+      "title": "P03-083交換保留雙向完整性要求",
+      "passed": true,
+      "qa_id": "1828"
+    },
+    {
+      "title": "P04-064交換仍受加入手牌權限控制",
+      "passed": true,
+      "qa_id": "1908"
+    },
+    {
+      "title": "P04-088技能限次不壓縮未來監聽次數",
+      "passed": true,
+      "qa_id": "1934"
+    },
+    {
+      "title": "P02-082一次監聽按效果實例計次",
+      "passed": true,
+      "qa_id": "1359"
+    },
+    {
+      "title": "P03-028放上方不被編成明示登場",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "P03-047技能自己加值上限保留共用機制待補旗標",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "雙位置Li+WS可符合Li以外的烏野攻擊角色",
+      "passed": true,
+      "qa_id": "1862"
+    },
+    {
+      "title": "只有Li的位置不符合該觸發",
+      "passed": true,
+      "qa_id": "1862"
+    },
+    {
+      "title": "該雙位置觸發仍須手牌來源",
+      "passed": true,
+      "qa_id": "1862"
+    },
+    {
+      "title": "任一角色選取涵蓋側攔",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "全隊共同烏野或共同Youth：混隊不成立",
+      "passed": true,
+      "qa_id": "1834"
+    },
+    {
+      "title": "全隊共同烏野：多所屬仍成立",
+      "passed": true,
+      "qa_id": "1834"
+    },
+    {
+      "title": "全隊條件不以空集合成立",
+      "passed": true,
+      "qa_id": "1834"
+    },
+    {
+      "title": "P03-087所屬以精確Youth而非疑似Youth",
+      "passed": true,
+      "qa_id": "1835"
+    },
+    {
+      "title": "P01-092空翻牌不因沒有重複所屬反而獲額外加值",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "P01-092翻到不同所屬才加值",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "P01-093空翻牌不獲限制對手打牌效果",
+      "passed": true,
+      "qa_id": null
+    }
+  ],
+  "limitations": [
+    "Program structure and selected independent source expectations checked; not all full card scenarios executed",
+    "All skill profiles remain runtime_approved=false; new numeric source-cap mechanism remains pending"
+  ]
+}

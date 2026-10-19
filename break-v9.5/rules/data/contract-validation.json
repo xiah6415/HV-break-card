@@ -1,0 +1,270 @@
+{
+  "status": "CONTRACT_AND_SCOPED_REFERENCE_CHECKS_NOT_GAME_SIMULATION",
+  "passed": 63,
+  "failed": 0,
+  "structure_counts": {
+    "profiles": 545,
+    "nodes": 3132,
+    "known_node_kinds": 48
+  },
+  "checks": [
+    {
+      "title": "545個卡文資料組全量結構與語意欄位檢查",
+      "passed": true
+    },
+    {
+      "title": "產出規格與驗證器使用相同定義",
+      "passed": true
+    },
+    {
+      "title": "所有已使用節點種類都有封閉欄位定義",
+      "passed": true
+    },
+    {
+      "title": "PR-081數量是動作層可選精確1或2張",
+      "passed": true
+    },
+    {
+      "title": "QA1957支付1張的後段效果",
+      "passed": true
+    },
+    {
+      "title": "QA1957支付2張的後段效果",
+      "passed": true
+    },
+    {
+      "title": "可以拒絕整個可選支付分支",
+      "passed": true
+    },
+    {
+      "title": "只剩1張時仍可完整支付1張",
+      "passed": true
+    },
+    {
+      "title": "付0張不當作完成",
+      "passed": true
+    },
+    {
+      "title": "不能付3張",
+      "passed": true
+    },
+    {
+      "title": "不可重複支付同一實體",
+      "passed": true
+    },
+    {
+      "title": "數量不足不能支付不存在的卡",
+      "passed": true
+    },
+    {
+      "title": "不可支付篩選池之外的牌",
+      "passed": true
+    },
+    {
+      "title": "付款參考判定不移動牌池或污染來源選擇／資料",
+      "passed": true
+    },
+    {
+      "title": "單體只能選一個實體",
+      "passed": true
+    },
+    {
+      "title": "單體不可偷選兩人",
+      "passed": true
+    },
+    {
+      "title": "單體不可選不在場的實體",
+      "passed": true
+    },
+    {
+      "title": "多人至多可選零人",
+      "passed": true
+    },
+    {
+      "title": "多人至多可選兩個不同實體",
+      "passed": true
+    },
+    {
+      "title": "多人不可超過張數",
+      "passed": true
+    },
+    {
+      "title": "多人不可重複同一實體",
+      "passed": true
+    },
+    {
+      "title": "多人精確數量不可少選",
+      "passed": true
+    },
+    {
+      "title": "全體自動涵蓋所有符合候選實體",
+      "passed": true
+    },
+    {
+      "title": "全體空集合沒有虛構對象",
+      "passed": true
+    },
+    {
+      "title": "全體不接受改成玩家選一人",
+      "passed": true
+    },
+    {
+      "title": "依存參照固定同一實體",
+      "passed": true
+    },
+    {
+      "title": "固定參照不能換另一個對象",
+      "passed": true
+    },
+    {
+      "title": "P04-070明示全體而非玩家選一人",
+      "passed": true
+    },
+    {
+      "title": "生效成員界線未定時停止執行判定",
+      "passed": true
+    },
+    {
+      "title": "未定成員界線不得核准runtime",
+      "passed": true
+    },
+    {
+      "title": "保護的選取池必須由作者明示對象範圍",
+      "passed": true
+    },
+    {
+      "title": "除兩項指定資料補正外，其餘卡片效果內容保持一致",
+      "passed": true
+    },
+    {
+      "title": "所有來源版本與原始卡文指紋保持一致",
+      "passed": true
+    },
+    {
+      "title": "原始PR-081欄位錯置會被攔截",
+      "passed": true
+    },
+    {
+      "title": "篩選器拒絕錯置數量欄位",
+      "passed": true
+    },
+    {
+      "title": "拒絕未知動作欄位",
+      "passed": true
+    },
+    {
+      "title": "拒絕未知節點種類",
+      "passed": true
+    },
+    {
+      "title": "拒絕數量與可選數量同時存在",
+      "passed": true
+    },
+    {
+      "title": "拒絕數量集合為字串",
+      "passed": true
+    },
+    {
+      "title": "拒絕布林值冒充整數",
+      "passed": true
+    },
+    {
+      "title": "拒絕重複數量選項",
+      "passed": true
+    },
+    {
+      "title": "拒絕負數數量",
+      "passed": true
+    },
+    {
+      "title": "拒絕零張視為已付費",
+      "passed": true
+    },
+    {
+      "title": "拒絕未排序的數量分支",
+      "passed": true
+    },
+    {
+      "title": "拒絕缺失可選數量",
+      "passed": true
+    },
+    {
+      "title": "精確模式不可搭配選項集合",
+      "passed": true
+    },
+    {
+      "title": "拒絕未知數量模式",
+      "passed": true
+    },
+    {
+      "title": "拒絕數值加值為文字",
+      "passed": true
+    },
+    {
+      "title": "拒絕未知固定目標參照",
+      "passed": true
+    },
+    {
+      "title": "拒絕單體選取卻綁為固定參照",
+      "passed": true
+    },
+    {
+      "title": "拒絕對象範圍欄位缺失",
+      "passed": true
+    },
+    {
+      "title": "拒絕對象範圍未知模式",
+      "passed": true
+    },
+    {
+      "title": "拒絕角色篩選器漏字",
+      "passed": true
+    },
+    {
+      "title": "數量比較不可使用字串常數",
+      "passed": true
+    },
+    {
+      "title": "全體不可附帶選一人數量",
+      "passed": true
+    },
+    {
+      "title": "多人模式不可使用一人數量",
+      "passed": true
+    },
+    {
+      "title": "被動觸發名稱格式不一致會被攔截",
+      "passed": true
+    },
+    {
+      "title": "原被動觸發名稱確實含未正規化值",
+      "passed": true
+    },
+    {
+      "title": "被動觸發名稱已統一為精確識別值",
+      "passed": true
+    },
+    {
+      "title": "技能不可缺少發動資料",
+      "passed": true
+    },
+    {
+      "title": "事件不可混入角色被動觸發",
+      "passed": true
+    },
+    {
+      "title": "被動技能不可錯用自由步驟窗口",
+      "passed": true
+    },
+    {
+      "title": "P04-084保持在共同條件內",
+      "passed": true
+    }
+  ],
+  "mapping_sha256": "031957f521584570bca643358d89efbede6de3898330fbc2c9200ed50f6d82b7",
+  "limitations": [
+    "Candidate ID pools are prefiltered; this suite does not implement every card filter",
+    "No state movement, trigger queue, expiry, undo or multiplayer integration",
+    "P04-070 membership remains unresolved and cannot be runtime approved"
+  ]
+}

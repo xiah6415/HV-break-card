@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "status": "FROZEN_FIRST_PASS_NOT_LIVE_APPROVED",
+  "source_hashes": {
+    "source/work/card-mapping/baseline-before-contract-v2/mapping.json": "625991b47becb63a78f33658c075fb0918bddd049c083e401d4149e7481dd637",
+    "source/work/card-mapping/build.py": "11132f1db7e97c4bf9a457101ea0d27c7fc45fc7bf491e928398bfe122585e82",
+    "source/work/card-mapping/contract_reference.py": "e8029108492bccbf35e5cbc5eec7d3bd747988cbf494cc73b1ebd83443f5d2c1",
+    "source/work/card-mapping/contract_tests.py": "59e941ff491e2b88b5ac7c32037447d336149ae3b8c6f0f22cdf28f243c135f6",
+    "source/work/card-mapping/model.py": "fc991906a215f94a6defa551828d4445ca52eb94dd457cced7bfade7ba5e690a",
+    "source/work/card-mapping/official-PR-013-P.webp": "fac06d591baaac8a6e92f2c23310b7a62e9bf14443642d5cc1b6a080703688dd",
+    "source/work/card-mapping/programs.py": "20a89594fbebeaf1368f068455232c77db8b6a6ae56bf32d81099100a9c8f312",
+    "source/work/card-mapping/schema.py": "7f4664b920ea0a3d0d0f9b48696f4ea2fdb96397a477b897fd29f1f55ec2e538",
+    "source/work/card-mapping/verify.py": "90b19f37dcdce231e484266cdf2bf421373a70b8d02768dc8e2ca4fb9d3eeb27",
+    "source/work/card-rulings/official-rulings.json": "8d43522be39b7be7fd96c2700fcabfcfc6a00732135ce876861ef5b51c15f0be",
+    "source/work/card-taxonomy/database.json": "aed3c68a7562c3e05c51cb76755cea248028ef33f06fe099d2307720803d195f",
+    "source/work/shared-rules/build.py": "7022794d87f7cf591cc5708b990666c6fec25b522ff5eea63496adc4caead5bd",
+    "source/work/shared-rules/catalog.tsv": "95be566bf650b8f4312ca51b5b07069004a003b36eee8deb3f1ddb895feb7d47",
+    "source/work/shared-rules/verify.py": "91711a5abafa9ed9cc6afea6471cfdd9588ac54aed871cb6074f1bc86c96ee18"
+  },
+  "output_hashes": {
+    "cards.json": "031957f521584570bca643358d89efbede6de3898330fbc2c9200ed50f6d82b7",
+    "shared-rules.json": "a9d9dccbca222324b21cece63aa2639f2c1ea976ae182ea67c610a865ba2317a",
+    "schema.json": "cbef466690bd97fc62b015a0c092bf0b78d36d307c4cb6a0a0fb3b4b00083406",
+    "mapping-validation.json": "d3be36f8718c1b498f238229c86146bbe2dbd9d0633eaae3c7cb84581e7d1432",
+    "contract-validation.json": "6ce984bcb1911fd2b39a416282e4c56f120b5c9fbde7bf821b4ec0b9bf55be14",
+    "permission-reference.json": "3f14024023906cc6404b4553ee21784bff099214a9856ef690ff6e16252b91ed"
+  }
+}

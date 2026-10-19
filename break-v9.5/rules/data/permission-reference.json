@@ -1,0 +1,3185 @@
+{
+  "status": "REFERENCE_VALIDATION_NOT_GAME_INTEGRATED",
+  "no_card_number_branches": true,
+  "no_runtime_qa_parsing": true,
+  "no_decision_is_not_global_allow": true,
+  "unknown_result": "REQUIRES_REVIEW",
+  "summary": {
+    "reference_policies": 26,
+    "cases": 94,
+    "passed": 94,
+    "catalog_rules_with_reference_policy": 45,
+    "catalog_rules_without_reference_policy": 86,
+    "official_qa_cited_by_cases": 73,
+    "test_scope": "Scoped reference decisions; not game replay, not all 602 full scenarios"
+  },
+  "policies": [
+    {
+      "id": "P01",
+      "stage": "分段執行",
+      "title": "加手牌禁止的範圍",
+      "shared_rule_ids": [
+        "permission.deny",
+        "hand.draw_subset",
+        "hand.restriction"
+      ],
+      "required_inputs": [
+        "operation",
+        "actor",
+        "origin",
+        "phase",
+        "restriction"
+      ],
+      "contract": "命中範圍才禁止該段；來源與階段不符不處理",
+      "implementation": "work/shared-rules/verify.py:evaluate",
+      "status": "REFERENCE_ONLY_NOT_GAME_INTEGRATED"
+    },
+    {
+      "id": "P02",
+      "stage": "打出卡",
+      "title": "正常事件階段與對練覆寫",
+      "shared_rule_ids": [
+        "event.phase",
+        "event.place_not_play"
+      ],
+      "required_inputs": [
+        "operation",
+        "phase",
+        "allowed_phases",
+        "profile_extra_phases"
+      ],
+      "contract": "只檢查正常打出；效果放置分流；覆寫有明確設定",
+      "implementation": "work/shared-rules/verify.py:evaluate",
+      "status": "REFERENCE_ONLY_NOT_GAME_INTEGRATED"
+    },
+    {
+      "id": "P03",
+      "stage": "使用技能",
+      "title": "無效化按技能標籤交集",
+      "shared_rule_ids": [
+        "permission.layers",
+        "skill.selector",
+        "skill.invalidate"
+      ],
+      "required_inputs": [
+        "operation",
+        "skill_tags",
+        "restriction"
+      ],
+      "contract": "技能階段與來源標籤全命中才封鎖，打出卡另判",
+      "implementation": "work/shared-rules/verify.py:evaluate",
+      "status": "REFERENCE_ONLY_NOT_GAME_INTEGRATED"
+    },
+    {
+      "id": "P04",
+      "stage": "分段執行",
+      "title": "減值保護只阻擋命中段落",
+      "shared_rule_ids": [
+        "numeric.protection",
+        "keyword.one_touch"
+      ],
+      "required_inputs": [
+        "operation",
+        "delta",
+        "target",
+        "numeric_domain",
+        "restriction"
+      ],
+      "contract": "目標及數值域精準匹配；階段移行段不被連帶取消",
+      "implementation": "work/shared-rules/verify.py:evaluate",
+      "status": "REFERENCE_ONLY_NOT_GAME_INTEGRATED"
+    },
+    {
+      "id": "P05",
+      "stage": "宣告費用",
+      "title": "費用完整且屬於該次技能",
+      "shared_rule_ids": [
+        "cost.declaration"
+      ],
+      "required_inputs": [
+        "paid_cards",
+        "required_count",
+        "paid_for",
+        "declared_skill"
+      ],
+      "contract": "不足、重複卡或其他技能已付的牌不當成已付款",
+      "implementation": "work/shared-rules/verify.py:evaluate",
+      "status": "REFERENCE_ONLY_NOT_GAME_INTEGRATED"
+    },
+    {
+      "id": "P06",
+      "stage": "登場門檻",
+      "title": "數字零與橫線分離",
+      "shared_rule_ids": [
+        "entry.parameter",
+        "numeric.negative"
+      ],
+      "required_inputs": [
+        "parameter"
+      ],
+      "contract": "橫線無該參數；零與負數是數字",
+      "implementation": "work/shared-rules/verify.py:evaluate",
+      "status": "REFERENCE_ONLY_NOT_GAME_INTEGRATED"
+    },
+    {
+      "id": "P07",
+      "stage": "觸發條件",
+      "title": "登場來源匹配",
+      "shared_rule_ids": [
+        "entry.origin"
+      ],
+      "required_inputs": [
+        "entry_origin",
+        "required_origins"
+      ],
+      "contract": "要求手牌來源的觸發不接受棄牌或Guts來源",
+      "implementation": "work/shared-rules/verify.py:evaluate",
+      "status": "REFERENCE_ONLY_NOT_GAME_INTEGRATED"
+    },
+    {
+      "id": "P08",
+      "stage": "使用技能",
+      "title": "同名限次跨卡號",
+      "shared_rule_ids": [
+        "limit.same_name"
+      ],
+      "required_inputs": [
+        "locks",
+        "player",
+        "name",
+        "turn"
+      ],
+      "contract": "玩家、名稱、回合相同才封鎖，卡號不參與鍵值",
+      "implementation": "work/shared-rules/verify.py:evaluate",
+      "status": "REFERENCE_ONLY_NOT_GAME_INTEGRATED"
+    },
+    {
+      "id": "P09",
+      "stage": "玩家選擇",
+      "title": "可抽精確N或不抽",
+      "shared_rule_ids": [
+        "selection.optional_exact",
+        "resource.shortfall"
+      ],
+      "required_inputs": [
+        "requested",
+        "chosen",
+        "available"
+      ],
+      "contract": "選0或N；選N後不足則盡可能執行",
+      "implementation": "work/shared-rules/verify.py:evaluate",
+      "status": "REFERENCE_ONLY_NOT_GAME_INTEGRATED"
+    },
+    {
+      "id": "P10",
+      "stage": "玩家選擇",
+      "title": "最多N張",
+      "shared_rule_ids": [
+        "selection.upto"
+      ],
+      "required_inputs": [
+        "chosen",
+        "maximum",
+        "available"
+      ],
+      "contract": "實際選0至可用上限，與精確N或不做分離",
+      "implementation": "work/shared-rules/verify.py:evaluate",
+      "status": "REFERENCE_ONLY_NOT_GAME_INTEGRATED"
+    },
+    {
+      "id": "P11",
+      "stage": "分段執行",
+      "title": "交換須兩向完整合法",
+      "shared_rule_ids": [
+        "move.exchange"
+      ],
+      "required_inputs": [
+        "selected_count",
+        "required_targets",
+        "direction_permissions"
+      ],
+      "contract": "缺目標或任一移動方向受阻則整個交換失敗；不取消技能其他獨立段",
+      "implementation": "work/shared-rules/verify.py:evaluate",
+      "status": "REFERENCE_ONLY_NOT_GAME_INTEGRATED"
+    },
+    {
+      "id": "P12",
+      "stage": "條件",
+      "title": "全體A或全體B",
+      "shared_rule_ids": [
+        "condition.uniform",
+        "condition.uniform_or"
+      ],
+      "required_inputs": [
+        "cards",
+        "affiliation_options"
+      ],
+      "contract": "只看角色；至少一人；全體須共同持有其中一個所屬",
+      "implementation": "work/shared-rules/verify.py:evaluate",
+      "status": "REFERENCE_ONLY_NOT_GAME_INTEGRATED"
+    },
+    {
+      "id": "P13",
+      "stage": "條件計數",
+      "title": "名稱種類與卡型",
+      "shared_rule_ids": [
+        "count.distinct_names",
+        "identity.name_scope"
+      ],
+      "required_inputs": [
+        "cards",
+        "required_tag"
+      ],
+      "contract": "先篩角色卡與所屬，再以當區名稱去重；不拆雙人卡名",
+      "implementation": "work/shared-rules/verify.py:evaluate",
+      "status": "REFERENCE_ONLY_NOT_GAME_INTEGRATED"
+    },
+    {
+      "id": "P14",
+      "stage": "對象條件",
+      "title": "所屬精確標籤",
+      "shared_rule_ids": [
+        "identity.exact_tags"
+      ],
+      "required_inputs": [
+        "required_tag",
+        "tags"
+      ],
+      "contract": "不使用子字串匹配",
+      "implementation": "work/shared-rules/verify.py:evaluate",
+      "status": "REFERENCE_ONLY_NOT_GAME_INTEGRATED"
+    },
+    {
+      "id": "P15",
+      "stage": "觸發",
+      "title": "新登場與自然露出",
+      "shared_rule_ids": [
+        "trigger.entry",
+        "zone.exposed_not_entry"
+      ],
+      "required_inputs": [
+        "reason",
+        "origin",
+        "required_origins"
+      ],
+      "contract": "明示登場才產生登場事件，底牌自然露出不產生",
+      "implementation": "work/shared-rules/verify.py:evaluate",
+      "status": "REFERENCE_ONLY_NOT_GAME_INTEGRATED"
+    },
+    {
+      "id": "P16",
+      "stage": "觸發排程",
+      "title": "跳階段與當前技能後段",
+      "shared_rule_ids": [
+        "trigger.skipped_window",
+        "flow.current_skill_after_skip"
+      ],
+      "required_inputs": [
+        "resolving_current_skill",
+        "pending_phase",
+        "skipped_phase"
+      ],
+      "contract": "取消被跳過窗口的待處理技能；當前正在解決技能的後段繼續",
+      "implementation": "work/shared-rules/verify.py:evaluate",
+      "status": "REFERENCE_ONLY_NOT_GAME_INTEGRATED"
+    },
+    {
+      "id": "P17",
+      "stage": "流程觸發",
+      "title": "Loss不是一般結束事件",
+      "shared_rule_ids": [
+        "loss.not_turn_end",
+        "loss.before_interval"
+      ],
+      "required_inputs": [
+        "event",
+        "trigger"
+      ],
+      "contract": "Loss不滿足一般結束觸發；Loss觸發排在間隔前",
+      "implementation": "work/shared-rules/verify.py:evaluate",
+      "status": "REFERENCE_ONLY_NOT_GAME_INTEGRATED"
+    },
+    {
+      "id": "P18",
+      "stage": "到期",
+      "title": "本回合效果的清理點",
+      "shared_rule_ids": [
+        "loss.cleanup",
+        "duration.same_turn"
+      ],
+      "required_inputs": [
+        "checkpoint",
+        "duration"
+      ],
+      "contract": "跳到抽牌及Loss後尚未間隔時保留，清理點才到期",
+      "implementation": "work/shared-rules/verify.py:evaluate",
+      "status": "REFERENCE_ONLY_NOT_GAME_INTEGRATED"
+    },
+    {
+      "id": "P19",
+      "stage": "數值",
+      "title": "非永久數值按解決順序",
+      "shared_rule_ids": [
+        "numeric.fixed_order",
+        "keyword.back_attack"
+      ],
+      "required_inputs": [
+        "base",
+        "effects"
+      ],
+      "contract": "僅處理已排序的非永久加減與設值；永久固定另規則",
+      "implementation": "work/shared-rules/verify.py:evaluate",
+      "status": "REFERENCE_ONLY_NOT_GAME_INTEGRATED"
+    },
+    {
+      "id": "P20",
+      "stage": "成功判定",
+      "title": "比較必須在判定步驟",
+      "shared_rule_ids": [
+        "judge.compare",
+        "judge.checkpoint"
+      ],
+      "required_inputs": [
+        "entered_judgment",
+        "defense",
+        "offense"
+      ],
+      "contract": "大於等於成功；未進判定不當成失敗",
+      "implementation": "work/shared-rules/verify.py:evaluate",
+      "status": "REFERENCE_ONLY_NOT_GAME_INTEGRATED"
+    },
+    {
+      "id": "P21",
+      "stage": "條件",
+      "title": "處理結果的全體條件須非空",
+      "shared_rule_ids": [
+        "condition.nonempty_results"
+      ],
+      "required_inputs": [
+        "matched_results"
+      ],
+      "contract": "翻／棄零張不滿足那些卡全符合；不足但非空可成立",
+      "implementation": "work/shared-rules/verify.py:evaluate",
+      "status": "REFERENCE_ONLY_NOT_GAME_INTEGRATED"
+    },
+    {
+      "id": "P22",
+      "stage": "數值期限",
+      "title": "加值綁定角色實例",
+      "shared_rule_ids": [
+        "duration.target_instance"
+      ],
+      "required_inputs": [
+        "target_instance",
+        "active_instance",
+        "base",
+        "delta"
+      ],
+      "contract": "同名或同卡號也不能繼承另一角色實例修正",
+      "implementation": "work/shared-rules/verify.py:evaluate",
+      "status": "REFERENCE_ONLY_NOT_GAME_INTEGRATED"
+    },
+    {
+      "id": "P23",
+      "stage": "期間監聽",
+      "title": "來源限次與已產生效果分離",
+      "shared_rule_ids": [
+        "limit.activation_not_watch",
+        "trigger.each_entry",
+        "limit.effect_instance"
+      ],
+      "required_inputs": [
+        "watcher_active",
+        "origins",
+        "events",
+        "watcher_remaining"
+      ],
+      "contract": "來源已封鎖不取消既成監聽；監聽自身一度僅一次另計",
+      "implementation": "work/shared-rules/verify.py:evaluate",
+      "status": "REFERENCE_ONLY_NOT_GAME_INTEGRATED"
+    },
+    {
+      "id": "P24",
+      "stage": "具體動作",
+      "title": "禁止打出與禁止放置分離",
+      "shared_rule_ids": [
+        "permission.deny",
+        "event.place_not_play",
+        "entry.limit"
+      ],
+      "required_inputs": [
+        "operation",
+        "actor",
+        "origin",
+        "phase",
+        "restriction"
+      ],
+      "contract": "匹配被禁動作才擋；正常打出與技能放置是不同操作",
+      "implementation": "work/shared-rules/verify.py:evaluate",
+      "status": "REFERENCE_ONLY_NOT_GAME_INTEGRATED"
+    },
+    {
+      "id": "P25",
+      "stage": "直接目標",
+      "title": "角色耐性不解除玩家限制",
+      "shared_rule_ids": [
+        "permission.target_immunity"
+      ],
+      "required_inputs": [
+        "immunity_active",
+        "effect_target",
+        "immune_target"
+      ],
+      "contract": "耐性只保護其直接目標，玩家受到的限制仍由玩家權限處理",
+      "implementation": "work/shared-rules/verify.py:evaluate",
+      "status": "REFERENCE_ONLY_NOT_GAME_INTEGRATED"
+    },
+    {
+      "id": "P26",
+      "stage": "效果支付分支",
+      "title": "前段全部完成才做依存後段",
+      "shared_rule_ids": [
+        "cost.effect_branch",
+        "effect.independent"
+      ],
+      "required_inputs": [
+        "opt_in",
+        "payment_steps"
+      ],
+      "contract": "只控制該依存分支，不自動禁止技能或取消其他獨立段",
+      "implementation": "work/shared-rules/verify.py:evaluate",
+      "status": "REFERENCE_ONLY_NOT_GAME_INTEGRATED"
+    }
+  ],
+  "golden_cases": [
+    {
+      "id": "P01-01",
+      "policy": "P01",
+      "title": "抽牌階段規則抽牌亦被禁止",
+      "qa_ids": [
+        "1933"
+      ],
+      "facts": {
+        "operation": "draw",
+        "actor": "opponent",
+        "origin": "rule",
+        "phase": "draw",
+        "restriction": {
+          "active": true,
+          "scope": {
+            "actor": [
+              "opponent"
+            ],
+            "origin": [
+              "rule",
+              "skill"
+            ],
+            "phase": [
+              "draw"
+            ]
+          }
+        }
+      },
+      "expected": {
+        "verdict": "DENY_STEP"
+      }
+    },
+    {
+      "id": "P01-02",
+      "policy": "P01",
+      "title": "抽牌階段技能回收亦被禁止",
+      "qa_ids": [
+        "1933"
+      ],
+      "facts": {
+        "operation": "add_hand",
+        "actor": "opponent",
+        "origin": "skill",
+        "phase": "draw",
+        "restriction": {
+          "active": true,
+          "scope": {
+            "actor": [
+              "opponent"
+            ],
+            "origin": [
+              "rule",
+              "skill"
+            ],
+            "phase": [
+              "draw"
+            ]
+          }
+        }
+      },
+      "expected": {
+        "verdict": "DENY_STEP"
+      }
+    },
+    {
+      "id": "P01-03",
+      "policy": "P01",
+      "title": "限制只在抽牌階段，不擋接球階段",
+      "qa_ids": [
+        "1933"
+      ],
+      "facts": {
+        "operation": "draw",
+        "actor": "opponent",
+        "origin": "rule",
+        "phase": "receive",
+        "restriction": {
+          "active": true,
+          "scope": {
+            "actor": [
+              "opponent"
+            ],
+            "origin": [
+              "rule",
+              "skill"
+            ],
+            "phase": [
+              "draw"
+            ]
+          }
+        }
+      },
+      "expected": {
+        "verdict": "NO_DECISION"
+      }
+    },
+    {
+      "id": "P01-04",
+      "policy": "P01",
+      "title": "限制對手，不擋自己",
+      "qa_ids": [
+        "1933"
+      ],
+      "facts": {
+        "operation": "draw",
+        "actor": "self",
+        "origin": "rule",
+        "phase": "draw",
+        "restriction": {
+          "active": true,
+          "scope": {
+            "actor": [
+              "opponent"
+            ],
+            "origin": [
+              "rule",
+              "skill"
+            ],
+            "phase": [
+              "draw"
+            ]
+          }
+        }
+      },
+      "expected": {
+        "verdict": "NO_DECISION"
+      }
+    },
+    {
+      "id": "P01-05",
+      "policy": "P01",
+      "title": "只禁技能加牌時不擋規則抽牌",
+      "qa_ids": [
+        "1158"
+      ],
+      "facts": {
+        "operation": "draw",
+        "actor": "opponent",
+        "origin": "rule",
+        "phase": "draw",
+        "restriction": {
+          "active": true,
+          "scope": {
+            "actor": [
+              "opponent"
+            ],
+            "origin": [
+              "skill"
+            ]
+          }
+        }
+      },
+      "expected": {
+        "verdict": "NO_DECISION"
+      }
+    },
+    {
+      "id": "P01-06",
+      "policy": "P01",
+      "title": "到期的限制不生效",
+      "qa_ids": [
+        "1933"
+      ],
+      "facts": {
+        "operation": "draw",
+        "actor": "opponent",
+        "origin": "rule",
+        "phase": "draw",
+        "restriction": {
+          "active": false,
+          "scope": {
+            "actor": [
+              "opponent"
+            ],
+            "origin": [
+              "rule",
+              "skill"
+            ],
+            "phase": [
+              "draw"
+            ]
+          }
+        }
+      },
+      "expected": {
+        "verdict": "NO_DECISION"
+      }
+    },
+    {
+      "id": "P01-07",
+      "policy": "P01",
+      "title": "缺少來源資料不能推定允許",
+      "qa_ids": [
+        "1933"
+      ],
+      "facts": {
+        "operation": "draw",
+        "actor": "opponent",
+        "phase": "draw",
+        "restriction": {
+          "active": true,
+          "scope": {
+            "actor": [
+              "opponent"
+            ],
+            "origin": [
+              "rule",
+              "skill"
+            ],
+            "phase": [
+              "draw"
+            ]
+          }
+        }
+      },
+      "expected": {
+        "verdict": "REQUIRES_REVIEW",
+        "missing": "origin"
+      }
+    },
+    {
+      "id": "P02-01",
+      "policy": "P02",
+      "title": "攻擊事件不能正常在接球打出",
+      "qa_ids": [
+        "12"
+      ],
+      "facts": {
+        "operation": "play_event",
+        "phase": "receive",
+        "allowed_phases": [
+          "attack"
+        ],
+        "profile_extra_phases": []
+      },
+      "expected": {
+        "verdict": "DENY_PLAY"
+      }
+    },
+    {
+      "id": "P02-02",
+      "policy": "P02",
+      "title": "正確攻擊階段通過此門檻",
+      "qa_ids": [
+        "12"
+      ],
+      "facts": {
+        "operation": "play_event",
+        "phase": "attack",
+        "allowed_phases": [
+          "attack"
+        ],
+        "profile_extra_phases": []
+      },
+      "expected": {
+        "verdict": "PHASE_VALID"
+      }
+    },
+    {
+      "id": "P02-03",
+      "policy": "P02",
+      "title": "技能放置不是正常打出",
+      "qa_ids": [
+        "1178",
+        "1372"
+      ],
+      "facts": {
+        "operation": "place_event_by_skill",
+        "phase": "receive",
+        "allowed_phases": [
+          "attack"
+        ],
+        "profile_extra_phases": []
+      },
+      "expected": {
+        "verdict": "NO_DECISION"
+      }
+    },
+    {
+      "id": "P02-04",
+      "policy": "P02",
+      "title": "對練設定允許抽牌事件接球前使用",
+      "qa_ids": [],
+      "facts": {
+        "operation": "play_event",
+        "phase": "receive",
+        "allowed_phases": [
+          "draw"
+        ],
+        "profile_extra_phases": [
+          "receive"
+        ]
+      },
+      "expected": {
+        "verdict": "PHASE_VALID"
+      }
+    },
+    {
+      "id": "P03-01",
+      "policy": "P03",
+      "title": "接球加手牌來源技能被封鎖",
+      "qa_ids": [
+        "1274",
+        "1875"
+      ],
+      "facts": {
+        "operation": "use_skill",
+        "skill_tags": [
+          "receive",
+          "hand"
+        ],
+        "restriction": {
+          "active": true,
+          "scope": {
+            "skill_tags": [
+              "receive",
+              "hand"
+            ]
+          }
+        }
+      },
+      "expected": {
+        "verdict": "DENY_SKILL"
+      }
+    },
+    {
+      "id": "P03-02",
+      "policy": "P03",
+      "title": "場上登場技能不命中手牌來源",
+      "qa_ids": [
+        "1274"
+      ],
+      "facts": {
+        "operation": "use_skill",
+        "skill_tags": [
+          "receive",
+          "entry"
+        ],
+        "restriction": {
+          "active": true,
+          "scope": {
+            "skill_tags": [
+              "receive",
+              "hand"
+            ]
+          }
+        }
+      },
+      "expected": {
+        "verdict": "NO_DECISION"
+      }
+    },
+    {
+      "id": "P03-03",
+      "policy": "P03",
+      "title": "技能封鎖本身不當成放卡禁止",
+      "qa_ids": [
+        "1814"
+      ],
+      "facts": {
+        "operation": "play_event",
+        "skill_tags": [
+          "receive",
+          "hand"
+        ],
+        "restriction": {
+          "active": true,
+          "scope": {
+            "skill_tags": [
+              "receive",
+              "hand"
+            ]
+          }
+        }
+      },
+      "expected": {
+        "verdict": "NO_DECISION"
+      }
+    },
+    {
+      "id": "P04-01",
+      "policy": "P04",
+      "title": "受保護的球進攻值不減",
+      "qa_ids": [
+        "1437"
+      ],
+      "facts": {
+        "operation": "modify_numeric",
+        "delta": -2,
+        "target": "ball-1",
+        "numeric_domain": "offense",
+        "restriction": {
+          "active": true,
+          "scope": {
+            "target": [
+              "ball-1"
+            ],
+            "numeric_domain": [
+              "offense"
+            ]
+          }
+        }
+      },
+      "expected": {
+        "verdict": "SKIP_STEP"
+      }
+    },
+    {
+      "id": "P04-02",
+      "policy": "P04",
+      "title": "同技能下一段移行仍繼續",
+      "qa_ids": [
+        "1437"
+      ],
+      "facts": {
+        "operation": "phase_jump",
+        "delta": -2,
+        "target": "ball-1",
+        "numeric_domain": "offense",
+        "restriction": {
+          "active": true,
+          "scope": {
+            "target": [
+              "ball-1"
+            ],
+            "numeric_domain": [
+              "offense"
+            ]
+          }
+        }
+      },
+      "expected": {
+        "verdict": "NO_DECISION"
+      }
+    },
+    {
+      "id": "P04-03",
+      "policy": "P04",
+      "title": "球總值保護不擋角色攻擊參數減值",
+      "qa_ids": [
+        "1779"
+      ],
+      "facts": {
+        "operation": "modify_numeric",
+        "delta": -2,
+        "target": "character-1",
+        "numeric_domain": "attack_parameter",
+        "restriction": {
+          "active": true,
+          "scope": {
+            "target": [
+              "ball-1"
+            ],
+            "numeric_domain": [
+              "offense"
+            ]
+          }
+        }
+      },
+      "expected": {
+        "verdict": "NO_DECISION"
+      }
+    },
+    {
+      "id": "P04-04",
+      "policy": "P04",
+      "title": "側攔自己的保護不保護中攔",
+      "qa_ids": [
+        "1815"
+      ],
+      "facts": {
+        "operation": "modify_numeric",
+        "delta": -2,
+        "target": "center-1",
+        "numeric_domain": "block_parameter",
+        "restriction": {
+          "active": true,
+          "scope": {
+            "target": [
+              "side-1"
+            ],
+            "numeric_domain": [
+              "block_parameter"
+            ]
+          }
+        }
+      },
+      "expected": {
+        "verdict": "NO_DECISION"
+      }
+    },
+    {
+      "id": "P04-05",
+      "policy": "P04",
+      "title": "減值保護不阻擋加值",
+      "qa_ids": [
+        "1437"
+      ],
+      "facts": {
+        "operation": "modify_numeric",
+        "delta": 1,
+        "target": "ball-1",
+        "numeric_domain": "offense",
+        "restriction": {
+          "active": true,
+          "scope": {
+            "target": [
+              "ball-1"
+            ],
+            "numeric_domain": [
+              "offense"
+            ]
+          }
+        }
+      },
+      "expected": {
+        "verdict": "NO_DECISION"
+      }
+    },
+    {
+      "id": "P05-01",
+      "policy": "P05",
+      "title": "為本技能付完整費用",
+      "qa_ids": [
+        "1130"
+      ],
+      "facts": {
+        "paid_cards": [
+          "cost-card-1"
+        ],
+        "required_count": 1,
+        "paid_for": "declared",
+        "declared_skill": "declared"
+      },
+      "expected": {
+        "verdict": "COST_VALID"
+      }
+    },
+    {
+      "id": "P05-02",
+      "policy": "P05",
+      "title": "其他技能棄牌不能替付",
+      "qa_ids": [
+        "1152"
+      ],
+      "facts": {
+        "paid_cards": [
+          "cost-card-1"
+        ],
+        "required_count": 1,
+        "paid_for": "other",
+        "declared_skill": "declared"
+      },
+      "expected": {
+        "verdict": "DENY_DECLARATION"
+      }
+    },
+    {
+      "id": "P05-03",
+      "policy": "P05",
+      "title": "不足指定量不能宣告",
+      "qa_ids": [
+        "1130"
+      ],
+      "facts": {
+        "paid_cards": [
+          "cost-card-1"
+        ],
+        "required_count": 2,
+        "paid_for": "declared",
+        "declared_skill": "declared"
+      },
+      "expected": {
+        "verdict": "DENY_DECLARATION"
+      }
+    },
+    {
+      "id": "P05-04",
+      "policy": "P05",
+      "title": "同張牌不能重複計作兩份費用",
+      "qa_ids": [
+        "1130"
+      ],
+      "facts": {
+        "paid_cards": [
+          "x",
+          "x"
+        ],
+        "required_count": 2,
+        "paid_for": "declared",
+        "declared_skill": "declared"
+      },
+      "expected": {
+        "verdict": "DENY_DECLARATION"
+      }
+    },
+    {
+      "id": "P06-01",
+      "policy": "P06",
+      "title": "數字零可通過參數門檻",
+      "qa_ids": [
+        "7"
+      ],
+      "facts": {
+        "parameter": 0
+      },
+      "expected": {
+        "verdict": "PARAMETER_VALID"
+      }
+    },
+    {
+      "id": "P06-02",
+      "policy": "P06",
+      "title": "橫線不能登場對應區",
+      "qa_ids": [
+        "8",
+        "1741"
+      ],
+      "facts": {
+        "parameter": "dash"
+      },
+      "expected": {
+        "verdict": "DENY_ENTRY"
+      }
+    },
+    {
+      "id": "P06-03",
+      "policy": "P06",
+      "title": "負數不冒充橫線",
+      "qa_ids": [
+        "9"
+      ],
+      "facts": {
+        "parameter": -1
+      },
+      "expected": {
+        "verdict": "PARAMETER_VALID"
+      }
+    },
+    {
+      "id": "P07-01",
+      "policy": "P07",
+      "title": "手牌登場命中",
+      "qa_ids": [
+        "1119"
+      ],
+      "facts": {
+        "entry_origin": "hand",
+        "required_origins": [
+          "hand"
+        ]
+      },
+      "expected": {
+        "verdict": "ORIGIN_VALID"
+      }
+    },
+    {
+      "id": "P07-02",
+      "policy": "P07",
+      "title": "棄牌登場不冒用手牌",
+      "qa_ids": [
+        "1119",
+        "1854"
+      ],
+      "facts": {
+        "entry_origin": "drop",
+        "required_origins": [
+          "hand"
+        ]
+      },
+      "expected": {
+        "verdict": "NOT_TRIGGERED"
+      }
+    },
+    {
+      "id": "P07-03",
+      "policy": "P07",
+      "title": "Guts登場不吃只限手牌的減值",
+      "qa_ids": [
+        "1855"
+      ],
+      "facts": {
+        "entry_origin": "guts",
+        "required_origins": [
+          "hand"
+        ]
+      },
+      "expected": {
+        "verdict": "NOT_TRIGGERED"
+      }
+    },
+    {
+      "id": "P08-01",
+      "policy": "P08",
+      "title": "另一卡號同名技能仍被封鎖",
+      "qa_ids": [
+        "1746"
+      ],
+      "facts": {
+        "locks": [
+          [
+            "P1",
+            "日向翔陽",
+            7
+          ]
+        ],
+        "player": "P1",
+        "name": "日向翔陽",
+        "turn": 7,
+        "card_no": "another-number"
+      },
+      "expected": {
+        "verdict": "DENY_SKILL"
+      }
+    },
+    {
+      "id": "P08-02",
+      "policy": "P08",
+      "title": "不同名稱不命中",
+      "qa_ids": [
+        "1746"
+      ],
+      "facts": {
+        "locks": [
+          [
+            "P1",
+            "日向翔陽",
+            7
+          ]
+        ],
+        "player": "P1",
+        "name": "影山飛雄",
+        "turn": 7,
+        "card_no": "another-number"
+      },
+      "expected": {
+        "verdict": "NO_DECISION"
+      }
+    },
+    {
+      "id": "P08-03",
+      "policy": "P08",
+      "title": "不同玩家不命中",
+      "qa_ids": [
+        "1746"
+      ],
+      "facts": {
+        "locks": [
+          [
+            "P1",
+            "日向翔陽",
+            7
+          ]
+        ],
+        "player": "P2",
+        "name": "日向翔陽",
+        "turn": 7,
+        "card_no": "another-number"
+      },
+      "expected": {
+        "verdict": "NO_DECISION"
+      }
+    },
+    {
+      "id": "P08-04",
+      "policy": "P08",
+      "title": "下一回合不命中",
+      "qa_ids": [
+        "1746"
+      ],
+      "facts": {
+        "locks": [
+          [
+            "P1",
+            "日向翔陽",
+            7
+          ]
+        ],
+        "player": "P1",
+        "name": "日向翔陽",
+        "turn": 8,
+        "card_no": "another-number"
+      },
+      "expected": {
+        "verdict": "NO_DECISION"
+      }
+    },
+    {
+      "id": "P09-01",
+      "policy": "P09",
+      "title": "抽兩張或不抽不能選一張",
+      "qa_ids": [
+        "1949",
+        "1954"
+      ],
+      "facts": {
+        "requested": 2,
+        "chosen": 1,
+        "available": 5
+      },
+      "expected": {
+        "verdict": "INVALID_CHOICE"
+      }
+    },
+    {
+      "id": "P09-02",
+      "policy": "P09",
+      "title": "可以選不抽",
+      "qa_ids": [
+        "1949"
+      ],
+      "facts": {
+        "requested": 2,
+        "chosen": 0,
+        "available": 5
+      },
+      "expected": {
+        "verdict": "RESOLVE_COUNT",
+        "count": 0
+      }
+    },
+    {
+      "id": "P09-03",
+      "policy": "P09",
+      "title": "選抽兩張但牌庫僅一張仍抽一張",
+      "qa_ids": [
+        "1950",
+        "1955"
+      ],
+      "facts": {
+        "requested": 2,
+        "chosen": 2,
+        "available": 1
+      },
+      "expected": {
+        "verdict": "RESOLVE_COUNT",
+        "count": 1
+      }
+    },
+    {
+      "id": "P09-04",
+      "policy": "P09",
+      "title": "兩張俱足就抽兩張",
+      "qa_ids": [
+        "1949"
+      ],
+      "facts": {
+        "requested": 2,
+        "chosen": 2,
+        "available": 5
+      },
+      "expected": {
+        "verdict": "RESOLVE_COUNT",
+        "count": 2
+      }
+    },
+    {
+      "id": "P10-01",
+      "policy": "P10",
+      "title": "最多兩張可選一張",
+      "qa_ids": [
+        "37"
+      ],
+      "facts": {
+        "chosen": 1,
+        "maximum": 2,
+        "available": 5
+      },
+      "expected": {
+        "verdict": "CHOICE_VALID"
+      }
+    },
+    {
+      "id": "P10-02",
+      "policy": "P10",
+      "title": "最多兩張可選零",
+      "qa_ids": [
+        "37"
+      ],
+      "facts": {
+        "chosen": 0,
+        "maximum": 2,
+        "available": 5
+      },
+      "expected": {
+        "verdict": "CHOICE_VALID"
+      }
+    },
+    {
+      "id": "P10-03",
+      "policy": "P10",
+      "title": "不可超過上限",
+      "qa_ids": [
+        "37"
+      ],
+      "facts": {
+        "chosen": 3,
+        "maximum": 2,
+        "available": 5
+      },
+      "expected": {
+        "verdict": "INVALID_CHOICE"
+      }
+    },
+    {
+      "id": "P10-04",
+      "policy": "P10",
+      "title": "不可選不存在的第二張",
+      "qa_ids": [
+        "37"
+      ],
+      "facts": {
+        "chosen": 2,
+        "maximum": 2,
+        "available": 1
+      },
+      "expected": {
+        "verdict": "INVALID_CHOICE"
+      }
+    },
+    {
+      "id": "P11-01",
+      "policy": "P11",
+      "title": "完整合法交換",
+      "qa_ids": [
+        "1828"
+      ],
+      "facts": {
+        "selected_count": 2,
+        "required_targets": 2,
+        "direction_permissions": [
+          true,
+          true
+        ]
+      },
+      "expected": {
+        "verdict": "EXCHANGE_VALID"
+      }
+    },
+    {
+      "id": "P11-02",
+      "policy": "P11",
+      "title": "缺一方不可單向放牌",
+      "qa_ids": [
+        "1828",
+        "1906"
+      ],
+      "facts": {
+        "selected_count": 1,
+        "required_targets": 2,
+        "direction_permissions": [
+          true,
+          true
+        ]
+      },
+      "expected": {
+        "verdict": "DENY_EXCHANGE"
+      }
+    },
+    {
+      "id": "P11-03",
+      "policy": "P11",
+      "title": "加入手牌方向被禁則不交換",
+      "qa_ids": [
+        "1908"
+      ],
+      "facts": {
+        "selected_count": 2,
+        "required_targets": 2,
+        "direction_permissions": [
+          true,
+          false
+        ]
+      },
+      "expected": {
+        "verdict": "DENY_EXCHANGE"
+      }
+    },
+    {
+      "id": "P12-01",
+      "policy": "P12",
+      "title": "全烏野含雙所屬可成立",
+      "qa_ids": [
+        "1834"
+      ],
+      "facts": {
+        "cards": [
+          {
+            "role": "character",
+            "tags": [
+              "烏野"
+            ]
+          },
+          {
+            "role": "character",
+            "tags": [
+              "烏野",
+              "ユース"
+            ]
+          }
+        ],
+        "affiliation_options": [
+          "烏野",
+          "ユース"
+        ]
+      },
+      "expected": {
+        "verdict": "CONDITION_TRUE"
+      }
+    },
+    {
+      "id": "P12-02",
+      "policy": "P12",
+      "title": "各自一種所屬的混隊不成立",
+      "qa_ids": [
+        "1834"
+      ],
+      "facts": {
+        "cards": [
+          {
+            "role": "character",
+            "tags": [
+              "烏野"
+            ]
+          },
+          {
+            "role": "character",
+            "tags": [
+              "ユース"
+            ]
+          }
+        ],
+        "affiliation_options": [
+          "烏野",
+          "ユース"
+        ]
+      },
+      "expected": {
+        "verdict": "CONDITION_FALSE"
+      }
+    },
+    {
+      "id": "P12-03",
+      "policy": "P12",
+      "title": "空場不以空集合成立",
+      "qa_ids": [
+        "1834"
+      ],
+      "facts": {
+        "cards": [],
+        "affiliation_options": [
+          "烏野"
+        ]
+      },
+      "expected": {
+        "verdict": "CONDITION_FALSE"
+      }
+    },
+    {
+      "id": "P12-04",
+      "policy": "P12",
+      "title": "Guts不參與全隊所屬",
+      "qa_ids": [
+        "1321"
+      ],
+      "facts": {
+        "cards": [
+          {
+            "role": "character",
+            "tags": [
+              "烏野"
+            ]
+          },
+          {
+            "role": "guts",
+            "tags": [
+              "音駒"
+            ]
+          }
+        ],
+        "affiliation_options": [
+          "烏野"
+        ]
+      },
+      "expected": {
+        "verdict": "CONDITION_TRUE"
+      }
+    },
+    {
+      "id": "P13-01",
+      "policy": "P13",
+      "title": "重複角色與教練事件不增加種類",
+      "qa_ids": [
+        "1276",
+        "1277"
+      ],
+      "facts": {
+        "cards": [
+          {
+            "name": "宮侑",
+            "type": "character",
+            "tags": [
+              "稲荷崎"
+            ]
+          },
+          {
+            "name": "宮侑",
+            "type": "character",
+            "tags": [
+              "稲荷崎"
+            ]
+          },
+          {
+            "name": "宮兄弟",
+            "type": "character",
+            "tags": [
+              "稲荷崎"
+            ]
+          },
+          {
+            "name": "黒須法宗",
+            "type": "event",
+            "tags": [
+              "稲荷崎"
+            ]
+          }
+        ],
+        "required_tag": "稲荷崎"
+      },
+      "expected": {
+        "verdict": "COUNT",
+        "count": 2
+      }
+    },
+    {
+      "id": "P13-02",
+      "policy": "P13",
+      "title": "換卡號仍同名不增加種類",
+      "qa_ids": [
+        "1858"
+      ],
+      "facts": {
+        "cards": [
+          {
+            "name": "月島・山口",
+            "type": "character",
+            "tags": [
+              "烏野"
+            ]
+          },
+          {
+            "name": "月島・山口",
+            "type": "character",
+            "tags": [
+              "烏野"
+            ]
+          },
+          {
+            "name": "月島・山口",
+            "type": "character",
+            "tags": [
+              "烏野"
+            ]
+          }
+        ],
+        "required_tag": "烏野"
+      },
+      "expected": {
+        "verdict": "COUNT",
+        "count": 1
+      }
+    },
+    {
+      "id": "P14-01",
+      "policy": "P14",
+      "title": "疑似Youth不等於Youth",
+      "qa_ids": [
+        "1835"
+      ],
+      "facts": {
+        "required_tag": "ユース",
+        "tags": [
+          "疑似ユース"
+        ]
+      },
+      "expected": {
+        "verdict": "TAG_MISMATCH"
+      }
+    },
+    {
+      "id": "P14-02",
+      "policy": "P14",
+      "title": "多所屬包含精確Youth則成立",
+      "qa_ids": [
+        "1835"
+      ],
+      "facts": {
+        "required_tag": "ユース",
+        "tags": [
+          "ユース",
+          "烏野"
+        ]
+      },
+      "expected": {
+        "verdict": "TAG_MATCH"
+      }
+    },
+    {
+      "id": "P14-03",
+      "policy": "P14",
+      "title": "音駒中不當成音駒",
+      "qa_ids": [
+        "1798"
+      ],
+      "facts": {
+        "required_tag": "音駒",
+        "tags": [
+          "音駒中"
+        ]
+      },
+      "expected": {
+        "verdict": "TAG_MISMATCH"
+      }
+    },
+    {
+      "id": "P15-01",
+      "policy": "P15",
+      "title": "技能讓Guts登場會觸發",
+      "qa_ids": [
+        "34",
+        "1147"
+      ],
+      "facts": {
+        "reason": "skill_entry",
+        "origin": "guts",
+        "required_origins": [
+          "hand",
+          "guts",
+          "drop"
+        ]
+      },
+      "expected": {
+        "verdict": "TRIGGERED"
+      }
+    },
+    {
+      "id": "P15-02",
+      "policy": "P15",
+      "title": "頂牌移除自然露出不觸發",
+      "qa_ids": [
+        "1925"
+      ],
+      "facts": {
+        "reason": "exposed",
+        "origin": "guts",
+        "required_origins": [
+          "hand",
+          "guts",
+          "drop"
+        ]
+      },
+      "expected": {
+        "verdict": "NOT_TRIGGERED"
+      }
+    },
+    {
+      "id": "P15-03",
+      "policy": "P15",
+      "title": "自然露出不吃登場減值",
+      "qa_ids": [
+        "1926"
+      ],
+      "facts": {
+        "reason": "exposed",
+        "origin": "guts",
+        "required_origins": [
+          "hand",
+          "guts",
+          "drop"
+        ]
+      },
+      "expected": {
+        "verdict": "NOT_TRIGGERED"
+      }
+    },
+    {
+      "id": "P15-04",
+      "policy": "P15",
+      "title": "自然露出不吃A通",
+      "qa_ids": [
+        "1927"
+      ],
+      "facts": {
+        "reason": "exposed",
+        "origin": "guts",
+        "required_origins": [
+          "hand",
+          "guts",
+          "drop"
+        ]
+      },
+      "expected": {
+        "verdict": "NOT_TRIGGERED"
+      }
+    },
+    {
+      "id": "P16-01",
+      "policy": "P16",
+      "title": "一觸移行後待處理Blockout消失",
+      "qa_ids": [
+        "1195",
+        "1752"
+      ],
+      "facts": {
+        "resolving_current_skill": false,
+        "pending_phase": "block",
+        "skipped_phase": "block"
+      },
+      "expected": {
+        "verdict": "CANCEL_PENDING"
+      }
+    },
+    {
+      "id": "P16-02",
+      "policy": "P16",
+      "title": "其他未被跳過窗口不受此規則取消",
+      "qa_ids": [
+        "1162"
+      ],
+      "facts": {
+        "resolving_current_skill": false,
+        "pending_phase": "end",
+        "skipped_phase": "block"
+      },
+      "expected": {
+        "verdict": "KEEP_PENDING"
+      }
+    },
+    {
+      "id": "P16-03",
+      "policy": "P16",
+      "title": "當前技能移行後的後段繼續",
+      "qa_ids": [],
+      "facts": {
+        "resolving_current_skill": true,
+        "pending_phase": "block",
+        "skipped_phase": "block"
+      },
+      "expected": {
+        "verdict": "CONTINUE_CURRENT_SKILL"
+      }
+    },
+    {
+      "id": "P17-01",
+      "policy": "P17",
+      "title": "Loss不觸發回合結束",
+      "qa_ids": [
+        "22"
+      ],
+      "facts": {
+        "event": "loss",
+        "trigger": "turn_end"
+      },
+      "expected": {
+        "verdict": "NOT_TRIGGERED"
+      }
+    },
+    {
+      "id": "P17-02",
+      "policy": "P17",
+      "title": "Loss觸發於間隔前處理",
+      "qa_ids": [
+        "23",
+        "1921"
+      ],
+      "facts": {
+        "event": "loss",
+        "trigger": "loss"
+      },
+      "expected": {
+        "verdict": "SCHEDULE",
+        "checkpoint": "after_loss_before_interval"
+      }
+    },
+    {
+      "id": "P17-03",
+      "policy": "P17",
+      "title": "一般回合結束正常觸發",
+      "qa_ids": [
+        "22"
+      ],
+      "facts": {
+        "event": "turn_end",
+        "trigger": "turn_end"
+      },
+      "expected": {
+        "verdict": "TRIGGERED"
+      }
+    },
+    {
+      "id": "P18-01",
+      "policy": "P18",
+      "title": "同回合移行抽牌不清除",
+      "qa_ids": [
+        "1161"
+      ],
+      "facts": {
+        "checkpoint": "phase_jump",
+        "duration": "this_turn"
+      },
+      "expected": {
+        "verdict": "KEEP"
+      }
+    },
+    {
+      "id": "P18-02",
+      "policy": "P18",
+      "title": "Loss後、間隔前效果仍在",
+      "qa_ids": [
+        "24"
+      ],
+      "facts": {
+        "checkpoint": "after_loss",
+        "duration": "this_turn"
+      },
+      "expected": {
+        "verdict": "KEEP"
+      }
+    },
+    {
+      "id": "P18-03",
+      "policy": "P18",
+      "title": "間隔前清理時到期",
+      "qa_ids": [
+        "24"
+      ],
+      "facts": {
+        "checkpoint": "before_interval",
+        "duration": "this_turn"
+      },
+      "expected": {
+        "verdict": "EXPIRE"
+      }
+    },
+    {
+      "id": "P18-04",
+      "policy": "P18",
+      "title": "一般回合清理到期",
+      "qa_ids": [
+        "32"
+      ],
+      "facts": {
+        "checkpoint": "turn_cleanup",
+        "duration": "this_turn"
+      },
+      "expected": {
+        "verdict": "EXPIRE"
+      }
+    },
+    {
+      "id": "P19-01",
+      "policy": "P19",
+      "title": "先加1再BackAttack設4不保留原加值",
+      "qa_ids": [
+        "1778"
+      ],
+      "facts": {
+        "base": 1,
+        "effects": [
+          {
+            "op": "add",
+            "value": 1,
+            "type": "nonpermanent"
+          },
+          {
+            "op": "set",
+            "value": 4,
+            "type": "nonpermanent"
+          }
+        ]
+      },
+      "expected": {
+        "verdict": "VALUE",
+        "value": 4
+      }
+    },
+    {
+      "id": "P19-02",
+      "policy": "P19",
+      "title": "技能先設4後登場觸發減2",
+      "qa_ids": [
+        "1874"
+      ],
+      "facts": {
+        "base": 3,
+        "effects": [
+          {
+            "op": "set",
+            "value": 4,
+            "type": "nonpermanent"
+          },
+          {
+            "op": "add",
+            "value": -2,
+            "type": "nonpermanent"
+          }
+        ]
+      },
+      "expected": {
+        "verdict": "VALUE",
+        "value": 2
+      }
+    },
+    {
+      "id": "P19-03",
+      "policy": "P19",
+      "title": "先減值後事件重設原值",
+      "qa_ids": [
+        "1944"
+      ],
+      "facts": {
+        "base": 5,
+        "effects": [
+          {
+            "op": "add",
+            "value": -2,
+            "type": "nonpermanent"
+          },
+          {
+            "op": "set",
+            "value": 5,
+            "type": "nonpermanent"
+          }
+        ]
+      },
+      "expected": {
+        "verdict": "VALUE",
+        "value": 5
+      }
+    },
+    {
+      "id": "P19-04",
+      "policy": "P19",
+      "title": "重設原值後仍可加1",
+      "qa_ids": [
+        "1358"
+      ],
+      "facts": {
+        "base": 2,
+        "effects": [
+          {
+            "op": "set",
+            "value": 5,
+            "type": "nonpermanent"
+          },
+          {
+            "op": "add",
+            "value": 1,
+            "type": "nonpermanent"
+          }
+        ]
+      },
+      "expected": {
+        "verdict": "VALUE",
+        "value": 6
+      }
+    },
+    {
+      "id": "P19-05",
+      "policy": "P19",
+      "title": "永久固定值不能混入此簡化運算",
+      "qa_ids": [],
+      "facts": {
+        "base": 2,
+        "effects": [
+          {
+            "op": "set",
+            "value": 3,
+            "type": "permanent"
+          }
+        ]
+      },
+      "expected": {
+        "verdict": "REQUIRES_REVIEW"
+      }
+    },
+    {
+      "id": "P20-01",
+      "policy": "P20",
+      "title": "零對零成功",
+      "qa_ids": [
+        "19"
+      ],
+      "facts": {
+        "entered_judgment": true,
+        "defense": 0,
+        "offense": 0
+      },
+      "expected": {
+        "verdict": "SUCCESS"
+      }
+    },
+    {
+      "id": "P20-02",
+      "policy": "P20",
+      "title": "負一防禦對零進攻失敗",
+      "qa_ids": [
+        "1222"
+      ],
+      "facts": {
+        "entered_judgment": true,
+        "defense": -1,
+        "offense": 0
+      },
+      "expected": {
+        "verdict": "FAILURE"
+      }
+    },
+    {
+      "id": "P20-03",
+      "policy": "P20",
+      "title": "一觸先移行不視為攔網失敗",
+      "qa_ids": [
+        "1311"
+      ],
+      "facts": {
+        "entered_judgment": false,
+        "defense": 0,
+        "offense": 5
+      },
+      "expected": {
+        "verdict": "NO_JUDGMENT"
+      }
+    },
+    {
+      "id": "P21-01",
+      "policy": "P21",
+      "title": "空牌庫結果不成立",
+      "qa_ids": [
+        "1312",
+        "1429",
+        "1813"
+      ],
+      "facts": {
+        "matched_results": []
+      },
+      "expected": {
+        "verdict": "CONDITION_FALSE"
+      }
+    },
+    {
+      "id": "P21-02",
+      "policy": "P21",
+      "title": "僅剩一張但符合條件可成立",
+      "qa_ids": [
+        "1313",
+        "1430"
+      ],
+      "facts": {
+        "matched_results": [
+          true
+        ]
+      },
+      "expected": {
+        "verdict": "CONDITION_TRUE"
+      }
+    },
+    {
+      "id": "P21-03",
+      "policy": "P21",
+      "title": "包含一張不符合則不成立",
+      "qa_ids": [
+        "1313"
+      ],
+      "facts": {
+        "matched_results": [
+          true,
+          false
+        ]
+      },
+      "expected": {
+        "verdict": "CONDITION_FALSE"
+      }
+    },
+    {
+      "id": "P22-01",
+      "policy": "P22",
+      "title": "第一次角色的加值不轉給第二次登場者",
+      "qa_ids": [
+        "1124",
+        "1371"
+      ],
+      "facts": {
+        "target_instance": "old",
+        "active_instance": "new",
+        "base": 3,
+        "delta": 2
+      },
+      "expected": {
+        "verdict": "NO_DECISION"
+      }
+    },
+    {
+      "id": "P22-02",
+      "policy": "P22",
+      "title": "同一角色實例正常加值",
+      "qa_ids": [
+        "1124"
+      ],
+      "facts": {
+        "target_instance": "old",
+        "active_instance": "old",
+        "base": 3,
+        "delta": 2
+      },
+      "expected": {
+        "verdict": "VALUE",
+        "value": 5
+      }
+    },
+    {
+      "id": "P23-01",
+      "policy": "P23",
+      "title": "Turn1已使用但下回合兩次登場皆減值",
+      "qa_ids": [
+        "1934"
+      ],
+      "facts": {
+        "watcher_active": true,
+        "origins": [
+          "hand",
+          "guts"
+        ],
+        "events": [
+          {
+            "origin": "hand"
+          },
+          {
+            "origin": "guts"
+          }
+        ],
+        "watcher_remaining": null,
+        "source_skill_locked": true
+      },
+      "expected": {
+        "verdict": "COUNT",
+        "count": 2
+      }
+    },
+    {
+      "id": "P23-02",
+      "policy": "P23",
+      "title": "只限手牌監聽不吃Guts登場",
+      "qa_ids": [
+        "1855"
+      ],
+      "facts": {
+        "watcher_active": true,
+        "origins": [
+          "hand"
+        ],
+        "events": [
+          {
+            "origin": "hand"
+          },
+          {
+            "origin": "guts"
+          }
+        ],
+        "watcher_remaining": null,
+        "source_skill_locked": true
+      },
+      "expected": {
+        "verdict": "COUNT",
+        "count": 1
+      }
+    },
+    {
+      "id": "P23-03",
+      "policy": "P23",
+      "title": "一次效果實例只作用一次",
+      "qa_ids": [
+        "1359",
+        "1360"
+      ],
+      "facts": {
+        "watcher_active": true,
+        "origins": [
+          "hand",
+          "guts"
+        ],
+        "events": [
+          {
+            "origin": "hand"
+          },
+          {
+            "origin": "guts"
+          }
+        ],
+        "watcher_remaining": 1,
+        "source_skill_locked": true
+      },
+      "expected": {
+        "verdict": "COUNT",
+        "count": 1
+      }
+    },
+    {
+      "id": "P23-04",
+      "policy": "P23",
+      "title": "監聽到期不觸發",
+      "qa_ids": [
+        "1934"
+      ],
+      "facts": {
+        "watcher_active": false,
+        "origins": [
+          "hand",
+          "guts"
+        ],
+        "events": [
+          {
+            "origin": "hand"
+          },
+          {
+            "origin": "guts"
+          }
+        ],
+        "watcher_remaining": null,
+        "source_skill_locked": true
+      },
+      "expected": {
+        "verdict": "COUNT",
+        "count": 0
+      }
+    },
+    {
+      "id": "P24-01",
+      "policy": "P24",
+      "title": "禁止打出事件時不能正常打出",
+      "qa_ids": [
+        "14",
+        "1372"
+      ],
+      "facts": {
+        "operation": "play_event",
+        "actor": "opponent",
+        "origin": "hand",
+        "phase": "attack",
+        "restriction": {
+          "active": true,
+          "scope": {
+            "operation": [
+              "play_event"
+            ],
+            "actor": [
+              "opponent"
+            ]
+          }
+        }
+      },
+      "expected": {
+        "verdict": "DENY_ACTION"
+      }
+    },
+    {
+      "id": "P24-02",
+      "policy": "P24",
+      "title": "同一限制不擋技能把事件放入區域",
+      "qa_ids": [
+        "1372"
+      ],
+      "facts": {
+        "operation": "place_event_by_skill",
+        "actor": "opponent",
+        "origin": "hand",
+        "phase": "attack",
+        "restriction": {
+          "active": true,
+          "scope": {
+            "operation": [
+              "play_event"
+            ],
+            "actor": [
+              "opponent"
+            ]
+          }
+        }
+      },
+      "expected": {
+        "verdict": "NO_DECISION"
+      }
+    },
+    {
+      "id": "P24-03",
+      "policy": "P24",
+      "title": "手牌登場禁止不擋其他區域登場",
+      "qa_ids": [
+        "1383",
+        "1384"
+      ],
+      "facts": {
+        "operation": "enter_character",
+        "actor": "opponent",
+        "origin": "court",
+        "phase": "attack",
+        "restriction": {
+          "active": true,
+          "scope": {
+            "operation": [
+              "enter_character"
+            ],
+            "origin": [
+              "hand"
+            ]
+          }
+        }
+      },
+      "expected": {
+        "verdict": "NO_DECISION"
+      }
+    },
+    {
+      "id": "P25-01",
+      "policy": "P25",
+      "title": "角色耐性不豁免限制玩家的登場禁止",
+      "qa_ids": [],
+      "facts": {
+        "immunity_active": true,
+        "effect_target": "player-1",
+        "immune_target": "character-1"
+      },
+      "expected": {
+        "verdict": "NO_DECISION"
+      }
+    },
+    {
+      "id": "P25-02",
+      "policy": "P25",
+      "title": "直接針對有耐性角色的技能被擋",
+      "qa_ids": [],
+      "facts": {
+        "immunity_active": true,
+        "effect_target": "character-1",
+        "immune_target": "character-1"
+      },
+      "expected": {
+        "verdict": "SKIP_DIRECT_EFFECT"
+      }
+    },
+    {
+      "id": "P25-03",
+      "policy": "P25",
+      "title": "耐性到期則此規則不處理",
+      "qa_ids": [],
+      "facts": {
+        "immunity_active": false,
+        "effect_target": "character-1",
+        "immune_target": "character-1"
+      },
+      "expected": {
+        "verdict": "NO_DECISION"
+      }
+    },
+    {
+      "id": "P26-01",
+      "policy": "P26",
+      "title": "棄三張及付兩Guts完整後執行後段",
+      "qa_ids": [
+        "30",
+        "31",
+        "1335"
+      ],
+      "facts": {
+        "opt_in": true,
+        "payment_steps": [
+          {
+            "required": 3,
+            "actual": 3
+          },
+          {
+            "required": 2,
+            "actual": 2
+          }
+        ]
+      },
+      "expected": {
+        "verdict": "EXECUTE_DEPENDENT_STEPS"
+      }
+    },
+    {
+      "id": "P26-02",
+      "policy": "P26",
+      "title": "牌庫僅兩張未完成棄三張的前段",
+      "qa_ids": [
+        "1335"
+      ],
+      "facts": {
+        "opt_in": true,
+        "payment_steps": [
+          {
+            "required": 3,
+            "actual": 2
+          },
+          {
+            "required": 2,
+            "actual": 2
+          }
+        ]
+      },
+      "expected": {
+        "verdict": "SKIP_BRANCH"
+      }
+    },
+    {
+      "id": "P26-03",
+      "policy": "P26",
+      "title": "未選支付就略過該分支",
+      "qa_ids": [
+        "30"
+      ],
+      "facts": {
+        "opt_in": false,
+        "payment_steps": [
+          {
+            "required": 3,
+            "actual": 3
+          },
+          {
+            "required": 2,
+            "actual": 2
+          }
+        ]
+      },
+      "expected": {
+        "verdict": "SKIP_BRANCH"
+      }
+    },
+    {
+      "id": "P26-04",
+      "policy": "P26",
+      "title": "只有部分支付資料不足以確認",
+      "qa_ids": [
+        "30"
+      ],
+      "facts": {
+        "opt_in": true,
+        "payment_steps": []
+      },
+      "expected": {
+        "verdict": "REQUIRES_REVIEW"
+      }
+    }
+  ],
+  "outcomes": [
+    {
+      "id": "P01-01",
+      "passed": true,
+      "actual": {
+        "verdict": "DENY_STEP"
+      }
+    },
+    {
+      "id": "P01-02",
+      "passed": true,
+      "actual": {
+        "verdict": "DENY_STEP"
+      }
+    },
+    {
+      "id": "P01-03",
+      "passed": true,
+      "actual": {
+        "verdict": "NO_DECISION"
+      }
+    },
+    {
+      "id": "P01-04",
+      "passed": true,
+      "actual": {
+        "verdict": "NO_DECISION"
+      }
+    },
+    {
+      "id": "P01-05",
+      "passed": true,
+      "actual": {
+        "verdict": "NO_DECISION"
+      }
+    },
+    {
+      "id": "P01-06",
+      "passed": true,
+      "actual": {
+        "verdict": "NO_DECISION"
+      }
+    },
+    {
+      "id": "P01-07",
+      "passed": true,
+      "actual": {
+        "verdict": "REQUIRES_REVIEW",
+        "missing": "origin"
+      }
+    },
+    {
+      "id": "P02-01",
+      "passed": true,
+      "actual": {
+        "verdict": "DENY_PLAY"
+      }
+    },
+    {
+      "id": "P02-02",
+      "passed": true,
+      "actual": {
+        "verdict": "PHASE_VALID"
+      }
+    },
+    {
+      "id": "P02-03",
+      "passed": true,
+      "actual": {
+        "verdict": "NO_DECISION"
+      }
+    },
+    {
+      "id": "P02-04",
+      "passed": true,
+      "actual": {
+        "verdict": "PHASE_VALID"
+      }
+    },
+    {
+      "id": "P03-01",
+      "passed": true,
+      "actual": {
+        "verdict": "DENY_SKILL"
+      }
+    },
+    {
+      "id": "P03-02",
+      "passed": true,
+      "actual": {
+        "verdict": "NO_DECISION"
+      }
+    },
+    {
+      "id": "P03-03",
+      "passed": true,
+      "actual": {
+        "verdict": "NO_DECISION"
+      }
+    },
+    {
+      "id": "P04-01",
+      "passed": true,
+      "actual": {
+        "verdict": "SKIP_STEP"
+      }
+    },
+    {
+      "id": "P04-02",
+      "passed": true,
+      "actual": {
+        "verdict": "NO_DECISION"
+      }
+    },
+    {
+      "id": "P04-03",
+      "passed": true,
+      "actual": {
+        "verdict": "NO_DECISION"
+      }
+    },
+    {
+      "id": "P04-04",
+      "passed": true,
+      "actual": {
+        "verdict": "NO_DECISION"
+      }
+    },
+    {
+      "id": "P04-05",
+      "passed": true,
+      "actual": {
+        "verdict": "NO_DECISION"
+      }
+    },
+    {
+      "id": "P05-01",
+      "passed": true,
+      "actual": {
+        "verdict": "COST_VALID"
+      }
+    },
+    {
+      "id": "P05-02",
+      "passed": true,
+      "actual": {
+        "verdict": "DENY_DECLARATION"
+      }
+    },
+    {
+      "id": "P05-03",
+      "passed": true,
+      "actual": {
+        "verdict": "DENY_DECLARATION"
+      }
+    },
+    {
+      "id": "P05-04",
+      "passed": true,
+      "actual": {
+        "verdict": "DENY_DECLARATION"
+      }
+    },
+    {
+      "id": "P06-01",
+      "passed": true,
+      "actual": {
+        "verdict": "PARAMETER_VALID"
+      }
+    },
+    {
+      "id": "P06-02",
+      "passed": true,
+      "actual": {
+        "verdict": "DENY_ENTRY"
+      }
+    },
+    {
+      "id": "P06-03",
+      "passed": true,
+      "actual": {
+        "verdict": "PARAMETER_VALID"
+      }
+    },
+    {
+      "id": "P07-01",
+      "passed": true,
+      "actual": {
+        "verdict": "ORIGIN_VALID"
+      }
+    },
+    {
+      "id": "P07-02",
+      "passed": true,
+      "actual": {
+        "verdict": "NOT_TRIGGERED"
+      }
+    },
+    {
+      "id": "P07-03",
+      "passed": true,
+      "actual": {
+        "verdict": "NOT_TRIGGERED"
+      }
+    },
+    {
+      "id": "P08-01",
+      "passed": true,
+      "actual": {
+        "verdict": "DENY_SKILL"
+      }
+    },
+    {
+      "id": "P08-02",
+      "passed": true,
+      "actual": {
+        "verdict": "NO_DECISION"
+      }
+    },
+    {
+      "id": "P08-03",
+      "passed": true,
+      "actual": {
+        "verdict": "NO_DECISION"
+      }
+    },
+    {
+      "id": "P08-04",
+      "passed": true,
+      "actual": {
+        "verdict": "NO_DECISION"
+      }
+    },
+    {
+      "id": "P09-01",
+      "passed": true,
+      "actual": {
+        "verdict": "INVALID_CHOICE"
+      }
+    },
+    {
+      "id": "P09-02",
+      "passed": true,
+      "actual": {
+        "verdict": "RESOLVE_COUNT",
+        "count": 0
+      }
+    },
+    {
+      "id": "P09-03",
+      "passed": true,
+      "actual": {
+        "verdict": "RESOLVE_COUNT",
+        "count": 1
+      }
+    },
+    {
+      "id": "P09-04",
+      "passed": true,
+      "actual": {
+        "verdict": "RESOLVE_COUNT",
+        "count": 2
+      }
+    },
+    {
+      "id": "P10-01",
+      "passed": true,
+      "actual": {
+        "verdict": "CHOICE_VALID"
+      }
+    },
+    {
+      "id": "P10-02",
+      "passed": true,
+      "actual": {
+        "verdict": "CHOICE_VALID"
+      }
+    },
+    {
+      "id": "P10-03",
+      "passed": true,
+      "actual": {
+        "verdict": "INVALID_CHOICE"
+      }
+    },
+    {
+      "id": "P10-04",
+      "passed": true,
+      "actual": {
+        "verdict": "INVALID_CHOICE"
+      }
+    },
+    {
+      "id": "P11-01",
+      "passed": true,
+      "actual": {
+        "verdict": "EXCHANGE_VALID"
+      }
+    },
+    {
+      "id": "P11-02",
+      "passed": true,
+      "actual": {
+        "verdict": "DENY_EXCHANGE"
+      }
+    },
+    {
+      "id": "P11-03",
+      "passed": true,
+      "actual": {
+        "verdict": "DENY_EXCHANGE"
+      }
+    },
+    {
+      "id": "P12-01",
+      "passed": true,
+      "actual": {
+        "verdict": "CONDITION_TRUE"
+      }
+    },
+    {
+      "id": "P12-02",
+      "passed": true,
+      "actual": {
+        "verdict": "CONDITION_FALSE"
+      }
+    },
+    {
+      "id": "P12-03",
+      "passed": true,
+      "actual": {
+        "verdict": "CONDITION_FALSE"
+      }
+    },
+    {
+      "id": "P12-04",
+      "passed": true,
+      "actual": {
+        "verdict": "CONDITION_TRUE"
+      }
+    },
+    {
+      "id": "P13-01",
+      "passed": true,
+      "actual": {
+        "verdict": "COUNT",
+        "count": 2
+      }
+    },
+    {
+      "id": "P13-02",
+      "passed": true,
+      "actual": {
+        "verdict": "COUNT",
+        "count": 1
+      }
+    },
+    {
+      "id": "P14-01",
+      "passed": true,
+      "actual": {
+        "verdict": "TAG_MISMATCH"
+      }
+    },
+    {
+      "id": "P14-02",
+      "passed": true,
+      "actual": {
+        "verdict": "TAG_MATCH"
+      }
+    },
+    {
+      "id": "P14-03",
+      "passed": true,
+      "actual": {
+        "verdict": "TAG_MISMATCH"
+      }
+    },
+    {
+      "id": "P15-01",
+      "passed": true,
+      "actual": {
+        "verdict": "TRIGGERED"
+      }
+    },
+    {
+      "id": "P15-02",
+      "passed": true,
+      "actual": {
+        "verdict": "NOT_TRIGGERED"
+      }
+    },
+    {
+      "id": "P15-03",
+      "passed": true,
+      "actual": {
+        "verdict": "NOT_TRIGGERED"
+      }
+    },
+    {
+      "id": "P15-04",
+      "passed": true,
+      "actual": {
+        "verdict": "NOT_TRIGGERED"
+      }
+    },
+    {
+      "id": "P16-01",
+      "passed": true,
+      "actual": {
+        "verdict": "CANCEL_PENDING"
+      }
+    },
+    {
+      "id": "P16-02",
+      "passed": true,
+      "actual": {
+        "verdict": "KEEP_PENDING"
+      }
+    },
+    {
+      "id": "P16-03",
+      "passed": true,
+      "actual": {
+        "verdict": "CONTINUE_CURRENT_SKILL"
+      }
+    },
+    {
+      "id": "P17-01",
+      "passed": true,
+      "actual": {
+        "verdict": "NOT_TRIGGERED"
+      }
+    },
+    {
+      "id": "P17-02",
+      "passed": true,
+      "actual": {
+        "verdict": "SCHEDULE",
+        "checkpoint": "after_loss_before_interval"
+      }
+    },
+    {
+      "id": "P17-03",
+      "passed": true,
+      "actual": {
+        "verdict": "TRIGGERED"
+      }
+    },
+    {
+      "id": "P18-01",
+      "passed": true,
+      "actual": {
+        "verdict": "KEEP"
+      }
+    },
+    {
+      "id": "P18-02",
+      "passed": true,
+      "actual": {
+        "verdict": "KEEP"
+      }
+    },
+    {
+      "id": "P18-03",
+      "passed": true,
+      "actual": {
+        "verdict": "EXPIRE"
+      }
+    },
+    {
+      "id": "P18-04",
+      "passed": true,
+      "actual": {
+        "verdict": "EXPIRE"
+      }
+    },
+    {
+      "id": "P19-01",
+      "passed": true,
+      "actual": {
+        "verdict": "VALUE",
+        "value": 4
+      }
+    },
+    {
+      "id": "P19-02",
+      "passed": true,
+      "actual": {
+        "verdict": "VALUE",
+        "value": 2
+      }
+    },
+    {
+      "id": "P19-03",
+      "passed": true,
+      "actual": {
+        "verdict": "VALUE",
+        "value": 5
+      }
+    },
+    {
+      "id": "P19-04",
+      "passed": true,
+      "actual": {
+        "verdict": "VALUE",
+        "value": 6
+      }
+    },
+    {
+      "id": "P19-05",
+      "passed": true,
+      "actual": {
+        "verdict": "REQUIRES_REVIEW"
+      }
+    },
+    {
+      "id": "P20-01",
+      "passed": true,
+      "actual": {
+        "verdict": "SUCCESS"
+      }
+    },
+    {
+      "id": "P20-02",
+      "passed": true,
+      "actual": {
+        "verdict": "FAILURE"
+      }
+    },
+    {
+      "id": "P20-03",
+      "passed": true,
+      "actual": {
+        "verdict": "NO_JUDGMENT"
+      }
+    },
+    {
+      "id": "P21-01",
+      "passed": true,
+      "actual": {
+        "verdict": "CONDITION_FALSE"
+      }
+    },
+    {
+      "id": "P21-02",
+      "passed": true,
+      "actual": {
+        "verdict": "CONDITION_TRUE"
+      }
+    },
+    {
+      "id": "P21-03",
+      "passed": true,
+      "actual": {
+        "verdict": "CONDITION_FALSE"
+      }
+    },
+    {
+      "id": "P22-01",
+      "passed": true,
+      "actual": {
+        "verdict": "NO_DECISION"
+      }
+    },
+    {
+      "id": "P22-02",
+      "passed": true,
+      "actual": {
+        "verdict": "VALUE",
+        "value": 5
+      }
+    },
+    {
+      "id": "P23-01",
+      "passed": true,
+      "actual": {
+        "verdict": "COUNT",
+        "count": 2
+      }
+    },
+    {
+      "id": "P23-02",
+      "passed": true,
+      "actual": {
+        "verdict": "COUNT",
+        "count": 1
+      }
+    },
+    {
+      "id": "P23-03",
+      "passed": true,
+      "actual": {
+        "verdict": "COUNT",
+        "count": 1
+      }
+    },
+    {
+      "id": "P23-04",
+      "passed": true,
+      "actual": {
+        "verdict": "COUNT",
+        "count": 0
+      }
+    },
+    {
+      "id": "P24-01",
+      "passed": true,
+      "actual": {
+        "verdict": "DENY_ACTION"
+      }
+    },
+    {
+      "id": "P24-02",
+      "passed": true,
+      "actual": {
+        "verdict": "NO_DECISION"
+      }
+    },
+    {
+      "id": "P24-03",
+      "passed": true,
+      "actual": {
+        "verdict": "NO_DECISION"
+      }
+    },
+    {
+      "id": "P25-01",
+      "passed": true,
+      "actual": {
+        "verdict": "NO_DECISION"
+      }
+    },
+    {
+      "id": "P25-02",
+      "passed": true,
+      "actual": {
+        "verdict": "SKIP_DIRECT_EFFECT"
+      }
+    },
+    {
+      "id": "P25-03",
+      "passed": true,
+      "actual": {
+        "verdict": "NO_DECISION"
+      }
+    },
+    {
+      "id": "P26-01",
+      "passed": true,
+      "actual": {
+        "verdict": "EXECUTE_DEPENDENT_STEPS"
+      }
+    },
+    {
+      "id": "P26-02",
+      "passed": true,
+      "actual": {
+        "verdict": "SKIP_BRANCH"
+      }
+    },
+    {
+      "id": "P26-03",
+      "passed": true,
+      "actual": {
+        "verdict": "SKIP_BRANCH"
+      }
+    },
+    {
+      "id": "P26-04",
+      "passed": true,
+      "actual": {
+        "verdict": "REQUIRES_REVIEW"
+      }
+    }
+  ]
+}

@@ -1,5 +1,25 @@
 # BREAK 對練台 — 交接文件（Claude → Codex，2026-10-19）
 
+> 最新結算核心（2026-10-20）：新增repo內rules/core.js、core.test.js、README.md、rebuild.py、source/及data/，可在此repo離線重建，不依賴外層工作目錄。21種動作節點與部分條件可執行；54個局面情境及600次狀態操作／還原比對通過。已處理權限分層、支付／實體、同名限次、觸發順序、期間監聽、ワンタッチ跳階段及Loss清理；Loss切到loss_set，不把原階段限制帶入。原build／fuzz3000／test300通過，engine／UI／index指紋不變，尚未接入公開遊戲。
+
+> 本批界線：live技能核准仍0，實際卡片只在sandbox驗證；只完成one_touch關鍵字，其他關鍵字、改名登場、交換、翻牌選牌、永久固定值等明確停止；來源不是自身登場的角色被動及無中攔特殊側攔亦待擴充。Loss停在間隔入口，完整比賽控制／手機非同步選擇／舊Undo及47卡接入尚未完成。rules/README.md有詳細限制，外層outputs/BREAK-settlement-update.md／validation.json是成果。下一批先接控制器及非同步選擇，再逐機制核准47卡，勿同時執行新舊技能邏輯。
+
+> 最新補正（2026-10-20）：完成資料規格v2，見外層outputs/BREAK-card-contract-update.md。PR-081已改為動作層one_of_exact／[1,2]；359個直接作用目標節點明示single／multiple／all，P04-070為全體但membership=unresolved並禁止runtime核准；12個被動觸發資料組名稱格式已統一。545個資料組／3,132節點通過嚴格檢查，79項資料檢查、63項契約正反情境及既有94參考情境通過。沒有接入遊戲或部署。下方「PR-081未修正」為補正前分析。
+
+> 重建：外層work/card-mapping/build.py→verify.py→contract_tests.py；schema.py是封閉欄位及跨欄位語意檢查，contract_reference.py只做已篩選ID的少量選擇參考判定，不是完整遊戲執行器。補正前資料在baseline-before-contract-v2，原風險證據保留，work/current-risk-audit.py改產出獨立followup。下一批建立共用結算／局面測試，再以現有47卡接入；資料與工具尚在外層，交接時不能只帶遊戲repo。
+
+> 現況風險分析（2026-10-20）：見外層outputs/BREAK-current-risk-review.md及證據JSON。已確認PR-081可選1／2張的數量欄位誤放篩選條件、動作仍固定1張；未修正。P04-070全體保護的量詞／對象匹配待明定；效果期限、觸發佇列、同卡實體與多人Undo及資料版本交接需先完成。P04-084條件範圍已依實際JSON排除疑點。建議先補共用規格／完整情境，再由現有47卡分批接入。新資料／遊戲仍未整合提交部署，本次僅分析及交接紀錄。
+
+> 最新實作進度（2026-10-19）：已完成541卡結構化映射第一輪，358張有技能（362卡文版本）及183張無技能全部建檔，保留713筆來源紀錄／707個不重複卡圖。外層 outputs/BREAK-card-rule-mapping.md／json 為主成果，BREAK-card-mapping-validation.md／json 有74項資料與條件檢查通過；卡片引用共用規則及參數，所有技能仍標記首次轉譯、runtime_approved=false。遊戲尚未讀取資料，不能宣稱全卡技能可玩。
+
+> 共用規則最新為131條（新增效果放置不等於明示登場），來源仍602問答／614關聯；26組獨立參考判定／94情境通過，涵蓋45條契約的部分規則，其餘86條尚無可執行參考驗證。下一階段驗證資料執行與共用引擎整合，維持舊逐卡修補清單暫停。
+
+> 工作檔：外層 work/shared-rules/build.py→verify.py，再 work/card-mapping/build.py→verify.py。card-mapping/model.py為共用資料建構器、programs.py為一次性結構化卡片資料，未供對戰時按卡號分支。例外見 outputs/BREAK-card-mapping-exceptions.md：四個卡文差異、P03-047來源技能加值上限與OPEN-EVENT-NO-CHANGE。P03-028放上方已依總合1-4-5／8-3分開處理，沒有冒用登場。PR-013官方JSON學年錯字已用官方卡圖核對。既有對練設定、引擎／UI／公開頁未改，未提交部署。
+
+> 先前分析背景（2026-10-19）：已暫停逐卡補正，分析 541 卡／713 版本並產出分類候選與報告（外層 outputs/BREAK-card-engine-analysis.md）。目前依上方最新調整，先以官方問答歸納共用規則，尚未修改引擎。下方 47 張與 16 張缺口是目前已發布版本狀態，不是本次新實作指令。
+
+> 判例追加：官方 31 頁共 602 則（552 卡片、50 通用）已完整取得；552 則日文問答與資料庫逐一比對一致。分類草案已連到 242 個卡號的全部判例，另整理 30 個重點情境。見外層 outputs/BREAK-card-rulings-analysis.md 與索引；語意／引擎仍待覆核，不能把已連結判例當作已實作。
+
 ## 翻牌操作更新（2026-10-19）
 - P01-006 技能付費後呼叫 `revealTop(p, source, eligible)`。真人先收到 `kind: reveal` 的「翻開牌庫頂」，不帶隱藏卡號；按下才揭露卡片。符合且可加手牌：`kind: retrieve`，`ctx: {revealed,source,reason}`，選加入或置底。
 - 不符合或禁止加入時自動置底，接著 `kind: revealResult` 顯示卡圖、牌名與原因，按「看完了，繼續」才往下；空牌庫也用此確認但不翻出卡片。上述決策保留本回合 Loss 和 Undo。
