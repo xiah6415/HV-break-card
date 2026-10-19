@@ -128,6 +128,13 @@ class UndoSession {
     const g = new this.engine.Game({
       seed: this.seed, decks: this.options.decks, reveal: this.localPlayer, agents,
       onLog: (s, cls) => { if (active()) this.options.onLog?.(s, cls); },
+      onNotice: async notice => {
+        await this.ready(token);
+        // Presentation pauses are not decisions; skip them while restoring history.
+        if (this.replaying || !this.options.onNotice) return;
+        await Promise.race([this.options.onNotice(g, notice), token.aborted]);
+        await this.ready(token);
+      },
       onUpdate: () => { if (active() && !this.replaying) this.options.onUpdate?.(g); }
     });
     this.game = g;

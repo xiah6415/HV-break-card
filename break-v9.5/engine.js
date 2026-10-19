@@ -121,13 +121,15 @@ class Game {
     this.logFn = opts.onLog || (() => {});
     this.reveal = opts.reveal == null ? -1 : opts.reveal; this.src = '';
     this.update = opts.onUpdate || (() => {});
+    this.onNotice = opts.onNotice || (() => {});
     this.players = [new Player(this, 0, opts.decks[0], opts.agents[0]), new Player(this, 1, opts.decks[1], opts.agents[1])];
     this.ball = null; this.rallyNo = 0; this.turnNo = 0; this.winner = null; this.stats = {};
   }
   shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(this.rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } }
   log(s, cls) { this.logFn(s, cls); }
   tag(k) { this.stats[k] = (this.stats[k] || 0) + 1; }
-  async ask(p, req) { this.update(); req.canLoss = this.turnP === p && req.kind !== 'mulligan' && req.kind !== 'roll'; const r = await p.agent.choose(this, p, req); if (r && r.__loss && req.canLoss) this.lost(p, '主動 Loss（放棄這球）'); return r; }
+  async ask(p, req) { this.update(); req.canLoss = this.turnP === p && !['mulligan', 'roll', 'lossConfirm'].includes(req.kind); const r = await p.agent.choose(this, p, req); if (r && r.__loss && req.canLoss) this.lost(p, '主動 Loss（放棄這球）'); return r; }
+  async notice(data) { this.update(); await this.onNotice({ rally: this.rallyNo, ...data }); }
   async yes(p, kind, prompt, ctx) { const r = await this.ask(p, { kind, prompt, ctx, options: [{ label: '發動', value: true }, { label: '不發動', value: false }] }); return r; }
 
   // ---------- card movement
@@ -191,7 +193,7 @@ class Game {
     for (;;) {
       this.rallyNo++;
       this.log(`第 ${this.rallyNo} 球 — ${server.name} 發球`, 'head');
-      let loser = null;
+      let loser = null, lossReason = '回合往返達上限';
       try {
         this.ball = await this.serveTurn(server);
         let cur = server.opp;
@@ -199,8 +201,13 @@ class Game {
         loser = cur;
       } catch (e) {
         if (!(e instanceof LostSignal)) throw e;
-        loser = e.who; this.log(`${loser.name} ロスト：${e.why}`, 'lost');
+        loser = e.who; lossReason = e.why;
+        if (loser.agent.wantsAck && !lossReason.startsWith('主動 Loss')) {
+          await this.ask(loser, { kind: 'lossConfirm', prompt: `${loser.name} 無法繼續這球：${lossReason}`, reason: lossReason, options: [{ label: '喊 Loss', value: true }] });
+        }
+        this.log(`${loser.name} ロスト：${lossReason}`, 'lost');
       }
+      await this.notice({ type: 'loss', player: loser.idx, reason: lossReason, winner: loser.opp.idx, final: !loser.sets.length });
       this.turnP = null;
       for (const p of this.players) { p.pending = {}; p.restrict = {}; p.ts = {}; }
       this.ball = null; this.target = null;
@@ -220,6 +227,7 @@ class Game {
   // ---------- serve
   async serveTurn(p) {
     this.beginTurn(p);
+    await this.notice({ type: 'serve', player: p.idx });
     const o = p.opp;
     const cs = [...new Set(p.handC().filter(c => st(c, 'srv') != null))];
     if (!cs.length) this.lost(p, '沒有能發球的角色');
@@ -239,6 +247,7 @@ class Game {
   async defendTurn(p) {
     this.beginTurn(p);
     const ball = this.ball;
+    await this.notice({ type: 'turn', player: p.idx, from: p.opp.idx, ball: { ...ball }, toss: ball.type === 'attack' ? p.opp.ts.toss : null, attack: ball.type === 'attack' ? p.opp.ts.atk : null });
     if (ball.type === 'attack') {
       const combos = this.blockCombos(p, ball.off);
       if (combos.length) {

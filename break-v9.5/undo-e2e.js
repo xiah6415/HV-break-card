@@ -9,6 +9,7 @@ const snapshot = page => page.evaluate(() => {
   };
 });
 async function advance(page) {
+  if (await page.locator('#turnScreen:visible').count()) return page.click('#turnNext');
   if (await page.locator('[data-act="multi"]').count()) return page.locator('[data-act="multi"]').click();
   if (await page.locator('[data-act="confirm"]').count()) return page.locator('[data-act="confirm"]').click();
   if (await page.locator('[data-act="gutsok"]').count()) {
@@ -82,17 +83,29 @@ async function advance(page) {
       await page.waitForSelector('.hand .hc.sel');
       await page.click('[data-act="loss"]');
       await page.click('[data-act="lossyes"]');
+      await page.waitForSelector('#turnTitle');
+      assert.equal(await page.locator('#turnTitle').textContent(), '你 LOSS');
+      await page.click('#turnNext');
+      await page.waitForFunction(() => document.getElementById('turnTitle')?.textContent === 'AI 的發球回合');
       await page.getByRole('button', { name: '請求悔棋', exact: true }).click();
       await page.waitForSelector('#confirmUndo');
       const paused = await snapshot(page);
       await page.waitForTimeout(1200);
       assert.deepEqual(await snapshot(page), paused, 'AI must pause while a request is pending');
       await page.getByRole('button', { name: '繼續對戰', exact: true }).click();
-      await page.getByRole('button', { name: 'Undo', exact: true }).waitFor();
+      // Cancelling returns to the same paused announcement; explicitly continue it.
+      for (let step = 0; step < 100; step++) {
+        if (await page.locator('#turnScreen:visible').count()) await page.click('#turnNext');
+        if (!await page.locator('#turnScreen:visible').count() && await page.locator('[data-act="loss"]').count()) break;
+        await page.waitForTimeout(100);
+      }
       await page.waitForSelector('[data-act="loss"]');
       const beforeSecondLoss = await snapshot(page);
       await page.click('[data-act="loss"]');
       await page.click('[data-act="lossyes"]');
+      await page.waitForFunction(() => document.getElementById('turnTitle')?.textContent === '你 LOSS');
+      await page.click('#turnNext');
+      await page.waitForFunction(() => document.getElementById('turnTitle')?.textContent === 'AI 的發球回合');
       await page.getByRole('button', { name: '請求悔棋', exact: true }).click();
       await page.click('#confirmUndo');
       await page.waitForFunction(() => document.getElementById('undoBtn').textContent === 'Undo');

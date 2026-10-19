@@ -34,6 +34,7 @@ const path = require('node:path');
     const jsClick = sel => pg.evaluate(s => document.querySelector(s).click(), sel);
     for (; clicks < 900 && games < 3; clicks++) {
       maxSW = Math.max(maxSW, await pg.evaluate(() => document.documentElement.scrollWidth));
+      if (await pg.$('#turnScreen:not([hidden])')) { seen.transition = 1; await pg.click('#turnNext'); continue; }
       if (await pg.$('[data-act="again"]')) { games++; if (games < 3) await jsClick('[data-act="again"]'); continue; }
       if (await pg.$('#sheet:not([hidden])')) await pg.evaluate(() => document.getElementById('sheet').hidden = true);
       const q = await pg.evaluate(() => document.getElementById('dockQ').textContent.slice(0, 40));

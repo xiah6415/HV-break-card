@@ -85,3 +85,12 @@ node e2e.js                     # 需 playwright + chromium
 - 回覆用中文、精簡、Markdown 結構；Adobe 介面術語用英文。
 - 動工前先在 memory.md 寫計畫，完成後寫結果。
 - 卡片效果有疑問以資料庫（含官方 Q&A）為準；規則以官方 rules_sheet_v1 為準。
+
+
+## 回合交接提示與 Loss 確認（2026-10-19 更新）
+- Game 的 opts.onNotice(notice) 為可等待的展示回呼；notice 含 rally 與 type：serve（player）、turn（player/from/ball/toss/attack）、loss（player/reason/winner/final）。只含公開局面，不帶手牌或牌庫。
+- serveTurn / defendTurn 在回合開始、任何選牌或 AI 行動前等待展示回呼；來球值採結算後的 ball.off，攻擊合計採對方 ts.toss/ts.atk。loss 通知在補牌、拿 set card 與下一球前等待確認。
+- 引擎仍以 LostSignal 判定失分；run() 捕捉後，wantsAck 真人若尚未主動喊 Loss，先收到 kind: lossConfirm（reason, options:[{label:'喊 Loss',value:true}]，canLoss:false）。這是確定失分前的獨立玩家確認，可 Undo 回去改上一個決策；AI 不需要另一位玩家替它喊 Loss。
+- ui.html 的 #turnScreen 為全螢幕確認畫面；不以計時器自動跳過。使用 inert 與 aria-hidden 隔離背景、管理焦點；#turnNext 確認，#turnUndo 使用既有 Undo／同意悔棋介面。
+- UndoSession 的 onNotice(g,notice) 不記入決策歷史，重播時跳過；使用同一取消 token 隔離舊提示回呼。真正 lossConfirm 會記入決策歷史，供完整重播。
+- flow.test.js 驗證暫停、取消舊提示、接球失敗確認、延後補牌、Undo 與悔棋。flow-e2e.js 使用 seed 7 的完整真實對局逐步比對畫面、來球數字與 Loss 順序；其餘 UI 測試已加入提示確認操作。
