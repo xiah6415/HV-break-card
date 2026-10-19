@@ -1,5 +1,7 @@
 # BREAK 對練台 — 交接文件（Claude → Codex，2026-10-19）
 
+> 本機保存：實作提交a0490f9，尚未推送或部署，公開版仍af6d8c6。rules/source及rules/rebuild.py可獨立重建本批資料；後續請同步來源、data與manifest，避免只改外層副本。
+
 > 最新結算核心（2026-10-20）：新增repo內rules/core.js、core.test.js、README.md、rebuild.py、source/及data/，可在此repo離線重建，不依賴外層工作目錄。21種動作節點與部分條件可執行；54個局面情境及600次狀態操作／還原比對通過。已處理權限分層、支付／實體、同名限次、觸發順序、期間監聽、ワンタッチ跳階段及Loss清理；Loss切到loss_set，不把原階段限制帶入。原build／fuzz3000／test300通過，engine／UI／index指紋不變，尚未接入公開遊戲。
 
 > 本批界線：live技能核准仍0，實際卡片只在sandbox驗證；只完成one_touch關鍵字，其他關鍵字、改名登場、交換、翻牌選牌、永久固定值等明確停止；來源不是自身登場的角色被動及無中攔特殊側攔亦待擴充。Loss停在間隔入口，完整比賽控制／手機非同步選擇／舊Undo及47卡接入尚未完成。rules/README.md有詳細限制，外層outputs/BREAK-settlement-update.md／validation.json是成果。下一批先接控制器及非同步選擇，再逐機制核准47卡，勿同時執行新舊技能邏輯。

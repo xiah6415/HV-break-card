@@ -457,3 +457,7 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 原遊戲build、fuzz3000與test300均通過；engine.js／ui.html／index.html指紋均未變，index仍4ad6787e90f66c4677d9f951888a343ba16d63c311d7978177f806f3498de90e。沒有UI改動或Safari真機測試，未接入公開頁。
 - 限制明列rules/README.md：關鍵字僅one_touch；改名登場、非自身登場型被動、逐區Guts、交換、翻牌選牌、永久設值、加值上限、連續全體匹配及部分側攔例外等未放行。完整回合／判定／間隔補牌／計分控制、同步choose改為畫面非同步選擇、舊Undo與47卡接入是下一批；不允許新舊邏輯重複結算。
 - outputs/BREAK-settlement-update.md、BREAK-settlement-validation.json與BREAK-settlement-evidence.json記錄成果及證據，HANDOFF／ROADMAP已更新。本批將以本機提交保存核心、可重建資料及交接文件；不推送或部署，公開版仍af6d8c6。
+
+## 本機版本保存（2026-10-20）
+- 共用結算核心、可重建來源／資料、測試與前批交接文件已保存為本機實作提交a0490f9（Add isolated shared settlement core and reproducible rule data）。本批未推送GitHub、未部署或同步iCloud；公開版仍af6d8c6。
+- 後續核心讀取repo內rules/data，建檔入口為rules/rebuild.py及rules/source；修改資料時一併重建、核對manifest及測試，避免僅修改外層副本造成分叉。交接紀錄另以文件提交保存。
