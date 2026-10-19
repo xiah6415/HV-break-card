@@ -43,6 +43,7 @@
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 html, body { background: var(--bg); overflow-x: clip; max-width: 100%; }
+html { scroll-padding-bottom: var(--dockh, 0px); }
 @supports not (overflow-x: clip) { html, body { overflow-x: hidden; } }
 body { color: var(--ink); font-family: var(--f-body); font-size: 14px; line-height: 1.45; -webkit-tap-highlight-color: transparent; }
 button { font: inherit; color: inherit; }
@@ -125,7 +126,7 @@ select { font: inherit; padding: 10px; border-radius: 8px; border: 1px solid var
 .hand .hc.sel .ci { box-shadow: 0 0 0 3px var(--court); }
 .hand .hc.sel { transform: translateY(-6px); }
 .hand .hc.picked .ci { opacity: .45; filter: grayscale(.6); }
-.hand .hc.picked::after { content: "放回"; position: absolute; left: 50%; top: 40%; transform: translateX(-50%); background: var(--bad); color: #fff; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
+.hand .hc.picked::after { content: "放回"; position: absolute; left: 50%; top: 40%; transform: translateX(-50%); background: var(--bad); color: #fff; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; pointer-events: none; }
 .hand .empty { grid-column: 1 / -1; color: var(--muted); font-size: 12px; padding: 20px 0; }
 .lay { display: grid; gap: 10px; grid-template-columns: minmax(0, 1fr); }
 .logcol { display: none; }
@@ -178,6 +179,18 @@ select { font: inherit; padding: 10px; border-radius: 8px; border: 1px solid var
 .opt.primary { background: var(--court); border-color: var(--court); color: #fff; font-weight: 700; }
 .opt.quiet { background: transparent; }
 .dock.wait .q { color: var(--muted); font-weight: 400; }
+.dock-head { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.dock-summary { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 12px; color: var(--muted); }
+.dock-toggle { flex: 0 0 auto; min-height: 40px; }
+.dock.collapsed .q, .dock.collapsed .opts { display: none; }
+.dock.collapsed .in { padding-block: 4px; }
+@media (max-width: 699px) {
+  .dock .in { max-height: calc(var(--viewh, 100vh) * .46 - env(safe-area-inset-bottom, 0px)); grid-template-rows: auto minmax(0, 1fr) auto; gap: 6px; padding-block: 4px 8px; }
+  .dock .q { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+  .dock .opts { max-height: calc(var(--viewh, 100vh) * .18); overscroll-behavior: contain; }
+  .dock .opt { min-height: 44px; }
+  .dock.collapsed .in { grid-template-rows: auto; }
+}
 .dots::after { content: "…"; animation: blink 1s steps(3) infinite; }
 @keyframes blink { 50% { opacity: .3; } }
 
@@ -324,7 +337,7 @@ body.dragging .hand .hc.sel .ci, body.dragging .hand .hc.staged .ci { opacity: .
   </section>
 </div>
 
-<div class="dock" id="dock" hidden><div class="in"><div class="q" id="dockQ"></div><div class="opts" id="dockOpts"></div></div></div>
+<div class="dock" id="dock" hidden><div class="in"><div class="dock-head"><div class="dock-summary" id="dockSummary">目前操作</div><button class="chip dock-toggle" id="dockToggle" type="button" aria-expanded="true" aria-controls="dockQ dockOpts">收合面板</button></div><div class="q" id="dockQ"></div><div class="opts" id="dockOpts"></div></div></div>
 <div class="sheet" id="sheet" hidden><div class="box" id="sheetBox"></div></div>
 
 <script>
@@ -1074,7 +1087,7 @@ else root.BreakDeckTools = api;
   let staged = null;            // { card, i(option index) } — 預放中的卡
   let blk = null;               // { cards: [], center } — 攔網組裝中
   let prevTop = {}, prevVal = {}, prevBall = null, suppressClick = false, lossArm = false;
-  const human = { label: '你', choose(g, p, req) { return new Promise(res => { pending = { req, res }; picked = new Set(); staged = null; lossArm = false; blk = req.kind === 'block' && req.build ? { cards: [], center: null } : null; render(); }); } };
+  const human = { label: '你', choose(g, p, req) { return new Promise(res => { pending = { req, res }; picked = new Set(); staged = null; lossArm = false; blk = req.kind === 'block' && req.build ? { cards: [], center: null } : null; setDockCollapsed(false); render(); if (req.kind === 'mulligan' || handReq()) requestAnimationFrame(() => { measureDock(); if (window.matchMedia('(max-width: 699px)').matches) $('meSide').querySelector('.hand')?.scrollIntoView({ block: 'nearest' }); }); }); } };
   function answer(v) { if (!pending) return; const r = pending.res; pending = null; picked = new Set(); staged = null; blk = null; r(v); render(); }
 
   // 哪些 req 是「從手牌選一張」；選到的卡會放去哪
@@ -1098,6 +1111,7 @@ else root.BreakDeckTools = api;
     return new Set(r.options.filter(o => o.card && game.players[0].hand.includes(o.card)).map(o => o.card));
   }
   function stage(c) {
+    setDockCollapsed(false);
     const r = pending.req, i = r.options.findIndex(o => o.card === c);
     if (i < 0) return;
     staged = { card: c, i }; render();
@@ -1299,6 +1313,26 @@ else root.BreakDeckTools = api;
       }).join('') || '<span class="sub">從手牌選</span>'];
   }
 
+  function measureDock() {
+    const dock = $('dock');
+    document.documentElement.style.setProperty('--dockh', (dock.hidden ? 0 : dock.offsetHeight + 16) + 'px');
+  }
+  function syncViewport() {
+    document.documentElement.style.setProperty('--viewh', (window.visualViewport?.height || window.innerHeight) + 'px');
+    requestAnimationFrame(measureDock);
+  }
+  function setDockCollapsed(collapsed) {
+    $('dock').classList.toggle('collapsed', collapsed);
+    $('dockToggle').setAttribute('aria-expanded', String(!collapsed));
+    $('dockToggle').textContent = collapsed ? '展開面板' : '收合面板';
+    requestAnimationFrame(measureDock);
+  }
+  $('dockToggle').onclick = () => setDockCollapsed(!$('dock').classList.contains('collapsed'));
+  window.addEventListener('resize', syncViewport);
+  window.visualViewport?.addEventListener('resize', syncViewport);
+  if (window.ResizeObserver) new ResizeObserver(() => requestAnimationFrame(measureDock)).observe($('dock'));
+  syncViewport();
+
   function render() {
     if (!game) return;
     const [me, ai] = game.players;
@@ -1322,7 +1356,8 @@ else root.BreakDeckTools = api;
       $('dockQ').innerHTML = '<span class="dots">AI 行動中</span>';
       $('dockOpts').innerHTML = '';
     }
-    requestAnimationFrame(() => document.documentElement.style.setProperty('--dockh', (dock.offsetHeight + 12) + 'px'));
+    $('dockSummary').textContent = game.winner ? $('dockQ').textContent : pending ? pending.req.prompt : 'AI 行動中';
+    requestAnimationFrame(measureDock);
   }
 
   function act(a, b) {
@@ -1356,7 +1391,7 @@ else root.BreakDeckTools = api;
     if (b.dataset.rec != null && blk) { const o = pending.req.options.find(x => String(x.value) === b.dataset.rec); blk.cards = o.cards.slice(); blk.center = blk.cards.includes('P02-003') ? 'P02-003' : blk.cards.slice().sort((x, y) => E.val(y) - E.val(x))[0]; return render(); }
     if (pending && b.dataset.i != null) {
       const o = pending.req.options[+b.dataset.i];
-      if (o.card && pending.req.kind !== 'block') { staged = { card: o.card, i: +b.dataset.i }; return render(); }
+      if (o.card && pending.req.kind !== 'block') { setDockCollapsed(false); staged = { card: o.card, i: +b.dataset.i }; return render(); }
       answer(o.value);
     }
   });

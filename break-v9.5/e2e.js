@@ -1,13 +1,35 @@
-const { chromium } = require('/opt/npm-tools/node_modules/playwright');
+const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
+const assert = require('node:assert/strict');
+const path = require('node:path');
 (async () => {
-  const b = await chromium.launch();
-  for (const [w, h, scheme, name, mobile] of [[1280, 900, 'light', 'desk', false], [375, 760, 'dark', 'phone', true]]) {
+  const b = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_EXECUTABLE || undefined });
+  for (const [w, h, scheme, name, mobile] of [[1280, 900, 'light', 'desk', false], [375, 760, 'dark', 'phone', true], [320, 568, 'light', 'small-phone', true]]) {
     const pg = await b.newPage({ viewport: { width: w, height: h }, colorScheme: scheme, isMobile: mobile, hasTouch: mobile });
     const errs = []; pg.on('pageerror', e => errs.push(e.message)); pg.on('console', m => m.type() === 'error' && !/ERR_TUNNEL|fonts|net::/.test(m.text()) && errs.push(m.text()));
     const html = require('fs').readFileSync('index.html', 'utf8');
-    await pg.setContent('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>' + html + '</body></html>', { waitUntil: 'domcontentloaded' });
+    await pg.setContent(html, { waitUntil: 'domcontentloaded' });
     await pg.selectOption('#speed', '200');
     await pg.click('#startBtn');
+    if (mobile) {
+      await pg.click('#dockOpts [data-i="0"]');
+      await pg.waitForSelector('[data-act="multi"]');
+      await pg.locator('.hand .hc').last().scrollIntoViewIfNeeded();
+      const geometry = await pg.evaluate(() => {
+        const dock = document.getElementById('dock').getBoundingClientRect();
+        const hand = document.querySelector('.hand').getBoundingClientRect();
+        return { dockHeight: dock.height, dockTop: dock.top, handBottom: hand.bottom };
+      });
+      assert(geometry.dockHeight <= h * .46 + 1, name + ': expanded panel too tall');
+      assert(geometry.handBottom <= geometry.dockTop, name + ': hand obscured');
+      await pg.click('#dockToggle');
+      assert.equal(await pg.getAttribute('#dockToggle', 'aria-expanded'), 'false');
+      assert.equal(await pg.isVisible('#dockOpts'), false);
+      await pg.click('.hand .hc .cbtn >> nth=0');
+      assert.equal(await pg.getAttribute('#dockToggle', 'aria-expanded'), 'false');
+      await pg.click('#dockToggle');
+      assert.match(await pg.textContent('#dockQ'), /已選 1 張放回/);
+      await pg.click('.hand .hc .cbtn >> nth=0');
+    }
     const seen = {}; let maxSW = 0, drags = 0, games = 0, clicks = 0;
     const jsClick = sel => pg.evaluate(s => document.querySelector(s).click(), sel);
     for (; clicks < 900 && games < 3; clicks++) {
@@ -42,8 +64,12 @@ const { chromium } = require('/opt/npm-tools/node_modules/playwright');
       if (opt) { await opt.evaluate(e => e.click()); continue; }
       await pg.waitForTimeout(150);
     }
-    await pg.screenshot({ path: `v7_${name}_end.png` });
+    await pg.screenshot({ path: path.join(process.env.E2E_OUTPUT_DIR || '.', `e2e_${name}_end.png`) });
     console.log(name, 'clicks', clicks, 'games', games, 'maxSW', maxSW, 'seen', JSON.stringify(seen), 'errors', errs);
+    assert.equal(errs.length, 0, name + ': browser errors');
+    assert.equal(games, 3, name + ': did not finish three games');
+    assert(maxSW <= w, name + ': horizontal overflow');
+    await pg.close();
   }
   await b.close();
-})();
+})().catch(e => { console.error(e); process.exit(1); });
