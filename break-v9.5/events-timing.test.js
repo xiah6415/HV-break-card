@@ -59,6 +59,7 @@ async function toSetter(g, p) {
         const f = fixture(async (game, player, req) => {
           if (req.kind === 'ack') return true;
           if (req.kind === 'receiver') return receiver;
+          if (req.kind === 'name') return '西谷 夕';
           if (req.kind === 'skill') return false;
           if (req.kind === 'event') return req.timing === timing && req.options.some(o => o.value === 'P03-057') ? 'P03-057' : null;
           if (req.kind === 'setter') throw STOP;

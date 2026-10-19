@@ -298,6 +298,7 @@ body.dragging .hand .hc.sel .ci, body.dragging .hand .hc.staged .ci { opacity: .
 .reveal-result small { margin-top: 5px; }
 .reveal-public { display: grid; justify-items: center; gap: 10px; }
 .reveal-public .ci { width: min(180px, 45vw); height: auto; border-radius: 8px; }
+.court-name { display: block; color: var(--court); font-size: 11px; text-align: center; line-height: 1.4; margin-top: 6px; }
 @media (prefers-reduced-motion: reduce) { .die.roll { animation: none; } }
 
 /* Deliberate breaks between turns; no timer can dismiss these screens. */
@@ -566,18 +567,21 @@ body.turn-open .sheet { z-index: 80; }
       if (base >= b.off) { out.lines.push(`接 ${base} ≥ 來球 ${b.off}：接得起`); out.tone = 'good'; }
       else if (base + ex >= b.off) { out.lines.push(`接 ${base}，發動技能 +${ex} 後 ${base + ex} ≥ ${b.off}：要發動技能才接得起`); out.tone = 'warn'; }
       else { out.lines.push(`接 ${base}${ex ? `（技能 +${ex}）` : ''} < 來球 ${b.off}：要靠 Event 補，不然失分`); out.tone = 'bad'; }
-      if (!E.canChain(rest, E.recvName(c))) { out.lines.push('⚠ 接完後手上湊不出「舉球＋攻擊」，會在後面失分'); out.tone = 'bad'; }
+      if (!E.entryNames(c).some(name => E.canChain(rest, name))) { out.lines.push('⚠ 接完後手上湊不出「舉球＋攻擊」，會在後面失分'); out.tone = 'bad'; }
+      if (c === 'PR-057') out.lines.push('登場時再選日向翔陽／西谷夕；名稱影響後續同名限制');
     }
     if (req.kind === 'setter') {
       const t = st(c, 'tos') + (me.ts.apass || 0); out.val = '舉 ' + t;
-      const atks = [...new Set(rest.filter(x => isC(x) && st(x, 'atk') != null && E.atkName(x) !== nm(c)).map(x => `${E.short(x)} 攻${st(x, 'atk')}`))];
+      const atks = [...new Set(rest.filter(x => isC(x) && st(x, 'atk') != null && game.legalEntryNames(me, 'toss', c).some(name => E.entryNames(x).some(other => other !== name))).map(x => `${E.short(x)} 攻${st(x, 'atk')}`))];
       out.lines.push(`舉球 ${t}${me.ts.apass ? `（含 A 傳球 +${me.ts.apass}）` : ''}`);
       if (atks.length) out.lines.push('之後可攻擊：' + atks.join('、')); else { out.lines.push('⚠ 舉完沒有能攻擊的角色（不能與舉球同名）'); out.tone = 'bad'; }
+      if (c === 'PR-057') out.lines.push('登場時選名稱；不能與本回合接球角色同名');
     }
     if (req.kind === 'attacker') {
       const o = req.options.find(x => x.card === c), a = st(c, 'atk') + (E.isHin(c) && me.ts.hin ? me.ts.hin : 0);
       out.val = '攻 ' + a; out.lines.push(`進攻 = 舉 ${me.ts.toss} ＋ 攻 ${a} ＝ ${me.ts.toss + a}`);
       if (/技能|\+/.test(DEF[c][10] || '')) out.lines.push('登場後會問你要不要發動技能');
+      if (c === 'PR-057') out.lines.push(`登場時選名稱${me.ts.hin && game.legalEntryNames(me, 'attack', c).includes('日向 翔陽') ? '；選日向翔陽可再獲影山的攻擊 +2' : ''}`);
       void o;
     }
     if (req.kind === 'event') { out.val = isC(c) ? '棄' : 'EV'; out.lines.push((isC(c) ? '棄掉發動：' : '打出：') + (req.options.find(x => x.card === c) || {}).label); }
@@ -589,7 +593,7 @@ body.turn-open .sheet { z-index: 80; }
   function zone(p, a) {
     const mine = p.idx === 0, top = p.top(a), g = p.guts(a);
     let v = '';
-    if (top && p.ts) {
+    if (top && p.ts && !p.ts.finished) {
       if (a === 'receive' && p.ts.receiver === top && p.ts.rcv != null) v = '接 ' + p.ts.rcv;
       if (a === 'toss' && p.ts.setter === top && p.ts.toss != null) v = '舉 ' + p.ts.toss;
       if (a === 'attack' && p.ts.attacker === top && p.ts.atk != null) v = '攻 ' + p.ts.atk;
@@ -604,7 +608,10 @@ body.turn-open .sheet { z-index: 80; }
       if (handReq() && targetOf(pending.req, [...legalCards()][0]) === a) tgt = ' tgt';
       if (pending.req.kind === 'defend' && a === 'receive') tgt = ' tgt';
     }
-    return `<div class="zone"><div class="zl">${E.AREA_ZH[a]}</div><div class="slot${tgt}${enter ? ' enter' : ''}" ${mine ? `data-drop="${a}"` : ''}>${top ? `<button class="cbtn" type="button" data-zone="${a}" data-p="${p.idx}">${img(top)}</button>` : ''}${g ? `<span class="badge g">G${g}</span>` : ''}${v ? `<span class="badge v${pop ? ' pop' : ''}">${v}</span>` : ''}${ghost}</div>${gl}</div>`;
+    const fx = p.effects[a], labels = { srv: '發球', blk: '攔網', rcv: '接球', tos: '舉球', atk: '攻擊' };
+    const changes = fx?.card === top ? Object.entries(fx.mods || {}).map(([k, n]) => `${labels[k]} +${n}`).join('／') : '';
+    const chosen = (top === 'PR-057' && game.cardName(p, a) !== nm(top) || changes) ? `<small class="court-name">${top === 'PR-057' ? '本回合：' + esc(game.cardName(p, a)) : ''}${changes ? `<br>${esc(changes)}` : ''}</small>` : '';
+    return `<div class="zone"><div class="zl">${E.AREA_ZH[a]}</div><div class="slot${tgt}${enter ? ' enter' : ''}" ${mine ? `data-drop="${a}"` : ''}>${top ? `<button class="cbtn" type="button" data-zone="${a}" data-p="${p.idx}">${img(top)}</button>` : ''}${g ? `<span class="badge g">G${g}</span>` : ''}${v ? `<span class="badge v${pop ? ' pop' : ''}">${v}</span>` : ''}${ghost}</div>${chosen}${gl}</div>`;
   }
   let nextTop = {}, nextVal = {};
   const sets = p => `<span class="sets" title="セットカード ${p.sets.length}">${[0, 1].map(i => `<i class="${i < p.sets.length ? '' : 'off'}"></i>`).join('')}</span>`;
@@ -680,7 +687,7 @@ body.turn-open .sheet { z-index: 80; }
     rows.push([!!rc && (r.role === 'serve' || st(rc, 'rcv') >= Math.min(mx, 5)), `接球手：${rc ? `${E.short(rc)} 接 ${st(rc, 'rcv')}` : '沒有'}${r.role === 'receive' ? `（對手發球最高約 ${mx}）` : ''}`]);
     const ts = kept.filter(c => st(c, 'tos') != null && st(c, 'tos') >= 1).sort((a, b) => st(b, 'tos') - st(a, 'tos'))[0];
     rows.push([!!ts, `舉球手：${ts ? `${E.short(ts)} 舉 ${st(ts, 'tos')}` : '沒有舉球 ≥1 的角色'}`]);
-    const at = ts ? best('atk', kept.filter(c => E.atkName(c) !== nm(ts))) : best('atk');
+    const at = ts ? best('atk', kept.filter((c, i) => i !== kept.indexOf(ts) && E.entryNames(ts).some(name => E.entryNames(c).some(other => other !== name)))) : best('atk');
     rows.push([!!at && st(at, 'atk') >= 2, `攻擊手：${at ? `${E.short(at)} 攻 ${st(at, 'atk')}` : '沒有'}${ts && at ? `（進攻約 ${st(ts, 'tos') + st(at, 'atk')}）` : ''}`]);
     return `<div class="chk"><b>${r.role === 'serve' ? '你先發球' : '你先接發球'}・保留後的手牌：</b>${rows.map(([ok, t]) => `<span class="${ok ? 'good' : 'bad'}">${ok ? '✓' : '✗'} ${esc(t)}</span>`).join('')}</div>`;
   }
@@ -700,10 +707,10 @@ body.turn-open .sheet { z-index: 80; }
         <div class="rollres">${meFirst ? '你先發球' : 'AI 先發球'}</div><small>${meFirst ? '你是發球方：第 1 球先派發球角色，之後要接 AI 的攻擊。調度時至少留 1 張發球角色＋接球／舉球／攻擊。' : `你是接發球方：要先接 AI 的發球（${oppSrvText()}），抽 1 張後接→舉→攻。調度時優先留能接住發球的接球手、舉球手、攻擊手。`}</small>`,
         '<button class="opt primary" type="button" data-i="0">開始調度</button>'];
     }
-    if (r.kind === 'guts') {
-      const n = r.need, ok = picked.size === n, a = me.area[r.area];
-      return [`${esc(r.prompt)}<small>已選 ${picked.size} / ${n}</small>${r.area === 'receive' && me.top('receive') === 'P03-051' ? '<small class="warn">西谷 P03-051：付的 Guts 全是烏野才有效</small>' : ''}<div class="gpick">${a.slice(0, -1).map((c, i) => `<button type="button" class="gp${picked.has(i) ? ' on' : ''}" data-gp="${i}">${img(c)}<span>${esc(E.short(c))}</span></button>`).reverse().join('')}</div>`,
-        `<button class="opt primary" type="button" data-act="gutsok" ${ok ? '' : 'disabled'}>付這 ${n} 張</button><button class="opt quiet" type="button" data-act="gutsbottom">從最下面付</button>`];
+    if (r.kind === 'guts' || r.kind === 'gutsCourt') {
+      const n = r.need, ok = picked.size === n;
+      return [`${esc(r.prompt)}<small>已選 ${picked.size} / ${n}</small>${r.area === 'receive' && me.top('receive') === 'P03-051' ? '<small class="warn">西谷 P03-051：付的 Guts 全是烏野才有效</small>' : ''}<div class="gpick">${r.options.map((o, i) => `<button type="button" class="gp${picked.has(i) ? ' on' : ''}" data-gp="${i}">${img(o.card)}<span>${esc(r.kind === 'gutsCourt' ? o.label : E.short(o.card))}</span></button>`).join('')}</div>`,
+        `<button class="opt primary" type="button" data-act="gutsok" ${ok ? '' : 'disabled'}>付這 ${n} 張</button><button class="opt quiet" type="button" data-act="gutsbottom">${r.kind === 'gutsCourt' ? '自動選 6 張 Guts' : '從最下面付'}</button>`];
     }
     if (r.kind === 'mulligan') return [`${r.prompt}<small>已選 ${picked.size} 張放回</small>${mullHint(r)}`, `<button class="opt primary" type="button" data-act="multi">${picked.size ? `放回 ${picked.size} 張並重抽` : '全部保留'}</button>` + (picked.size ? '<button class="opt quiet" type="button" data-act="clear">取消選取</button>' : '')];
     if (r.kind === 'ack') return [esc(r.prompt) + '<small>輪到你了，按下方大按鈕抽牌</small>', '<button class="opt primary draw-action" type="button" data-act="ack">抽 1 張<small>點此抽牌，再進行接球</small></button>'];
@@ -851,7 +858,7 @@ body.turn-open .sheet { z-index: 80; }
     if (b.dataset.rec != null && blk) { const o = pending.req.options.find(x => String(x.value) === b.dataset.rec); blk.cards = o.cards.slice(); blk.center = blk.cards.includes('P02-003') ? 'P02-003' : blk.cards.slice().sort((x, y) => E.val(y) - E.val(x))[0]; return render(); }
     if (pending && b.dataset.i != null) {
       const o = pending.req.options[+b.dataset.i];
-      if (o.card && pending.req.kind !== 'block' && !Object.hasOwn(pending.req.ctx || {}, 'revealed')) { setDockCollapsed(false); staged = { card: o.card, i: +b.dataset.i }; return render(); }
+      if (o.card && !['block', 'target'].includes(pending.req.kind) && !Object.hasOwn(pending.req.ctx || {}, 'revealed')) { setDockCollapsed(false); staged = { card: o.card, i: +b.dataset.i }; return render(); }
       answer(o.value);
     }
   });

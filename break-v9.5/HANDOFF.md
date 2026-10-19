@@ -6,7 +6,15 @@
 - 非 wantsAck 的 AI 自動選擇後送公開 `onNotice({type:'reveal',player,card,source,reason,result})`，本機玩家看完再繼續。只含公開牌；Undo 展示重播與取消沿用既有機制。多人真人的觀戰傳輸未接入。
 - UI 公開結果可點卡圖放大，選加入手牌直接確認，不使用角色登場預放。`reveal.test.js` 驗證翻前等待、五種結果、重複卡頂精準移動、AI 暫停、Undo 與過期回覆；`reveal-e2e.js` 桌機及兩種手機驗證六種實際畫面。
 
-> 最新狀態：使用者指定 1→2→6→7→3→4，目前在第 1 階段。首批完成 47 張官方資料對照與 8 個回歸修正，仍有 19 張部分技能待補。最新範圍見 RULES-AUDIT.md、card-support.json，工作順序見 ROADMAP.md。下列 Artifact、49 張及卡庫總數是歷史描述，不作目前完成度依據。
+> 最新狀態：使用者指定 1→2→6→7→3→4，目前在第 1 階段。47 張官方資料已核對，第二批補完 PR-057、P03-087、P03-096 的主要情境，支援狀態為 18 張無技能、13 張主要技能情境通過、16 張部分技能待補。最新範圍見 RULES-AUDIT.md、card-support.json，工作順序見 ROADMAP.md。下列 Artifact、49 張及卡庫總數是歷史描述，不作目前完成度依據。
+
+## 名稱、角色目標與跨區費用（2026-10-19 第二批）
+- `enterCharacter` 在 PR-057 登場前送 `kind: name`，先排除與接球／舉球角色同名的選項。`cardName(p,key)` 取場上有效名稱；手牌、棄牌與 Guts 仍用卡面名稱。`entryNames` 供 AI／預覽預估合法名稱，不能把 PR-057 固定視作日向或西谷。
+- `p.effects[key] = {card,name?,mods}` 以區域綁定目前角色，側攔用 side:0 等 key。`place`／替換攻擊角色會清除原區效果；`finishTurn` 在真人結束確認後清除效果並設 `ts.finished`，保留 ts.toss/atk 結果供來球提示。Loss 結算亦清除。下一回合 `beginTurn` 補做上一回合清除。
+- `courtTargets` 不含 Guts；`chooseTarget` 送 kind: target，options 的 value 是區域 key、card 是展示卡圖；UI 直接選目標，不預放到手牌區。`chooseParameter` 送 kind: parameter，排除「－」、保留 0。`boostParameter` 同時更新對應活動中的接／托／攻與攔網合計，其他參數存入效果並顯示在球場。
+- P03-096 可指定任一場上名稱為日向翔陽的角色（含側攔／PR-057 選日向），再選一參數；沒有日向但能抽牌仍可使用。P03-087 的全隊條件依非空場上角色、精確烏野／ユース所屬判定，Guts 不參與；接球／攻擊均可選任一角色攻擊 +1，選影山且有 6 Guts 時可選擇額外付費再選其參數 +2。
+- `payCourt` 送 kind: gutsCourt、multi:true、need:6；選項是跨區 Guts 的平面索引，標記區域與卡圖，每區頂牌不可付。精確選 6 張後按區內索引倒序移動；無效代理回覆沿用既有費用介面的確定性自動選擇，絕不多付或移走頂牌。
+- `skill-targets.test.js` 涵蓋名稱／期限／替換、指定角色與參數、側攔、禁加牌與無目標、跨區六費用／拒絕／不足、所屬、真正接球判定與非法回覆；`skill-targets-undo.test.js` 比較 7 次完整局面／紀錄還原；`skill-targets-e2e.js` 在三種尺寸實際操作與 Undo。
 
 > 先讀這份，再讀 `memory.md`（完整版本歷史）。每次動工前後都要在 `memory.md` 追加紀錄（Xiah 的規定：先寫計畫再改程式，完成後寫結果），讓 Claude／Codex 雙方都看得懂做到哪。
 

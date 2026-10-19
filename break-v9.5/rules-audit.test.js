@@ -57,6 +57,7 @@ async function check(name, run) {
     const { g, p } = fixture(async (g, p, r) => r.options[0].value);
     p.hand = ['P01-078', 'D01-005', 'P01-006']; p.deck = ['P01-013', 'P01-011']; p.drop = ['P01-002'];
     p.ts.setter = 'P01-004'; p.ts.attacker = 'D01-009'; p.ts.atk = 3;
+    p.area.toss = ['P01-004']; p.area.attack = ['D01-009'];
     assert(g.playable(p, 'atk').some(x => x.card === 'P01-078'));
     await g.resolve(p, 'P01-078', 'atk');
     assert.equal(p.ts.attacker, 'D01-009'); assert(p.drop.includes('P01-002'));

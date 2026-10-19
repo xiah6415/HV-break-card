@@ -241,11 +241,13 @@
       "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-PR-057&voba=P",
       "sourceSha256": "24c4c4b22a7d208b52d0bc3fcaa97d11d5c30acee94a2c6415b967c2e4b7442d",
       "qaIds": [],
-      "status": "partial",
-      "gaps": [
-        "目前依接球／攻擊固定名稱；尚未提供登場時二選一及完整名稱期限處理。"
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "skill-targets.test.js",
+        "skill-targets-undo.test.js",
+        "skill-targets-e2e.js"
       ],
-      "tests": [],
       "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-PR-057"
     },
     "D01-009": {
@@ -788,11 +790,13 @@
       "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P03-096&voba=N",
       "sourceSha256": "e33486caaea26c607de65c323ffad224551e8db119fee9460dd14680c206b789",
       "qaIds": [],
-      "status": "partial",
-      "gaps": [
-        "目前固定加本階段數值；尚未提供場上日向與任一參數的選擇。"
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "skill-targets.test.js",
+        "skill-targets-undo.test.js",
+        "skill-targets-e2e.js"
       ],
-      "tests": [],
       "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P03-096"
     },
     "P03-087": {
@@ -817,11 +821,13 @@
         "1835",
         "1836"
       ],
-      "status": "partial",
-      "gaps": [
-        "目前僅攻擊階段加攻擊；尚缺接球階段、任意角色目標、影山跨區六 Guts 與參數選擇。"
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "skill-targets.test.js",
+        "skill-targets-undo.test.js",
+        "skill-targets-e2e.js"
       ],
-      "tests": [],
       "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P03-087"
     },
     "P01-033": {

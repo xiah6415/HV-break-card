@@ -13,7 +13,7 @@ const DEF = {
   'P02-001': ['日向 翔陽', 'C', 2, 2, 0, 0, 3, 6, K, 1, '接球登場：雙方セット合計 ≤1 時，付 3 Guts → 接球 +6，棄牌區烏野角色 1 張回手'],
   'P03-051': ['西谷 夕', 'C', N, N, 5, 0, 0, 3, K, 2, '接球登場：付 2 Guts，付的全是烏野 → 接球 +2；對手攻擊手原始攻擊 0 時，對手進攻 −3'],
   'PR-022': ['澤村 大地', 'C', 1, 0, 5, 0, 0, 3, K, 3, '接球登場：對手發球/攻擊 ≤2 → A 傳球(1)；付 1 Guts 抽 1'],
-  'PR-057': ['着地上手組。', 'C', N, N, 5, 0, 3, 5, K, 1, '登場時名稱可選「日向 翔陽」或「西谷 夕」，直到本回合結束（目前名稱選擇尚未自動化，見支援限制）'],
+  'PR-057': ['着地上手組。', 'C', N, N, 5, 0, 3, 5, K, 1, '每次登場時選「日向 翔陽」或「西谷 夕」，直到本回合結束；在場上仍算 1 人'],
   'D01-009': ['菅原 孝支', 'C', 1, 1, 2, 2, 3, 4, K, 3, ''],
   'P01-006': ['影山 飛雄', 'C', 1, 1, 1, 1, 2, 9, K, 1, '舉球登場：付 2 Guts → 翻牌庫頂，日向或オープン攻撃加入手牌；本回合日向登場時攻擊 +2'],
   'P03-048': ['影山 飛雄', 'C', 1, 3, 0, 2, 2, 5, K, 1, ''],
@@ -35,7 +35,7 @@ const DEF = {
   'P03-090': ['おれにバレーボール教えてくれて ありがとう', 'E', 0, 0, 0, 0, 0, 4, '音駒', 0, '［抽牌］每回合 1 次：Event 區 1 張其他 Event 回手'],
   'PR-029': ['鬼と 鬼だな', 'E', 0, 0, 0, 0, 0, 4, K, 0, '［抽牌］棄牌區日向、影山各最多 1 張回手'],
   'P03-096': ['日向 夏', 'E', 0, 0, 0, 0, 0, 5, K, 0, '［攔網/接球/攻擊］每回合 1 次：抽 1，日向 1 人任一數值 +1'],
-  'P03-087': ['周りの上手さに引っ張られる', 'E', 0, 0, 0, 0, 0, 5, K, 0, '［接球/攻擊］每回合 1 次：全烏野或全ユース → 抽 1，角色 1 人攻擊 +1；指定影山可跨區付 6 Guts，再任一參數 +2（部分效果待補）'],
+  'P03-087': ['周りの上手さに引っ張られる', 'E', 0, 0, 0, 0, 0, 5, K, 0, '［接球/攻擊］每回合 1 次：全烏野或全ユース → 抽 1，選場上角色 1 人攻擊 +1；指定影山可跨區付 6 Guts，再選其任一參數 +2'],
   // ---- 青葉城西（含 P04 / D04）
   'P01-033': ['及川 徹', 'C', 5, 0, 0, 1, 0, 7, A, 3, '發球/舉球登場：棄 1 張青城 → 任一參數 +1；對手手牌 ≥4 → 對手棄 1（目前僅加當階段數值）'],
   'D04-003': ['及川 徹', 'C', 5, 0, 1, 2, 2, 6, A, 3, ''],
@@ -74,9 +74,10 @@ const yr = c => DEF[c][9];
 const isK = c => sch(c) === K;
 const isA = c => sch(c) === A;
 const short = c => nm(c).split(' ')[0];
-const recvName = c => (c === 'PR-057' ? '西谷 夕' : nm(c));
-const atkName = c => (c === 'PR-057' ? '日向 翔陽' : nm(c));
-const isHin = c => HIN.has(c) || c === 'PR-057';
+const entryNames = c => c === 'PR-057' ? ['日向 翔陽', '西谷 夕'] : [nm(c)];
+const recvName = c => nm(c);
+const atkName = c => nm(c);
+const isHin = c => HIN.has(c);
 const kuroEligible = c => isK(c) && (yr(c) === 2 || yr(c) === 3 || c === 'PR-057');
 const EVT = {
   'D01-012': ['atk'], 'P01-074': ['atk'], 'P01-078': ['atk'], 'P03-086': ['tos'], 'P03-090': ['drw'], 'PR-029': ['drw'],
@@ -106,7 +107,7 @@ class Player {
     game.shuffle(this.deck);
     this.hand = []; this.drop = []; this.ev = []; this.sets = [];
     this.area = { serve: [], block: [], receive: [], toss: [], attack: [] };
-    this.restrict = {}; this.pending = {}; this.ts = {}; this.newCount = {};
+    this.restrict = {}; this.pending = {}; this.ts = {}; this.newCount = {}; this.effects = {};
   }
   get opp() { return this.g.players[1 - this.idx]; }
   handC() { return this.hand.filter(isC); }
@@ -205,7 +206,89 @@ class Game {
       if (Array.isArray(r) && new Set(r).size === n && r.every(i => i >= 0 && i < s.length - 1)) idx = [...new Set(r)].sort((x, y) => y - x);
     }
     const paid = idx ? idx.map(i => s.splice(i, 1)[0]).reverse() : s.splice(0, n); p.drop.push(...paid); if (paid.length) this.log(`${p.name} 付 ${paid.length} Guts（${AREA_ZH[a]}區）：${paid.map(nm).join('、')} → 棄牌區`, 'guts'); return paid; }
-  place(p, a, c) { rm(p.hand, c); p.area[a].push(c); }
+  place(p, a, c) { rm(p.hand, c); p.area[a].push(c); delete p.effects[a]; }
+  courtTargets(p) {
+    return [...AREAS.map(key => ({ key, card: p.top(key), label: AREA_ZH[key] + '區' })),
+      ...(p.ts.sides || []).map((card, i) => ({ key: 'side:' + i, card, label: '側攔 ' + (i + 1) }))].filter(t => t.card);
+  }
+  cardName(p, key) {
+    const c = this.courtTargets(p).find(t => t.key === key)?.card;
+    if (!c) return '';
+    return p.effects[key]?.card === c && p.effects[key].name || nm(c);
+  }
+  effect(p, key) {
+    const card = this.courtTargets(p).find(t => t.key === key)?.card;
+    if (!card) throw new Error('目標角色已離場');
+    if (p.effects[key]?.card !== card) p.effects[key] = { card, mods: {} };
+    return p.effects[key];
+  }
+  activeParameter(p, key, param) {
+    if (p.ts.finished) return null;
+    if (key === 'receive' && param === 'rcv' && p.ts.receiver === p.top(key)) return 'rcv';
+    if (key === 'toss' && param === 'tos' && p.ts.setter === p.top(key)) return 'toss';
+    if (key === 'attack' && param === 'atk' && p.ts.attacker === p.top(key)) return 'atk';
+    if ((key === 'block' || key.startsWith('side:')) && param === 'blk' && p.ts.blockers) return 'blk';
+    return null;
+  }
+  parameter(p, key, param) {
+    const card = this.courtTargets(p).find(t => t.key === key)?.card;
+    if (!card || st(card, param) == null) return null;
+    const active = this.activeParameter(p, key, param);
+    // Block is an aggregate; per-character values remain separate.
+    if (active && active !== 'blk' && p.ts[active] != null) return p.ts[active];
+    const fx = p.effects[key];
+    return st(card, param) + (fx?.card === card ? fx.mods?.[param] || 0 : 0);
+  }
+  boostParameter(p, key, param, amount) {
+    if (this.parameter(p, key, param) == null) return;
+    const fx = this.effect(p, key); fx.mods ||= {}; fx.mods[param] = (fx.mods[param] || 0) + amount;
+    const active = this.activeParameter(p, key, param);
+    if (active && p.ts[active] != null) p.ts[active] += amount;
+    const zh = { srv: '發球', blk: '攔網', rcv: '接球', tos: '舉球', atk: '攻擊' };
+    this.log(`${this.cardName(p, key)}（${this.courtTargets(p).find(t => t.key === key).label}）：${zh[param]} +${amount}`);
+  }
+  legalEntryNames(p, area, c) {
+    const other = area === 'toss' ? 'receive' : area === 'attack' ? 'toss' : null;
+    return entryNames(c).filter(name => !other || name !== this.cardName(p, other));
+  }
+  canEnter(p, area, c) { return st(c, { serve: 'srv', block: 'blk', receive: 'rcv', toss: 'tos', attack: 'atk' }[area]) != null && this.legalEntryNames(p, area, c).length > 0; }
+  async enterCharacter(p, area, c, fromDrop = false) {
+    const names = this.legalEntryNames(p, area, c);
+    if (!this.canEnter(p, area, c)) throw new Error('不能以相同名稱登場');
+    let name = nm(c);
+    if (c === 'PR-057') name = await this.ask(p, { kind: 'name', prompt: `着地上手組。：選擇登場名稱（${AREA_ZH[area]}區，本回合有效）`, ctx: { card: c, area }, options: names.map(value => ({ label: value, value })) });
+    if (!names.includes(name)) throw new Error('無效的登場名稱');
+    if (fromDrop) { rm(p.drop, c); p.area[area].push(c); delete p.effects[area]; }
+    else this.place(p, area, c);
+    if (c === 'PR-057') { this.effect(p, area).name = name; this.log(`着地上手組。：本回合在${AREA_ZH[area]}區作為「${name}」`); }
+  }
+  async chooseTarget(p, targets, prompt, timing) {
+    if (!targets.length) { this.log('沒有符合條件的場上角色，略過這部分效果', 'warn'); return null; }
+    const key = await this.ask(p, { kind: 'target', prompt, timing, options: targets.map(t => ({ value: t.key, card: t.card, label: `${t.label} · ${this.cardName(p, t.key)} · ${t.card}` })) });
+    if (!targets.some(t => t.key === key)) throw new Error('無效的角色目標');
+    return key;
+  }
+  async chooseParameter(p, key, amount, source, timing) {
+    const labels = { srv: '發球', blk: '攔網', rcv: '接球', tos: '舉球', atk: '攻擊' };
+    const options = Object.entries(labels).filter(([k]) => this.parameter(p, key, k) != null).map(([value, label]) => ({ value, label: `${label} ${this.parameter(p, key, value)} → ${this.parameter(p, key, value) + amount}` }));
+    if (!options.length) return;
+    const param = await this.ask(p, { kind: 'parameter', timing, ctx: { target: key, amount }, prompt: `${source}：選擇「${this.cardName(p, key)}」要 +${amount} 的數值`, options });
+    if (!options.some(o => o.value === param)) throw new Error('無效的參數選擇');
+    this.boostParameter(p, key, param, amount);
+  }
+  uniformCourt(p) {
+    const chars = this.courtTargets(p);
+    return chars.length > 0 && [K, 'ユース'].some(s => chars.every(t => sch(t.card).split('/').includes(s)));
+  }
+  courtGuts(p) { return AREAS.flatMap(area => p.area[area].slice(0, -1).map((card, index) => ({ area, index, card }))); }
+  async payCourt(p, need) {
+    const guts = this.courtGuts(p); if (guts.length < need) return false;
+    const answer = await this.ask(p, { kind: 'gutsCourt', multi: true, need, prompt: `影山：從各區選合計 ${need} Guts（每區最上方角色不能付）`, options: guts.map((g, value) => ({ value, card: g.card, label: AREA_ZH[g.area] + '區 · ' + nm(g.card) })) });
+    const valid = Array.isArray(answer) && answer.length === need && new Set(answer).size === need && answer.every(i => Number.isInteger(i) && i >= 0 && i < guts.length);
+    const chosen = (valid ? answer : guts.slice(0, need).map((_, i) => i)).map(i => guts[i]);
+    for (const area of AREAS) for (const g of chosen.filter(g => g.area === area).sort((a, b) => b.index - a.index)) p.drop.push(p.area[area].splice(g.index, 1)[0]);
+    this.log(`影山：跨區支付 ${need} Guts → 棄牌區`); return true;
+  }
 
   // ---------- main loop
   async run() {
@@ -247,7 +330,7 @@ class Game {
       }
       await this.notice({ type: 'loss', player: loser.idx, reason: lossReason, winner: loser.opp.idx, final: !loser.sets.length });
       this.turnP = null;
-      for (const p of this.players) { p.pending = {}; p.restrict = {}; p.ts = {}; }
+      for (const p of this.players) { p.pending = {}; p.restrict = {}; p.ts = {}; p.effects = {}; }
       this.ball = null; this.target = null;
       const winner = loser.opp;
       if (!loser.sets.length) { this.winner = winner; this.log(`${winner.name} 獲勝！`, 'win'); this.update(); return winner; }
@@ -264,10 +347,12 @@ class Game {
     const sides = p.ts.sides || [];
     if (!sides.length) return;
     p.ts.sides = [];
+    for (const key of Object.keys(p.effects)) if (key.startsWith('side:')) delete p.effects[key];
     p.drop.push(...sides);
     if (sides.length) this.log(`側攔 ${sides.map(nm).join('、')} → 棄牌區`, 'guts');
   }
-  beginTurn(p) { this.turnP = p; this.turnNo++; p.restrict = p.pending; p.pending = {}; p.ts = { used: {} }; p.newCount = {}; this.src = ''; }
+  finishTurn(p) { p.effects = {}; p.ts.finished = true; }
+  beginTurn(p) { if (this.turnP) this.finishTurn(this.turnP); this.turnP = p; this.turnNo++; p.restrict = p.pending; p.pending = {}; p.ts = { used: {} }; p.newCount = {}; this.src = ''; }
   async confirmTurnEnd(p, outgoing) {
     if (!p.agent.wantsAck) return;
     const label = { serve: '發球', attack: '進攻', block: '攔網回球' }[outgoing.type];
@@ -290,6 +375,7 @@ class Game {
     }
     await this.eventLoop(p, 'srv', { serveChar: c });
     await this.confirmTurnEnd(p, { type: 'serve', off });
+    this.finishTurn(p);
     this.log(`${p.name} 發球 ${nm(c)} → 威力 ${off}`);
     return { type: 'serve', off };
   }
@@ -347,6 +433,7 @@ class Game {
     if (cb.tsu) {
       const e = await this.pickHand(p, '月島：選 1 張 Event 放到 Event 區', x => !isC(x), 'cost');
       rm(p.hand, e); p.ev.push(e); this.sdraw(p, 1);
+      this.effect(p, 'block').mods.blk = 6;
     }
     p.ts.blk = cb.total; p.ts.blockers = cb.cards.slice();
     this.log(`${p.name} 攔網 ${cb.cards.map(short).join('＋')}：攔 ${cb.total} vs ${this.ball.off}`);
@@ -355,6 +442,7 @@ class Game {
     if (p.ts.blk < this.ball.off) this.lost(p, `攔網 ${p.ts.blk} 小於進攻 ${this.ball.off}`);
     this.log(`攔網成功（${p.ts.blk} ≥ ${this.ball.off}），回球 0；側攔進棄牌區`);
     await this.confirmTurnEnd(p, { type: 'block', off: 0 });
+    this.finishTurn(p);
     this.tag(p.idx + ':block');
     return { type: 'block', off: 0 };
   }
@@ -369,7 +457,7 @@ class Game {
     const cs = [...new Set(p.handC().filter(c => st(c, 'rcv') != null && !(p.restrict.no_rcv6 && st(c, 'rcv') >= 6)))];
     if (!cs.length) this.lost(p, '沒有能接球的角色');
     const c = await this.ask(p, { kind: 'receiver', prompt: `來球：${ball.type === 'serve' ? '發球' : ball.type === 'block' ? '攔網回球' : '攻擊'} ${off}。選擇接球角色`, ball, options: cs.map(x => ({ label: `${nm(x)}　接 ${this.rcvPreview(p, x)}`, card: x, value: x })) });
-    this.place(p, 'receive', c); this.src = nm(c);
+    await this.enterCharacter(p, 'receive', c); this.src = nm(c);
     const kuro = p.ts.kurokawa && kuroEligible(c);
     let r = st(c, 'rcv') - (kuro ? 0 : (p.restrict.rcv_minus || 0));
     if (p.restrict.rcv_minus && !kuro) this.log(`ドンピシャ!!!：${nm(c)} 接球 −${p.restrict.rcv_minus}`, 'warn');
@@ -399,11 +487,10 @@ class Game {
     if (r < ball.off) this.lost(p, `接球 ${r} 小於來球 ${ball.off}`);
     this.log(`接球成功（${r} ≥ ${ball.off}）`);
     // toss
-    const rname = recvName(c);
-    const ts = [...new Set(p.handC().filter(x => st(x, 'tos') != null && nm(x) !== rname))];
+    const ts = [...new Set(p.handC().filter(x => this.canEnter(p, 'toss', x)))];
     if (!ts.length) this.lost(p, '沒有能舉球的角色');
     const t = await this.ask(p, { kind: 'setter', prompt: '選擇舉球角色', options: ts.map(x => ({ label: `${nm(x)}　舉 ${st(x, 'tos')}`, card: x, value: x })) });
-    this.place(p, 'toss', t); this.src = nm(t);
+    await this.enterCharacter(p, 'toss', t); this.src = nm(t);
     let toss = st(t, 'tos') + (p.ts.apass || 0);
     if (t === 'P01-006' && p.guts('toss') >= 2 && await this.yes(p, 'skill', '影山：付 2 Guts → 翻牌庫頂找日向/オープン，本回合日向攻擊 +2？', { card: t })) {
       await this.pay(p, 'toss', 2); p.ts.hin = 2;
@@ -417,14 +504,14 @@ class Game {
     this.log(`${p.name} 舉球 ${nm(t)}：${toss}`);
     await this.eventLoop(p, 'tos', {});
     // attack
-    const tname = nm(t);
-    const as = [...new Set(p.handC().filter(x => st(x, 'atk') != null && atkName(x) !== tname))];
+    const as = [...new Set(p.handC().filter(x => this.canEnter(p, 'attack', x)))];
     if (!as.length) this.lost(p, '沒有能攻擊的角色');
-    const a = await this.ask(p, { kind: 'attacker', prompt: '選擇攻擊角色', options: as.map(x => ({ label: `${nm(x)}　攻 ${st(x, 'atk')}${isHin(x) && p.ts.hin ? ' +2' : ''}`, card: x, value: x })) });
+    const a = await this.ask(p, { kind: 'attacker', prompt: '選擇攻擊角色', options: as.map(x => ({ label: `${nm(x)}　攻 ${st(x, 'atk')}${isHin(x) && p.ts.hin ? ' +2' : x === 'PR-057' ? '（登場時選名稱）' : ''}`, card: x, value: x })) });
     await this.enterAttack(p, a, false);
     await this.eventLoop(p, 'atk', {});
     const offense = p.ts.toss + p.ts.atk;
     await this.confirmTurnEnd(p, { type: 'attack', off: offense });
+    this.finishTurn(p);
     this.log(`${p.name} 攻擊 ${nm(p.ts.attacker)}：舉 ${p.ts.toss} ＋ 攻 ${p.ts.atk} ＝ 進攻 ${offense}`, 'atk');
     this.tag(p.idx + ':attack');
     return { type: 'attack', off: offense };
@@ -443,7 +530,7 @@ class Game {
   }
   async enterAttack(p, a, fromDrop) {
     const o = p.opp; this.src = nm(a);
-    if (fromDrop) { rm(p.drop, a); p.area.attack.push(a); } else this.place(p, 'attack', a);
+    await this.enterCharacter(p, 'attack', a, fromDrop);
     let atk = st(a, 'atk');
     const g = p.guts('attack');
     const t = p.ts.setter;
@@ -455,7 +542,7 @@ class Game {
       if (o.hand.length <= 4) { o.pending.no_add = 1; this.log(`岩泉：${o.name} 下回合不能用技能加牌`, 'warn'); }
     }
     if (a === 'D04-002' && nm(t) === '及川 徹' && g >= 2 && await this.yes(p, 'skill', '岩泉：付 2 Guts → 攻擊 +3？', { card: a })) { await this.pay(p, 'attack', 2); atk += 3 + (p.sets.length < o.sets.length ? 1 : 0); }
-    if (isHin(a) && p.ts.hin) atk += p.ts.hin;
+    if (this.cardName(p, 'attack') === '日向 翔陽' && p.ts.hin) atk += p.ts.hin;
     p.ts.atk = atk; p.ts.attacker = a;
     this.log(`${p.name} 攻擊手 ${nm(a)}：攻 ${atk}`);
   }
@@ -483,8 +570,8 @@ class Game {
         'P01-087': () => ['serve', 'toss'].some(a => p.top(a) && nm(p.top(a)) === '及川 徹'),
         'P01-078': () => !!p.ts.attacker,
         'D01-012': () => !!p.ts.attacker, 'P01-074': () => !!p.ts.attacker,
-        'P03-096': () => (timing === 'atk' ? p.ts.attacker && isHin(p.ts.attacker) : timing === 'rcv' ? p.ts.receiver && isHin(p.ts.receiver) : timing === 'blk' ? (p.ts.blockers || []).some(x => HIN.has(x)) : false),
-        'P03-087': () => timing === 'atk' && p.ts.attacker && p.allSchool(K),
+        'P03-096': () => (!p.restrict.no_add && p.deck.length > 0) || this.courtTargets(p).some(t => this.cardName(p, t.key) === '日向 翔陽'),
+        'P03-087': () => this.uniformCourt(p),
         'P04-088': () => p.ts.attacker && isA(p.ts.attacker),
         'P04-089': () => p.ts.receiver && isA(p.ts.receiver) && yr(p.ts.receiver) === 3,
         'P01-088': () => p.ts.receiver && isA(p.ts.receiver),
@@ -553,7 +640,7 @@ class Game {
       case 'P01-078': {
         this.sdraw(p, 2);
         if (p.hand.length) await this.discard(p, 'オープン攻撃：抽 2 後棄 1 張');
-        if (p.ev.filter(x => x === 'P01-078').length <= 2 && nm(p.ts.setter) !== '日向 翔陽') {
+        if (p.ev.filter(x => x === 'P01-078').length <= 2 && this.cardName(p, 'toss') !== '日向 翔陽') {
           const hs = [...new Set(p.drop.filter(x => HIN.has(x)))];
           if (hs.length) {
             const h = hs.length === 1 ? hs[0] : await this.ask(p, { kind: 'summon', prompt: 'オープン攻撃：選棄牌區的日向登場攻擊區（必須）', options: hs.map(y => ({ label: `${nm(y)} ${y}　攻 ${st(y, 'atk')}`, card: y, value: y })) });
@@ -562,10 +649,27 @@ class Game {
         }
         break;
       }
-      case 'D01-012': { this.sdraw(p, 1); p.ts.atk += 1; if (nm(p.ts.setter) === '影山 飛雄' && atkName(p.ts.attacker) === '日向 翔陽') { o.pending.one_blocker = 1; this.log(`${o.name} 下回合最多派 1 人攔網`, 'warn'); } break; }
+      case 'D01-012': { this.sdraw(p, 1); p.ts.atk += 1; if (this.cardName(p, 'toss') === '影山 飛雄' && this.cardName(p, 'attack') === '日向 翔陽') { o.pending.one_blocker = 1; this.log(`${o.name} 下回合最多派 1 人攔網`, 'warn'); } break; }
       case 'P01-074': { this.sdraw(p, 1); p.ts.atk += 1; if (o.ev.filter(x => EVT[x] && (EVT[x].includes('drw') || EVT[x].includes('rcv'))).length >= 5) p.ts.atk += 2; break; }
-      case 'P03-096': { this.sdraw(p, 1); if (timing === 'atk') p.ts.atk += 1; else if (timing === 'rcv') p.ts.rcv += 1; else if (timing === 'blk') p.ts.blk += 1; break; }
-      case 'P03-087': { this.sdraw(p, 1); p.ts.atk += 1; break; }
+      case 'P03-096': {
+        this.sdraw(p, 1);
+        const targets = this.courtTargets(p).filter(t => this.cardName(p, t.key) === '日向 翔陽');
+        const key = await this.chooseTarget(p, targets, '日向夏：選擇場上 1 位日向翔陽', timing);
+        if (key != null) await this.chooseParameter(p, key, 1, '日向夏', timing);
+        break;
+      }
+      case 'P03-087': {
+        if (!this.uniformCourt(p)) { this.log('場上角色未全部同為烏野或ユース，效果不成立', 'warn'); break; }
+        this.sdraw(p, 1);
+        const key = await this.chooseTarget(p, this.courtTargets(p).filter(t => this.parameter(p, t.key, 'atk') != null), '周りの上手さ：選擇場上 1 人攻擊 +1', timing);
+        if (key != null) {
+          this.boostParameter(p, key, 'atk', 1);
+          if (this.cardName(p, key) === '影山 飛雄' && this.courtGuts(p).length >= 6 && await this.yes(p, 'skill', '影山：從場上各區合計付 6 Guts，再選此角色任一數值 +2？', { card: 'P03-087', target: key })) {
+            if (await this.payCourt(p, 6)) await this.chooseParameter(p, key, 2, '影山 6 Guts', timing);
+          }
+        }
+        break;
+      }
       case 'P04-088': { this.sdraw(p, 1); p.ts.atk += 1; if (p.ts.atk >= 8) { o.pending.rcv_minus = 1; this.log(`${o.name} 下回合接球手 −1`, 'warn'); } break; }
       case 'P04-089': {
         this.sdraw(p, 1); p.ts.rcv += 1;
@@ -581,9 +685,9 @@ class Game {
 function canChain(hand, rname, drop) {
   const cs = hand.filter(isC);
   for (const t of cs) {
-    if (st(t, 'tos') == null || nm(t) === rname) continue;
+    if (st(t, 'tos') == null) continue;
     const rest = cs.slice(); rest.splice(rest.indexOf(t), 1);
-    if (rest.some(a => st(a, 'atk') != null && atkName(a) !== nm(t))) return true;
+    if (entryNames(t).some(name => name !== rname && rest.some(a => st(a, 'atk') != null && entryNames(a).some(other => other !== name)))) return true;
   }
   return false;
 }
@@ -637,7 +741,7 @@ const AI = {
         for (const x of opts) {
           const c = x.value; const { v, boost, rest } = rcvPotential(g, p, c);
           if (v + boost < off) continue;
-          if (!canChain(rest, recvName(c), p.drop)) continue;
+          if (!entryNames(c).some(name => canChain(rest, name, p.drop))) continue;
           const cost = val(c) + (v < off ? 2 : 0);
           if (!best || cost < best.cost) best = { c, cost };
         }
@@ -645,11 +749,10 @@ const AI = {
         return byVal(opts, x => rcvPotential(g, p, x.value).v).value;
       }
       case 'setter': {
-        const rname = p.ts.receiver ? recvName(p.ts.receiver) : '';
         return byVal(opts, x => {
           const t = x.value; const rest = p.hand.slice(); rest.splice(rest.indexOf(t), 1);
           let s = st(t, 'tos') * 3 - val(t) * 0.3;
-          if (!rest.some(a => isC(a) && st(a, 'atk') != null && atkName(a) !== nm(t))) s -= 50;
+          if (!g.legalEntryNames(p, 'toss', t).some(name => rest.some(a => isC(a) && st(a, 'atk') != null && entryNames(a).some(other => other !== name)))) s -= 50;
           if (t === 'P01-006' && p.guts('toss') + (p.area.toss.length ? 1 : 0) >= 2 && rest.some(a => HIN.has(a))) s += 8;
           if (t === 'P01-033' && rest.filter(isA).length >= 2) s += 3;
           if (['日向 翔陽', '岩泉 一'].includes(nm(t))) s -= 10;
@@ -663,7 +766,7 @@ const AI = {
           if (a === 'BP-002' && p.hand.length >= 2) b += 2;
           if (a === 'P01-035' && p.hand.filter(isA).length >= 2) b += 2;
           if (a === 'D04-002' && nm(p.ts.setter) === '及川 徹' && gg >= 2) b += 3;
-          if (isHin(a)) b += p.ts.hin || 0;
+          if (g.legalEntryNames(p, 'attack', a).includes('日向 翔陽')) b += p.ts.hin || 0;
           return b * 3 - val(a) * 0.5;
         }).value;
       }
@@ -671,13 +774,31 @@ const AI = {
         if (req.ctx && req.ctx.need != null && req.ctx.need <= 0 && ['D01-005', 'P01-039'].includes(req.ctx.card)) return false;
         return true;
       }
+      case 'name': {
+        const area = req.ctx.area;
+        const rest = p.hand.slice(); rm(rest, 'PR-057');
+        if (area === 'receive') return (opts.find(o => canChain(rest, o.value)) || opts[0]).value;
+        if (area === 'toss') return (opts.find(o => rest.some(c => isC(c) && st(c, 'atk') != null && entryNames(c).some(n => n !== o.value))) || opts[0]).value;
+        return (opts.find(o => o.value === '日向 翔陽') || opts[0]).value;
+      }
+      case 'target': {
+        const active = { rcv: 'receive', atk: 'attack', blk: 'block' }[req.timing];
+        return (opts.find(o => o.value === active) || opts[0]).value;
+      }
+      case 'parameter': {
+        const key = req.ctx.target, active = { receive: 'rcv', toss: 'tos', attack: 'atk', block: 'blk', serve: 'srv' }[key] || 'blk';
+        return (opts.find(o => o.value === active) || opts[0]).value;
+      }
+      case 'gutsCourt': return opts.slice(0, req.need).map(o => o.value);
       case 'event': {
         const cards = opts.filter(x => x.value);
         for (const x of cards) {
           const c = x.value;
           if (req.timing === 'blk') { if (p.ts.blk < g.ball.off) return c; continue; }
           if (req.timing === 'rcv') {
-            if (p.ts.rcv < g.ball.off && ['P01-013', 'P01-088', 'P04-089', 'P03-096'].includes(c)) return c;
+            if (p.ts.rcv < g.ball.off && ['P01-013', 'P01-088', 'P04-089'].includes(c)) return c;
+            if (c === 'P03-096' && p.ts.rcv < g.ball.off && g.cardName(p, 'receive') === '日向 翔陽') return c;
+            if (c === 'P03-087' && p.ts.rcv < g.ball.off && g.cardName(p, 'receive') === '影山 飛雄' && g.courtGuts(p).length >= 6) return c;
             if (c === 'P03-057') {
               const receiver = p.ts.receiver;
               if (p.ts.rcv < g.ball.off && receiver && kuroEligible(receiver)) return c;
@@ -717,6 +838,6 @@ const AI = {
   },
 };
 
-const api = { DEF, DECKS, HIN, AREAS, AREA_ZH, EVT, Game, AI, nm, isC, st, val, sch, yr, short, canChain, recvName, atkName, isHin };
+const api = { DEF, DECKS, HIN, AREAS, AREA_ZH, EVT, Game, AI, nm, isC, st, val, sch, yr, short, canChain, recvName, atkName, isHin, entryNames };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.BreakEngine = api;
 })(typeof window !== 'undefined' ? window : globalThis);

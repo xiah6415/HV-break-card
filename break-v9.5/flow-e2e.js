@@ -75,12 +75,17 @@ const snapshot = page => page.evaluate(() => ({
           const before = await snapshot(page);
           await page.waitForTimeout(260); assert.deepEqual(await snapshot(page), before);
           if (!seen.has('loss-undo')) {
+            const prior = trace.slice(0, trace.findIndex(entry => entry.req === req)).reverse().find(entry => entry.req);
             await page.click('#undoBtn');
-            await page.waitForFunction(() => document.getElementById('dockQ').textContent.includes('選擇接球角色'));
-            const prior = trace[trace.findIndex(entry => entry.req === req) - 1];
-            assert.equal(prior.req.kind, 'receiver');
-            await page.locator(`.hand .hc.sel .cbtn[data-card="${prior.value}"]`).first().click();
-            await page.click('[data-act="confirm"]'); await page.waitForSelector('#confirmLoss');
+            await page.waitForFunction(prompt => document.getElementById('dockQ').textContent.includes(prompt), prior.req.prompt);
+            if (prior.req.kind === 'receiver') {
+              await page.locator(`.hand .hc.sel .cbtn[data-card="${prior.value}"]`).first().click();
+              await page.click('[data-act="confirm"]');
+            } else {
+              const i = prior.req.options.findIndex(o => JSON.stringify(o.value) === JSON.stringify(prior.value));
+              await page.click(`#dockOpts [data-i="${i}"]`);
+            }
+            await page.waitForSelector('#confirmLoss');
             assert.deepEqual(await snapshot(page), before);
             assert(await page.locator('#undoBtn').isEnabled()); seen.add('loss-undo');
           }
@@ -114,13 +119,13 @@ const snapshot = page => page.evaluate(() => ({
         }
         if (req.kind === 'mulligan') { await page.click('[data-act="multi"]'); continue; }
         if (req.kind === 'ack') { await page.click('#dockOpts [data-act="ack"]'); continue; }
-        if (req.kind === 'guts') { await page.click('[data-act="gutsbottom"]'); continue; }
+        if (req.kind === 'guts' || req.kind === 'gutsCourt') { await page.click('[data-act="gutsbottom"]'); continue; }
         if (req.kind === 'block') { await page.click(`[data-rec="${value}"]`); await page.click('[data-act="blk"]'); continue; }
         const i = req.options.findIndex(o => JSON.stringify(o.value) === JSON.stringify(value));
         assert(i >= 0);
         const option = req.options[i], card = option.card && page.locator(`.hand .hc.sel .cbtn[data-card="${option.card}"]`).first();
         if (card && await card.count()) { await card.click(); await page.click('[data-act="confirm"]'); }
-        else { await page.click(`#dockOpts [data-i="${i}"]`); if (option.card && !Object.hasOwn(req.ctx || {}, 'revealed')) await page.click('[data-act="confirm"]'); }
+        else { await page.click(`#dockOpts [data-i="${i}"]`); if (option.card && req.kind !== 'target' && !Object.hasOwn(req.ctx || {}, 'revealed')) await page.click('[data-act="confirm"]'); }
       }
       await page.waitForSelector('[data-act="again"]');
       assert.equal(await page.locator('#dockQ').textContent(), winner === 0 ? '你贏了！' : 'AI 贏了');

@@ -5,8 +5,8 @@
 47 張均已對到官方卡號、名稱、數值與位置；6 組預設牌組全部納入。角色數值與目前引擎一致。
 
 - 無技能／數值核對：18 張。
-- 主要技能情境通過：10 張。
-- 部分技能待補：19 張。
+- 主要技能情境通過：13 張。
+- 部分技能待補：16 張。
 
 「主要技能情境通過」只代表列出的測試通過，不是所有目標、技能組合或規則均已驗證。部分技能卡仍可在現有對練台使用，限制見下表。官方 Q&A 編號是來源索引，不代表每則 Q&A 都已自動化。
 
@@ -18,16 +18,17 @@
 - 移除自由步驟 12 次的任意上限。
 - 攔網付費／事件途中 Loss，側攔卡進棄牌區一次，避免遺失。
 - 官方 HVBP-002 能對應現有 BP-002。
+- 第二批：PR-057 每次登場可選名稱，與同名限制／日向技能連動，回合結束到期。
+- 第二批：P03-096 可指定場上日向及任一數值（排除「－」）；P03-087 支援接球與攻擊、角色目標、跨區六 Guts 與額外參數。新選擇可 Undo。
 
 8 個回歸情境在修改前引擎均失敗，修改後均通過，見 rules-audit.test.js；另有 skill-basics.test.js 與既有流程／Undo 測試。
 
 ## 接續修正順序
 
-1. PR-057 登場名稱二選一、名稱有效期限及各卡引用名稱。
-2. P03-087 接球時機、角色／參數指定與跨區六 Guts；P03-096 的角色／參數指定。
-3. 其他事件的場上目標、可不抽牌，以及打出事件與技能失效的分離。
-4. 登場技能的可不發動、中側攔技能選擇、各效果期限與負值。
-5. 所有 19 張部分技能逐項補測後，再進入牌組串接階段。
+1. 將新目標／參數介面套用到其餘卡片的已知限制。
+2. 其他事件的場上目標、可不抽牌，以及無變化時不能打出／失效處理。
+3. 登場技能的可不發動、中側攔技能選擇、各效果期限與負值。
+4. 剩餘 16 張部分技能逐項補測後，再進入牌組串接階段。
 
 ## 本機流程與正式模式待分離項目
 
@@ -48,7 +49,7 @@
 | [HV-P02-001](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P02-001&voba=S) | 日向 翔陽 | 主要技能情境通過 | `rules-audit.test.js` |
 | [HV-P03-051](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P03-051&voba=N) | 西谷 夕 | 部分技能待補 | 接球加成已實作；對手進攻減值目前有歸零下限，需依總規核對負值處理。 |
 | [HV-PR-022](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-PR-022&voba=P) | 澤村 大地 | 部分技能待補 | 目前自動套用 A 傳球，尚未讓玩家分別選擇兩個可使用的效果。 |
-| [HV-PR-057](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-PR-057&voba=P) | 着地上手組。 | 部分技能待補 | 目前依接球／攻擊固定名稱；尚未提供登場時二選一及完整名稱期限處理。 |
+| [HV-PR-057](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-PR-057&voba=P) | 着地上手組。 | 主要技能情境通過 | `skill-targets.test.js`；`skill-targets-undo.test.js`；`skill-targets-e2e.js` |
 | [HV-D01-009](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-D01-009&voba=D) | 菅原 孝支 | 無技能／數值核對 | 官方卡文無技能；數值、卡圖與牌組引用已檢查 |
 | [HV-P01-006](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-006&voba=%E9%A0%82) | 影山 飛雄 | 部分技能待補 | 公開卡可選擇不拿已修正；PR-057 的名稱判定仍依固定名稱，需隨名稱模組補全。；`rules-audit.test.js` |
 | [HV-P03-048](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P03-048&voba=R) | 影山 飛雄 | 無技能／數值核對 | 官方卡文無技能；數值、卡圖與牌組引用已檢查 |
@@ -69,8 +70,8 @@
 | [HV-P03-086](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P03-086&voba=N) | プレーは大分 おりこうさんよな | 主要技能情境通過 | `rules-audit.test.js` |
 | [HV-P03-090](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P03-090&voba=S) | おれにバレーボール教えてくれて ありがとう | 部分技能待補 | 回收與每回合次數已實作；目前只在可回收時提供，尚未分開處理打出事件與技能無效。 |
 | [HV-PR-029](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-PR-029&voba=P) | 鬼と 鬼だな | 部分技能待補 | 最多各一張可選擇不拿已修正；目前只在可回收時提供，空目標打出尚未提供。；`rules-audit.test.js`；`events-timing.test.js` |
-| [HV-P03-096](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P03-096&voba=N) | 日向 夏 | 部分技能待補 | 目前固定加本階段數值；尚未提供場上日向與任一參數的選擇。 |
-| [HV-P03-087](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P03-087&voba=N) | 周りの上手さに引っ張られる | 部分技能待補 | 目前僅攻擊階段加攻擊；尚缺接球階段、任意角色目標、影山跨區六 Guts 與參數選擇。 |
+| [HV-P03-096](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P03-096&voba=N) | 日向 夏 | 主要技能情境通過 | `skill-targets.test.js`；`skill-targets-undo.test.js`；`skill-targets-e2e.js` |
+| [HV-P03-087](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P03-087&voba=N) | 周りの上手さに引っ張られる | 主要技能情境通過 | `skill-targets.test.js`；`skill-targets-undo.test.js`；`skill-targets-e2e.js` |
 | [HV-P01-033](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-033&voba=%E9%A0%82) | 及川 徹 | 部分技能待補 | 目前只加發球／舉球階段數值，尚未提供任一參數的選擇。 |
 | [HV-D04-003](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-D04-003&voba=D) | 及川 徹 | 無技能／數值核對 | 官方卡文無技能；數值、卡圖與牌組引用已檢查 |
 | [HV-P04-027](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P04-027&voba=R) | 渡 親治 | 無技能／數值核對 | 官方卡文無技能；數值、卡圖與牌組引用已檢查 |

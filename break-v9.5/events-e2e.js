@@ -86,7 +86,7 @@ async function makeTrace() {
           await hand.click(); await page.click('[data-act="confirm"]');
         } else {
           await page.click(`#dockOpts [data-i="${index}"]`);
-          if (option.card && !Object.hasOwn(req.ctx || {}, 'revealed')) await page.click('[data-act="confirm"]');
+          if (option.card && req.kind !== 'target' && !Object.hasOwn(req.ctx || {}, 'revealed')) await page.click('[data-act="confirm"]');
         }
       }
       assert.equal(errors.length, 0);
