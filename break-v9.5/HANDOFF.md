@@ -94,3 +94,11 @@ node e2e.js                     # 需 playwright + chromium
 - ui.html 的 #turnScreen 為全螢幕確認畫面；不以計時器自動跳過。使用 inert 與 aria-hidden 隔離背景、管理焦點；#turnNext 確認，#turnUndo 使用既有 Undo／同意悔棋介面。
 - UndoSession 的 onNotice(g,notice) 不記入決策歷史，重播時跳過；使用同一取消 token 隔離舊提示回呼。真正 lossConfirm 會記入決策歷史，供完整重播。
 - flow.test.js 驗證暫停、取消舊提示、接球失敗確認、延後補牌、Undo 與悔棋。flow-e2e.js 使用 seed 7 的完整真實對局逐步比對畫面、來球數字與 Loss 順序；其餘 UI 測試已加入提示確認操作。
+
+
+## 手動結束回合與發球標示（2026-10-19 後續更新）
+- 真人在發球、成功攔網或接／托／打進攻全部完成後，新增 kind: turnEnd（outgoing:{type,off}，canLoss:true）決策；按結束回合才 return 來球並交棒，此時仍可主動 Loss 或 Undo。AI 不額外等待，卡片效果與數值不變。
+- lossConfirm 改在一般操作面板顯示，保留已登場的接球角色與球場可見；不再用全螢幕蓋掉失敗接球。玩家按「喊 Loss」後仍沿用 Loss 結果全畫面、補牌與換發球流程。
+- Game.server 記錄本球最初發球者，每球開始設定；ui.html 的 #rallyStatus 黏在球場上緣，整球顯示「本球發球：你／AI」及目前回合／等待結束／等待 Loss。發球原本的全螢幕提示保留。
+- 手機進入 turnEnd／lossConfirm 會捲至我方主球場，角色須完整位於發球標示和操作面板之間。
+- turn-end.test.js 驗證成功接托打後的暫停、主動 Loss、未交棒及留場；flow-e2e.js 新增交棒前 Loss→Undo→再按結束、發球標示持續可見、失敗角色未被遮擋。回合通知依舊不寫入決策歷史，turnEnd 與 lossConfirm 都是正式決策。

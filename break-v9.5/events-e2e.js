@@ -34,17 +34,16 @@ async function makeTrace() {
       let savedDraw = false;
       for (const { req, value } of trace) {
         if (req.kind === 'roll') { await page.click('#dockOpts [data-i="0"]'); continue; }
+        if (req.kind === 'lossConfirm') { await page.waitForSelector('#confirmLoss'); await page.click('#confirmLoss'); continue; }
         let ready = false;
         for (let step = 0; step < 200; step++) {
           if (await page.locator('#turnScreen:visible').count()) {
-            if (req.kind === 'lossConfirm' && await page.locator('#dockQ').textContent() === req.prompt) { ready = true; break; }
             await page.click('#turnNext');
           }
           if (!await page.locator('#turnScreen:visible').count() && (await page.locator('#dockQ').textContent()).includes(req.prompt)) { ready = true; break; }
           await page.waitForTimeout(50);
         }
         assert(ready, 'must reach scripted decision: ' + req.kind);
-        if (req.kind === 'lossConfirm') { await page.click('#turnNext'); continue; }
         if (req.kind === 'mulligan') { await page.click('[data-act="multi"]'); continue; }
         if (req.kind === 'ack') {
           if (!savedDraw && width === 390) {

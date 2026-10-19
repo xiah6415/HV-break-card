@@ -16,8 +16,7 @@ async function recordedGame() {
 const snapshot = page => page.evaluate(() => ({
   board: document.getElementById('game').textContent,
   cards: [...document.querySelectorAll('#meSide .hand [data-card]')].map(n => n.dataset.card),
-  log: document.getElementById('logSide').textContent,
-  title: document.getElementById('turnTitle')?.textContent
+  log: document.getElementById('logSide').textContent
 }));
 (async () => {
   const { trace, winner } = await recordedGame();
@@ -32,60 +31,83 @@ const snapshot = page => page.evaluate(() => ({
       await page.selectOption('#myDeck', 'k1014'); await page.selectOption('#aiDeck', 'seijoh');
       await page.selectOption('#speed', '200'); await page.click('#startBtn');
       const seen = new Set();
+      let server = null;
       for (const { req, value, notice } of trace) {
-        if (notice || req.kind === 'lossConfirm') {
-          const expected = req ? '你接不起這球' : notice.type === 'serve' ? (notice.player === 0 ? '你的發球回合' : 'AI 的發球回合') : notice.type === 'turn' ? (notice.player === 0 ? '輪到你了' : '輪到 AI 了') : (notice.player === 0 ? '你 LOSS' : 'AI LOSS');
+        if (notice) {
+          if (notice.type === 'serve') server = notice.player;
+          const expected = notice.type === 'serve' ? (notice.player === 0 ? '你的發球回合' : 'AI 的發球回合') : notice.type === 'turn' ? (notice.player === 0 ? '輪到你了' : '輪到 AI 了') : (notice.player === 0 ? '你 LOSS' : 'AI LOSS');
           await page.waitForFunction(title => !document.getElementById('turnScreen').hidden && document.getElementById('turnTitle').textContent === title, expected);
+          assert((await page.locator('#rallyStatus').textContent()).includes(`本球發球：${server === 0 ? '你' : 'AI'}`));
           const geometry = await page.locator('#turnScreen').evaluate(screen => {
             const r = screen.getBoundingClientRect();
             return { x: r.x, y: r.y, w: r.width, h: r.height, vw: innerWidth, vh: innerHeight, focus: screen.contains(document.activeElement), inert: document.getElementById('dock').inert && document.querySelector('.wrap').inert };
           });
           assert.equal(geometry.x, 0); assert.equal(geometry.y, 0);
           assert.equal(geometry.w, geometry.vw); assert.equal(geometry.h, geometry.vh);
-          assert(geometry.focus && geometry.inert, 'announcement must own focus and block background interactions');
+          assert(geometry.focus && geometry.inert);
           const before = await snapshot(page);
           await page.waitForTimeout(260);
-          assert.deepEqual(await snapshot(page), before, 'nothing may advance until explicit confirmation');
-          let kind = 'manual-loss';
-          if (notice) {
-            kind = notice.type + '-' + notice.player;
-            if (notice.type === 'turn') {
-              assert.equal(await page.locator('.turn-ball strong').textContent(), String(notice.ball.off));
-              if (notice.ball.type === 'attack') assert((await page.locator('.turn-ball').textContent()).includes(`舉球 ${notice.toss} ＋ 攻擊 ${notice.attack} ＝ ${notice.ball.off}`));
-              seen.add('ball-' + notice.ball.type + (notice.ball.off === 0 ? '-zero' : ''));
-            }
-            if (notice.type === 'loss') assert((await page.locator('.turn-ball').textContent()).includes(notice.final ? '贏了這場對戰' : `下一球：${notice.winner === 0 ? '你' : 'AI'}發球`));
-          } else {
-            assert.equal(await page.locator('#turnNext').textContent(), '喊 Loss');
-            assert((await page.locator('#turnDetail').textContent()).includes(req.reason));
-            // Undo while a failed receive is awaiting confirmation must restore the preceding decision.
-            if (!seen.has('loss-undo')) {
-              await page.click('#turnUndo');
-              await page.waitForSelector('#turnScreen[hidden]', { state: 'attached' });
-              assert(!await page.locator('#turnScreen:visible').count());
-              assert.match(await page.locator('#dockQ').textContent(), /選擇接球角色/);
-              if (await page.locator('#dockOpts [data-act="confirm"]').count()) throw new Error('Undo should restore an unstaged decision');
-              // Reapply the prior recorded choice, bringing us back to the identical failed receive.
-              const prior = trace[trace.findIndex(entry => entry.req === req) - 1];
-              assert(prior.req && prior.req.kind === 'receiver', 'fixture must fail directly after a receiver choice');
-              await page.locator(`.hand .hc.sel .cbtn[data-card="${prior.value}"]`).first().click();
-              await page.click('[data-act="confirm"]');
-              await page.waitForFunction(() => document.getElementById('turnTitle')?.textContent === '你接不起這球' && !document.getElementById('turnScreen').hidden);
-              assert.deepEqual(await snapshot(page), before, 'redoing the receiver must restore the same failed state');
-              assert(await page.locator('#turnUndo').isEnabled(), 'Undo must remain available after redoing the failed receiver');
-              seen.add('loss-undo');
-            }
+          assert.deepEqual(await snapshot(page), before, 'announcement must wait for confirmation');
+          const kind = notice.type + '-' + notice.player;
+          if (notice.type === 'turn') {
+            assert.equal(await page.locator('.turn-ball strong').textContent(), String(notice.ball.off));
+            if (notice.ball.type === 'attack') assert((await page.locator('.turn-ball').textContent()).includes(`舉球 ${notice.toss} ＋ 攻擊 ${notice.attack} ＝ ${notice.ball.off}`));
+            seen.add('ball-' + notice.ball.type + (notice.ball.off === 0 ? '-zero' : ''));
           }
+          if (notice.type === 'loss') assert((await page.locator('.turn-ball').textContent()).includes(notice.final ? '贏了這場對戰' : `下一球：${notice.winner === 0 ? '你' : 'AI'}發球`));
           if (width === 390 && !seen.has(kind)) await page.screenshot({ path: path.join(process.env.E2E_OUTPUT_DIR || '.', `flow-${kind}-mobile.png`) });
-          seen.add(kind);
-          await page.click('#turnNext');
-          continue;
+          seen.add(kind); await page.click('#turnNext'); continue;
+        }
+        if (req.kind === 'lossConfirm') {
+          await page.waitForSelector('#confirmLoss');
+          assert(!await page.locator('#turnScreen:visible').count(), 'failed receive must keep the board visible');
+          assert((await page.locator('#dockQ').textContent()).includes(req.reason));
+          const receiver = page.locator('#meSide [data-drop="receive"]');
+          assert.equal(await receiver.locator('.cbtn').count(), 1, 'the failed receiver must remain on court');
+          if (width < 700) {
+            const bounds = await receiver.boundingBox(), dock = await page.locator('#dock').boundingBox();
+            const banner = await page.locator('#rallyStatus').boundingBox();
+            assert(bounds.y >= banner.y + banner.height && bounds.y + bounds.height <= dock.y, 'failed receiver must be visible between the persistent banner and panel');
+          }
+          const before = await snapshot(page);
+          await page.waitForTimeout(260); assert.deepEqual(await snapshot(page), before);
+          if (!seen.has('loss-undo')) {
+            await page.click('#undoBtn');
+            await page.waitForFunction(() => document.getElementById('dockQ').textContent.includes('選擇接球角色'));
+            const prior = trace[trace.findIndex(entry => entry.req === req) - 1];
+            assert.equal(prior.req.kind, 'receiver');
+            await page.locator(`.hand .hc.sel .cbtn[data-card="${prior.value}"]`).first().click();
+            await page.click('[data-act="confirm"]'); await page.waitForSelector('#confirmLoss');
+            assert.deepEqual(await snapshot(page), before);
+            assert(await page.locator('#undoBtn').isEnabled()); seen.add('loss-undo');
+          }
+          if (width === 390 && !seen.has('manual-loss')) await page.screenshot({ path: path.join(process.env.E2E_OUTPUT_DIR || '.', 'flow-manual-loss-mobile.png') });
+          seen.add('manual-loss'); await page.click('#confirmLoss'); continue;
         }
         if (req.kind === 'roll') { await page.click('#dockOpts [data-i="0"]'); continue; }
         try {
           await page.waitForFunction(({ kind, prompt }) => document.getElementById('turnScreen').hidden && (kind === 'block' ? !!document.querySelector('[data-act="blk"]') : document.getElementById('dockQ').textContent.includes(prompt)), req);
         } catch (error) {
           throw new Error(`Expected ${req.kind}: ${req.prompt}; current: ${await page.locator('#dockQ').textContent()}; screen: ${await page.locator('#turnTitle').textContent()}; ${error.message}`);
+        }
+        if (req.kind === 'turnEnd') {
+          assert(await page.locator('#endTurn').isVisible());
+          assert(await page.locator('[data-act="loss"]').isVisible(), 'Loss must remain available until explicit turn end');
+          assert((await page.locator('#rallyStatus').textContent()).includes(`本球發球：${server === 0 ? '你' : 'AI'}`));
+          const banner = await page.locator('#rallyStatus').boundingBox();
+          assert(banner.y >= 0 && banner.y + banner.height <= height, 'server banner must remain visible while reviewing the court');
+          const before = await snapshot(page);
+          await page.waitForTimeout(260); assert.deepEqual(await snapshot(page), before, 'AI cannot move before turn end');
+          seen.add('end-' + req.outgoing.type);
+          if (req.outgoing.type === 'attack' && !seen.has('attack-loss')) {
+            await page.click('[data-act="loss"]'); await page.click('[data-act="lossyes"]');
+            await page.waitForFunction(() => !document.getElementById('turnScreen').hidden && document.getElementById('turnTitle').textContent === '你 LOSS');
+            await page.click('#turnUndo'); await page.waitForSelector('#endTurn');
+            assert.deepEqual(await snapshot(page), before, 'Loss after completing attack must be reversible to the end-turn decision');
+            assert(await page.locator('[data-act="loss"]').isVisible()); seen.add('attack-loss');
+          }
+          if (width === 390 && req.outgoing.type === 'attack') await page.screenshot({ path: path.join(process.env.E2E_OUTPUT_DIR || '.', 'flow-end-turn-mobile.png') });
+          await page.click('#endTurn'); continue;
         }
         if (req.kind === 'mulligan') { await page.click('[data-act="multi"]'); continue; }
         if (req.kind === 'ack') { await page.click('#dockOpts [data-act="ack"]'); continue; }
@@ -99,10 +121,10 @@ const snapshot = page => page.evaluate(() => ({
       }
       await page.waitForSelector('[data-act="again"]');
       assert.equal(await page.locator('#dockQ').textContent(), winner === 0 ? '你贏了！' : 'AI 贏了');
-      for (const kind of ['serve-0', 'serve-1', 'turn-0', 'turn-1', 'loss-0', 'loss-1', 'manual-loss', 'loss-undo', 'ball-attack', 'ball-serve', 'ball-block-zero']) assert(seen.has(kind), 'must exercise ' + kind);
+      for (const kind of ['serve-0', 'serve-1', 'turn-0', 'turn-1', 'loss-0', 'loss-1', 'manual-loss', 'loss-undo', 'end-serve', 'end-attack', 'end-block', 'attack-loss', 'ball-attack', 'ball-serve', 'ball-block-zero']) assert(seen.has(kind), 'must exercise ' + kind);
       assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
       assert.deepEqual(errors, []);
-      console.log(`flow UI passed: ${width}×${height}, full match, paused serve/turn/loss screens, final ball values, manual Loss and Undo`);
+      console.log(`flow UI passed: ${width}×${height}, full match, paused serve/turn/loss screens, final ball values, explicit end turn, Loss after attack, visible failed receiver and Undo`);
       await page.close();
     }
   } finally { await browser.close(); }

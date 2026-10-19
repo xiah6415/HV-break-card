@@ -77,6 +77,11 @@ select { font: inherit; padding: 10px; border-radius: 8px; border: 1px solid var
 /* ---------- board */
 .game { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; margin-top: 8px; min-width: 0; }
 .game > *, .side > *, .strip > *, .net > * { min-width: 0; }
+.rally-status { position: sticky; top: max(0px, env(safe-area-inset-top, 0px)); z-index: 15; background: #172c30; color: #fff; border: 2px solid #ffba87; border-radius: 10px; padding: 9px 12px; display: grid; gap: 3px; box-shadow: 0 3px 8px rgb(0 0 0 / .16); }
+.rally-status strong { font-size: 19px; line-height: 1.35; }
+.rally-status span { font-size: 12px; color: #e5edef; }
+.main, .hand { scroll-margin-top: 86px; }
+.loss-state b { color: var(--bad); }
 .side { border-radius: 14px; padding: 8px; display: grid; gap: 6px; }
 .side.opp { background: var(--teal-soft); }
 .side.me { background: var(--court-soft); }
@@ -350,6 +355,7 @@ body.turn-open .sheet { z-index: 80; }
   <section id="game" hidden>
     <div class="lay">
       <div class="game">
+        <div class="rally-status" id="rallyStatus" role="status"></div>
         <div class="side opp" id="oppSide"></div>
         <div class="net" id="net"></div>
         <div class="side me" id="meSide"></div>
@@ -493,7 +499,7 @@ class Game {
     this.update = opts.onUpdate || (() => {});
     this.onNotice = opts.onNotice || (() => {});
     this.players = [new Player(this, 0, opts.decks[0], opts.agents[0]), new Player(this, 1, opts.decks[1], opts.agents[1])];
-    this.ball = null; this.rallyNo = 0; this.turnNo = 0; this.winner = null; this.stats = {};
+    this.ball = null; this.rallyNo = 0; this.turnNo = 0; this.server = null; this.winner = null; this.stats = {};
   }
   shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(this.rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } }
   log(s, cls) { this.logFn(s, cls); }
@@ -562,6 +568,7 @@ class Game {
     }
     for (;;) {
       this.rallyNo++;
+      this.server = server.idx;
       this.log(`第 ${this.rallyNo} 球 — ${server.name} 發球`, 'head');
       let loser = null, lossReason = '回合往返達上限';
       try {
@@ -593,6 +600,11 @@ class Game {
   }
   lost(p, why) { const e = new LostSignal(why); e.who = p; throw e; }
   beginTurn(p) { this.turnP = p; this.turnNo++; p.restrict = p.pending; p.pending = {}; p.ts = { used: {} }; p.newCount = {}; this.src = ''; }
+  async confirmTurnEnd(p, outgoing) {
+    if (!p.agent.wantsAck) return;
+    const label = { serve: '發球', attack: '進攻', block: '攔網回球' }[outgoing.type];
+    await this.ask(p, { kind: 'turnEnd', prompt: `${label}準備完成：${outgoing.off}。尚未交棒，可結束回合或喊 Loss`, outgoing, options: [{ label: '結束回合', value: true }] });
+  }
 
   // ---------- serve
   async serveTurn(p) {
@@ -609,6 +621,7 @@ class Game {
       if (o.hand.length >= 4) await this.discard(o, '及川 033：你要棄 1 張手牌');
     }
     await this.eventLoop(p, 'srv', { serveChar: c });
+    await this.confirmTurnEnd(p, { type: 'serve', off });
     this.log(`${p.name} 發球 ${nm(c)} → 威力 ${off}`);
     return { type: 'serve', off };
   }
@@ -673,6 +686,7 @@ class Game {
     p.drop.push(...p.ts.sides); if (p.ts.sides.length) this.log(`側攔 ${p.ts.sides.map(nm).join('、')} → 棄牌區`, 'guts');
     if (p.ts.blk < this.ball.off) this.lost(p, `攔網 ${p.ts.blk} 小於進攻 ${this.ball.off}`);
     this.log(`攔網成功（${p.ts.blk} ≥ ${this.ball.off}），回球 0；側攔進棄牌區`);
+    await this.confirmTurnEnd(p, { type: 'block', off: 0 });
     this.tag(p.idx + ':block');
     return { type: 'block', off: 0 };
   }
@@ -746,6 +760,7 @@ class Game {
     await this.enterAttack(p, a, false);
     await this.eventLoop(p, 'atk', {});
     const offense = p.ts.toss + p.ts.atk;
+    await this.confirmTurnEnd(p, { type: 'attack', off: offense });
     this.log(`${p.name} 攻擊 ${nm(p.ts.attacker)}：舉 ${p.ts.toss} ＋ 攻 ${p.ts.atk} ＝ 進攻 ${offense}`, 'atk');
     this.tag(p.idx + ':attack');
     return { type: 'attack', off: offense };
@@ -1299,12 +1314,11 @@ else root.BreakUndoTools = api;
   let staged = null;            // { card, i(option index) } — 預放中的卡
   let blk = null;               // { cards: [], center } — 攔網組裝中
   let prevTop = {}, prevVal = {}, prevBall = null, suppressClick = false, lossArm = false;
-  const human = { label: '你', choose(g, p, req) { return new Promise(res => { pending = { req, res }; picked = new Set(); staged = null; lossArm = false; blk = req.kind === 'block' && req.build ? { cards: [], center: null } : null; setDockCollapsed(false); render(); if (req.kind === 'mulligan' || handReq()) requestAnimationFrame(() => { measureDock(); if (window.matchMedia('(max-width: 699px)').matches) $('meSide').querySelector('.hand')?.scrollIntoView({ block: 'nearest' }); }); }); } };
+  const human = { label: '你', choose(g, p, req) { return new Promise(res => { pending = { req, res }; picked = new Set(); staged = null; lossArm = false; blk = req.kind === 'block' && req.build ? { cards: [], center: null } : null; setDockCollapsed(false); render(); if (req.kind === 'lossConfirm' || req.kind === 'turnEnd' || req.kind === 'mulligan' || handReq()) requestAnimationFrame(() => { measureDock(); if (window.matchMedia('(max-width: 699px)').matches) $('meSide').querySelector(req.kind === 'lossConfirm' || req.kind === 'turnEnd' ? '.main' : '.hand')?.scrollIntoView({ block: req.kind === 'lossConfirm' || req.kind === 'turnEnd' ? 'start' : 'nearest' }); }); }); } };
   function answer(v) { if (!pending) return; const r = pending.res; pending = null; picked = new Set(); staged = null; blk = null; r(v); render(); }
 
   function renderTransition() {
-    const loss = pending?.req.kind === 'lossConfirm' ? pending.req : null;
-    const source = loss || turnNotice;
+    const source = turnNotice;
     if (source === shownTransition) return;
     shownTransition = source;
     const screen = $('turnScreen');
@@ -1320,10 +1334,7 @@ else root.BreakUndoTools = api;
     const n = turnNotice?.data, mine = n?.player === 0;
     const who = mine ? '你' : 'AI';
     let title, phase, detail, middle = '', action;
-    if (loss) {
-      title = loss.reason.startsWith('接球 ') ? '你接不起這球' : '這球無法繼續';
-      phase = '等待你喊 Loss'; detail = loss.reason + '。確認後才會結算失分。'; action = '喊 Loss';
-    } else if (n.type === 'serve') {
+    if (n.type === 'serve') {
       title = mine ? '你的發球回合' : 'AI 的發球回合';
       phase = '發球階段'; detail = `第 ${n.rally} 球，由${who}先發球。`;
       middle = '<div class="turn-ball"><span>準備發球</span><strong aria-hidden="true">SERVE</strong></div>';
@@ -1344,7 +1355,6 @@ else root.BreakUndoTools = api;
     const status = session?.status();
     $('turnCard').innerHTML = `<div class="turn-eyebrow">BREAK · 第 ${game.rallyNo} 球</div><h2 class="turn-title" id="turnTitle">${title}</h2><p class="turn-phase">${phase}</p>${middle}<p class="turn-detail" id="turnDetail">${esc(detail)}</p><div class="turn-actions"><button class="turn-next" id="turnNext" type="button">${action}</button><button class="turn-undo" id="turnUndo" type="button" ${status?.enabled ? '' : 'disabled'}>${status?.opponent ? '請求悔棋' : '返回上一步（Undo）'}</button></div>`;
     $('turnNext').onclick = () => {
-      if (loss) return answer(true);
       const done = turnNotice?.resolve;
       turnNotice = null; renderTransition(); done?.();
     };
@@ -1534,7 +1544,8 @@ else root.BreakUndoTools = api;
   function dockHTML() {
     const r = pending.req, me = game.players[0];
     const fl = flashMsg ? `<small class="flash">${esc(flashMsg)}</small>` : '';
-    if (r.kind === 'lossConfirm') return [esc(r.prompt), '<button class="opt lossy" type="button" data-i="0">喊 Loss</button>'];
+    if (r.kind === 'lossConfirm') return [`<div class="loss-state"><b>這球無法繼續，等待你喊 Loss</b><small>${esc(r.reason)}。已登場的牌留在場上；按下 Loss 才結算下一球。</small></div>`, '<button class="opt lossy" type="button" id="confirmLoss" data-i="0">喊 Loss</button>'];
+    if (r.kind === 'turnEnd') return [`<b>${esc(r.prompt)}</b><small>${r.outgoing.type === 'attack' ? '接／托／打與事件已完成' : r.outgoing.type === 'serve' ? '發球準備完成' : '攔網已完成'}，確認球場後再交棒；現在仍可喊 Loss。</small>`, '<button class="opt primary" type="button" data-i="0" id="endTurn">結束回合</button>'];
     if (r.kind === 'roll') {
       const [a, b] = r.ctx.dice, meFirst = r.ctx.server === 0;
       return [`<div class="dice"><div><span class="die roll">${a}</span><small>你</small></div><b class="vs">VS</b><div><span class="die roll d2">${b}</span><small>AI</small></div></div>
@@ -1630,6 +1641,11 @@ else root.BreakUndoTools = api;
     $('meSide').innerHTML = mainHTML(me) + auxHTML(me) + stripHTML(me, true) + handHTML(me);
     prevTop = nextTop; prevVal = nextVal;
     $('net').innerHTML = netHTML();
+    const server = game.server ?? game.firstServer;
+    const owner = game.turnP?.idx;
+    const who = owner === 0 ? '你' : 'AI';
+    const state = game.winner ? '對局結束' : pending?.req.kind === 'lossConfirm' ? '你的回合 · 等待你喊 Loss' : pending?.req.kind === 'turnEnd' ? '你的回合 · 等待結束或 Loss' : owner == null ? '準備／交接中' : !game.ball ? `${who}正在發球` : `${who}的回合`;
+    $('rallyStatus').innerHTML = `<strong>${game.rallyNo ? `第 ${game.rallyNo} 球 · 本球發球：${server === 0 ? '你' : 'AI'}` : '準備對局'}</strong><span>${state}</span>`;
     const logHTML = logBuf.slice(-200).map(([s, c]) => `<div class="${c || ''}">${esc(s)}</div>`).join('');
     $('logSide').innerHTML = logHTML; $('logSide').scrollTop = $('logSide').scrollHeight;
     const dock = $('dock'); dock.hidden = false;

@@ -123,7 +123,7 @@ class Game {
     this.update = opts.onUpdate || (() => {});
     this.onNotice = opts.onNotice || (() => {});
     this.players = [new Player(this, 0, opts.decks[0], opts.agents[0]), new Player(this, 1, opts.decks[1], opts.agents[1])];
-    this.ball = null; this.rallyNo = 0; this.turnNo = 0; this.winner = null; this.stats = {};
+    this.ball = null; this.rallyNo = 0; this.turnNo = 0; this.server = null; this.winner = null; this.stats = {};
   }
   shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(this.rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } }
   log(s, cls) { this.logFn(s, cls); }
@@ -192,6 +192,7 @@ class Game {
     }
     for (;;) {
       this.rallyNo++;
+      this.server = server.idx;
       this.log(`第 ${this.rallyNo} 球 — ${server.name} 發球`, 'head');
       let loser = null, lossReason = '回合往返達上限';
       try {
@@ -223,6 +224,11 @@ class Game {
   }
   lost(p, why) { const e = new LostSignal(why); e.who = p; throw e; }
   beginTurn(p) { this.turnP = p; this.turnNo++; p.restrict = p.pending; p.pending = {}; p.ts = { used: {} }; p.newCount = {}; this.src = ''; }
+  async confirmTurnEnd(p, outgoing) {
+    if (!p.agent.wantsAck) return;
+    const label = { serve: '發球', attack: '進攻', block: '攔網回球' }[outgoing.type];
+    await this.ask(p, { kind: 'turnEnd', prompt: `${label}準備完成：${outgoing.off}。尚未交棒，可結束回合或喊 Loss`, outgoing, options: [{ label: '結束回合', value: true }] });
+  }
 
   // ---------- serve
   async serveTurn(p) {
@@ -239,6 +245,7 @@ class Game {
       if (o.hand.length >= 4) await this.discard(o, '及川 033：你要棄 1 張手牌');
     }
     await this.eventLoop(p, 'srv', { serveChar: c });
+    await this.confirmTurnEnd(p, { type: 'serve', off });
     this.log(`${p.name} 發球 ${nm(c)} → 威力 ${off}`);
     return { type: 'serve', off };
   }
@@ -303,6 +310,7 @@ class Game {
     p.drop.push(...p.ts.sides); if (p.ts.sides.length) this.log(`側攔 ${p.ts.sides.map(nm).join('、')} → 棄牌區`, 'guts');
     if (p.ts.blk < this.ball.off) this.lost(p, `攔網 ${p.ts.blk} 小於進攻 ${this.ball.off}`);
     this.log(`攔網成功（${p.ts.blk} ≥ ${this.ball.off}），回球 0；側攔進棄牌區`);
+    await this.confirmTurnEnd(p, { type: 'block', off: 0 });
     this.tag(p.idx + ':block');
     return { type: 'block', off: 0 };
   }
@@ -376,6 +384,7 @@ class Game {
     await this.enterAttack(p, a, false);
     await this.eventLoop(p, 'atk', {});
     const offense = p.ts.toss + p.ts.atk;
+    await this.confirmTurnEnd(p, { type: 'attack', off: offense });
     this.log(`${p.name} 攻擊 ${nm(p.ts.attacker)}：舉 ${p.ts.toss} ＋ 攻 ${p.ts.atk} ＝ 進攻 ${offense}`, 'atk');
     this.tag(p.idx + ':attack');
     return { type: 'attack', off: offense };
