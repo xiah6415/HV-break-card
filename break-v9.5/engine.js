@@ -122,7 +122,7 @@ class Game {
     this.reveal = opts.reveal == null ? -1 : opts.reveal; this.src = '';
     this.update = opts.onUpdate || (() => {});
     this.players = [new Player(this, 0, opts.decks[0], opts.agents[0]), new Player(this, 1, opts.decks[1], opts.agents[1])];
-    this.ball = null; this.rallyNo = 0; this.winner = null; this.stats = {};
+    this.ball = null; this.rallyNo = 0; this.turnNo = 0; this.winner = null; this.stats = {};
   }
   shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(this.rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } }
   log(s, cls) { this.logFn(s, cls); }
@@ -215,7 +215,7 @@ class Game {
     }
   }
   lost(p, why) { const e = new LostSignal(why); e.who = p; throw e; }
-  beginTurn(p) { this.turnP = p; p.restrict = p.pending; p.pending = {}; p.ts = { used: {} }; p.newCount = {}; this.src = ''; }
+  beginTurn(p) { this.turnP = p; this.turnNo++; p.restrict = p.pending; p.pending = {}; p.ts = { used: {} }; p.newCount = {}; this.src = ''; }
 
   // ---------- serve
   async serveTurn(p) {

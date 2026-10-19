@@ -182,6 +182,8 @@ select { font: inherit; padding: 10px; border-radius: 8px; border: 1px solid var
 .dock-head { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .dock-summary { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 12px; color: var(--muted); }
 .dock-toggle { flex: 0 0 auto; min-height: 40px; }
+.undo-button { flex: 0 0 auto; min-height: 40px; }
+.undo-button:disabled { opacity: .4; cursor: not-allowed; }
 .dock.collapsed .q, .dock.collapsed .opts { display: none; }
 .dock.collapsed .in { padding-block: 4px; }
 @media (max-width: 699px) {
@@ -337,7 +339,7 @@ body.dragging .hand .hc.sel .ci, body.dragging .hand .hc.staged .ci { opacity: .
   </section>
 </div>
 
-<div class="dock" id="dock" hidden><div class="in"><div class="dock-head"><div class="dock-summary" id="dockSummary">目前操作</div><button class="chip dock-toggle" id="dockToggle" type="button" aria-expanded="true" aria-controls="dockQ dockOpts">收合面板</button></div><div class="q" id="dockQ"></div><div class="opts" id="dockOpts"></div></div></div>
+<div class="dock" id="dock" hidden><div class="in"><div class="dock-head"><div class="dock-summary" id="dockSummary">目前操作</div><button class="chip undo-button" id="undoBtn" type="button" disabled>Undo</button><button class="chip dock-toggle" id="dockToggle" type="button" aria-expanded="true" aria-controls="dockQ dockOpts">收合面板</button></div><div class="q" id="dockQ"></div><div class="opts" id="dockOpts"></div></div></div>
 <div class="sheet" id="sheet" hidden><div class="box" id="sheetBox"></div></div>
 
 <script>
@@ -348,6 +350,9 @@ body.dragging .hand .hc.sel .ci, body.dragging .hand .hc.staged .ci { opacity: .
 </script>
 <script>
 /*DECKTOOLS*/
+</script>
+<script>
+/*UNDOTOOLS*/
 </script>
 <script>
 (() => {
@@ -389,8 +394,9 @@ body.dragging .hand .hc.sel .ci, body.dragging .hand .hc.staged .ci { opacity: .
   };
 
   // ---------- sheets
-  function openSheet(html) { $('sheetBox').innerHTML = html + '<button class="chip closer" type="button" data-close="1">關閉</button>'; $('sheet').hidden = false; }
-  function closeSheet() { $('sheet').hidden = true; }
+  let sheetOnClose = null;
+  function openSheet(html, onClose = null) { closeSheet(); sheetOnClose = onClose; $('sheetBox').innerHTML = html + '<button class="chip closer" type="button" data-close="1">關閉</button>'; $('sheet').hidden = false; }
+  function closeSheet() { $('sheet').hidden = true; const callback = sheetOnClose; sheetOnClose = null; callback?.(); }
   $('sheet').addEventListener('click', e => { if (e.target.id === 'sheet' || e.target.dataset.close) closeSheet(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
   function cardSheet(c) {
@@ -402,7 +408,7 @@ body.dragging .hand .hc.sel .ci, body.dragging .hand .hc.staged .ci { opacity: .
   }
 
   // ---------- game state
-  let game = null, pending = null, picked = new Set(), logBuf = [];
+  let game = null, session = null, pending = null, picked = new Set(), logBuf = [];
   let staged = null;            // { card, i(option index) } — 預放中的卡
   let blk = null;               // { cards: [], center } — 攔網組裝中
   let prevTop = {}, prevVal = {}, prevBall = null, suppressClick = false, lossArm = false;
@@ -652,6 +658,25 @@ body.dragging .hand .hc.sel .ci, body.dragging .hand .hc.staged .ci { opacity: .
   if (window.ResizeObserver) new ResizeObserver(() => requestAnimationFrame(measureDock)).observe($('dock'));
   syncViewport();
 
+  function updateUndoButton() {
+    const status = session?.status();
+    $('undoBtn').disabled = !!session?.replaying || !(staged || status?.enabled);
+    $('undoBtn').textContent = !staged && status?.opponent ? '請求悔棋' : 'Undo';
+    $('undoBtn').title = staged ? '取消尚未確認的預放' : status?.opponent ? '回到交棒前最後一個我方決策' : '撤回本回合上一個已確認操作';
+  }
+  $('undoBtn').onclick = () => {
+    if (!session || session.replaying) return;
+    if (staged) { staged = null; return render(); }
+    const status = session.status();
+    if (!status.enabled) return;
+    if (!status.opponent) { closeSheet(); session.undo(); return; }
+    const current = session;
+    const request = current.requestTakeback();
+    if (!request) return;
+    openSheet('<h3>請求悔棋</h3><p>向 AI 請求回到交棒前最後一個我方決策？AI 對練會自動接受；抽牌與擲骰沿用原結果。</p><div class="opts"><button class="opt primary" id="confirmUndo" type="button">送出悔棋請求</button><button class="opt" data-close="1" type="button">繼續對戰</button></div>', () => current.cancelTakeback(request.id));
+    $('confirmUndo').onclick = () => { current.resolveTakeback(request.id, request.responder, true); closeSheet(); };
+  };
+
   function render() {
     if (!game) return;
     const [me, ai] = game.players;
@@ -676,6 +701,7 @@ body.dragging .hand .hc.sel .ci, body.dragging .hand .hc.staged .ci { opacity: .
       $('dockOpts').innerHTML = '';
     }
     $('dockSummary').textContent = game.winner ? $('dockQ').textContent : pending ? pending.req.prompt : 'AI 行動中';
+    updateUndoButton();
     requestAnimationFrame(measureDock);
   }
 
@@ -782,20 +808,27 @@ body.dragging .hand .hc.sel .ci, body.dragging .hand .hc.staged .ci { opacity: .
   $('logBtn').onclick = showLog;
   $('menuBtn').onclick = () => openSheet('<h3>選單</h3><div class="opts"><button class="opt primary" type="button" id="mRestart">重新開始這場</button><button class="opt" type="button" id="mSetup">回到選牌組</button></div>');
   $('sheet').addEventListener('click', e => { if (e.target.id === 'mRestart') { closeSheet(); start(); } if (e.target.id === 'mSetup') { closeSheet(); backToSetup(); } });
-  function backToSetup() { game = null; pending = null; $('game').hidden = true; $('dock').hidden = true; $('tbtns').hidden = true; $('setup').hidden = false; }
+  function backToSetup() { session?.stop(); session = null; game = null; pending = null; $('game').hidden = true; $('dock').hidden = true; $('tbtns').hidden = true; $('setup').hidden = false; }
 
-  let gen = 0;
   function start() {
     const my = $('myDeck').value, ai = $('aiDeck').value, speed = +$('speed').value;
     store.set('bk_my', my); store.set('bk_ai', ai); store.set('bk_speed', String(speed));
-    const myGen = ++gen; logBuf = []; pending = null;
-    const aiAgent = Object.assign({}, E.AI, { label: 'AI', delay: speed, choose(g, p, req) { if (myGen !== gen) return new Promise(() => {}); g.current = 1; return E.AI.choose.call(this, g, p, req); } });
-    const hum = { label: '你', wantsAck: true, choose(g, p, req) { if (myGen !== gen) return new Promise(() => {}); g.current = 0; return human.choose(g, p, req); } };
-    game = new E.Game({ reveal: 0, decks: [my, ai], agents: [hum, aiAgent], onLog: (s, c) => { if (myGen === gen) logBuf.push([s, c]); }, onUpdate: () => { if (myGen === gen) render(); } });
-    game.current = 0;
+    session?.stop();
+    session = new window.BreakUndoTools.UndoSession(E, {
+      decks: [my, ai], human, ai: Object.assign({}, E.AI, { label: 'AI', delay: speed }),
+      onGame(g) {
+        game = g; logBuf = []; pending = null; picked = new Set(); staged = null; blk = null; lossArm = false;
+        prevTop = {}; prevVal = {}; prevBall = null; flashMsg = ''; clearTimeout(flashT);
+        if (drag?.el) drag.el.remove(); if (drag?.over) drag.over.classList.remove('over');
+        drag = null; suppressClick = false; document.body.classList.remove('dragging');
+        if (session.replaying) { $('dockQ').textContent = '正在撤回…'; $('dockOpts').innerHTML = ''; updateUndoButton(); }
+      },
+      onLog: (s, cls) => logBuf.push([s, cls]),
+      onUpdate: () => render(),
+      onError(err) { pending = null; logBuf.push(['發生錯誤：' + err.message, 'lost']); render(); $('runtimeStatus').hidden = false; $('runtimeStatus').textContent = '❌ ' + err.message; console.error(err); }
+    });
     $('setup').hidden = true; $('game').hidden = false; $('tbtns').hidden = false;
-    render();
-    game.run().then(() => { if (myGen === gen) render(); }).catch(err => { logBuf.push(['發生錯誤：' + err.message, 'lost']); render(); console.error(err); });
+    session.start();
   }
   $('startBtn').onclick = () => { try { start(); document.getElementById('runtimeStatus').hidden = true; } catch (e) { const box = document.getElementById('runtimeStatus'); box.hidden = false; box.textContent = '❌ 遊戲啟動錯誤：' + (e && e.message || e); console.error(e); } };
   document.getElementById('runtimeStatus').hidden = true;

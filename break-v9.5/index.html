@@ -182,6 +182,8 @@ select { font: inherit; padding: 10px; border-radius: 8px; border: 1px solid var
 .dock-head { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .dock-summary { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 12px; color: var(--muted); }
 .dock-toggle { flex: 0 0 auto; min-height: 40px; }
+.undo-button { flex: 0 0 auto; min-height: 40px; }
+.undo-button:disabled { opacity: .4; cursor: not-allowed; }
 .dock.collapsed .q, .dock.collapsed .opts { display: none; }
 .dock.collapsed .in { padding-block: 4px; }
 @media (max-width: 699px) {
@@ -337,7 +339,7 @@ body.dragging .hand .hc.sel .ci, body.dragging .hand .hc.staged .ci { opacity: .
   </section>
 </div>
 
-<div class="dock" id="dock" hidden><div class="in"><div class="dock-head"><div class="dock-summary" id="dockSummary">目前操作</div><button class="chip dock-toggle" id="dockToggle" type="button" aria-expanded="true" aria-controls="dockQ dockOpts">收合面板</button></div><div class="q" id="dockQ"></div><div class="opts" id="dockOpts"></div></div></div>
+<div class="dock" id="dock" hidden><div class="in"><div class="dock-head"><div class="dock-summary" id="dockSummary">目前操作</div><button class="chip undo-button" id="undoBtn" type="button" disabled>Undo</button><button class="chip dock-toggle" id="dockToggle" type="button" aria-expanded="true" aria-controls="dockQ dockOpts">收合面板</button></div><div class="q" id="dockQ"></div><div class="opts" id="dockOpts"></div></div></div>
 <div class="sheet" id="sheet" hidden><div class="box" id="sheetBox"></div></div>
 
 <script>
@@ -468,7 +470,7 @@ class Game {
     this.reveal = opts.reveal == null ? -1 : opts.reveal; this.src = '';
     this.update = opts.onUpdate || (() => {});
     this.players = [new Player(this, 0, opts.decks[0], opts.agents[0]), new Player(this, 1, opts.decks[1], opts.agents[1])];
-    this.ball = null; this.rallyNo = 0; this.winner = null; this.stats = {};
+    this.ball = null; this.rallyNo = 0; this.turnNo = 0; this.winner = null; this.stats = {};
   }
   shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(this.rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } }
   log(s, cls) { this.logFn(s, cls); }
@@ -561,7 +563,7 @@ class Game {
     }
   }
   lost(p, why) { const e = new LostSignal(why); e.who = p; throw e; }
-  beginTurn(p) { this.turnP = p; p.restrict = p.pending; p.pending = {}; p.ts = { used: {} }; p.newCount = {}; this.src = ''; }
+  beginTurn(p) { this.turnP = p; this.turnNo++; p.restrict = p.pending; p.pending = {}; p.ts = { used: {} }; p.newCount = {}; this.src = ''; }
 
   // ---------- serve
   async serveTurn(p) {
@@ -1031,6 +1033,161 @@ else root.BreakDeckTools = api;
 
 </script>
 <script>
+/* Fixed-seed decision replay. Does not serialize async engine continuations. */
+(function(root) {
+'use strict';
+const copy = value => JSON.parse(JSON.stringify(value));
+class Cancelled extends Error {}
+let sessionId = 0;
+
+class UndoSession {
+  constructor(engine, options) {
+    this.engine = engine;
+    this.options = options;
+    this.seed = options.seed ?? (Date.now() >>> 0);
+    this.localPlayer = options.localPlayer ?? 0;
+    this.gameId = options.gameId || 'local-' + this.seed + '-' + (++sessionId);
+    this.revision = 0;
+    this.requestNo = 0;
+    this.takeback = null;
+    this.entries = [];
+    this.replaying = false;
+    this.token = null;
+    this.game = null;
+  }
+  stop() {
+    const token = this.token;
+    if (!token || token.cancelled) return;
+    token.cancelled = true;
+    this.takeback = null;
+    token.abort(new Cancelled('Old game cancelled'));
+    this.resume();
+  }
+  pause() { if (this.token) this.token.paused = true; }
+  resume() {
+    if (!this.token) return;
+    this.token.paused = false;
+    this.token.waiters.splice(0).forEach(resolve => resolve());
+  }
+  async ready(token) {
+    while (token.paused && !token.cancelled) await new Promise(resolve => token.waiters.push(resolve));
+    if (token.cancelled || token !== this.token) throw new Cancelled('Old game cancelled');
+  }
+  status(player = this.localPlayer) {
+    const g = this.game;
+    if (![0, 1].includes(player) || !g || g.winner || this.replaying || this.token?.cancelled) return { enabled: false, opponent: false, target: -1 };
+    const owner = g.turnP?.idx ?? null;
+    const opponent = owner === 1 - player || (owner === null && g.current === 1 - player);
+    let target = -1;
+    for (let i = this.entries.length - 1; i >= 0; i--) {
+      const entry = this.entries[i];
+      if (entry.actor === player && entry.kind !== 'roll' && (opponent ?
+        entry.owner === player || (owner === null && entry.owner === null) :
+        entry.owner === owner && entry.turn === g.turnNo)) { target = i; break; }
+    }
+    return { enabled: target >= 0, opponent, target };
+  }
+  undo() {
+    const status = this.status();
+    if (!status.enabled || status.opponent || this.takeback) return false;
+    this.start(this.entries.slice(0, status.target));
+    return true;
+  }
+  requestTakeback(player = this.localPlayer) {
+    const status = this.status(player);
+    if (!status.enabled || !status.opponent || this.takeback) return null;
+    const request = {
+      id: this.gameId + ':' + (++this.requestNo), gameId: this.gameId,
+      requester: player, responder: 1 - player, revision: this.revision,
+      target: status.target, turn: this.game.turnNo
+    };
+    this.takeback = request;
+    this.pause();
+    return copy(request);
+  }
+  resolveTakeback(id, responder, accepted) {
+    const request = this.takeback;
+    if (typeof accepted !== 'boolean' || !request || request.id !== id || request.responder !== responder || request.revision !== this.revision || request.turn !== this.game.turnNo) return false;
+    const status = this.status(request.requester);
+    if (!status.enabled || status.target !== request.target || !status.opponent) return false;
+    this.takeback = null;
+    if (accepted) this.start(this.entries.slice(0, request.target));
+    else this.resume();
+    return true;
+  }
+  cancelTakeback(id, requester = this.localPlayer) {
+    if (!this.takeback || this.takeback.id !== id || this.takeback.requester !== requester) return false;
+    this.takeback = null;
+    this.resume();
+    return true;
+  }
+  start(prefix = []) {
+    this.stop();
+    const token = { cancelled: false, paused: false, waiters: [], cursor: 0, prefix: copy(prefix) };
+    token.aborted = new Promise((resolve, reject) => { token.abort = reject; });
+    token.aborted.catch(() => {});
+    this.token = token;
+    this.revision++;
+    this.entries = [];
+    this.replaying = prefix.length > 0;
+    const active = () => token === this.token && !token.cancelled;
+    const providers = this.options.agents || [this.options.human, this.options.ai];
+    const agents = providers.map((provider, actor) => ({
+      label: provider.label || (actor === 0 ? '你' : 'AI'),
+      wantsAck: provider.wantsAck ?? actor === this.localPlayer,
+      choose: async (g, p, req) => {
+        await this.ready(token);
+        g.current = actor;
+        const checkpoint = {
+          actor, owner: g.turnP?.idx ?? null, turn: g.turnNo, kind: req.kind,
+          signature: JSON.stringify(req)
+        };
+        let value;
+        if (token.cursor < token.prefix.length) {
+          const previous = token.prefix[token.cursor++];
+          if (previous.actor !== actor || previous.turn !== checkpoint.turn || previous.signature !== checkpoint.signature) {
+            throw new Error('悔棋紀錄與對局不一致，請重新開始對局');
+          }
+          value = copy(previous.value);
+        } else {
+          this.replaying = false;
+          this.options.onUpdate?.(g);
+          value = await Promise.race([provider.choose(g, p, req), token.aborted]);
+          await this.ready(token);
+        }
+        this.entries.push({ ...checkpoint, value: copy(value) });
+        this.revision++;
+        return value;
+      }
+    }));
+    const g = new this.engine.Game({
+      seed: this.seed, decks: this.options.decks, reveal: this.localPlayer, agents,
+      onLog: (s, cls) => { if (active()) this.options.onLog?.(s, cls); },
+      onUpdate: () => { if (active() && !this.replaying) this.options.onUpdate?.(g); }
+    });
+    this.game = g;
+    this.options.onGame?.(g);
+    this.done = g.run().then(winner => {
+      if (active()) this.options.onUpdate?.(g);
+      return winner;
+    }).catch(error => {
+      if (active() && !(error instanceof Cancelled)) {
+        this.replaying = false;
+        this.stop();
+        this.options.onError?.(error);
+      }
+      return null;
+    });
+    return g;
+  }
+}
+const api = { UndoSession };
+if (typeof module !== 'undefined' && module.exports) module.exports = api;
+else root.BreakUndoTools = api;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
 (() => {
   const E = window.BreakEngine, IMG = window.CARD_IMG || {}, DT = window.BreakDeckTools;
   document.getElementById("runtimeStatus").textContent = "✅ JavaScript 已執行，正在載入牌組及遊戲…";
@@ -1070,8 +1227,9 @@ else root.BreakDeckTools = api;
   };
 
   // ---------- sheets
-  function openSheet(html) { $('sheetBox').innerHTML = html + '<button class="chip closer" type="button" data-close="1">關閉</button>'; $('sheet').hidden = false; }
-  function closeSheet() { $('sheet').hidden = true; }
+  let sheetOnClose = null;
+  function openSheet(html, onClose = null) { closeSheet(); sheetOnClose = onClose; $('sheetBox').innerHTML = html + '<button class="chip closer" type="button" data-close="1">關閉</button>'; $('sheet').hidden = false; }
+  function closeSheet() { $('sheet').hidden = true; const callback = sheetOnClose; sheetOnClose = null; callback?.(); }
   $('sheet').addEventListener('click', e => { if (e.target.id === 'sheet' || e.target.dataset.close) closeSheet(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
   function cardSheet(c) {
@@ -1083,7 +1241,7 @@ else root.BreakDeckTools = api;
   }
 
   // ---------- game state
-  let game = null, pending = null, picked = new Set(), logBuf = [];
+  let game = null, session = null, pending = null, picked = new Set(), logBuf = [];
   let staged = null;            // { card, i(option index) } — 預放中的卡
   let blk = null;               // { cards: [], center } — 攔網組裝中
   let prevTop = {}, prevVal = {}, prevBall = null, suppressClick = false, lossArm = false;
@@ -1333,6 +1491,25 @@ else root.BreakDeckTools = api;
   if (window.ResizeObserver) new ResizeObserver(() => requestAnimationFrame(measureDock)).observe($('dock'));
   syncViewport();
 
+  function updateUndoButton() {
+    const status = session?.status();
+    $('undoBtn').disabled = !!session?.replaying || !(staged || status?.enabled);
+    $('undoBtn').textContent = !staged && status?.opponent ? '請求悔棋' : 'Undo';
+    $('undoBtn').title = staged ? '取消尚未確認的預放' : status?.opponent ? '回到交棒前最後一個我方決策' : '撤回本回合上一個已確認操作';
+  }
+  $('undoBtn').onclick = () => {
+    if (!session || session.replaying) return;
+    if (staged) { staged = null; return render(); }
+    const status = session.status();
+    if (!status.enabled) return;
+    if (!status.opponent) { closeSheet(); session.undo(); return; }
+    const current = session;
+    const request = current.requestTakeback();
+    if (!request) return;
+    openSheet('<h3>請求悔棋</h3><p>向 AI 請求回到交棒前最後一個我方決策？AI 對練會自動接受；抽牌與擲骰沿用原結果。</p><div class="opts"><button class="opt primary" id="confirmUndo" type="button">送出悔棋請求</button><button class="opt" data-close="1" type="button">繼續對戰</button></div>', () => current.cancelTakeback(request.id));
+    $('confirmUndo').onclick = () => { current.resolveTakeback(request.id, request.responder, true); closeSheet(); };
+  };
+
   function render() {
     if (!game) return;
     const [me, ai] = game.players;
@@ -1357,6 +1534,7 @@ else root.BreakDeckTools = api;
       $('dockOpts').innerHTML = '';
     }
     $('dockSummary').textContent = game.winner ? $('dockQ').textContent : pending ? pending.req.prompt : 'AI 行動中';
+    updateUndoButton();
     requestAnimationFrame(measureDock);
   }
 
@@ -1463,20 +1641,27 @@ else root.BreakDeckTools = api;
   $('logBtn').onclick = showLog;
   $('menuBtn').onclick = () => openSheet('<h3>選單</h3><div class="opts"><button class="opt primary" type="button" id="mRestart">重新開始這場</button><button class="opt" type="button" id="mSetup">回到選牌組</button></div>');
   $('sheet').addEventListener('click', e => { if (e.target.id === 'mRestart') { closeSheet(); start(); } if (e.target.id === 'mSetup') { closeSheet(); backToSetup(); } });
-  function backToSetup() { game = null; pending = null; $('game').hidden = true; $('dock').hidden = true; $('tbtns').hidden = true; $('setup').hidden = false; }
+  function backToSetup() { session?.stop(); session = null; game = null; pending = null; $('game').hidden = true; $('dock').hidden = true; $('tbtns').hidden = true; $('setup').hidden = false; }
 
-  let gen = 0;
   function start() {
     const my = $('myDeck').value, ai = $('aiDeck').value, speed = +$('speed').value;
     store.set('bk_my', my); store.set('bk_ai', ai); store.set('bk_speed', String(speed));
-    const myGen = ++gen; logBuf = []; pending = null;
-    const aiAgent = Object.assign({}, E.AI, { label: 'AI', delay: speed, choose(g, p, req) { if (myGen !== gen) return new Promise(() => {}); g.current = 1; return E.AI.choose.call(this, g, p, req); } });
-    const hum = { label: '你', wantsAck: true, choose(g, p, req) { if (myGen !== gen) return new Promise(() => {}); g.current = 0; return human.choose(g, p, req); } };
-    game = new E.Game({ reveal: 0, decks: [my, ai], agents: [hum, aiAgent], onLog: (s, c) => { if (myGen === gen) logBuf.push([s, c]); }, onUpdate: () => { if (myGen === gen) render(); } });
-    game.current = 0;
+    session?.stop();
+    session = new window.BreakUndoTools.UndoSession(E, {
+      decks: [my, ai], human, ai: Object.assign({}, E.AI, { label: 'AI', delay: speed }),
+      onGame(g) {
+        game = g; logBuf = []; pending = null; picked = new Set(); staged = null; blk = null; lossArm = false;
+        prevTop = {}; prevVal = {}; prevBall = null; flashMsg = ''; clearTimeout(flashT);
+        if (drag?.el) drag.el.remove(); if (drag?.over) drag.over.classList.remove('over');
+        drag = null; suppressClick = false; document.body.classList.remove('dragging');
+        if (session.replaying) { $('dockQ').textContent = '正在撤回…'; $('dockOpts').innerHTML = ''; updateUndoButton(); }
+      },
+      onLog: (s, cls) => logBuf.push([s, cls]),
+      onUpdate: () => render(),
+      onError(err) { pending = null; logBuf.push(['發生錯誤：' + err.message, 'lost']); render(); $('runtimeStatus').hidden = false; $('runtimeStatus').textContent = '❌ ' + err.message; console.error(err); }
+    });
     $('setup').hidden = true; $('game').hidden = false; $('tbtns').hidden = false;
-    render();
-    game.run().then(() => { if (myGen === gen) render(); }).catch(err => { logBuf.push(['發生錯誤：' + err.message, 'lost']); render(); console.error(err); });
+    session.start();
   }
   $('startBtn').onclick = () => { try { start(); document.getElementById('runtimeStatus').hidden = true; } catch (e) { const box = document.getElementById('runtimeStatus'); box.hidden = false; box.textContent = '❌ 遊戲啟動錯誤：' + (e && e.message || e); console.error(e); } };
   document.getElementById('runtimeStatus').hidden = true;

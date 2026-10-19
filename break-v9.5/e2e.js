@@ -39,7 +39,12 @@ const path = require('node:path');
       const q = await pg.evaluate(() => document.getElementById('dockQ').textContent.slice(0, 40));
       seen['q:' + q.slice(0, 6)] = 1;
       if (await pg.$('[data-act="multi"]')) { seen.mull = 1; await jsClick('[data-act="multi"]'); continue; }
-      if (await pg.$('[data-act="gutsok"]')) { seen.guts = 1; await pg.evaluate(() => { const n = +document.querySelector('#dockQ small').textContent.split('/')[1]; [...document.querySelectorAll('.gp')].slice(0, n).forEach(b => b.click()); }); await jsClick('[data-act="gutsok"]'); continue; }
+      if (await pg.$('[data-act="gutsok"]')) {
+        seen.guts = 1;
+        const n = +(await pg.locator('#dockQ small').first().textContent()).split('/')[1];
+        while (await pg.locator('.gp.on').count() < n) await pg.locator('.gp:not(.on)').first().click();
+        await pg.locator('[data-act="gutsok"]').click(); continue;
+      }
       if (/擲骰|你先發球|AI 先發球/.test(q)) seen.roll = 1;
       if (/保留後的手牌/.test(q)) seen.mullhint = 1;
       if (games === 1 && !seen.loss && await pg.$('[data-act="loss"]')) { await jsClick('[data-act="loss"]'); await jsClick('[data-act="lossyes"]'); seen.loss = 1; continue; }
