@@ -291,6 +291,13 @@ body.dragging .hand .hc.sel .ci, body.dragging .hand .hc.staged .ci { opacity: .
 .lossb { margin-left: auto; color: var(--bad); border-color: color-mix(in srgb, var(--bad) 50%, var(--line)); }
 .lossy { background: var(--bad); border-color: var(--bad); color: #fff; font-weight: 700; }
 .lossq { font-size: 12.5px; color: var(--bad); align-self: center; flex-basis: 100%; }
+.reveal-result { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 12px; align-items: center; }
+.reveal-result .cbtn { width: 92px; }
+.reveal-result .ci { width: 100%; height: auto; display: block; }
+.reveal-result b, .reveal-result small { display: block; }
+.reveal-result small { margin-top: 5px; }
+.reveal-public { display: grid; justify-items: center; gap: 10px; }
+.reveal-public .ci { width: min(180px, 45vw); height: auto; border-radius: 8px; }
 @media (prefers-reduced-motion: reduce) { .die.roll { animation: none; } }
 
 /* Deliberate breaks between turns; no timer can dismiss these screens. */
@@ -539,6 +546,37 @@ class Game {
     if (!candidates.length || p.restrict.no_add) return null;
     return this.ask(p, { kind: 'retrieve', prompt, options: [...candidates.map(c => ({ label: nm(c) + ' ' + c, card: c, value: c })), { label: '不加入手牌', value: null }] });
   }
+  async revealTop(p, source, eligible) {
+    // The flip request must not contain the still-hidden top card.
+    if (p.deck.length && p.agent.wantsAck) await this.ask(p, {
+      kind: 'reveal', prompt: `${source}：請翻開牌庫頂 1 張`,
+      options: [{ label: '翻開牌庫頂', value: true }]
+    });
+    const card = p.deck[p.deck.length - 1] || null;
+    const matches = card && eligible(card);
+    const canTake = matches && !p.restrict.no_add;
+    const reason = !card ? '牌庫已空，沒有可翻開的牌。' : !matches ? '沒有符合條件的牌，已放回牌庫底。' : p.restrict.no_add ? '符合條件，但受到禁止加入手牌的效果影響，已放回牌庫底。' : '符合條件：可以加入手牌，也可以放回牌庫底。';
+    if (card) this.log(`${source}翻開：${nm(card)}（${card}）`);
+    if (card && !canTake) p.deck.unshift(p.deck.pop());
+    const ctx = { revealed: card, source, reason };
+    let take = null;
+    if (canTake) take = await this.ask(p, {
+      kind: 'retrieve', prompt: `${source}：${reason}`, ctx,
+      options: [{ label: '加入手牌', card, value: card }, { label: '不加入，放回牌庫底', value: null }]
+    });
+    else if (p.agent.wantsAck) await this.ask(p, {
+      kind: 'revealResult', prompt: `${source}：${reason}`, ctx,
+      options: [{ label: '看完了，繼續', value: true }]
+    });
+    if (!p.agent.wantsAck) await this.notice({
+      type: 'reveal', player: p.idx, card, source, reason,
+      result: !card ? '沒有翻牌' : take === card ? '加入手牌' : '放回牌庫底'
+    });
+    if (card) {
+      if (take === card) { const top = [p.deck.pop()]; await this.sadd(p, card, top); this.log(`${source}：${nm(card)} 加入手牌`); }
+      else { if (canTake) p.deck.unshift(p.deck.pop()); this.log(`${source}：${nm(card)} 放回牌庫底。${reason}`, 'draw'); }
+    } else this.log(`${source}：${reason}`, 'warn');
+  }
   async discard(p, prompt, filter) {
     const c = await this.pickHand(p, prompt, filter);
     if (c) { rm(p.hand, c); p.drop.push(c); this.log(`${p.name} 棄掉 ${nm(c)}`); }
@@ -754,16 +792,7 @@ class Game {
     let toss = st(t, 'tos') + (p.ts.apass || 0);
     if (t === 'P01-006' && p.guts('toss') >= 2 && await this.yes(p, 'skill', '影山：付 2 Guts → 翻牌庫頂找日向/オープン，本回合日向攻擊 +2？', { card: t })) {
       await this.pay(p, 'toss', 2); p.ts.hin = 2;
-      if (p.deck.length) {
-        const top = p.deck[p.deck.length - 1];
-        this.log(`影山翻開：${nm(top)}`);
-        if (isHin(top) && top !== 'PR-057' || top === 'P01-078') {
-          const take = await this.optionalRetrieve(p, '影山：公開的卡最多 1 張加入手牌；不拿則放牌庫底', [top]);
-          if (take) { const tmp = [p.deck.pop()]; if (!(await this.sadd(p, top, tmp))) p.deck.unshift(top); }
-          else p.deck.unshift(p.deck.pop());
-        }
-        else p.deck.unshift(p.deck.pop());
-      }
+      await this.revealTop(p, '影山', top => isHin(top) && top !== 'PR-057' || top === 'P01-078');
     }
     if (t === 'P01-033' && p.hand.some(isA) && await this.yes(p, 'skill', `及川：棄 1 張青城 → 舉球 +1${o.hand.length >= 4 ? '，對手棄 1' : ''}？`, { card: t })) {
       await this.discard(p, '選 1 張青城棄掉', isA); toss += 1;
@@ -1378,6 +1407,10 @@ else root.BreakUndoTools = api;
       middle = `<div class="turn-ball"><span>${from}打出的${kind}</span><strong>${n.ball.off}</strong>${n.ball.type === 'attack' ? `<span>舉球 ${n.toss} ＋ 攻擊 ${n.attack} ＝ ${n.ball.off}</span>` : ''}</div>`;
       detail = n.ball.type === 'attack' ? `${who}接下來選擇接球或合法的攔網。` : '這種來球只能接球，不能攔網。';
       action = mine ? '我準備好了' : '讓 AI 開始防守';
+    } else if (n.type === 'reveal') {
+      title = `${who}的翻牌結果`; phase = `${n.source}技能 · ${n.result}`;
+      middle = n.card ? `<div class="reveal-public">${img(n.card)}<b>${esc(nm(n.card))}</b><span>${esc(n.card)}</span></div>` : '';
+      detail = n.reason; action = '看完了，繼續';
     } else {
       title = mine ? '你 LOSS' : 'AI LOSS'; phase = mine ? 'AI 得分' : '你得分';
       detail = n.reason;
@@ -1591,6 +1624,11 @@ else root.BreakUndoTools = api;
     }
     if (r.kind === 'mulligan') return [`${r.prompt}<small>已選 ${picked.size} 張放回</small>${mullHint(r)}`, `<button class="opt primary" type="button" data-act="multi">${picked.size ? `放回 ${picked.size} 張並重抽` : '全部保留'}</button>` + (picked.size ? '<button class="opt quiet" type="button" data-act="clear">取消選取</button>' : '')];
     if (r.kind === 'ack') return [esc(r.prompt) + '<small>輪到你了，按下方大按鈕抽牌</small>', '<button class="opt primary draw-action" type="button" data-act="ack">抽 1 張<small>點此抽牌，再進行接球</small></button>'];
+    if (r.kind === 'reveal') return [`<b>${esc(r.prompt)}</b><small>翻開後會顯示卡圖與結果，再決定是否加入手牌。</small>`, '<button class="opt primary draw-action" type="button" id="flipTop" data-i="0">翻開牌庫頂<small>點此公開 1 張牌</small></button>'];
+    if (r.kind === 'revealResult' || r.ctx && Object.hasOwn(r.ctx, 'revealed')) {
+      const c = r.ctx.revealed;
+      return [`<div class="reveal-result" id="revealResult">${c ? `<button class="cbtn" type="button" data-card="${c}" aria-label="查看翻開的卡片">${img(c)}</button>` : '<b>牌庫已空</b>'}<div><b>${c ? '翻開：' + esc(nm(c)) : '沒有可翻開的牌'}</b>${c ? `<small>${esc(c)} · 點卡圖可放大</small>` : ''}<small>${esc(r.prompt)}</small></div></div>`, r.options.map((o, i) => `<button class="opt ${i === 0 ? 'primary' : 'quiet'}" type="button" data-i="${i}">${esc(o.label)}</button>`).join('')];
+    }
     if (r.kind === 'block' && blk) {
       const ev = blk.cards.length ? game.evalBlock(me, blk.cards) : null, need = game.ball.off;
       const chips = blk.cards.map(c => `<span class="bchip${c === blk.center ? ' ctr' : ''}">${c === blk.center ? '中' : '側'}・${esc(E.short(c))} ${st(c, 'blk')}${c !== blk.center && !(ev && ev.tsu) ? `<button type="button" data-ctr="${c}" aria-label="設為中攔">設中攔</button>` : ''}<button type="button" data-rm="${c}" aria-label="移除">✕</button></span>`).join('');
@@ -1730,7 +1768,7 @@ else root.BreakUndoTools = api;
     if (b.dataset.rec != null && blk) { const o = pending.req.options.find(x => String(x.value) === b.dataset.rec); blk.cards = o.cards.slice(); blk.center = blk.cards.includes('P02-003') ? 'P02-003' : blk.cards.slice().sort((x, y) => E.val(y) - E.val(x))[0]; return render(); }
     if (pending && b.dataset.i != null) {
       const o = pending.req.options[+b.dataset.i];
-      if (o.card && pending.req.kind !== 'block') { setDockCollapsed(false); staged = { card: o.card, i: +b.dataset.i }; return render(); }
+      if (o.card && pending.req.kind !== 'block' && !Object.hasOwn(pending.req.ctx || {}, 'revealed')) { setDockCollapsed(false); staged = { card: o.card, i: +b.dataset.i }; return render(); }
       answer(o.value);
     }
   });

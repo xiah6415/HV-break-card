@@ -35,7 +35,7 @@ const snapshot = page => page.evaluate(() => ({
       for (const { req, value, notice } of trace) {
         if (notice) {
           if (notice.type === 'serve') server = notice.player;
-          const expected = notice.type === 'serve' ? (notice.player === 0 ? '你的發球回合' : 'AI 的發球回合') : notice.type === 'turn' ? (notice.player === 0 ? '輪到你了' : '輪到 AI 了') : (notice.player === 0 ? '你 LOSS' : 'AI LOSS');
+          const expected = notice.type === 'reveal' ? (notice.player === 0 ? '你的翻牌結果' : 'AI的翻牌結果') : notice.type === 'serve' ? (notice.player === 0 ? '你的發球回合' : 'AI 的發球回合') : notice.type === 'turn' ? (notice.player === 0 ? '輪到你了' : '輪到 AI 了') : (notice.player === 0 ? '你 LOSS' : 'AI LOSS');
           await page.waitForFunction(title => !document.getElementById('turnScreen').hidden && document.getElementById('turnTitle').textContent === title, expected);
           assert((await page.locator('#rallyStatus').textContent()).includes(`本球發球：${server === 0 ? '你' : 'AI'}`));
           const geometry = await page.locator('#turnScreen').evaluate(screen => {
@@ -65,9 +65,12 @@ const snapshot = page => page.evaluate(() => ({
           const receiver = page.locator('#meSide [data-drop="receive"]');
           assert.equal(await receiver.locator('.cbtn').count(), 1, 'the failed receiver must remain on court');
           if (width < 700) {
+            // The UI measures the panel and positions the court on the next frame.
+            await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
             const bounds = await receiver.boundingBox(), dock = await page.locator('#dock').boundingBox();
             const banner = await page.locator('#rallyStatus').boundingBox();
-            assert(bounds.y >= banner.y + banner.height && bounds.y + bounds.height <= dock.y, 'failed receiver must be visible between the persistent banner and panel');
+            if (!(bounds.y >= banner.y + banner.height && bounds.y + bounds.height <= dock.y)) await page.screenshot({ path: path.join(process.env.E2E_OUTPUT_DIR || '.', 'flow-geometry-failure.png') });
+            assert(bounds.y >= banner.y + banner.height && bounds.y + bounds.height <= dock.y, 'failed receiver must be visible between the persistent banner and panel: ' + JSON.stringify({ bounds, dock, banner }));
           }
           const before = await snapshot(page);
           await page.waitForTimeout(260); assert.deepEqual(await snapshot(page), before);
@@ -117,7 +120,7 @@ const snapshot = page => page.evaluate(() => ({
         assert(i >= 0);
         const option = req.options[i], card = option.card && page.locator(`.hand .hc.sel .cbtn[data-card="${option.card}"]`).first();
         if (card && await card.count()) { await card.click(); await page.click('[data-act="confirm"]'); }
-        else { await page.click(`#dockOpts [data-i="${i}"]`); if (option.card) await page.click('[data-act="confirm"]'); }
+        else { await page.click(`#dockOpts [data-i="${i}"]`); if (option.card && !Object.hasOwn(req.ctx || {}, 'revealed')) await page.click('[data-act="confirm"]'); }
       }
       await page.waitForSelector('[data-act="again"]');
       assert.equal(await page.locator('#dockQ').textContent(), winner === 0 ? '你贏了！' : 'AI 贏了');

@@ -1,5 +1,11 @@
 # BREAK 對練台 — 交接文件（Claude → Codex，2026-10-19）
 
+## 翻牌操作更新（2026-10-19）
+- P01-006 技能付費後呼叫 `revealTop(p, source, eligible)`。真人先收到 `kind: reveal` 的「翻開牌庫頂」，不帶隱藏卡號；按下才揭露卡片。符合且可加手牌：`kind: retrieve`，`ctx: {revealed,source,reason}`，選加入或置底。
+- 不符合或禁止加入時自動置底，接著 `kind: revealResult` 顯示卡圖、牌名與原因，按「看完了，繼續」才往下；空牌庫也用此確認但不翻出卡片。上述決策保留本回合 Loss 和 Undo。
+- 非 wantsAck 的 AI 自動選擇後送公開 `onNotice({type:'reveal',player,card,source,reason,result})`，本機玩家看完再繼續。只含公開牌；Undo 展示重播與取消沿用既有機制。多人真人的觀戰傳輸未接入。
+- UI 公開結果可點卡圖放大，選加入手牌直接確認，不使用角色登場預放。`reveal.test.js` 驗證翻前等待、五種結果、重複卡頂精準移動、AI 暫停、Undo 與過期回覆；`reveal-e2e.js` 桌機及兩種手機驗證六種實際畫面。
+
 > 最新狀態：使用者指定 1→2→6→7→3→4，目前在第 1 階段。首批完成 47 張官方資料對照與 8 個回歸修正，仍有 19 張部分技能待補。最新範圍見 RULES-AUDIT.md、card-support.json，工作順序見 ROADMAP.md。下列 Artifact、49 張及卡庫總數是歷史描述，不作目前完成度依據。
 
 > 先讀這份，再讀 `memory.md`（完整版本歷史）。每次動工前後都要在 `memory.md` 追加紀錄（Xiah 的規定：先寫計畫再改程式，完成後寫結果），讓 Claude／Codex 雙方都看得懂做到哪。

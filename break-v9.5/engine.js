@@ -161,6 +161,37 @@ class Game {
     if (!candidates.length || p.restrict.no_add) return null;
     return this.ask(p, { kind: 'retrieve', prompt, options: [...candidates.map(c => ({ label: nm(c) + ' ' + c, card: c, value: c })), { label: '不加入手牌', value: null }] });
   }
+  async revealTop(p, source, eligible) {
+    // The flip request must not contain the still-hidden top card.
+    if (p.deck.length && p.agent.wantsAck) await this.ask(p, {
+      kind: 'reveal', prompt: `${source}：請翻開牌庫頂 1 張`,
+      options: [{ label: '翻開牌庫頂', value: true }]
+    });
+    const card = p.deck[p.deck.length - 1] || null;
+    const matches = card && eligible(card);
+    const canTake = matches && !p.restrict.no_add;
+    const reason = !card ? '牌庫已空，沒有可翻開的牌。' : !matches ? '沒有符合條件的牌，已放回牌庫底。' : p.restrict.no_add ? '符合條件，但受到禁止加入手牌的效果影響，已放回牌庫底。' : '符合條件：可以加入手牌，也可以放回牌庫底。';
+    if (card) this.log(`${source}翻開：${nm(card)}（${card}）`);
+    if (card && !canTake) p.deck.unshift(p.deck.pop());
+    const ctx = { revealed: card, source, reason };
+    let take = null;
+    if (canTake) take = await this.ask(p, {
+      kind: 'retrieve', prompt: `${source}：${reason}`, ctx,
+      options: [{ label: '加入手牌', card, value: card }, { label: '不加入，放回牌庫底', value: null }]
+    });
+    else if (p.agent.wantsAck) await this.ask(p, {
+      kind: 'revealResult', prompt: `${source}：${reason}`, ctx,
+      options: [{ label: '看完了，繼續', value: true }]
+    });
+    if (!p.agent.wantsAck) await this.notice({
+      type: 'reveal', player: p.idx, card, source, reason,
+      result: !card ? '沒有翻牌' : take === card ? '加入手牌' : '放回牌庫底'
+    });
+    if (card) {
+      if (take === card) { const top = [p.deck.pop()]; await this.sadd(p, card, top); this.log(`${source}：${nm(card)} 加入手牌`); }
+      else { if (canTake) p.deck.unshift(p.deck.pop()); this.log(`${source}：${nm(card)} 放回牌庫底。${reason}`, 'draw'); }
+    } else this.log(`${source}：${reason}`, 'warn');
+  }
   async discard(p, prompt, filter) {
     const c = await this.pickHand(p, prompt, filter);
     if (c) { rm(p.hand, c); p.drop.push(c); this.log(`${p.name} 棄掉 ${nm(c)}`); }
@@ -376,16 +407,7 @@ class Game {
     let toss = st(t, 'tos') + (p.ts.apass || 0);
     if (t === 'P01-006' && p.guts('toss') >= 2 && await this.yes(p, 'skill', '影山：付 2 Guts → 翻牌庫頂找日向/オープン，本回合日向攻擊 +2？', { card: t })) {
       await this.pay(p, 'toss', 2); p.ts.hin = 2;
-      if (p.deck.length) {
-        const top = p.deck[p.deck.length - 1];
-        this.log(`影山翻開：${nm(top)}`);
-        if (isHin(top) && top !== 'PR-057' || top === 'P01-078') {
-          const take = await this.optionalRetrieve(p, '影山：公開的卡最多 1 張加入手牌；不拿則放牌庫底', [top]);
-          if (take) { const tmp = [p.deck.pop()]; if (!(await this.sadd(p, top, tmp))) p.deck.unshift(top); }
-          else p.deck.unshift(p.deck.pop());
-        }
-        else p.deck.unshift(p.deck.pop());
-      }
+      await this.revealTop(p, '影山', top => isHin(top) && top !== 'PR-057' || top === 'P01-078');
     }
     if (t === 'P01-033' && p.hand.some(isA) && await this.yes(p, 'skill', `及川：棄 1 張青城 → 舉球 +1${o.hand.length >= 4 ? '，對手棄 1' : ''}？`, { card: t })) {
       await this.discard(p, '選 1 張青城棄掉', isA); toss += 1;
