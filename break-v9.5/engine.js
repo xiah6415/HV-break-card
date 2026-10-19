@@ -11,9 +11,9 @@ const DEF = {
   'P01-011': ['西谷 夕', 'C', N, N, 6, 0, 0, 3, K, 2, ''],
   'PR-033': ['西谷 夕', 'C', N, N, 6, 0, 0, 3, K, 2, ''],
   'P02-001': ['日向 翔陽', 'C', 2, 2, 0, 0, 3, 6, K, 1, '接球登場：雙方セット合計 ≤1 時，付 3 Guts → 接球 +6，棄牌區烏野角色 1 張回手'],
-  'P03-051': ['西谷 夕', 'C', N, N, 5, 0, 0, 3, K, 2, '接球登場：付 2 Guts，付的全是烏野 → 接球 +2'],
+  'P03-051': ['西谷 夕', 'C', N, N, 5, 0, 0, 3, K, 2, '接球登場：付 2 Guts，付的全是烏野 → 接球 +2；對手攻擊手原始攻擊 0 時，對手進攻 −3'],
   'PR-022': ['澤村 大地', 'C', 1, 0, 5, 0, 0, 3, K, 3, '接球登場：對手發球/攻擊 ≤2 → A 傳球(1)；付 1 Guts 抽 1'],
-  'PR-057': ['着地上手組。', 'C', N, N, 5, 0, 3, 5, K, 1, '登場時改名為「日向 翔陽」或「西谷 夕」（接球＝西谷、攻擊＝日向）'],
+  'PR-057': ['着地上手組。', 'C', N, N, 5, 0, 3, 5, K, 1, '登場時名稱可選「日向 翔陽」或「西谷 夕」，直到本回合結束（目前名稱選擇尚未自動化，見支援限制）'],
   'D01-009': ['菅原 孝支', 'C', 1, 1, 2, 2, 3, 4, K, 3, ''],
   'P01-006': ['影山 飛雄', 'C', 1, 1, 1, 1, 2, 9, K, 1, '舉球登場：付 2 Guts → 翻牌庫頂，日向或オープン攻撃加入手牌；本回合日向登場時攻擊 +2'],
   'P03-048': ['影山 飛雄', 'C', 1, 3, 0, 2, 2, 5, K, 1, ''],
@@ -27,7 +27,7 @@ const DEF = {
   'PR-053': ['日向 翔陽', 'C', 3, 3, 2, 0, 3, 5, K, 1, ''],
   'D01-004': ['山口 忠', 'C', 5, 3, 3, 0, 1, 4, K, 1, ''],
   'P03-046': ['赤木 路成', 'C', N, N, 5, 0, 0, 3, '稲荷崎', 3, '接球登場：對手發球 ≤2 → 抽 1；對手發球 ≥6 → 接球 +2'],
-  'P03-057': ['黒川 広樹', 'C', 0, 1, 0, 0, 2, 2, K, 0, '抽牌階段從手牌棄置：本回合自己的烏野 2/3 年角色登場時接球 +2'],
+  'P03-057': ['黒川 広樹', 'C', 0, 1, 0, 0, 2, 2, K, 0, '抽牌階段從手牌棄置：本回合自己的烏野 2/3 年角色登場時接球 +2，參數不會被降低'],
   'D01-012': ['ブロード攻撃', 'E', 0, 0, 0, 0, 0, 5, K, 0, '［攻擊］抽 1、攻擊 +1；舉球影山、攻擊日向 → 對手下回合最多派 1 人攔網'],
   'P01-074': ['烏養 一繋', 'E', 0, 0, 0, 0, 0, 3, K, 0, '［攻擊］抽 1、攻擊 +1；對手 Event 區抽牌/接球卡 ≥5 → 再 +2'],
   'P01-078': ['オープン攻撃', 'E', 0, 0, 0, 0, 0, 8, K, 0, '［攻擊］抽 2 棄 1；Event 區オープン ≤2 → 棄牌區日向登場攻擊區、攻擊 +1'],
@@ -35,9 +35,9 @@ const DEF = {
   'P03-090': ['おれにバレーボール教えてくれて ありがとう', 'E', 0, 0, 0, 0, 0, 4, '音駒', 0, '［抽牌］每回合 1 次：Event 區 1 張其他 Event 回手'],
   'PR-029': ['鬼と 鬼だな', 'E', 0, 0, 0, 0, 0, 4, K, 0, '［抽牌］棄牌區日向、影山各最多 1 張回手'],
   'P03-096': ['日向 夏', 'E', 0, 0, 0, 0, 0, 5, K, 0, '［攔網/接球/攻擊］每回合 1 次：抽 1，日向 1 人任一數值 +1'],
-  'P03-087': ['周りの上手さに引っ張られる', 'E', 0, 0, 0, 0, 0, 5, K, 0, '［接球/攻擊］每回合 1 次：我方全是烏野 → 抽 1、攻擊 +1'],
+  'P03-087': ['周りの上手さに引っ張られる', 'E', 0, 0, 0, 0, 0, 5, K, 0, '［接球/攻擊］每回合 1 次：全烏野或全ユース → 抽 1，角色 1 人攻擊 +1；指定影山可跨區付 6 Guts，再任一參數 +2（部分效果待補）'],
   // ---- 青葉城西（含 P04 / D04）
-  'P01-033': ['及川 徹', 'C', 5, 0, 0, 1, 0, 7, A, 3, '發球/舉球登場：棄 1 張青城 → 該數值 +1；對手手牌 ≥4 → 對手棄 1'],
+  'P01-033': ['及川 徹', 'C', 5, 0, 0, 1, 0, 7, A, 3, '發球/舉球登場：棄 1 張青城 → 任一參數 +1；對手手牌 ≥4 → 對手棄 1（目前僅加當階段數值）'],
   'D04-003': ['及川 徹', 'C', 5, 0, 1, 2, 2, 6, A, 3, ''],
   'P04-027': ['渡 親治', 'C', N, N, 6, 0, 0, 3, A, 2, ''],
   'P01-039': ['渡 親治', 'C', N, N, 5, 1, 0, 3, A, 2, '接球登場：對手進攻 ≥6，棄 1 張青城 → 接球 +1；全青城 → 抽 1'],
@@ -52,7 +52,7 @@ const DEF = {
   'P01-087': ['俺も思った☆', 'E', 0, 0, 0, 0, 0, 5, A, 0, '［發球/舉球］及川在場：抽 1、及川舉球 +1；對手下回合每次非抽牌加手牌就棄 1'],
   'P04-088': ['ドンピシャ!!!', 'E', 0, 0, 0, 0, 0, 5, A, 0, '［攻擊］每回合 1 次：抽 1、青城攻擊手 +1；攻擊 ≥8 → 對手下回合接球手 −1'],
   'P04-089': ['3年間ありがとう!!!', 'E', 0, 0, 0, 0, 0, 5, A, 0, '［接球］每回合 1 次：抽 1、青城 3 年接球 +1；再棄 1 張青城 3 年角色 → +2'],
-  'P01-088': ['お前達は 強いよ', 'E', 0, 0, 0, 0, 0, 4, A, 0, '［接球］抽 1、青城接球 +1；手牌 ≤3 再 +1'],
+  'P01-088': ['お前達は 強いよ', 'E', 0, 0, 0, 0, 0, 4, A, 0, '［接球］最多抽 1，青城角色 1 人接球 +1；手牌 ≤3 再 +1（目前可不抽牌與目標選擇待補）'],
 };
 const HIN = new Set(['P02-001', 'P01-002', 'P01-004', 'BP-002', 'P01-003', 'PR-053']);
 const DECKS = {
@@ -77,6 +77,7 @@ const short = c => nm(c).split(' ')[0];
 const recvName = c => (c === 'PR-057' ? '西谷 夕' : nm(c));
 const atkName = c => (c === 'PR-057' ? '日向 翔陽' : nm(c));
 const isHin = c => HIN.has(c) || c === 'PR-057';
+const kuroEligible = c => isK(c) && (yr(c) === 2 || yr(c) === 3 || c === 'PR-057');
 const EVT = {
   'D01-012': ['atk'], 'P01-074': ['atk'], 'P01-078': ['atk'], 'P03-086': ['tos'], 'P03-090': ['drw'], 'PR-029': ['drw'],
   'P03-096': ['atk', 'rcv', 'blk'], 'P03-087': ['atk', 'rcv'], 'P01-087': ['srv', 'tos'], 'P04-088': ['atk'], 'P04-089': ['rcv'], 'P01-088': ['rcv'],
@@ -156,6 +157,10 @@ class Game {
     const c = await this.ask(p, { kind, prompt, options: cands.map(x => ({ label: `${nm(x)}`, card: x, value: x })) });
     return c;
   }
+  async optionalRetrieve(p, prompt, candidates) {
+    if (!candidates.length || p.restrict.no_add) return null;
+    return this.ask(p, { kind: 'retrieve', prompt, options: [...candidates.map(c => ({ label: nm(c) + ' ' + c, card: c, value: c })), { label: '不加入手牌', value: null }] });
+  }
   async discard(p, prompt, filter) {
     const c = await this.pickHand(p, prompt, filter);
     if (c) { rm(p.hand, c); p.drop.push(c); this.log(`${p.name} 棄掉 ${nm(c)}`); }
@@ -203,6 +208,7 @@ class Game {
       } catch (e) {
         if (!(e instanceof LostSignal)) throw e;
         loser = e.who; lossReason = e.why;
+        this.cleanupSides(loser);
         if (loser.agent.wantsAck && !lossReason.startsWith('主動 Loss')) {
           await this.ask(loser, { kind: 'lossConfirm', prompt: `${loser.name} 無法繼續這球：${lossReason}`, reason: lossReason, options: [{ label: '喊 Loss', value: true }] });
         }
@@ -223,6 +229,13 @@ class Game {
     }
   }
   lost(p, why) { const e = new LostSignal(why); e.who = p; throw e; }
+  cleanupSides(p) {
+    const sides = p.ts.sides || [];
+    if (!sides.length) return;
+    p.ts.sides = [];
+    p.drop.push(...sides);
+    if (sides.length) this.log(`側攔 ${sides.map(nm).join('、')} → 棄牌區`, 'guts');
+  }
   beginTurn(p) { this.turnP = p; this.turnNo++; p.restrict = p.pending; p.pending = {}; p.ts = { used: {} }; p.newCount = {}; this.src = ''; }
   async confirmTurnEnd(p, outgoing) {
     if (!p.agent.wantsAck) return;
@@ -307,7 +320,7 @@ class Game {
     p.ts.blk = cb.total; p.ts.blockers = cb.cards.slice();
     this.log(`${p.name} 攔網 ${cb.cards.map(short).join('＋')}：攔 ${cb.total} vs ${this.ball.off}`);
     await this.eventLoop(p, 'blk', {});
-    p.drop.push(...p.ts.sides); if (p.ts.sides.length) this.log(`側攔 ${p.ts.sides.map(nm).join('、')} → 棄牌區`, 'guts');
+    this.cleanupSides(p);
     if (p.ts.blk < this.ball.off) this.lost(p, `攔網 ${p.ts.blk} 小於進攻 ${this.ball.off}`);
     this.log(`攔網成功（${p.ts.blk} ≥ ${this.ball.off}），回球 0；側攔進棄牌區`);
     await this.confirmTurnEnd(p, { type: 'block', off: 0 });
@@ -326,7 +339,7 @@ class Game {
     if (!cs.length) this.lost(p, '沒有能接球的角色');
     const c = await this.ask(p, { kind: 'receiver', prompt: `來球：${ball.type === 'serve' ? '發球' : ball.type === 'block' ? '攔網回球' : '攻擊'} ${off}。選擇接球角色`, ball, options: cs.map(x => ({ label: `${nm(x)}　接 ${this.rcvPreview(p, x)}`, card: x, value: x })) });
     this.place(p, 'receive', c); this.src = nm(c);
-    const kuro = p.ts.kurokawa && isK(c) && (yr(c) === 2 || yr(c) === 3 || c === 'PR-057');
+    const kuro = p.ts.kurokawa && kuroEligible(c);
     let r = st(c, 'rcv') - (kuro ? 0 : (p.restrict.rcv_minus || 0));
     if (p.restrict.rcv_minus && !kuro) this.log(`ドンピシャ!!!：${nm(c)} 接球 −${p.restrict.rcv_minus}`, 'warn');
     if (kuro) { r += 2; this.log('黒川：接球 +2，數值不會被降低'); }
@@ -342,7 +355,8 @@ class Game {
     if (c === 'P02-001' && p.sets.length + o.sets.length <= 1 && g >= 3 && await this.yes(p, 'skill', '日向：付 3 Guts → 接球 +6、棄牌區烏野角色回手？', { card: c, need: off - r })) {
       await this.pay(p, 'receive', 3); r += 6;
       const cand = [...new Set(p.drop.filter(x => isC(x) && isK(x)))];
-      if (cand.length) { const x = await this.ask(p, { kind: 'retrieve', prompt: '選 1 張烏野角色回手', options: cand.map(y => ({ label: nm(y), card: y, value: y })) }); await this.sadd(p, x, p.drop); }
+      const x = await this.optionalRetrieve(p, '最多選 1 張烏野角色回手', cand);
+      if (x) await this.sadd(p, x, p.drop);
     }
     if (c === 'PR-022' && ball.type !== 'block' && off <= 2) { p.ts.apass = 1; this.log('澤村：A 傳球(1)'); if (p.guts('receive') >= 1 && await this.yes(p, 'skill', '澤村：付 1 Guts 抽 1？', { card: c })) { await this.pay(p, 'receive', 1); this.sdraw(p, 1); } }
     if (c === 'P03-046' && ball.type === 'serve') { if (off <= 2) { this.sdraw(p, 1); this.log('赤木：抽 1'); } if (off >= 6) { r += 2; this.log('赤木：接球 +2'); } }
@@ -365,7 +379,11 @@ class Game {
       if (p.deck.length) {
         const top = p.deck[p.deck.length - 1];
         this.log(`影山翻開：${nm(top)}`);
-        if (isHin(top) && top !== 'PR-057' || top === 'P01-078') { const tmp = [p.deck.pop()]; if (!(await this.sadd(p, top, tmp))) p.deck.unshift(top); }
+        if (isHin(top) && top !== 'PR-057' || top === 'P01-078') {
+          const take = await this.optionalRetrieve(p, '影山：公開的卡最多 1 張加入手牌；不拿則放牌庫底', [top]);
+          if (take) { const tmp = [p.deck.pop()]; if (!(await this.sadd(p, top, tmp))) p.deck.unshift(top); }
+          else p.deck.unshift(p.deck.pop());
+        }
         else p.deck.unshift(p.deck.pop());
       }
     }
@@ -390,14 +408,15 @@ class Game {
     return { type: 'attack', off: offense };
   }
   rcvPreview(p, c) {
-    let r = st(c, 'rcv') - (p.restrict.rcv_minus || 0);
+    const kuro = p.ts.kurokawa && kuroEligible(c);
+    let r = st(c, 'rcv') - (kuro ? 0 : (p.restrict.rcv_minus || 0));
     const g = p.guts('receive') + (p.area.receive.length ? 1 : 0);
     const extra = [];
     if (c === 'D01-005' && g >= 3) extra.push('+2');
     if (c === 'P03-051' && g >= 2) extra.push('+2');
     if (c === 'P02-001' && p.sets.length + p.opp.sets.length <= 1 && g >= 3) extra.push('+6');
     if (c === 'P03-046' && this.ball.type === 'serve' && this.ball.off >= 6) extra.push('+2');
-    if (p.ts.kurokawa && isK(c) && (yr(c) === 2 || yr(c) === 3)) r += 2;
+    if (kuro) r += 2;
     return r + (extra.length ? `（技能 ${extra.join('')}）` : '');
   }
   async enterAttack(p, a, fromDrop) {
@@ -440,7 +459,7 @@ class Game {
         'P03-090': () => !p.restrict.no_add && p.ev.some(x => x !== 'P03-090'),
         'P03-086': () => !!p.ts.setter && ['影山 飛雄', '菅原 孝支', '及川 徹'].includes(nm(p.ts.setter)),
         'P01-087': () => ['serve', 'toss'].some(a => p.top(a) && nm(p.top(a)) === '及川 徹'),
-        'P01-078': () => p.ts.attacker && nm(p.ts.setter) !== '日向 翔陽',
+        'P01-078': () => !!p.ts.attacker,
         'D01-012': () => !!p.ts.attacker, 'P01-074': () => !!p.ts.attacker,
         'P03-096': () => (timing === 'atk' ? p.ts.attacker && isHin(p.ts.attacker) : timing === 'rcv' ? p.ts.receiver && isHin(p.ts.receiver) : timing === 'blk' ? (p.ts.blockers || []).some(x => HIN.has(x)) : false),
         'P03-087': () => timing === 'atk' && p.ts.attacker && p.allSchool(K),
@@ -453,7 +472,7 @@ class Game {
     return res;
   }
   async eventLoop(p, timing, ctx) {
-    for (let guard = 0; guard < 12; guard++) {
+    for (;;) {
       const opts = this.playable(p, timing);
       if (!opts.length) return;
       const zh = { srv: '發球階段', drw: '抽牌階段', rcv: '接球判定前', tos: '舉球階段', atk: '攻擊階段', blk: '攔網階段' }[timing];
@@ -472,7 +491,7 @@ class Game {
       if (c === 'P03-057') {
         p.ts.kurokawa = 1;
         const receiver = p.ts.receiver;
-        if (timing === 'rcv' && receiver && isK(receiver) && (yr(receiver) === 2 || yr(receiver) === 3 || receiver === 'PR-057')) {
+        if (timing === 'rcv' && receiver && kuroEligible(receiver)) {
           p.ts.rcv += 2 + (p.restrict.rcv_minus || 0);
           this.log(`黒川：目前接球 +2，數值不會被降低 → ${p.ts.rcv}`);
         }
@@ -487,8 +506,8 @@ class Game {
         for (const want of [x => isHin(x) && x !== 'PR-057', x => nm(x) === '影山 飛雄']) {
           const cand = [...new Set(p.drop.filter(want))];
           if (!cand.length) continue;
-          const x = cand.length === 1 ? cand[0] : await this.ask(p, { kind: 'retrieve', prompt: '鬼と鬼だな：選 1 張回手', options: cand.map(y => ({ label: nm(y) + ' ' + y, card: y, value: y })) });
-          if (await this.sadd(p, x, p.drop)) this.log(`回收 ${nm(x)}`);
+          const x = await this.optionalRetrieve(p, '鬼と鬼だな：最多選 1 張回手', cand);
+          if (x && await this.sadd(p, x, p.drop)) this.log(`回收 ${nm(x)}`);
         }
         break;
       }
@@ -501,10 +520,10 @@ class Game {
       case 'P03-086': {
         p.ts.toss = 2; this.log('舉球設為 2');
         const back = [...new Set(p.ev.filter(x => EVT[x] && EVT[x].length === 1 && EVT[x][0] === 'atk'))];
-        if (back.length && await this.yes(p, 'skill', 'おりこう：放回牌庫底，從 Event 區拿 1 張攻擊 Event 回手？', {})) {
-          const x = await this.ask(p, { kind: 'retrieve', prompt: '選 1 張攻擊 Event 回手', options: back.map(y => ({ label: nm(y), card: y, value: y })) });
+        if (await this.yes(p, 'skill', 'おりこう：放回牌庫底，從 Event 區最多拿 1 張攻擊 Event 回手？', {})) {
+          const x = await this.optionalRetrieve(p, '最多選 1 張攻擊 Event 回手', back);
           rm(p.ev, c); p.deck.unshift(c);
-          if (await this.sadd(p, x, p.ev)) this.log(`回收 ${nm(x)}`);
+          if (x && await this.sadd(p, x, p.ev)) this.log(`回收 ${nm(x)}`);
         }
         break;
       }
@@ -512,7 +531,7 @@ class Game {
       case 'P01-078': {
         this.sdraw(p, 2);
         if (p.hand.length) await this.discard(p, 'オープン攻撃：抽 2 後棄 1 張');
-        if (p.ev.filter(x => x === 'P01-078').length <= 2) {
+        if (p.ev.filter(x => x === 'P01-078').length <= 2 && nm(p.ts.setter) !== '日向 翔陽') {
           const hs = [...new Set(p.drop.filter(x => HIN.has(x)))];
           if (hs.length) {
             const h = hs.length === 1 ? hs[0] : await this.ask(p, { kind: 'summon', prompt: 'オープン攻撃：選棄牌區的日向登場攻擊區（必須）', options: hs.map(y => ({ label: `${nm(y)} ${y}　攻 ${st(y, 'atk')}`, card: y, value: y })) });
@@ -548,7 +567,7 @@ function canChain(hand, rname, drop) {
 }
 function rcvPotential(g, p, c) {
   const off = g.ball.off;
-  const kuro = p.ts.kurokawa && isK(c) && (yr(c) === 2 || yr(c) === 3 || c === 'PR-057');
+  const kuro = p.ts.kurokawa && kuroEligible(c);
   let v = st(c, 'rcv') - (kuro ? 0 : (p.restrict.rcv_minus || 0));
   const gg = p.guts('receive') + (p.area.receive.length ? 1 : 0);
   if (c === 'D01-005' && gg >= 3) v += 2;
@@ -639,7 +658,7 @@ const AI = {
             if (p.ts.rcv < g.ball.off && ['P01-013', 'P01-088', 'P04-089', 'P03-096'].includes(c)) return c;
             if (c === 'P03-057') {
               const receiver = p.ts.receiver;
-              if (p.ts.rcv < g.ball.off && receiver && isK(receiver) && (yr(receiver) === 2 || yr(receiver) === 3 || receiver === 'PR-057')) return c;
+              if (p.ts.rcv < g.ball.off && receiver && kuroEligible(receiver)) return c;
               continue;
             }
             if (!EVT[c] || !EVT[c].includes('drw')) continue;
@@ -659,7 +678,10 @@ const AI = {
         }
         return null;
       }
-      case 'retrieve': case 'summon': return byVal(opts, x => val(x.value)).value;
+      case 'retrieve': case 'summon': {
+        const cards = opts.filter(x => x.value);
+        return cards.length ? byVal(cards, x => val(x.value)).value : null;
+      }
       case 'discard': case 'cost': {
         const openInHand = p.hand.includes('P01-078');
         return opts.slice().sort((a, b) => {

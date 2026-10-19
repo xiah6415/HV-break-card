@@ -12,4 +12,6 @@ assert.throws(()=>parseDeck({...base,c:[['P01-002',39]]},DEF), /40 張/);
 assert.throws(()=>parseDeck({...base,c:[['P01-078',9],['P01-002',31]]},DEF), /Event/);
 assert.throws(()=>parseDeck({...base,c:[['P01-002',40.5]]},DEF), /張數無效/);
 assert.equal(normalCode('HV-P01-002.webp'),'P01-002');
+assert.equal(normalCode('HVBP-002.webp'),'BP-002');
+assert.deepEqual(parseDeck({ n: 'official bonus code', c: [['HVBP-002',40]] }, DEF).cards, { 'BP-002': 40 });
 console.log('deck-tools: all tests passed');

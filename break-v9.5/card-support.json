@@ -1,0 +1,1230 @@
+{
+  "schemaVersion": 1,
+  "checkedOn": "2026-10-19",
+  "rules": {
+    "version": "1.06",
+    "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/rules/pdf/rules_general_v1.06.pdf",
+    "sha256": "bab6e46cd410177596d75a826ce6022cf271a3ba35fbf5ed144690325ffc1a9a"
+  },
+  "scope": "官方資料核對與已測試情境；不等於所有規則、技能目標與組合均已自動化。",
+  "houseRules": [
+    "抽牌事件在接球判定前也可使用，以及接不起球後手動按 Loss，保留使用者指定操作。",
+    "開局目前由擲骰勝者直接發球；官方規則另有選擇先發球與否，尚未實作。"
+  ],
+  "cards": {
+    "P01-013": {
+      "name": "縁下 力",
+      "number": "HV-P01-013",
+      "rarity": "N",
+      "kind": "C",
+      "stats": [
+        1,
+        0,
+        2,
+        0,
+        0
+      ],
+      "affiliation": "烏野·2年",
+      "position": "WS",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-013&voba=N",
+      "sourceSha256": "12bc3e5fd2ede823988ad4c50b9b9583229af3852f7030aa8b7929a1f6e1df13",
+      "qaIds": [
+        "1129",
+        "1130"
+      ],
+      "status": "partial",
+      "gaps": [
+        "目前僅強化本次接球角色，尚未提供其他場上烏野角色的指定。"
+      ],
+      "tests": [
+        "rules-audit.test.js"
+      ],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P01-013"
+    },
+    "P02-003": {
+      "name": "月島 蛍",
+      "number": "HV-P02-003",
+      "rarity": "頂",
+      "kind": "C",
+      "stats": [
+        1,
+        2,
+        3,
+        0,
+        2
+      ],
+      "affiliation": "烏野·1年",
+      "position": "MB",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P02-003&voba=%E9%A0%82",
+      "sourceSha256": "5c6684e8d2f7933bca09b8a468a782e35d77440db853031d6eda90131beee999",
+      "qaIds": [
+        "1261"
+      ],
+      "status": "partial",
+      "gaps": [
+        "目前會自動使用月島技能並指定中攔；仍需補上可不發動及側攔技能的選擇。"
+      ],
+      "tests": [],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P02-003"
+    },
+    "D01-005": {
+      "name": "西谷 夕",
+      "number": "HV-D01-005",
+      "rarity": "D",
+      "kind": "C",
+      "stats": [
+        null,
+        null,
+        5,
+        0,
+        0
+      ],
+      "affiliation": "烏野·2年",
+      "position": "Li",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-D01-005&voba=D",
+      "sourceSha256": "74e9d1ef7f89b5066bf4cd5e264c7c6454cebc7ec1622c88efd56e214305e8b7",
+      "qaIds": [],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "skill-basics.test.js"
+      ],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-D01-005"
+    },
+    "P01-011": {
+      "name": "西谷 夕",
+      "number": "HV-P01-011",
+      "rarity": "R",
+      "kind": "C",
+      "stats": [
+        null,
+        null,
+        6,
+        0,
+        0
+      ],
+      "affiliation": "烏野·2年",
+      "position": "Li",
+      "hasSkill": false,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-011&voba=R",
+      "sourceSha256": "7c6b0d1fb362223e99ebb3215ff514e363d58d21ad04902183ed1f073a606827",
+      "qaIds": [],
+      "status": "basic",
+      "gaps": [],
+      "tests": [],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P01-011"
+    },
+    "PR-033": {
+      "name": "西谷 夕",
+      "number": "HV-PR-033",
+      "rarity": "P",
+      "kind": "C",
+      "stats": [
+        null,
+        null,
+        6,
+        0,
+        0
+      ],
+      "affiliation": "烏野·2年",
+      "position": "Li",
+      "hasSkill": false,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-PR-033&voba=P",
+      "sourceSha256": "6137738613f53932004c7d1d6a835d6390b29479db120f2b76ff7ebc26355d0b",
+      "qaIds": [],
+      "status": "basic",
+      "gaps": [],
+      "tests": [],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-PR-033"
+    },
+    "P02-001": {
+      "name": "日向 翔陽",
+      "number": "HV-P02-001",
+      "rarity": "S",
+      "kind": "C",
+      "stats": [
+        2,
+        2,
+        0,
+        0,
+        3
+      ],
+      "affiliation": "烏野·1年",
+      "position": "MB",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P02-001&voba=S",
+      "sourceSha256": "2d6ce9405b77265330770d6085d6bcea0f90f8a3c86d857f6fdcb0b0a097daa6",
+      "qaIds": [
+        "1257"
+      ],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "rules-audit.test.js"
+      ],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P02-001"
+    },
+    "P03-051": {
+      "name": "西谷 夕",
+      "number": "HV-P03-051",
+      "rarity": "N",
+      "kind": "C",
+      "stats": [
+        null,
+        null,
+        5,
+        0,
+        0
+      ],
+      "affiliation": "烏野·2年",
+      "position": "Li",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P03-051&voba=N",
+      "sourceSha256": "8e0b4617c7c0493e5f5bdcba6175da9ec192875b145f11fb0756f6357f2fb7ce",
+      "qaIds": [
+        "1802",
+        "1803"
+      ],
+      "status": "partial",
+      "gaps": [
+        "接球加成已實作；對手進攻減值目前有歸零下限，需依總規核對負值處理。"
+      ],
+      "tests": [],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P03-051"
+    },
+    "PR-022": {
+      "name": "澤村 大地",
+      "number": "HV-PR-022",
+      "rarity": "P",
+      "kind": "C",
+      "stats": [
+        1,
+        0,
+        5,
+        0,
+        0
+      ],
+      "affiliation": "烏野·3年",
+      "position": "WS",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-PR-022&voba=P",
+      "sourceSha256": "ae1d46cedd7da2739ae70391e04a0f41deab2f86d99651efa5af079b7fbb0c77",
+      "qaIds": [
+        "1415",
+        "1416"
+      ],
+      "status": "partial",
+      "gaps": [
+        "目前自動套用 A 傳球，尚未讓玩家分別選擇兩個可使用的效果。"
+      ],
+      "tests": [],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-PR-022"
+    },
+    "PR-057": {
+      "name": "着地上手組。",
+      "number": "HV-PR-057",
+      "rarity": "P",
+      "kind": "C",
+      "stats": [
+        null,
+        null,
+        5,
+        0,
+        3
+      ],
+      "affiliation": "烏野・1年,烏野・2年",
+      "position": "MB,Li",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-PR-057&voba=P",
+      "sourceSha256": "24c4c4b22a7d208b52d0bc3fcaa97d11d5c30acee94a2c6415b967c2e4b7442d",
+      "qaIds": [],
+      "status": "partial",
+      "gaps": [
+        "目前依接球／攻擊固定名稱；尚未提供登場時二選一及完整名稱期限處理。"
+      ],
+      "tests": [],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-PR-057"
+    },
+    "D01-009": {
+      "name": "菅原 孝支",
+      "number": "HV-D01-009",
+      "rarity": "D",
+      "kind": "C",
+      "stats": [
+        1,
+        1,
+        2,
+        2,
+        3
+      ],
+      "affiliation": "烏野·3年",
+      "position": "S",
+      "hasSkill": false,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-D01-009&voba=D",
+      "sourceSha256": "b2d53d815ddca15c275ea2546a927e669b68ffb5df2326caeba126826165aea1",
+      "qaIds": [],
+      "status": "basic",
+      "gaps": [],
+      "tests": [],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-D01-009"
+    },
+    "P01-006": {
+      "name": "影山 飛雄",
+      "number": "HV-P01-006",
+      "rarity": "頂",
+      "kind": "C",
+      "stats": [
+        1,
+        1,
+        1,
+        1,
+        2
+      ],
+      "affiliation": "烏野·1年",
+      "position": "S",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-006&voba=%E9%A0%82",
+      "sourceSha256": "72753c9306be32e27f2ca9a65248d4160493afa1b86a6aac36a45f83822c0407",
+      "qaIds": [
+        "1122",
+        "1123",
+        "1124"
+      ],
+      "status": "partial",
+      "gaps": [
+        "公開卡可選擇不拿已修正；PR-057 的名稱判定仍依固定名稱，需隨名稱模組補全。"
+      ],
+      "tests": [
+        "rules-audit.test.js"
+      ],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P01-006"
+    },
+    "P03-048": {
+      "name": "影山 飛雄",
+      "number": "HV-P03-048",
+      "rarity": "R",
+      "kind": "C",
+      "stats": [
+        1,
+        3,
+        0,
+        2,
+        2
+      ],
+      "affiliation": "烏野·1年",
+      "position": "S",
+      "hasSkill": false,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P03-048&voba=R",
+      "sourceSha256": "faec7b252a021600064d1f6bb5a9dce8cc789d0a42c2c9d309e023142bb4fe72",
+      "qaIds": [],
+      "status": "basic",
+      "gaps": [],
+      "tests": [],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P03-048"
+    },
+    "PR-032": {
+      "name": "影山 飛雄",
+      "number": "HV-PR-032",
+      "rarity": "P",
+      "kind": "C",
+      "stats": [
+        4,
+        1,
+        2,
+        2,
+        1
+      ],
+      "affiliation": "烏野·1年",
+      "position": "S",
+      "hasSkill": false,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-PR-032&voba=P",
+      "sourceSha256": "15c3f9cb5b158e8dd13c110935718ee9818f3361ec89867a5f25baf8719671ed",
+      "qaIds": [],
+      "status": "basic",
+      "gaps": [],
+      "tests": [],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-PR-032"
+    },
+    "PR-043": {
+      "name": "影山 飛雄",
+      "number": "HV-PR-043",
+      "rarity": "P",
+      "kind": "C",
+      "stats": [
+        3,
+        3,
+        0,
+        2,
+        0
+      ],
+      "affiliation": "烏野·1年",
+      "position": "S",
+      "hasSkill": false,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-PR-043&voba=P",
+      "sourceSha256": "2f3b5e81b4220a40a4f50e4299cc1bfd6a341d3279604f06796fae332af59221",
+      "qaIds": [],
+      "status": "basic",
+      "gaps": [],
+      "tests": [],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-PR-043"
+    },
+    "PR-054": {
+      "name": "影山 飛雄",
+      "number": "HV-PR-054",
+      "rarity": "P",
+      "kind": "C",
+      "stats": [
+        5,
+        1,
+        1,
+        2,
+        1
+      ],
+      "affiliation": "烏野・1年",
+      "position": "S",
+      "hasSkill": false,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-PR-054&voba=P",
+      "sourceSha256": "734d733ff1f551b4fac5087d72448eac9014ab4af680b9296077fac1e1f4ab99",
+      "qaIds": [],
+      "status": "basic",
+      "gaps": [],
+      "tests": [],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-PR-054"
+    },
+    "P01-002": {
+      "name": "日向 翔陽",
+      "number": "HV-P01-002",
+      "rarity": "頂",
+      "kind": "C",
+      "stats": [
+        2,
+        3,
+        1,
+        0,
+        1
+      ],
+      "affiliation": "烏野·1年",
+      "position": "MB",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-002&voba=%E9%A0%82",
+      "sourceSha256": "39aa8f5f3f3462b9df8a3b7cf8219d382c03af12300eed726a3fa380adad432e",
+      "qaIds": [
+        "1116",
+        "1117"
+      ],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "skill-basics.test.js"
+      ],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P01-002"
+    },
+    "P01-004": {
+      "name": "日向 翔陽",
+      "number": "HV-P01-004",
+      "rarity": "R",
+      "kind": "C",
+      "stats": [
+        2,
+        0,
+        5,
+        0,
+        3
+      ],
+      "affiliation": "烏野·1年",
+      "position": "MB",
+      "hasSkill": false,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-004&voba=R",
+      "sourceSha256": "e01119f074509d0be170ac0382c36fb66c2f04c1767036ada0ad8029d0073280",
+      "qaIds": [],
+      "status": "basic",
+      "gaps": [],
+      "tests": [],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P01-004"
+    },
+    "P01-003": {
+      "name": "日向 翔陽",
+      "number": "HV-P01-003",
+      "rarity": "S",
+      "kind": "C",
+      "stats": [
+        1,
+        2,
+        2,
+        0,
+        2
+      ],
+      "affiliation": "烏野·1年",
+      "position": "MB",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-003&voba=S",
+      "sourceSha256": "56c98335d26960d8cfd789e2eda7528cf19cad58277e6ffa955b14c8eed252ca",
+      "qaIds": [
+        "1118",
+        "1119",
+        "1120",
+        "1121"
+      ],
+      "status": "partial",
+      "gaps": [
+        "條件及加成已實作；目前會自動使用，尚未提供符合條件時不發動的選擇。"
+      ],
+      "tests": [],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P01-003"
+    },
+    "BP-002": {
+      "name": "日向 翔陽",
+      "number": "HVBP-002",
+      "rarity": "P",
+      "kind": "C",
+      "stats": [
+        1,
+        1,
+        1,
+        0,
+        2
+      ],
+      "affiliation": "烏野·1年",
+      "position": "MB",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HVBP-002&voba=P",
+      "sourceSha256": "a73cb6ef7d17d5ada193a6abcf491d906990881b84dff8955973944d6f895be2",
+      "qaIds": [],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "skill-basics.test.js",
+        "deck-tools.test.js"
+      ],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HVBP-002"
+    },
+    "PR-053": {
+      "name": "日向 翔陽",
+      "number": "HV-PR-053",
+      "rarity": "P",
+      "kind": "C",
+      "stats": [
+        3,
+        3,
+        2,
+        0,
+        3
+      ],
+      "affiliation": "烏野・1年",
+      "position": "MB",
+      "hasSkill": false,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-PR-053&voba=P",
+      "sourceSha256": "84891fae147b4f636e49067ec66ecdd541d6084d513ad19dfb8db8b445a8766c",
+      "qaIds": [],
+      "status": "basic",
+      "gaps": [],
+      "tests": [],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-PR-053"
+    },
+    "D01-004": {
+      "name": "山口　忠",
+      "number": "HV-D01-004",
+      "rarity": "D",
+      "kind": "C",
+      "stats": [
+        5,
+        3,
+        3,
+        0,
+        1
+      ],
+      "affiliation": "烏野·1年",
+      "position": "MB",
+      "hasSkill": false,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-D01-004&voba=D",
+      "sourceSha256": "fa32cfac4990fca8bbc07ba0b7b4fe70e412c379c30b1238211a2184e6b86968",
+      "qaIds": [],
+      "status": "basic",
+      "gaps": [],
+      "tests": [],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-D01-004"
+    },
+    "P03-046": {
+      "name": "赤木 路成",
+      "number": "HV-P03-046",
+      "rarity": "N",
+      "kind": "C",
+      "stats": [
+        null,
+        null,
+        5,
+        0,
+        0
+      ],
+      "affiliation": "稲荷崎·3年",
+      "position": "Li",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P03-046&voba=N",
+      "sourceSha256": "d510985e0164c64ec3b35b51f06a1c053de6c20d3a39546fa1f23462a6b4b70d",
+      "qaIds": [],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "skill-basics.test.js"
+      ],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P03-046"
+    },
+    "P03-057": {
+      "name": "黒川 広樹",
+      "number": "HV-P03-057",
+      "rarity": "N",
+      "kind": "C",
+      "stats": [
+        0,
+        1,
+        0,
+        0,
+        2
+      ],
+      "affiliation": "烏野",
+      "position": "WS",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P03-057&voba=N",
+      "sourceSha256": "474f9d5f7a900525b5b6023b87d976a6f59c7abdb5af95709863b18fc59ba072",
+      "qaIds": [
+        "1809",
+        "1810",
+        "1811"
+      ],
+      "status": "partial",
+      "gaps": [
+        "目前採玩家指定的接球前延長時機，且以接球防降為主；正式抽牌時機與各參數防降待分離核對。"
+      ],
+      "tests": [
+        "rules-audit.test.js",
+        "events-timing.test.js"
+      ],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P03-057"
+    },
+    "D01-012": {
+      "name": "ブロード攻撃",
+      "number": "HV-D01-012",
+      "rarity": "D",
+      "kind": "E",
+      "stats": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "affiliation": "烏野",
+      "position": "-",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-D01-012&voba=D",
+      "sourceSha256": "593a9e03e082c14efec432e8ed393d425388eef9c64fc16a8b3a6781c708a00e",
+      "qaIds": [
+        "1108"
+      ],
+      "status": "partial",
+      "gaps": [
+        "目前只加本次攻擊角色；需提供場上烏野角色指定，並核對混校牌組的目標限制。"
+      ],
+      "tests": [],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-D01-012"
+    },
+    "P01-074": {
+      "name": "烏養 一繋",
+      "number": "HV-P01-074",
+      "rarity": "N",
+      "kind": "E",
+      "stats": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "affiliation": "烏野",
+      "position": "元監督",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-074&voba=N",
+      "sourceSha256": "e57cfcd1f8d8a63f26c22e393f2f778d9f0a24c7245dc3490296fd0a36010e2d",
+      "qaIds": [
+        "1211"
+      ],
+      "status": "partial",
+      "gaps": [
+        "額外加成條件已實作；目前僅指定本次攻擊角色，尚未提供其他場上角色。"
+      ],
+      "tests": [],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P01-074"
+    },
+    "P01-078": {
+      "name": "オープン攻撃",
+      "number": "HV-P01-078",
+      "rarity": "S",
+      "kind": "E",
+      "stats": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "affiliation": "烏野",
+      "position": "-",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-078&voba=S",
+      "sourceSha256": "ad2fe84c070e1d57cd0599c44681a7ba53610aa1597047f83d85a4a39a1d608c",
+      "qaIds": [
+        "1218",
+        "1219",
+        "1220",
+        "1221"
+      ],
+      "status": "partial",
+      "gaps": [
+        "抽棄、次數及同名舉球限制已補測；PR-057 的可選名稱仍待名稱模組處理。"
+      ],
+      "tests": [
+        "rules-audit.test.js"
+      ],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P01-078"
+    },
+    "P03-086": {
+      "name": "プレーは大分 おりこうさんよな",
+      "number": "HV-P03-086",
+      "rarity": "N",
+      "kind": "E",
+      "stats": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "affiliation": "稲荷崎/ユース",
+      "position": "-",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P03-086&voba=N",
+      "sourceSha256": "9a0d484a99436871edccc359bf1cdff223a81b56a6b29bdab2696fb92e6a7a8d",
+      "qaIds": [],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "rules-audit.test.js"
+      ],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P03-086"
+    },
+    "P03-090": {
+      "name": "おれにバレーボール教えてくれて ありがとう",
+      "number": "HV-P03-090",
+      "rarity": "S",
+      "kind": "E",
+      "stats": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "affiliation": "音駒",
+      "position": "-",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P03-090&voba=S",
+      "sourceSha256": "9c67e815ff83aed44d72cdac2bdf795ee0f25308de8d476882595d5c91e2d192",
+      "qaIds": [],
+      "status": "partial",
+      "gaps": [
+        "回收與每回合次數已實作；目前只在可回收時提供，尚未分開處理打出事件與技能無效。"
+      ],
+      "tests": [],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P03-090"
+    },
+    "PR-029": {
+      "name": "鬼と 鬼だな",
+      "number": "HV-PR-029",
+      "rarity": "P",
+      "kind": "E",
+      "stats": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "affiliation": "烏野",
+      "position": "-",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-PR-029&voba=P",
+      "sourceSha256": "9b6f34e933aafcd8c7312615df9bdb99b86bb9338440ac3159f4634c48df6af1",
+      "qaIds": [
+        "1421"
+      ],
+      "status": "partial",
+      "gaps": [
+        "最多各一張可選擇不拿已修正；目前只在可回收時提供，空目標打出尚未提供。"
+      ],
+      "tests": [
+        "rules-audit.test.js",
+        "events-timing.test.js"
+      ],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-PR-029"
+    },
+    "P03-096": {
+      "name": "日向 夏",
+      "number": "HV-P03-096",
+      "rarity": "N",
+      "kind": "E",
+      "stats": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "affiliation": "烏野",
+      "position": "-",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P03-096&voba=N",
+      "sourceSha256": "e33486caaea26c607de65c323ffad224551e8db119fee9460dd14680c206b789",
+      "qaIds": [],
+      "status": "partial",
+      "gaps": [
+        "目前固定加本階段數值；尚未提供場上日向與任一參數的選擇。"
+      ],
+      "tests": [],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P03-096"
+    },
+    "P03-087": {
+      "name": "周りの上手さに引っ張られる",
+      "number": "HV-P03-087",
+      "rarity": "N",
+      "kind": "E",
+      "stats": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "affiliation": "烏野/ユース",
+      "position": "-",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P03-087&voba=N",
+      "sourceSha256": "f2a2d19ffa08db807975777f845222a6bec2db2b58c09bb6610fca9d9f88694c",
+      "qaIds": [
+        "1834",
+        "1835",
+        "1836"
+      ],
+      "status": "partial",
+      "gaps": [
+        "目前僅攻擊階段加攻擊；尚缺接球階段、任意角色目標、影山跨區六 Guts 與參數選擇。"
+      ],
+      "tests": [],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P03-087"
+    },
+    "P01-033": {
+      "name": "及川 徹",
+      "number": "HV-P01-033",
+      "rarity": "頂",
+      "kind": "C",
+      "stats": [
+        5,
+        0,
+        0,
+        1,
+        0
+      ],
+      "affiliation": "青葉城西·3年",
+      "position": "S",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-033&voba=%E9%A0%82",
+      "sourceSha256": "aa2ce069bf748bfe526c0a36b1849fd02fa0ad8e3c1ebe180223d8138ea50b64",
+      "qaIds": [
+        "1155"
+      ],
+      "status": "partial",
+      "gaps": [
+        "目前只加發球／舉球階段數值，尚未提供任一參數的選擇。"
+      ],
+      "tests": [],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P01-033"
+    },
+    "D04-003": {
+      "name": "及川 徹",
+      "number": "HV-D04-003",
+      "rarity": "D",
+      "kind": "C",
+      "stats": [
+        5,
+        0,
+        1,
+        2,
+        2
+      ],
+      "affiliation": "青葉城西･3年",
+      "position": "S",
+      "hasSkill": false,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-D04-003&voba=D",
+      "sourceSha256": "d1d2c61e4c70f93449093ff626065d0f90abaa58e8a5e9fd59523670b82abeed",
+      "qaIds": [],
+      "status": "basic",
+      "gaps": [],
+      "tests": [],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-D04-003"
+    },
+    "P04-027": {
+      "name": "渡 親治",
+      "number": "HV-P04-027",
+      "rarity": "R",
+      "kind": "C",
+      "stats": [
+        null,
+        null,
+        6,
+        0,
+        0
+      ],
+      "affiliation": "青葉城西·2年",
+      "position": "Li",
+      "hasSkill": false,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P04-027&voba=R",
+      "sourceSha256": "8e141993cfe9e64b28949f8b324d15b6fa262c66929a9f6783869c545fbe0f19",
+      "qaIds": [],
+      "status": "basic",
+      "gaps": [],
+      "tests": [],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P04-027"
+    },
+    "P01-039": {
+      "name": "渡 親治",
+      "number": "HV-P01-039",
+      "rarity": "N",
+      "kind": "C",
+      "stats": [
+        null,
+        null,
+        5,
+        1,
+        0
+      ],
+      "affiliation": "青葉城西·2年",
+      "position": "Li",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-039&voba=N",
+      "sourceSha256": "a99937d170fe65a9e41719d937f7f462ce78b5959fd8a26a8b9a790e35a54e6b",
+      "qaIds": [
+        "1163"
+      ],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "skill-basics.test.js"
+      ],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P01-039"
+    },
+    "D04-010": {
+      "name": "国見 英",
+      "number": "HV-D04-010",
+      "rarity": "D",
+      "kind": "C",
+      "stats": [
+        1,
+        2,
+        5,
+        0,
+        2
+      ],
+      "affiliation": "青葉城西･1年",
+      "position": "WS",
+      "hasSkill": false,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-D04-010&voba=D",
+      "sourceSha256": "b504dc98584e44b90479bdde268b887b8b763c1f96da319c92bc63689c75849b",
+      "qaIds": [],
+      "status": "basic",
+      "gaps": [],
+      "tests": [],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-D04-010"
+    },
+    "P04-026": {
+      "name": "花巻 貴大",
+      "number": "HV-P04-026",
+      "rarity": "N",
+      "kind": "C",
+      "stats": [
+        1,
+        3,
+        5,
+        0,
+        0
+      ],
+      "affiliation": "青葉城西·3年",
+      "position": "WS",
+      "hasSkill": false,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P04-026&voba=N",
+      "sourceSha256": "d2e6921128f48721aefc7d2839c75447686c836e0ad2cba567e333e413e6d713",
+      "qaIds": [],
+      "status": "basic",
+      "gaps": [],
+      "tests": [],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P04-026"
+    },
+    "P01-035": {
+      "name": "岩泉 一",
+      "number": "HV-P01-035",
+      "rarity": "S",
+      "kind": "C",
+      "stats": [
+        1,
+        3,
+        1,
+        0,
+        2
+      ],
+      "affiliation": "青葉城西·3年",
+      "position": "WS",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-035&voba=S",
+      "sourceSha256": "0245bf22ca2bac22ef6e4b2845abaf7b769c3820fc21b17027fa91b66f867f98",
+      "qaIds": [
+        "1156",
+        "1157",
+        "1158"
+      ],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "skill-basics.test.js"
+      ],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P01-035"
+    },
+    "D04-004": {
+      "name": "岩泉 一",
+      "number": "HV-D04-004",
+      "rarity": "D",
+      "kind": "C",
+      "stats": [
+        5,
+        0,
+        4,
+        0,
+        3
+      ],
+      "affiliation": "青葉城西･3年",
+      "position": "WS",
+      "hasSkill": false,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-D04-004&voba=D",
+      "sourceSha256": "c59b534665ca47a4498876e78c249551c841a5aef77a01a9e897238b8b62e867",
+      "qaIds": [],
+      "status": "basic",
+      "gaps": [],
+      "tests": [],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-D04-004"
+    },
+    "D04-002": {
+      "name": "岩泉 一",
+      "number": "HV-D04-002",
+      "rarity": "D",
+      "kind": "C",
+      "stats": [
+        3,
+        3,
+        0,
+        0,
+        1
+      ],
+      "affiliation": "青葉城西･3年",
+      "position": "WS",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-D04-002&voba=D",
+      "sourceSha256": "af1675487c46f8733cdc966c6c01f91b43b55e2ef9840e819f4f32fea4f4dd06",
+      "qaIds": [],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "skill-basics.test.js"
+      ],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-D04-002"
+    },
+    "D04-011": {
+      "name": "京谷 賢太郎",
+      "number": "HV-D04-011",
+      "rarity": "D",
+      "kind": "C",
+      "stats": [
+        4,
+        2,
+        3,
+        0,
+        3
+      ],
+      "affiliation": "青葉城西･2年",
+      "position": "WS",
+      "hasSkill": false,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-D04-011&voba=D",
+      "sourceSha256": "9613d72f6eb1318d1394db90987581e0a2b5b7a7983f58891cf1c2cddd2e22f6",
+      "qaIds": [],
+      "status": "basic",
+      "gaps": [],
+      "tests": [],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-D04-011"
+    },
+    "D04-006": {
+      "name": "松川 一静",
+      "number": "HV-D04-006",
+      "rarity": "D",
+      "kind": "C",
+      "stats": [
+        2,
+        3,
+        3,
+        0,
+        3
+      ],
+      "affiliation": "青葉城西･3年",
+      "position": "MB",
+      "hasSkill": false,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-D04-006&voba=D",
+      "sourceSha256": "e6783ef01182411a8a490d3a5c6af37dfc133e864a254d81eec19b8ea2f371b7",
+      "qaIds": [],
+      "status": "basic",
+      "gaps": [],
+      "tests": [],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-D04-006"
+    },
+    "P04-024": {
+      "name": "松川 一静",
+      "number": "HV-P04-024",
+      "rarity": "N",
+      "kind": "C",
+      "stats": [
+        1,
+        3,
+        0,
+        1,
+        3
+      ],
+      "affiliation": "青葉城西·3年",
+      "position": "MB",
+      "hasSkill": false,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P04-024&voba=N",
+      "sourceSha256": "4aeea3cd8fcc1a1245562aa831436d1a6fb0a169da8e861b390ee997607aa50a",
+      "qaIds": [],
+      "status": "basic",
+      "gaps": [],
+      "tests": [],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P04-024"
+    },
+    "P01-087": {
+      "name": "俺も思った☆",
+      "number": "HV-P01-087",
+      "rarity": "N",
+      "kind": "E",
+      "stats": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "affiliation": "青葉城西",
+      "position": "-",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-087&voba=N",
+      "sourceSha256": "36ed565281848dc36c5b573b681b737cff3afe12b65b5c75fef7df66d7f18163",
+      "qaIds": [
+        "1234",
+        "1235",
+        "1236",
+        "1237",
+        "1238",
+        "1239"
+      ],
+      "status": "partial",
+      "gaps": [
+        "抽牌、疊加棄牌已實作；目前只加當次及川舉球，尚缺其他場上及川目標及無效打出。"
+      ],
+      "tests": [],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P01-087"
+    },
+    "P04-088": {
+      "name": "ドンピシャ!!!",
+      "number": "HV-P04-088",
+      "rarity": "S",
+      "kind": "E",
+      "stats": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "affiliation": "青葉城西",
+      "position": "-",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P04-088&voba=S",
+      "sourceSha256": "1096ba55f99afad9c72ded0a21aeadc3587af8fee0e2bd638b0efb8d5fafe469",
+      "qaIds": [
+        "1934",
+        "1935"
+      ],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "skill-basics.test.js"
+      ],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P04-088"
+    },
+    "P04-089": {
+      "name": "3年間ありがとう!!!",
+      "number": "HV-P04-089",
+      "rarity": "N",
+      "kind": "E",
+      "stats": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "affiliation": "青葉城西",
+      "position": "-",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P04-089&voba=N",
+      "sourceSha256": "0ba3dbeb6ad1bcc4d4a48f48fe89be36f7415d8322ca1bc57ae8f1d147f2cfd5",
+      "qaIds": [],
+      "status": "partial",
+      "gaps": [
+        "抽牌、棄牌與加成已實作；目前只指定本次接球角色，尚未提供其他青城三年角色。"
+      ],
+      "tests": [],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P04-089"
+    },
+    "P01-088": {
+      "name": "お前達は 強いよ",
+      "number": "HV-P01-088",
+      "rarity": "N",
+      "kind": "E",
+      "stats": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "affiliation": "青葉城西",
+      "position": "-",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-088&voba=N",
+      "sourceSha256": "acc722079ca3dfd5db417aab0b02ece135498229ccddd5aeb44811584f606099",
+      "qaIds": [],
+      "status": "partial",
+      "gaps": [
+        "目前固定抽一張並強化接球角色；尚缺可不抽牌及其他場上青城角色指定。"
+      ],
+      "tests": [],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P01-088"
+    }
+  }
+}

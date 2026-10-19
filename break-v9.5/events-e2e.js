@@ -64,7 +64,18 @@ async function makeTrace() {
           if (width === 390) await page.screenshot({ path: path.join(process.env.E2E_OUTPUT_DIR || '.', 'late-event-mobile.png') });
           await page.click('[data-act="confirm"]');
           await page.waitForFunction(name => document.getElementById('logSide').textContent.includes('打出 ' + name), E.nm(value));
-          await page.click('#undoBtn');
+          await page.waitForFunction(() => document.getElementById('dockQ').textContent.includes('鬼と鬼だな：最多'));
+          let recovered = 0;
+          while ((await page.locator('#dockQ').textContent()).includes('鬼と鬼だな：最多')) {
+            await page.click('#dockOpts [data-i="0"]'); await page.click('[data-act="confirm"]'); recovered++;
+            await page.waitForFunction(() => !document.querySelector('[data-act="confirm"]'));
+            await page.waitForFunction(() => !document.getElementById('dock').classList.contains('wait'));
+          }
+          assert(recovered > 0, 'must exercise an actual optional recovery');
+          for (let step = 0; step <= recovered; step++) {
+            await page.click('#undoBtn');
+            await page.waitForFunction(() => !document.getElementById('dockQ').textContent.includes('正在撤回'));
+          }
           await page.waitForFunction(prompt => document.getElementById('dockQ').textContent.includes(prompt), req.prompt);
           assert.equal(await page.locator('#meSide .hand').textContent(), before, 'Undo must restore the event and recovered cards');
           assert.equal(await page.locator('.hand .hc.sel .cbtn[data-card="PR-029"]').count(), 1);

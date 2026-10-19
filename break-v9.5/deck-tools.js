@@ -3,7 +3,7 @@
 'use strict';
 function normalCode(s) {
   if (typeof s !== 'string') throw Error('卡號必須是文字');
-  return s.trim().replace(/^HV-/i, '').replace(/\.webp$/i, '');
+  return s.trim().replace(/\.webp$/i, '').replace(/^HVBP-/i, 'BP-').replace(/^HV-/i, '');
 }
 function parseDeck(source, defs) {
   const input = typeof source === 'string' ? JSON.parse(source) : source;

@@ -5,6 +5,8 @@
 - 此資料夾與既有卡牌查詢首頁共存，規則與 UI 沿用使用者提供的 haikyu-v9.5-diagnostic.zip。
 - 先讀 HANDOFF.md、AGENTS.md 與 memory.md；變更前後更新 memory.md。
 - 修改 ui.html / engine.js / deck-tools.js / undo-tools.js 後，以 python3 build.py 建置，勿直接編輯 index.html。
+- 規則支援檢查：node audit-support.js、node rules-audit.test.js、node skill-basics.test.js。card-support.json 修改後用 node audit-support.js --write 更新 RULES-AUDIT.md，再由 build.py 內嵌。
+- 支援清單、官方來源與 HVBP 特殊卡號的 UI 驗證：node audit-e2e.js，沿用下列 Playwright 環境變數。
 - 檢查：node deck-tools.test.js、node events-timing.test.js、node flow.test.js、node turn-end.test.js、node undo-tools.test.js、node fuzz.js、node test.js 300；UI 改動另依 AGENTS.md 驗證，Undo 改動另跑 node undo-e2e.js（沿用下列 Playwright 環境變數）。
 - 回合／發球／Loss 全螢幕流程另跑 node flow-e2e.js（同下列 Playwright 環境變數），包含桌機與兩種手機完整對戰、確認前暫停、實際來球數值、手動 Loss、Undo 與最後一球。
 - 事件時機的手機操作另跑 node events-e2e.js（同下列 Playwright 環境變數）：略過抽牌窗口後在接球前使用回收事件並 Undo。

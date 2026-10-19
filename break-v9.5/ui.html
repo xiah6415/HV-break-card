@@ -330,6 +330,7 @@ body.turn-open .sheet { z-index: 80; }
       <label class="field" for="myDeck">牌組<select id="myDeck"><option value="k1014">烏野1014</option><option value="k1014c">1014c（接 6 強化）</option><option value="quick">烏野快攻版</option><option value="k1010">烏野1010</option><option value="seijoh">青葉城西（第四彈）</option><option value="hk_axis">烏野 日向影山軸</option></select></label>
       <div class="deckstrip" id="myStrip"></div>
       <button class="chip" type="button" id="editDeck">匯入／編輯自訂牌組</button>
+      <button class="chip" type="button" id="supportBtn">卡片支援清單</button>
     </div>
     <div class="panel">
       <h2>AI 對手</h2>
@@ -372,6 +373,7 @@ body.turn-open .sheet { z-index: 80; }
 
 <script>
 /*IMAGES*/
+/*SUPPORT*/
 </script>
 <script>
 /*ENGINE*/
@@ -429,8 +431,16 @@ body.turn-open .sheet { z-index: 80; }
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
   function cardSheet(c) {
     const stats = isC(c) ? `<div class="statrow">${STAT.map(([k, z]) => `<span><b>${st(c, k) == null ? '－' : st(c, k)}</b>${z}</span>`).join('')}</div>` : '';
-    openSheet(`<div class="detail"><div>${img(c)}</div><div style="display:grid;gap:8px;min-width:0"><h3>${nm(c)}</h3><div class="sub">${c}・${DEF[c][8]}${DEF[c][9] ? '・' + DEF[c][9] + ' 年' : ''}${isC(c) ? '' : '・EVENT'}</div>${stats}<div>${DEF[c][10] || '沒有技能（白板）。'}</div></div></div>`);
+    const support = window.BREAK_SUPPORT.cards[c];
+    openSheet(`<div class="detail"><div>${img(c)}</div><div style="display:grid;gap:8px;min-width:0"><h3>${nm(c)}</h3><div class="sub">${esc(support.number)}・${esc(support.affiliation)}${isC(c) ? '' : '・EVENT'}</div>${stats}<div>${DEF[c][10] || '沒有技能（白板）。'}</div><div class="sub"><b>${supportLabel(support)}</b>${support.gaps.map(x => `<p>${esc(x)}</p>`).join('')}<p><a href="${esc(support.source)}" target="_blank" rel="noopener noreferrer">查看官方卡片</a></p></div></div></div>`);
   }
+  function supportLabel(card) { return { basic: '無技能卡：數值已核對', 'scenario-tested': '主要技能情境已測試', partial: '部分技能待補' }[card.status]; }
+  $('supportBtn').onclick = () => {
+    const cards = Object.entries(window.BREAK_SUPPORT.cards);
+    const count = status => cards.filter(([, card]) => card.status === status).length;
+    openSheet(`<h3>卡片支援清單</h3><p>${cards.length} 張已核對官方資料：${count('basic')} 張無技能卡、${count('scenario-tested')} 張主要技能情境已測試、${count('partial')} 張仍有部分技能待補。</p><p class="sub">可點卡片查看已知限制；主要情境通過仍不等於所有技能組合皆已驗證。</p><div style="display:grid;gap:8px">${cards.map(([c, card]) => `<button class="chip" type="button" data-support-card="${c}" style="text-align:left;white-space:normal">${c} ${esc(card.name)}<small style="display:block">${supportLabel(card)}</small></button>`).join('')}</div>`);
+  };
+  $('sheet').addEventListener('click', e => { const button = e.target.closest('[data-support-card]'); if (button) cardSheet(button.dataset.supportCard); });
   function pileSheet(title, cards) {
     openSheet(`<h3>${title}（${cards.length}）</h3>${cards.length ? `<div class="grid6">${cards.map(c => `<button class="cbtn" type="button" data-card="${c}">${img(c)}</button>`).join('')}</div>` : '<div class="sub">沒有卡片</div>'}`);
   }
