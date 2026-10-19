@@ -38,6 +38,12 @@ async function advance(page) {
       assert.equal(await page.locator('#undoBtn').isEnabled(), false);
       for (let step = 0; step < 350 && !await page.locator('#dockOpts [data-act="ack"]').count(); step++) await advance(page);
       assert.equal(await page.locator('#dockOpts [data-act="ack"]').count(), 1, 'must reach the human draw phase');
+      const drawGeometry = await page.locator('#dockOpts [data-act="ack"]').evaluate(button => {
+        const rect = button.getBoundingClientRect(), opts = button.parentElement.getBoundingClientRect();
+        return { height: rect.height, width: rect.width, availableWidth: opts.width, fontSize: parseFloat(getComputedStyle(button).fontSize) };
+      });
+      assert(drawGeometry.height >= 60 && drawGeometry.fontSize >= 20, 'draw action must be large and readable');
+      assert(drawGeometry.width >= drawGeometry.availableWidth - 2, 'draw action must occupy its own full row');
       const beforeDraw = await snapshot(page);
       await page.click('#dockOpts [data-act="ack"]');
       await page.waitForSelector('.hand .hc.sel');

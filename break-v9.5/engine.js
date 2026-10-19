@@ -404,16 +404,18 @@ class Game {
   // ---------- events
   playable(p, timing) {
     const o = p.opp, res = [];
+    // Draw-phase cards remain available until the receive check resolves.
+    const drawWindow = timing === 'drw' || timing === 'rcv';
     const seen = new Set();
     for (const c of p.hand) {
       if (seen.has(c)) continue; seen.add(c);
       const T = EVT[c];
       if (isC(c)) {
         if (c === 'P01-013' && timing === 'rcv' && p.ts.receiver && isK(p.ts.receiver)) res.push({ card: c, label: '縁下（棄掉）：接球 +2' });
-        if (c === 'P03-057' && timing === 'drw' && !p.ts.kurokawa) res.push({ card: c, label: '黒川（棄掉）：本回合 2/3 年烏野接球 +2' });
+        if (c === 'P03-057' && drawWindow && !p.ts.kurokawa) res.push({ card: c, label: '黒川（棄掉）：本回合 2/3 年烏野接球 +2' });
         continue;
       }
-      if (!T || !T.includes(timing)) continue;
+      if (!T || !(T.includes(timing) || (drawWindow && T.includes('drw')))) continue;
       if (p.ts.used[c] && ['P03-090', 'P03-096', 'P03-087', 'P04-088', 'P04-089'].includes(c)) continue;
       const ok = {
         'PR-029': () => !p.restrict.no_add && p.drop.some(x => isHin(x) && x !== 'PR-057' || nm(x) === '影山 飛雄'),
@@ -436,9 +438,9 @@ class Game {
     for (let guard = 0; guard < 12; guard++) {
       const opts = this.playable(p, timing);
       if (!opts.length) return;
-      const zh = { srv: '發球', drw: '抽牌', rcv: '接球', tos: '舉球', atk: '攻擊', blk: '攔網' }[timing];
+      const zh = { srv: '發球階段', drw: '抽牌階段', rcv: '接球判定前', tos: '舉球階段', atk: '攻擊階段', blk: '攔網階段' }[timing];
       const status = timing === 'blk' ? `目前攔網 ${p.ts.blk} vs 進攻 ${this.ball.off}` : timing === 'rcv' ? `目前接球 ${p.ts.rcv} vs 來球 ${this.ball.off}` : timing === 'atk' ? `目前進攻 ${p.ts.toss + p.ts.atk}` : timing === 'tos' ? `目前舉球 ${p.ts.toss}` : '';
-      const pick = await this.ask(p, { kind: 'event', timing, prompt: `${zh}階段：要使用卡片嗎？${status ? '　' + status : ''}`, options: [...opts.map(o => ({ label: o.label, card: o.card, value: o.card })), { label: '結束，進入下一步', value: null }] });
+      const pick = await this.ask(p, { kind: 'event', timing, prompt: `${zh}：要使用卡片嗎？${status ? '　' + status : ''}`, options: [...opts.map(o => ({ label: o.label, card: o.card, value: o.card })), { label: timing === 'rcv' ? '完成事件，判定接球' : '結束，進入下一步', value: null }] });
       if (!pick) return;
       await this.resolve(p, pick, timing);
     }
@@ -449,7 +451,15 @@ class Game {
     if (isC(c)) {
       p.drop.push(c);
       if (c === 'P01-013') { p.ts.rcv += 2; this.log(`${p.name} 棄縁下：接球 +2 → ${p.ts.rcv}`); }
-      if (c === 'P03-057') { p.ts.kurokawa = 1; this.log(`${p.name} 棄黒川：本回合 2/3 年烏野接球 +2`); }
+      if (c === 'P03-057') {
+        p.ts.kurokawa = 1;
+        const receiver = p.ts.receiver;
+        if (timing === 'rcv' && receiver && isK(receiver) && (yr(receiver) === 2 || yr(receiver) === 3 || receiver === 'PR-057')) {
+          p.ts.rcv += 2 + (p.restrict.rcv_minus || 0);
+          this.log(`黒川：目前接球 +2，數值不會被降低 → ${p.ts.rcv}`);
+        }
+        this.log(`${p.name} 棄黒川：本回合 2/3 年烏野接球 +2`);
+      }
       return;
     }
     p.ev.push(c); p.ts.used[c] = 1;
@@ -609,7 +619,12 @@ const AI = {
           if (req.timing === 'blk') { if (p.ts.blk < g.ball.off) return c; continue; }
           if (req.timing === 'rcv') {
             if (p.ts.rcv < g.ball.off && ['P01-013', 'P01-088', 'P04-089', 'P03-096'].includes(c)) return c;
-            continue;
+            if (c === 'P03-057') {
+              const receiver = p.ts.receiver;
+              if (p.ts.rcv < g.ball.off && receiver && isK(receiver) && (yr(receiver) === 2 || yr(receiver) === 3 || receiver === 'PR-057')) return c;
+              continue;
+            }
+            if (!EVT[c] || !EVT[c].includes('drw')) continue;
           }
           if (c === 'P01-078') {
             const hs = p.drop.filter(y => HIN.has(y));
