@@ -11,6 +11,7 @@ const path = require('node:path');
     await pg.selectOption('#speed', '200');
     await pg.click('#startBtn');
     if (mobile) {
+      if (await pg.locator('#chooseFirstServe').count()) await pg.click('#chooseFirstServe');
       await pg.click('#dockOpts [data-i="0"]');
       await pg.waitForSelector('[data-act="multi"]');
       await pg.locator('.hand .hc').last().scrollIntoViewIfNeeded();

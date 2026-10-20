@@ -32,11 +32,11 @@ const state = g => JSON.stringify({
   // Releasing an announcement from an old game must not advance its replacement.
   const oldNotice = ticket;
   session.start();
-  const roll = await next(); assert.equal(roll.req.kind, 'roll');
+  const roll = await next(); assert.equal(roll.req.kind, 'firstService');
   const replacement = state(session.game);
   oldNotice.resolve(); await flush(); await flush();
   assert.equal(state(session.game), replacement);
-  roll.resolve(true);
+  roll.resolve('serve');
 
   for (let step = 0; step < 100; step++) {
     ticket = await next();

@@ -1832,10 +1832,15 @@ class Game {
   async run() {
     const [P0, P1] = this.players;
     let d0, d1; do { d0 = 1 + Math.floor(this.rand() * 6); d1 = 1 + Math.floor(this.rand() * 6); } while (d0 === d1);
-    let server = d0 > d1 ? P0 : P1;
-    this.dice = [d0, d1]; this.firstServer = server.idx;
-    this.log(`擲骰：${P0.name} ${d0} vs ${P1.name} ${d1} → ${server.name} 取得發球權，從發球方開始調度`, 'head');
-    for (const p of this.players) if (p.agent.wantsAck) await this.ask(p, { kind: 'roll', prompt: '擲骰決定發球權', ctx: { dice: [d0, d1], server: server.idx }, options: [{ label: '開始調度', value: true }] });
+    const diceWinner = d0 > d1 ? P0 : P1;
+    this.dice = [d0, d1]; this.diceWinner = diceWinner.idx;
+    this.log(`擲骰：${P0.name} ${d0} vs ${P1.name} ${d1} → ${diceWinner.name} 取得先發／先接選擇權`, 'head');
+    const choice = await this.ask(diceWinner, { kind: 'firstService', prompt: `${diceWinner.name} 擲骰獲勝，請選擇先發或先接`, ctx: { dice: [d0, d1], winner: diceWinner.idx }, options: [{ label: '先發球', value: 'serve' }, { label: '先接球', value: 'receive' }] });
+    if (!['serve', 'receive'].includes(choice)) throw Error('請選擇先發球或先接球');
+    let server = choice === 'serve' ? diceWinner : diceWinner.opp;
+    this.firstServiceChoice = choice; this.firstServer = server.idx;
+    this.log(`${diceWinner.name} 選擇${choice === 'serve' ? '先發球' : '先接球'} → ${server.name} 先發球，從發球方開始調度`, 'head');
+    for (const p of this.players) if (p.agent.wantsAck) await this.ask(p, { kind: 'roll', prompt: '首球發球方已確定', ctx: { dice: [d0, d1], winner: diceWinner.idx, choice, server: server.idx }, options: [{ label: '開始調度', value: true }] });
     for (const p of [server, server.opp]) {
       this.draw(p, 6, '起手');
       const back = await this.ask(p, { kind: 'mulligan', role: p === server ? 'serve' : 'receive', multi: true, prompt: '起手調度：點選要放回牌庫的牌（可 0～6 張），放回幾張就重抽幾張', options: p.hand.map((c, i) => ({ label: nm(c), card: c, value: i })) });
@@ -2233,6 +2238,7 @@ const AI = {
     const o = p.opp, opts = req.options;
     const byVal = (arr, f) => arr.slice().sort((a, b) => f(b) - f(a))[0];
     switch (req.kind) {
+      case 'firstService': return 'serve';
       case 'mulligan': {
         // 保留：1 張接球 ≥5、1 張舉球手、1 張主攻；其餘在起手不理想時放回
         const isSet = c => isC(c) && st(c, 'tos') >= 1 && (nm(c) === '影山 飛雄' || nm(c) === '及川 徹' || nm(c) === '菅原 孝支');
@@ -3007,10 +3013,14 @@ else root.BreakUndoTools = api;
     const fl = flashMsg ? `<small class="flash">${esc(flashMsg)}</small>` : '';
     if (r.kind === 'lossConfirm') return [`<div class="loss-state"><b>這球無法繼續，等待你喊 Loss</b><small>${esc(r.reason)}。已登場的牌留在場上；按下 Loss 才結算下一球。</small></div>`, '<button class="opt lossy" type="button" id="confirmLoss" data-i="0">喊 Loss</button>'];
     if (r.kind === 'turnEnd') return [`<b>${esc(r.prompt)}</b><small>${r.outgoing.type === 'attack' ? '接／托／打與事件已完成' : r.outgoing.type === 'serve' ? '發球準備完成' : '攔網已完成'}，確認球場後再交棒；現在仍可喊 Loss。</small>`, '<button class="opt primary" type="button" data-i="0" id="endTurn">結束回合</button>'];
+    if (r.kind === 'firstService') {
+      const [a, b] = r.ctx.dice;
+      return [`<div class="dice"><div><span class="die roll">${a}</span><small>你</small></div><b class="vs">VS</b><div><span class="die roll d2">${b}</span><small>AI</small></div></div><div class="rollres">${esc(r.prompt)}</div><small>先發：先派發球角色。先接：由AI先發球，你先抽1張再接球。選好後從發球方開始調度。</small>`, '<button class="opt primary" type="button" data-i="0" id="chooseFirstServe">先發球</button><button class="opt" type="button" data-i="1" id="chooseFirstReceive">先接球</button>'];
+    }
     if (r.kind === 'roll') {
       const [a, b] = r.ctx.dice, meFirst = r.ctx.server === 0;
       return [`<div class="dice"><div><span class="die roll">${a}</span><small>你</small></div><b class="vs">VS</b><div><span class="die roll d2">${b}</span><small>AI</small></div></div>
-        <div class="rollres">${meFirst ? '你先發球' : 'AI 先發球'}</div><small>${meFirst ? '你是發球方：第 1 球先派發球角色，之後要接 AI 的攻擊。調度時至少留 1 張發球角色＋接球／舉球／攻擊。' : `你是接發球方：要先接 AI 的發球（${oppSrvText()}），抽 1 張後接→舉→攻。調度時優先留能接住發球的接球手、舉球手、攻擊手。`}</small>`,
+        <div class="rollres">${meFirst ? '你先發球' : 'AI 先發球'}</div><small>${r.ctx.winner === 0 ? '你' : 'AI'}擲骰獲勝，選擇${r.ctx.choice === 'receive' ? '先接球' : '先發球'}。</small><small>${meFirst ? '你是發球方：第 1 球先派發球角色，之後要接 AI 的攻擊。調度時至少留 1 張發球角色＋接球／舉球／攻擊。' : `你是接發球方：要先接 AI 的發球（${oppSrvText()}），抽 1 張後接→舉→攻。調度時優先留能接住發球的接球手、舉球手、攻擊手。`}</small>`,
         '<button class="opt primary" type="button" data-i="0">開始調度</button>'];
     }
     if (r.kind === 'guts' || r.kind === 'gutsCourt') {

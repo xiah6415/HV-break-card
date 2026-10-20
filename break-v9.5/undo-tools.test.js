@@ -7,7 +7,7 @@ const flush = () => new Promise(resolve => setImmediate(resolve));
 function state(g, logs) {
   return clone({
     players: g.players.map(p => { const { g, agent, ...data } = p; return data; }),
-    dice: g.dice, firstServer: g.firstServer, turn: g.turnNo, owner: g.turnP?.idx,
+    dice: g.dice, diceWinner: g.diceWinner, firstServiceChoice: g.firstServiceChoice, firstServer: g.firstServer, turn: g.turnNo, owner: g.turnP?.idx,
     ball: g.ball, target: g.target, rally: g.rallyNo, src: g.src, stats: g.stats,
     cardState: g.cardState, turnEffects: g.turnEffects, sharedRulesState: g.sharedRulesState, sharedRulesPending: g.sharedRulesPending, sharedRulesEvents: g.sharedRulesEvents, sharedRulesDepth: g.sharedRulesDepth, rulePhase: g.rulePhase,
     winner: g.winner?.idx, logs
@@ -175,12 +175,12 @@ async function defaultAnswer(ticket) {
   const fresh = harness(7);
   fresh.session.start();
   const roll = await fresh.next();
-  assert.equal(roll.req.kind, 'roll');
+  assert.equal(roll.req.kind, 'firstService');
   assert.equal(fresh.session.status().enabled, false, 'cannot undo the initial dice roll');
   assert.equal(fresh.session.undo(), false);
   fresh.session.stop();
   fresh.session.start();
-  assert.equal((await fresh.next()).req.kind, 'roll');
+  assert.equal((await fresh.next()).req.kind, 'firstService');
   assert.equal(fresh.session.entries.length, 0, 'new game clears undo history');
   fresh.session.stop();
   console.log('undo-tools: passed', reversals, 'complete-state reversals; AI pause/cancel/decline/accept; two-player consent; stale responses; restart; kinds:', [...kinds].join(', '));

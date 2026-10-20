@@ -329,10 +329,15 @@ class Game {
   async run() {
     const [P0, P1] = this.players;
     let d0, d1; do { d0 = 1 + Math.floor(this.rand() * 6); d1 = 1 + Math.floor(this.rand() * 6); } while (d0 === d1);
-    let server = d0 > d1 ? P0 : P1;
-    this.dice = [d0, d1]; this.firstServer = server.idx;
-    this.log(`擲骰：${P0.name} ${d0} vs ${P1.name} ${d1} → ${server.name} 取得發球權，從發球方開始調度`, 'head');
-    for (const p of this.players) if (p.agent.wantsAck) await this.ask(p, { kind: 'roll', prompt: '擲骰決定發球權', ctx: { dice: [d0, d1], server: server.idx }, options: [{ label: '開始調度', value: true }] });
+    const diceWinner = d0 > d1 ? P0 : P1;
+    this.dice = [d0, d1]; this.diceWinner = diceWinner.idx;
+    this.log(`擲骰：${P0.name} ${d0} vs ${P1.name} ${d1} → ${diceWinner.name} 取得先發／先接選擇權`, 'head');
+    const choice = await this.ask(diceWinner, { kind: 'firstService', prompt: `${diceWinner.name} 擲骰獲勝，請選擇先發或先接`, ctx: { dice: [d0, d1], winner: diceWinner.idx }, options: [{ label: '先發球', value: 'serve' }, { label: '先接球', value: 'receive' }] });
+    if (!['serve', 'receive'].includes(choice)) throw Error('請選擇先發球或先接球');
+    let server = choice === 'serve' ? diceWinner : diceWinner.opp;
+    this.firstServiceChoice = choice; this.firstServer = server.idx;
+    this.log(`${diceWinner.name} 選擇${choice === 'serve' ? '先發球' : '先接球'} → ${server.name} 先發球，從發球方開始調度`, 'head');
+    for (const p of this.players) if (p.agent.wantsAck) await this.ask(p, { kind: 'roll', prompt: '首球發球方已確定', ctx: { dice: [d0, d1], winner: diceWinner.idx, choice, server: server.idx }, options: [{ label: '開始調度', value: true }] });
     for (const p of [server, server.opp]) {
       this.draw(p, 6, '起手');
       const back = await this.ask(p, { kind: 'mulligan', role: p === server ? 'serve' : 'receive', multi: true, prompt: '起手調度：點選要放回牌庫的牌（可 0～6 張），放回幾張就重抽幾張', options: p.hand.map((c, i) => ({ label: nm(c), card: c, value: i })) });
@@ -730,6 +735,7 @@ const AI = {
     const o = p.opp, opts = req.options;
     const byVal = (arr, f) => arr.slice().sort((a, b) => f(b) - f(a))[0];
     switch (req.kind) {
+      case 'firstService': return 'serve';
       case 'mulligan': {
         // 保留：1 張接球 ≥5、1 張舉球手、1 張主攻；其餘在起手不理想時放回
         const isSet = c => isC(c) && st(c, 'tos') >= 1 && (nm(c) === '影山 飛雄' || nm(c) === '及川 徹' || nm(c) === '菅原 孝支');
