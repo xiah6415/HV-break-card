@@ -862,3 +862,10 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 嚴格212／數值541、共用自動技能22＋7舊流程（既有限制）不變，沒有新增技能核准。權限基底完成後才恢復14事件；下一批仍先寫計畫、逐完整profile語意／host／Undo測試後批准，不能只加card-support。見AUTHORITY.md及outputs/BREAK-authority-update.md／evidence.json／validation.json。本批接著提交推送部署並記公開核對。
 
 - 第5步另驗證library/build.py及rules/build_runtime.py可獨立執行；修正共用模組的CLI匯入路徑，重建index／library／runtime與完整回歸已測產物逐位元組一致，authority反例重跑通過，不重跑未變動對局。
+
+
+## 第5步權限來源改造公開部署結果（2026-10-21）
+- 實作提交57602b14c040d5cf4540afee53efd72da47f5b8c已推送master且Pages built／無錯誤，公開網址https://xiah6415.github.io/HV-break-card/break-v9.5/?v=57602b1；HTTP200、index 3347980bytes、SHA256 37ae5c8c1aa4f510908af48d4ffa21eef6493b665a9175c6e6f847728e4dc77c與已測本機完全一致。
+- 公開頁Chrome1280／390／320確認四種來源shared／legacy／basic／unapproved、22／7／183／329數量、卡庫／runtime authority一致、修改playable也無法取得嚴格權限；另驗證兩方數值分享匯入／重載保存、嚴格212、卡圖與開始對戰及無頁面錯誤／溢出。為Chrome手機模擬，非Safari真機。
+- 權限改造完成，可組牌數值541／嚴格212，自動技能22共用SHA核准＋7舊流程（既有限制）不變；沒有新增14張核准。最後交接結果以純文件提交推送，最終建置核對保存在outputs/BREAK-authority-evidence.json，不更改已測遊戲index。
+- 下一批恢復14有限事件，依結構化資料、完整語意／host／Undo驗證後逐筆寫完整SHA；card-support只補支援說明，不能代替授權。多人、多人Undo與AI難度仍延後。
