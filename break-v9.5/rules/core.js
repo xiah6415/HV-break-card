@@ -1,4 +1,4 @@
-/* Data-driven settlement kernel. Deliberately not wired into the published UI. */
+/* Data-driven settlement kernel; host controllers own UI and match progression. */
 (function(root) {
 'use strict';
 const clone = x => x===undefined ? null : JSON.parse(JSON.stringify(x));
@@ -581,6 +581,6 @@ class Kernel {
     need(['rally','loss_triggers','interval'].includes(this.state.stage),'Invalid rally stage');
     const seen=new Set();for(const [zone,ids] of Object.entries(this.state.zones))for(const id of ids){need(!seen.has(id),'Physical card appears twice');seen.add(id);const c=this.card(id);need(c.zone===zone&&c.id===id&&[0,1].includes(c.owner)&&Number.isInteger(c.incarnation)&&c.incarnation>=0&&this.profiles[c.profileId],'Card identity/zone mismatch');}need(seen.size===Object.keys(this.state.cards).length,'Card conservation failed'); }
 }
-const api={Kernel,NeedsReview,IllegalAction,capabilities:{status:'EXPERIMENTAL_NOT_GAME_INTEGRATED',nodes:[...KINDS],keywords:['one_touch'],liveCardApprovals:0}};
+const api={Kernel,NeedsReview,IllegalAction,capabilities:{status:'HOST_CONTROLLER_REQUIRED',nodes:[...KINDS],keywords:['one_touch'],defaultCatalogLiveCardApprovals:0}};
 if(typeof module!=='undefined')module.exports=api;else root.BreakRulesCore=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "status": "LOCAL_MIGRATION_NOT_PUBLISHED",
+  "profiles": {
+    "HV-P01-013:02f39fe84104ce51": {
+      "profile_sha256": "7dae8ea6774a9166e8a9b45b434eb05db6ca95893c89f8d8f59aa0d670fb91e6",
+      "scope": "legacy finite settlement: draw / positive numeric / own-hand discard; no persistent watches or entry",
+      "tests": "rules/legacy.test.js; rules/legacy-undo.test.js; rules/legacy-e2e.js"
+    },
+    "HV-P01-088:5acc349448fd5084": {
+      "profile_sha256": "b017fc891913d2e149887479e58f97524dba30abda4ea8183c703153c1f9a044",
+      "scope": "legacy finite settlement: draw / positive numeric / own-hand discard; no persistent watches or entry",
+      "tests": "rules/legacy.test.js; rules/legacy-undo.test.js; rules/legacy-e2e.js"
+    },
+    "HV-P04-089:2a2c4f7d069ac0af": {
+      "profile_sha256": "0f79e0addd662b8c8e22938a687f8a110cc4a70a4f2707e3ef05f308354300af",
+      "scope": "legacy finite settlement: draw / positive numeric / own-hand discard; no persistent watches or entry",
+      "tests": "rules/legacy.test.js; rules/legacy-undo.test.js; rules/legacy-e2e.js"
+    }
+  }
+}

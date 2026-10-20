@@ -858,7 +858,7 @@ body.turn-open .sheet { z-index: 80; }
     if (b.dataset.rec != null && blk) { const o = pending.req.options.find(x => String(x.value) === b.dataset.rec); blk.cards = o.cards.slice(); blk.center = blk.cards.includes('P02-003') ? 'P02-003' : blk.cards.slice().sort((x, y) => E.val(y) - E.val(x))[0]; return render(); }
     if (pending && b.dataset.i != null) {
       const o = pending.req.options[+b.dataset.i];
-      if (o.card && !['block', 'target'].includes(pending.req.kind) && !Object.hasOwn(pending.req.ctx || {}, 'revealed')) { setDockCollapsed(false); staged = { card: o.card, i: +b.dataset.i }; return render(); }
+      if (o.card && !['block', 'target', 'rulesChoice'].includes(pending.req.kind) && !Object.hasOwn(pending.req.ctx || {}, 'revealed')) { setDockCollapsed(false); staged = { card: o.card, i: +b.dataset.i }; return render(); }
       answer(o.value);
     }
   });

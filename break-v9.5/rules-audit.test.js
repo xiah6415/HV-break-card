@@ -64,7 +64,7 @@ async function check(name, run) {
     assert.equal(p.hand.length, 3); assert.equal(p.deck.length, 0);
   });
   await check('free step accepts thirteen legal hand skills without an arbitrary twelve-action cutoff', async () => {
-    const { g, p } = fixture(async (g, p, r) => r.options.find(x => x.value === 'P01-013')?.value ?? null);
+    const { g, p } = fixture(async (g, p, r) => r.kind === 'target' ? 'receive' : r.options.find(x => x.value === 'P01-013')?.value ?? null);
     p.hand = Array(13).fill('P01-013'); p.deck = Array(26).fill('D01-005'); p.area.receive = ['P01-004'];
     p.ts.receiver = 'P01-004'; p.ts.rcv = 5;
     await g.eventLoop(p, 'rcv', {});

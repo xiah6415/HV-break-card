@@ -5,8 +5,8 @@
 47 張均已對到官方卡號、名稱、數值與位置；6 組預設牌組全部納入。角色數值與目前引擎一致。
 
 - 無技能／數值核對：18 張。
-- 主要技能情境通過：13 張。
-- 部分技能待補：16 張。
+- 主要技能情境通過：16 張。
+- 部分技能待補：13 張。
 
 「主要技能情境通過」只代表列出的測試通過，不是所有目標、技能組合或規則均已驗證。部分技能卡仍可在現有對練台使用，限制見下表。官方 Q&A 編號是來源索引，不代表每則 Q&A 都已自動化。
 
@@ -28,7 +28,7 @@
 1. 將新目標／參數介面套用到其餘卡片的已知限制。
 2. 其他事件的場上目標、可不抽牌，以及無變化時不能打出／失效處理。
 3. 登場技能的可不發動、中側攔技能選擇、各效果期限與負值。
-4. 剩餘 16 張部分技能逐項補測後，再進入牌組串接階段。
+4. 剩餘 13 張部分技能逐項補測後，再進入牌組串接階段。
 
 ## 本機流程與正式模式待分離項目
 
@@ -41,7 +41,7 @@
 
 | 卡號／官方資料 | 名稱 | 支援狀態 | 已知限制／測試 |
 |---|---|---|---|
-| [HV-P01-013](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-013&voba=N) | 縁下 力 | 部分技能待補 | 目前僅強化本次接球角色，尚未提供其他場上烏野角色的指定。；`rules-audit.test.js` |
+| [HV-P01-013](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-013&voba=N) | 縁下 力 | 主要情境通過 | 本機共用結算：宣告棄牌後選任一場上烏野角色接球+2；含側攔、Guts排除與Undo。；`rules-audit.test.js`；`rules/legacy.test.js`／`rules/legacy-undo.test.js`／`rules/legacy-e2e.js` |
 | [HV-P02-003](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P02-003&voba=%E9%A0%82) | 月島 蛍 | 部分技能待補 | 目前會自動使用月島技能並指定中攔；仍需補上可不發動及側攔技能的選擇。 |
 | [HV-D01-005](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-D01-005&voba=D) | 西谷 夕 | 主要技能情境通過 | `skill-basics.test.js` |
 | [HV-P01-011](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-011&voba=R) | 西谷 夕 | 無技能／數值核對 | 官方卡文無技能；數值、卡圖與牌組引用已檢查 |
@@ -86,8 +86,8 @@
 | [HV-P04-024](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P04-024&voba=N) | 松川 一静 | 無技能／數值核對 | 官方卡文無技能；數值、卡圖與牌組引用已檢查 |
 | [HV-P01-087](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-087&voba=N) | 俺も思った☆ | 部分技能待補 | 抽牌、疊加棄牌已實作；目前只加當次及川舉球，尚缺其他場上及川目標及無效打出。 |
 | [HV-P04-088](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P04-088&voba=S) | ドンピシャ!!! | 主要技能情境通過 | `skill-basics.test.js` |
-| [HV-P04-089](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P04-089&voba=N) | 3年間ありがとう!!! | 部分技能待補 | 抽牌、棄牌與加成已實作；目前只指定本次接球角色，尚未提供其他青城三年角色。 |
-| [HV-P01-088](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-088&voba=N) | お前達は 強いよ | 部分技能待補 | 目前固定抽一張並強化接球角色；尚缺可不抽牌及其他場上青城角色指定。 |
+| [HV-P04-089](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P04-089&voba=N) | 3年間ありがとう!!! | 主要情境通過 | 本機共用結算：抽牌、指定場上青城三年角色，可選棄牌費用對同一目標追加+2，保留同名限次。；`rules/legacy.test.js`／`rules/legacy-undo.test.js`／`rules/legacy-e2e.js` |
+| [HV-P01-088](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-088&voba=N) | お前達は 強いよ | 主要情境通過 | 本機共用結算：抽0／1張、指定場上青城角色，結算時手牌≤3同一目標追加+1；無變化分支保守停用。；`rules/legacy.test.js`／`rules/legacy-undo.test.js`／`rules/legacy-e2e.js` |
 
 可重跑檢查：node audit-support.js。更新報告：node audit-support.js --write。
 

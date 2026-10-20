@@ -2,6 +2,7 @@
 (function (root) {
 'use strict';
 const N = null, K = '烏野', A = '青城';
+const sharedRules = typeof module !== 'undefined' && module.exports ? require('./rules/legacy') : root.BreakRulesLegacy;
 // code: [name, kind, srv, blk, rcv, tos, atk, value, school, year, text]
 const DEF = {
   // ---- 烏野
@@ -52,7 +53,7 @@ const DEF = {
   'P01-087': ['俺も思った☆', 'E', 0, 0, 0, 0, 0, 5, A, 0, '［發球/舉球］及川在場：抽 1、及川舉球 +1；對手下回合每次非抽牌加手牌就棄 1'],
   'P04-088': ['ドンピシャ!!!', 'E', 0, 0, 0, 0, 0, 5, A, 0, '［攻擊］每回合 1 次：抽 1、青城攻擊手 +1；攻擊 ≥8 → 對手下回合接球手 −1'],
   'P04-089': ['3年間ありがとう!!!', 'E', 0, 0, 0, 0, 0, 5, A, 0, '［接球］每回合 1 次：抽 1、青城 3 年接球 +1；再棄 1 張青城 3 年角色 → +2'],
-  'P01-088': ['お前達は 強いよ', 'E', 0, 0, 0, 0, 0, 4, A, 0, '［接球］最多抽 1，青城角色 1 人接球 +1；手牌 ≤3 再 +1（目前可不抽牌與目標選擇待補）'],
+  'P01-088': ['お前達は 強いよ', 'E', 0, 0, 0, 0, 0, 4, A, 0, '［接球］最多抽 1，青城角色 1 人接球 +1；手牌 ≤3 時同一角色再 +1'],
 };
 const HIN = new Set(['P02-001', 'P01-002', 'P01-004', 'BP-002', 'P01-003', 'PR-053']);
 const DECKS = {
@@ -555,9 +556,12 @@ class Game {
     const seen = new Set();
     for (const c of p.hand) {
       if (seen.has(c)) continue; seen.add(c);
+      if (sharedRules.handles(c)) {
+        if (sharedRules.canPlay(this, p, c, timing)) res.push({card:c,label:nm(c)});
+        continue;
+      }
       const T = EVT[c];
       if (isC(c)) {
-        if (c === 'P01-013' && timing === 'rcv' && p.ts.receiver && isK(p.ts.receiver)) res.push({ card: c, label: '縁下（棄掉）：接球 +2' });
         if (c === 'P03-057' && drawWindow && !p.ts.kurokawa) res.push({ card: c, label: '黒川（棄掉）：本回合 2/3 年烏野接球 +2' });
         continue;
       }
@@ -573,8 +577,6 @@ class Game {
         'P03-096': () => (!p.restrict.no_add && p.deck.length > 0) || this.courtTargets(p).some(t => this.cardName(p, t.key) === '日向 翔陽'),
         'P03-087': () => this.uniformCourt(p),
         'P04-088': () => p.ts.attacker && isA(p.ts.attacker),
-        'P04-089': () => p.ts.receiver && isA(p.ts.receiver) && yr(p.ts.receiver) === 3,
-        'P01-088': () => p.ts.receiver && isA(p.ts.receiver),
       }[c];
       if (ok && ok()) res.push({ card: c, label: nm(c) });
     }
@@ -593,10 +595,10 @@ class Game {
   }
   async resolve(p, c, timing) {
     const o = p.opp; this.src = nm(c);
+    if (sharedRules.handles(c)) return sharedRules.resolve(this, p, c, timing);
     rm(p.hand, c);
     if (isC(c)) {
       p.drop.push(c);
-      if (c === 'P01-013') { p.ts.rcv += 2; this.log(`${p.name} 棄縁下：接球 +2 → ${p.ts.rcv}`); }
       if (c === 'P03-057') {
         p.ts.kurokawa = 1;
         const receiver = p.ts.receiver;
@@ -671,12 +673,6 @@ class Game {
         break;
       }
       case 'P04-088': { this.sdraw(p, 1); p.ts.atk += 1; if (p.ts.atk >= 8) { o.pending.rcv_minus = 1; this.log(`${o.name} 下回合接球手 −1`, 'warn'); } break; }
-      case 'P04-089': {
-        this.sdraw(p, 1); p.ts.rcv += 1;
-        if (p.hand.some(x => isC(x) && isA(x) && yr(x) === 3) && await this.yes(p, 'skill', '3年間：再棄 1 張青城 3 年角色 → 接球 +2？', {})) { await this.discard(p, '選 1 張青城 3 年角色棄掉', x => isC(x) && isA(x) && yr(x) === 3); p.ts.rcv += 2; }
-        break;
-      }
-      case 'P01-088': { this.sdraw(p, 1); p.ts.rcv += 1 + (p.hand.length <= 3 ? 1 : 0); break; }
     }
   }
 }
