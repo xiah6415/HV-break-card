@@ -493,3 +493,7 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - build、離線重建7檔／14來源、核心54情境、首批15情境及全部既有unit suites通過。fuzz3000每局額外檢查80實體守恆，6組test各300局通過；桌機1280與手機390／320指定技能操作通過，原1280／375／320畫面各完整3局、無pageerror或橫向溢出。Chrome模擬，非iPhone Safari真機。
 - 本輪隨機檢查曾抓到付款時卡號陣列先更新／身分尚未更新造成查核失敗，已修正投影順序並補兩方活動接球角色的付款情境，重新通過整批。部分舊測試原本在已開始的假局面直接新增卡片，改為提前配置或走移牌；唯一整局重建測試明示重建身分，原規則／40張守恆斷言保留。
 - HANDOFF／ROADMAP／rules/README更新；成果outputs/BREAK-identity-lifecycle-update.md、validation.json及evidence.json。新核心核准仍3張，全卡封存核准0；持續核心效果／佇列／登場控制器、多人房間／資料版本／分視角授權仍待完成。未推送部署或同步iCloud，公開版仍af6d8c6。
+
+## 持續身分／期限本機版本保存（2026-10-20）
+- 實作提交d2d77d3：Preserve physical card identities and delayed restriction lifetimes。包含持續ID、角色代次、原引擎移牌集中化、首批共用結算接合、既有下回合限制期限與17情境、Undo／畫面回歸及交接資料。
+- 未推送部署或同步iCloud，公開版af6d8c6；本批之後先接新核心持續效果／觸發佇列／登場控制器，勿將全部技能直接核准。
