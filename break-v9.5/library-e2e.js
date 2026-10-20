@@ -27,7 +27,7 @@ async function advance(page){
   await page.waitForFunction(()=>document.querySelector('.detail img').naturalWidth>0);assert.equal(await page.locator('.statrow b').allTextContents().then(x=>x.join(',')),'2,3,3,0,3');
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   await page.screenshot({path:path.join(process.env.E2E_OUTPUT_DIR||'.',`library-${width}.png`)});await page.click('[data-close]');
-  await page.click('#editDeck');await page.fill('#customJSON',JSON.stringify({cards:{'P04-097':40}}));await page.click('#saveCustom');assert.match(await page.textContent('#customError'),/尚未開放/);
+  await page.click('#editDeck');await page.click('.imp-json summary');await page.fill('#customJSON',JSON.stringify({cards:{'P04-097':40}}));await page.click('#saveCustom');assert.match(await page.textContent('#customError'),/尚未開放/);
   await page.fill('#customJSON',JSON.stringify(sample));await page.click('#saveCustom');assert.equal(await page.inputValue('#myDeck'),'custom');assert.equal(await page.locator('#setup img[src="x"]').count(),0);assert.deepEqual(dialogs,[]);
   for(const image of await page.locator('#myStrip img').all()){await image.scrollIntoViewIfNeeded();await image.evaluate(i=>new Promise((resolve,reject)=>{if(i.complete)return i.naturalWidth?resolve():reject(Error('broken card image'));i.onload=resolve;i.onerror=()=>reject(Error('broken card image'));}));}
   await page.reload({waitUntil:'domcontentloaded'});assert.equal(await page.inputValue('#myDeck'),'custom');await page.evaluate(()=>{Date.now=()=>7;});await page.selectOption('#speed','200');await page.click('#startBtn');
