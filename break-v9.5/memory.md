@@ -886,3 +886,9 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - build可重建且產物逐位元組一致；41單元套件、規定fuzz3000及6組各300對戰、10瀏覽器套件全部通過。新增69事件操作（23階段×1280／390／320）包含選牌／選參數、Undo、同名無效警告與精確抽牌／數值。既有完整對局、手機狀態／Loss／交棒、數值、分享／查卡、開局與限制回歸通過；為Chrome手機模擬，非Safari真機。
 - 正式候選125→111／96家族；為保留原1938局面回歸，batch-baseline.json記錄原125集合，batch-test-index.js僅供隔離測試，正式索引與網頁不引用該授權fixture。完全無變化Event仍保守拒絕；P04-084／PR-031未納入。
 - 交接見FINITE-EVENTS／STATUS／REVIEW-PLAN／AUTHORITY及outputs/BREAK-finite-events-evidence.json、validation.json。下一步第6步依機制家族擴充，同家族優先烏野／青城／音駒／稲荷崎；多人、多人Undo與AI難度延後。本批接著提交推送部署，再記公開index SHA與卡圖核對。
+
+
+## 14張有限事件公開部署結果（2026-10-21）
+- 實作提交cc81bd249eae54e652e5d65ffa70ecc5499cb84b已推送master且Pages built／無錯誤。公開網址https://xiah6415.github.io/HV-break-card/break-v9.5/?v=cc81bd2，HTTP200、index 3408160bytes、SHA256 41ba6d3d46c943f313628a63a4a5037e93f3f00f820007bf384247d4ff9d4b30與已測本機逐位元組一致。新增14事件卡圖公開HTTP200且各自SHA與本機一致。
+- 公開頁Chrome1280／390／320確認數值541／嚴格226、共用36／舊7／無技能183／未自動化315、14事件皆shared且可由橋接處理；卡庫與runtime權限一致、偽造playable不能取得權限。雙方分享匯入／保存、未自動化標記、圖片、開始對戰及無溢出／頁面錯誤通過。Chrome手機模擬，非Safari真機。
+- 本批完成：14事件正式自動化，共用36＋7舊流程（既有限制）。最後交接紀錄以純文件提交推送，不改已測index；最後提交／Pages核對保存外層outputs/BREAK-finite-events-evidence.json。下一步依機制家族擴充，家族內優先四校，多人及AI難度延後。

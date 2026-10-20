@@ -1,5 +1,7 @@
 # GitHub Pages部署交接
 
+> 最新14事件批次已部署 cc81bd2。數值541／嚴格226，共用36＋舊7（既有限制）、未自動化315；公開index與14張卡圖均核對一致。下方較早版本為歷史。
+
 > 2026-10-21權限改造已完成回歸並部署57602b1，公開三尺寸已驗證；最新index SHA256 `37ae5c8c1aa4f510908af48d4ffa21eef6493b665a9175c6e6f847728e4dc77c`。下方舊發布描述為歷史，結果見文末與最新memory。
 
 > 2026-10-21第4步先發／先接選擇已完成回歸，已部署d7723d9並完成18組公開頁操作核對；最新遊戲index SHA256 `d00327a2f0c1fd069496859be4338f6df46cd6aaf60a79ee8e8b743bf67afdff`。下方3fc2023／b5395cc是前批數值模式公開驗證，最新部署結果見文末及memory。
@@ -38,3 +40,8 @@ Claude分享連結已合併，claude-handoff/已刪除並保留外層bundle備�
 - 公開頁Chrome1280／390／320確認四種來源shared／legacy／basic／unapproved、22／7／183／329數量、卡庫／runtime authority一致、修改playable也無法取得嚴格權限；另驗證兩方數值分享匯入／重載保存、嚴格212、卡圖與開始對戰及無頁面錯誤／溢出。為Chrome手機模擬，非Safari真機。
 - 權限改造完成，可組牌數值541／嚴格212，自動技能22共用SHA核准＋7舊流程（既有限制）不變；沒有新增14張核准。最後交接結果以純文件提交推送，最終建置核對保存在outputs/BREAK-authority-evidence.json，不更改已測遊戲index。
 - 下一批恢復14有限事件，依結構化資料、完整語意／host／Undo驗證後逐筆寫完整SHA；card-support只補支援說明，不能代替授權。多人、多人Undo與AI難度仍延後。
+
+## 14張有限事件公開部署結果（2026-10-21）
+- 實作提交cc81bd249eae54e652e5d65ffa70ecc5499cb84b已推送master且Pages built／無錯誤。公開網址https://xiah6415.github.io/HV-break-card/break-v9.5/?v=cc81bd2，HTTP200、index 3408160bytes、SHA256 41ba6d3d46c943f313628a63a4a5037e93f3f00f820007bf384247d4ff9d4b30與已測本機逐位元組一致。新增14事件卡圖公開HTTP200且各自SHA與本機一致。
+- 公開頁Chrome1280／390／320確認數值541／嚴格226、共用36／舊7／無技能183／未自動化315、14事件皆shared且可由橋接處理；卡庫與runtime權限一致、偽造playable不能取得權限。雙方分享匯入／保存、未自動化標記、圖片、開始對戰及無溢出／頁面錯誤通過。Chrome手機模擬，非Safari真機。
+- 本批完成：14事件正式自動化，共用36＋7舊流程（既有限制）。最後交接紀錄以純文件提交推送，不改已測index；最後提交／Pages核對保存外層outputs/BREAK-finite-events-evidence.json。下一步依機制家族擴充，家族內優先四校，多人及AI難度延後。
