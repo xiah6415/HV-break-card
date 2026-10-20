@@ -22,13 +22,13 @@ function fixture() {
   }
   { const { g, p } = fixture(); p.hand = ['P01-002']; p.area.attack = ['P01-013', 'P01-003', 'P01-006'];
     await g.enterAttack(p, 'P01-002', false);
-    assert.equal(p.ts.atk, 5); assert.equal(p.drop.length, 3); assert.equal(p.opp.pending.no_rcv6, 1);
-    g.beginTurn(p.opp); assert.equal(p.opp.restrict.no_rcv6, 1); g.beginTurn(p.opp); assert(!p.opp.restrict.no_rcv6);
+    assert.equal(p.ts.atk, 5); assert.equal(p.drop.length, 3); assert(!p.opp.pending.no_rcv6);assert.equal(g.sharedRulesState.effects.filter(e=>e.kind==='ban').length,1);
+    g.beginTurn(p.opp);assert(!g.canEnter(p.opp,'receive','P04-027'));g.beginTurn(p.opp);assert(g.canEnter(p.opp,'receive','P04-027'));
   }
   { const { g, p } = fixture(); p.hand = ['BP-002', 'P01-013']; await g.enterAttack(p, 'BP-002', false);
     assert.equal(p.ts.atk, 4); assert.deepEqual(p.drop, ['P01-013']);
   }
-  { const { g, p } = fixture(); p.hand = ['D04-002']; p.ts.setter = 'D04-003'; p.sets = []; p.opp.sets = ['D01-005']; p.area.attack = ['P01-033', 'P01-035'];
+  { const { g, p } = fixture(); p.hand = ['D04-002']; p.area.toss=['D04-003'];p.ts.setter = 'D04-003'; p.sets = []; p.opp.sets = ['D01-005']; p.area.attack = ['P01-033', 'P01-035'];
     await g.enterAttack(p, 'D04-002', false); assert.equal(p.ts.atk, 5); assert.equal(p.drop.length, 2);
   }
   { const { g, p } = fixture(); p.hand = ['P01-035', 'D04-003']; p.opp.hand = Array(4).fill('D01-005'); p.opp.deck = ['P01-002'];

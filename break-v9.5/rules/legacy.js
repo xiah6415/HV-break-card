@@ -20,11 +20,13 @@ function stored(g) {
   if(s&&(s.version!==1||s.fingerprint!==data.fingerprint))throw new Error('Shared watcher data version mismatch');
   return s||{version:1,fingerprint:data.fingerprint,next:1,effects:[],receipts:[]};
 }
-const watchSignatures=new Set();
+const watchSignatures=new Set(),banSignatures=new Set();
 function signature(e) { return JSON.stringify([e.event,typeof e.duration==='string'?e.duration:e.duration.kind,e.filters||{},e.then,e.remaining_uses??e.remaining??null]); }
-(function walk(n){if(!n||typeof n!=='object')return;if(n.kind==='watch')watchSignatures.add(signature(n));for(const v of Object.values(n))if(v&&typeof v==='object')walk(v);})(data.catalog);
-function persistent(e) { return ['watch','protect'].includes(e.kind); }
+function banSignature(e) {return JSON.stringify([e.action,typeof e.duration==='string'?e.duration:e.duration.kind,e.scope]);}
+(function walk(n){if(!n||typeof n!=='object')return;if(n.kind==='watch')watchSignatures.add(signature(n));if(n.kind==='ban_action')banSignatures.add(banSignature(n));for(const v of Object.values(n))if(v&&typeof v==='object')walk(v);})(data.catalog);
+function persistent(e) { return ['watch','protect','ban'].includes(e.kind); }
 function admitEffect(e) {
+  if(e.kind==='ban'&&e.duration.kind==='next_opponent_turn'&&banSignatures.has(banSignature(e)))return;
   const admittedFamily=e.event==='hand_added'&&e.duration.kind==='next_opponent_turn'||e.event==='character_entry'&&['this_turn','next_opponent_turn'].includes(e.duration.kind);
   if(e.kind==='watch'&&admittedFamily&&watchSignatures.has(signature(e)))return;
   if(e.kind==='protect'&&e.parameter==='all'&&e.duration.kind==='this_turn'&&e.ballOwner===null&&e.targets.length===1&&e.targets.every(r=>typeof r.id==='string'&&Number.isInteger(r.incarnation)))return;
@@ -43,6 +45,17 @@ function finishTurn(g) {
   const s=stored(g);s.effects=s.effects.filter(e=>e.duration.kind==='next_opponent_turn'&&e.duration.activeTurn===null);s.receipts=[];
 }
 function loss(g) { if(g.sharedRulesState){stored(g).effects=[];g.sharedRulesState.receipts=[];}g.sharedRulesPending=null;g.sharedRulesEvents=[]; }
+function permission(g,action) {
+  const effects=stored(g).effects;for(const e of effects)admitEffect(e);
+  if(!effects.some(e=>e.kind==='ban'&&active(e,g)))return {allowed:true};
+  const k=new Kernel({catalog:data.catalog,ruleIds:data.ruleIds,fingerprint:data.fingerprint,mode:'live'});
+  k.state.turn={id:Math.max(1,g.turnNo),player:g.turnP?.idx??action.player,phase:phase[g.rulePhase]||'draw',step:'free'};
+  k.state.effects=effects.filter(e=>e.kind==='ban');return k.permission(action);
+}
+function entryAllowed(g,p,code,area,{origin='rule',entryOrigin='hand',entryCount=1}={}) {
+  const printed=byShort[code]?.profiles[0].variants[0].printed;
+  return !!printed&&permission(g,{action:'enter_character',player:p.idx,origin,entryOrigin,entryCount,role:area==='block'?'center_blocker':area.startsWith('side:')?'side_blocker':area,printed,name:printed.name}).allowed;
+}
 function transaction(g,p,c,timing,notification=null) {
   if(g.sharedRulesPending)throw new Error('A shared settlement is already awaiting a choice');
   if(!notification&&(!handles(c)||!p.hand.includes(c)||g.turnP!==p))throw new Error('Not an admitted settlement');
@@ -96,7 +109,7 @@ function transaction(g,p,c,timing,notification=null) {
       if(req.count!==1)throw new Error('Adapter requires single physical-card choices');
       return req.options.map(id=>[id]);
     }
-    if(['draw_count','activate_payment','trigger_order'].includes(req.kind))return [...req.options].reverse();
+    if(['draw_count','activate_payment','optional','trigger_order'].includes(req.kind))return [...req.options].reverse();
     throw new Error('Decision is outside migration scope: '+req.kind);
   }
   // A legal event needs at least one resolving effect. Explore the same rules,
@@ -110,9 +123,11 @@ function transaction(g,p,c,timing,notification=null) {
     const req=step.boundary.request;
     return choices(req).some(answer=>possible([...answers,{request:req,answer}],budget));
   }
+  const savedIds=new Set(saved.effects.map(e=>e.id));
+  const durable=state=>state.effects.filter((e,i)=>persistent(e)&&(savedIds.has(e.id)||i>=base.effects.length));
   let eventCursor=0,effectCursor=base.effects.length,announced=false;
   function publish(state,complete,journal) {
-    for(const e of state.effects.filter(persistent))admitEffect(e);
+    for(const e of durable(state))admitEffect(e);
     const next=copy(physical);
     for(const key of Object.keys(next.zones)) {
       const [player,zone]=key.split('.');
@@ -143,7 +158,7 @@ function transaction(g,p,c,timing,notification=null) {
       }
     }
     if(complete) {
-      g.sharedRulesState={version:1,fingerprint:data.fingerprint,next:state.next,effects:copy(state.effects.filter(persistent)),receipts:notification?[...saved.receipts,...notification.events.map(e=>e.receipt)]:saved.receipts};
+      g.sharedRulesState={version:1,fingerprint:data.fingerprint,next:state.next,effects:copy(durable(state)),receipts:notification?[...saved.receipts,...notification.events.map(e=>e.receipt)]:saved.receipts};
       g.sharedRulesPending=null;
       if(notification)g.sharedRulesEvents=[];
     } else {
@@ -160,6 +175,7 @@ function transaction(g,p,c,timing,notification=null) {
     }
     for(const e of state.effects.slice(effectCursor)) {
       if(e.kind==='numeric') {const slot=slots[e.target.id];g.log(`${g.cardName(g.players[slot.player],slot.key)}（${labels[slot.key]||'側攔'}區）：${labels[e.parameter]} ${e.value<0?'−':'+'}${Math.abs(e.value)}`);}
+      else if(e.kind==='ban')g.log(`效果：${g.players[e.actor].name}下個回合，${e.action==='add_hand'?'不能用技能加入手牌':e.scope.printed_receive_gte!=null?`原始接球 ${e.scope.printed_receive_gte} 以上角色不能登場接球`:`最多 ${e.scope.max_count} 人攔網`}。`);
       else if(e.kind==='protect')g.log('登場效果：這位角色本回合的數值不會被降低。');
       else if(e.kind==='watch')g.log(e.event==='hand_added'?`效果：${g.players[e.actor].name}的下個回合，非抽牌加入手牌後需棄 1 張。`:e.duration.kind==='this_turn'?'效果：本回合符合條件的角色登場時，接球 +2，數值不會被降低。':`效果：${g.players[e.actor].name}下個回合的接球角色登場時，接球 −1。`);
     }
@@ -186,10 +202,10 @@ function transaction(g,p,c,timing,notification=null) {
         const job=state.queue.find(q=>q.id===answer),name=byShort[short[job.source?.id]]?.display_name||'觸發效果';
         return {label:`先結算 ${name}（${state.queue.indexOf(job)+1}）`,value:answer,answer};
       }
-      return {label:req.kind==='draw_count'?answer?`抽 ${answer} 張`:'不抽牌':answer?payment?.kind==='pay_guts'?`支付 ${payment.count} Guts`:payment?.destination==='self.event'?'選 1 張事件放到 Event 區':'棄 1 張符合條件的手牌，追加效果':'不追加',value:answer,answer};
+      return {label:req.kind==='optional'?answer?'執行登場效果':'不執行':req.kind==='draw_count'?answer?`抽 ${answer} 張`:'不抽牌':answer?payment?.kind==='pay_guts'?`支付 ${payment.count} Guts`:payment?.destination==='self.event'?'選 1 張事件放到 Event 區':'棄 1 張符合條件的手牌，追加效果':'不追加',value:answer,answer};
     });
-    const kind=req.kind==='target'?'target':req.kind==='activate_payment'?'skill':'rulesChoice';
-    const prompt=sourceName+'：'+({target:'選擇場上 1 位角色',draw_count:'選擇抽牌數量',activate_payment:paymentPrompt,payment_cards:req.destination==='self.event'?'選擇 1 張事件放到 Event 區':'選擇 1 張符合條件的手牌棄掉',move_cards:'非抽牌加入手牌後，請選 1 張手牌棄掉',trigger_order:'選擇同時觸發的結算順序'}[req.kind]);
+    const kind=req.kind==='target'?'target':['activate_payment','optional'].includes(req.kind)?'skill':'rulesChoice';
+    const prompt=sourceName+'：'+({target:'選擇場上 1 位角色',draw_count:'選擇抽牌數量',activate_payment:paymentPrompt,optional:'是否執行這個登場效果？',payment_cards:req.destination==='self.event'?'選擇 1 張事件放到 Event 區':'選擇 1 張符合條件的手牌棄掉',move_cards:'非抽牌加入手牌後，請選 1 張手牌棄掉',trigger_order:'選擇同時觸發的結算順序'}[req.kind]);
     let invalid=false;
     for(;;) {
       const value=await g.ask(owner,{kind,prompt:prompt+(invalid?'（請重新選擇有效選項）':''),timing,ctx:{card:short[req.source],...(state.cards[req.source]?.zone===req.player+'.receive'&&g.ball?{need:g.ball.off-g.parameter(owner,slots[req.source].key,'rcv')}: {})},options:opts.map(({answer,...o})=>o)});
@@ -253,6 +269,6 @@ async function legacyEffect(g,run) {
   try {const result=await run();complete=true;return result;}
   finally {g.sharedRulesDepth--;if(complete&&!g.sharedRulesDepth)await flushHandEvents(g);}
 }
-const api={charactersEntered,entryPreview,protectedParameter,handles,canPlay,resolve,assertReady,handAdded,legacyEffect,beginTurn,finishTurn,loss,approvals:[...approved]};
+const api={permission,entryAllowed,charactersEntered,entryPreview,protectedParameter,handles,canPlay,resolve,assertReady,handAdded,legacyEffect,beginTurn,finishTurn,loss,approvals:[...approved]};
 if(node)module.exports=api;else root.BreakRulesLegacy=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

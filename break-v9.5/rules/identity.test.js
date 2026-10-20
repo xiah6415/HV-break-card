@@ -75,11 +75,11 @@ function validate(g){const s=g.cardSnapshot();I.validate(g,s);return s;}
     }
   });
   await check('Independent delayed effects activate only on the next opponent turn and expire at its end',async()=>{
-    const {g,p,o}=fixture();p.hand=['P01-002'];p.area.attack=['P01-004','P01-004','P01-004'];
-    await g.enterAttack(p,'P01-002',false);const effect=copy(g.turnEffects.effects[0]);assert.equal(effect.activeTurn,null);assert.equal(effect.source.id,g.cardReference(p,'attack').id);
-    g.finishTurn(p);assert.equal(g.turnEffects.effects.length,1);g.moveCard(p.area.attack,p.drop,p.area.attack.length-1);
-    g.beginTurn(o);assert.equal(o.restrict.no_rcv6,1);assert.equal(g.turnEffects.effects[0].activeTurn,g.turnNo);
-    g.finishTurn(o);assert.deepEqual(o.restrict,{});assert.deepEqual(g.turnEffects.effects,[]);g.beginTurn(p);assert.deepEqual(p.restrict,{});
+    const {g,p,o}=fixture(async(g,p,r)=>r.kind==='skill'?true:r.kind==='guts'?r.options.slice(0,r.need).map(o=>o.value):r.options[0].value);p.hand=['P01-002'];p.area.attack=['P01-004','P01-004','P01-004'];
+    await g.enterAttack(p,'P01-002',false);const effect=copy(g.sharedRulesState.effects[0]);assert.equal(effect.duration.activeTurn,null);assert.equal(effect.source.id,g.cardReference(p,'attack').id);
+    g.finishTurn(p);assert.equal(g.sharedRulesState.effects.length,1);g.moveCard(p.area.attack,p.drop,p.area.attack.length-1);
+    g.beginTurn(o);assert(!g.canEnter(o,'receive','P04-027'));assert.equal(g.sharedRulesState.effects[0].duration.activeTurn,g.turnNo);
+    g.finishTurn(o);assert.deepEqual(o.restrict,{});assert.deepEqual(g.sharedRulesState.effects,[]);g.beginTurn(p);assert.deepEqual(p.restrict,{});
   });
   await check('Repeated delayed discard effects stack once; next turns do not reactivate them',async()=>{
     const {g,p,o}=fixture();p.hand=['P01-087','P01-087'];p.deck=['D01-009','D01-009'];p.area.serve=['P01-033'];

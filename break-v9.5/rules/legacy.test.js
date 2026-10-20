@@ -68,8 +68,8 @@ async function check(name,fn){await fn();cases.push({name,passed:true});}
     const {g,p}=setup(async()=> 'receive');p.hand=['P01-013'];p.area.receive=['PR-057'];p.ts.receiver='PR-057';p.ts.rcv=8;p.effects.receive={card:'PR-057',name:'日向 翔陽',mods:{rcv:3}};
     await g.resolve(p,'P01-013','rcv');assert.equal(p.ts.rcv,10);assert.equal(p.effects.receive.mods.rcv,5);assert.equal(g.cardName(p,'receive'),'日向 翔陽');g.finishTurn(p);assert.deepEqual(p.effects,{});
   });
-  await check('Only the explicit ten pinned profiles are admitted',async()=>{
-    assert.equal(bridge.approvals.length,10);assert(!bridge.handles('P03-087'));assert(bridge.handles('P03-057'));assert(bridge.handles('P04-088'));
+  await check('Only the explicit fourteen pinned profiles are admitted',async()=>{
+    assert.equal(bridge.approvals.length,14);assert(!bridge.handles('P03-087'));assert(bridge.handles('P03-057'));assert(bridge.handles('P04-088'));
   });
   await check('Stale effects from a replaced card cannot swallow or contaminate a new bonus',async()=>{
     const {g,p}=setup(async()=> 'receive');p.hand=['P01-013'];p.area.receive=['P01-004'];p.ts.receiver='P01-004';p.ts.rcv=5;

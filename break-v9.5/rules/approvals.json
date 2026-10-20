@@ -51,6 +51,26 @@
       "profile_sha256": "ed6e6f401d9f89a7b4578192ba948457255f466983d355b354c096150c7fe3cb",
       "scope": "self-entry passive in shared trigger queue / exact source-area Guts or hand payment / finite draw and numeric / receive and center-side block integration",
       "tests": "rules/passive.test.js; rules/passive-undo.test.js; rules/passive-e2e.js"
+    },
+    "HV-P01-002:1d197ca6a9e8803f": {
+      "profile_sha256": "6eae6c1788c7c46b237630c1d89dee05a925a2e3c5385f80a9dd8ff0527c742e",
+      "scope": "self-entry attack / exact cost and effective-name, hand, set and entry-origin conditions / persistent next-opponent action bans with host permission enforcement",
+      "tests": "rules/restriction.test.js; rules/restriction-undo.test.js; rules/restriction-e2e.js"
+    },
+    "HV-P01-003:aab9ac3325afd747": {
+      "profile_sha256": "10108fda5cbcf20014c981cd3af5ac0e1cb2c4e261117750f4b041ce8662d815",
+      "scope": "self-entry attack / exact cost and effective-name, hand, set and entry-origin conditions / persistent next-opponent action bans with host permission enforcement",
+      "tests": "rules/restriction.test.js; rules/restriction-undo.test.js; rules/restriction-e2e.js"
+    },
+    "HV-P01-035:14f54c719c0c554a": {
+      "profile_sha256": "77ef054900f1836d4cf3185b717444c50faaefa5ec04e592f44bebceb4081cba",
+      "scope": "self-entry attack / exact cost and effective-name, hand, set and entry-origin conditions / persistent next-opponent action bans with host permission enforcement",
+      "tests": "rules/restriction.test.js; rules/restriction-undo.test.js; rules/restriction-e2e.js"
+    },
+    "HV-D04-002:b1ed68c6c8b9fdd2": {
+      "profile_sha256": "40a2ab2cfca757f6c4cdff7217df07be8509fa2ce56744ea603fa52160cecb7d",
+      "scope": "self-entry attack / exact cost and effective-name, hand, set and entry-origin conditions / persistent next-opponent action bans with host permission enforcement",
+      "tests": "rules/restriction.test.js; rules/restriction-undo.test.js; rules/restriction-e2e.js"
     }
   }
 }

@@ -733,7 +733,7 @@ body.turn-open .sheet { z-index: 80; }
       return [head, r.options.map((o, i) => `<button class="opt ${o.value ? 'primary' : 'quiet'}" type="button" data-i="${i}">${esc(o.label)}</button>`).join('')];
     }
     if (r.kind === 'defend') {
-      const bestR = Math.max(...me.handC().filter(c => st(c, 'rcv') != null).map(c => num(game.rcvPreview(me, c))), 0);
+      const bestR = Math.max(...me.handC().filter(c => game.canEnter(me,'receive',c)).map(c => num(game.rcvPreview(me, c))), 0);
       const best = r.combos[0];
       return [`${esc(r.prompt)}<small>點「接球區」或「攔網區」也可以選</small>`,
         `<button class="opt" type="button" data-i="0">接球（先抽 1 張）<small>手上最高接 ${bestR}</small></button><button class="opt" type="button" data-i="1">攔網（不抽牌）<small>例：${esc(best.cards.map(E.short).join('＋'))} 攔 ${best.total}</small></button>`];

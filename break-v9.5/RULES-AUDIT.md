@@ -5,12 +5,14 @@
 47 張均已對到官方卡號、名稱、數值與位置；6 組預設牌組全部納入。角色數值與目前引擎一致。
 
 - 無技能／數值核對：18 張。
-- 主要技能情境通過：19 張。
-- 部分技能待補：10 張。
+- 主要技能情境通過：20 張。
+- 部分技能待補：9 張。
 
 「主要技能情境通過」只代表列出的測試通過，不是所有目標、技能組合或規則均已驗證。部分技能卡仍可在現有對練台使用，限制見下表。官方 Q&A 編號是來源索引，不代表每則 Q&A 都已自動化。
 
 ## 本批已修正
+
+- 攻擊登場P01-002／P01-003／P01-035／D04-002改走資料；共用下回合ban讀權限，涵蓋高接球登場、人數與技能加牌限制，不再生成舊旗標。P01-003依卡文及總合7-7-3補完整後段可選分支，來源／重建／語意回歸同步更新。34情境、三種限制44完整還原點與三尺寸操作通過。
 
 - 首批自身登場被動D01-005／P03-046／BP-002／P02-003進入共用觸發佇列，可與同人的監聽選順序；依資料支付Guts／手牌或放置事件，費用不足不提示。月島可選不發動，可作側攔，不再強制中攔；真實攔網合計按已結算數值。34新情境與13次完整Undo還原及三尺寸操作通過。
 
@@ -31,7 +33,7 @@
 1. 將新目標／參數介面套用到其餘卡片的已知限制。
 2. 其他事件的場上目標、可不抽牌，以及無變化時不能打出／失效處理。
 3. 登場技能的可不發動、中側攔技能選擇、各效果期限與負值。
-4. 剩餘 10 張部分技能逐項補測後，再進入牌組串接階段。
+4. 剩餘 9 張部分技能逐項補測後，再進入牌組串接階段。
 
 ## 本機流程與正式模式待分離項目
 
@@ -59,9 +61,9 @@
 | [HV-PR-032](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-PR-032&voba=P) | 影山 飛雄 | 無技能／數值核對 | 官方卡文無技能；數值、卡圖與牌組引用已檢查 |
 | [HV-PR-043](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-PR-043&voba=P) | 影山 飛雄 | 無技能／數值核對 | 官方卡文無技能；數值、卡圖與牌組引用已檢查 |
 | [HV-PR-054](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-PR-054&voba=P) | 影山 飛雄 | 無技能／數值核對 | 官方卡文無技能；數值、卡圖與牌組引用已檢查 |
-| [HV-P01-002](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-002&voba=%E9%A0%82) | 日向 翔陽 | 主要技能情境通過 | `skill-basics.test.js` |
+| [HV-P01-002](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-002&voba=%E9%A0%82) | 日向 翔陽 | 主要技能情境通過 | 共用3 Guts／攻擊+4、下回合原始接球≥6禁止登場；依印刷數值判斷，來源離場／到期／Loss及Undo；`rules/restriction.test.js`等。 |
 | [HV-P01-004](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-004&voba=R) | 日向 翔陽 | 無技能／數值核對 | 官方卡文無技能；數值、卡圖與牌組引用已檢查 |
-| [HV-P01-003](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-003&voba=S) | 日向 翔陽 | 部分技能待補 | 條件及加成已實作；目前會自動使用，尚未提供符合條件時不發動的選擇。 |
+| [HV-P01-003](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-003&voba=S) | 日向 翔陽 | 主要技能情境通過 | 手牌登場／登場後手牌≤3／舉球有效影山名稱條件；可選完整後段攻擊+2與最多2人攔網，QA1118–1121／總合7-7-3；`rules/restriction.test.js`等。 |
 | [HVBP-002](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HVBP-002&voba=P) | 日向 翔陽 | 主要技能情境通過 | 共用自身登場／精確手牌棄置與攻擊+2、整張事件後觸發；`rules/passive.test.js`／Undo／畫面。 |
 | [HV-PR-053](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-PR-053&voba=P) | 日向 翔陽 | 無技能／數值核對 | 官方卡文無技能；數值、卡圖與牌組引用已檢查 |
 | [HV-D01-004](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-D01-004&voba=D) | 山口　忠 | 無技能／數值核對 | 官方卡文無技能；數值、卡圖與牌組引用已檢查 |
@@ -81,9 +83,9 @@
 | [HV-P01-039](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-039&voba=N) | 渡 親治 | 主要技能情境通過 | `skill-basics.test.js` |
 | [HV-D04-010](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-D04-010&voba=D) | 国見 英 | 無技能／數值核對 | 官方卡文無技能；數值、卡圖與牌組引用已檢查 |
 | [HV-P04-026](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P04-026&voba=N) | 花巻 貴大 | 無技能／數值核對 | 官方卡文無技能；數值、卡圖與牌組引用已檢查 |
-| [HV-P01-035](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-035&voba=S) | 岩泉 一 | 主要技能情境通過 | `skill-basics.test.js` |
+| [HV-P01-035](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-035&voba=S) | 岩泉 一 | 主要技能情境通過 | 精確青城手牌費用／攻擊+2、依對手手牌≤4生成下回合技能加牌禁止，正常抽牌保留；`rules/restriction.test.js`等。 |
 | [HV-D04-004](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-D04-004&voba=D) | 岩泉 一 | 無技能／數值核對 | 官方卡文無技能；數值、卡圖與牌組引用已檢查 |
-| [HV-D04-002](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-D04-002&voba=D) | 岩泉 一 | 主要技能情境通過 | `skill-basics.test.js` |
+| [HV-D04-002](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-D04-002&voba=D) | 岩泉 一 | 主要技能情境通過 | 場上舉球有效及川名稱條件、精確2 Guts／攻擊+3，自己セット較少再+1；`rules/restriction.test.js`等。 |
 | [HV-D04-011](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-D04-011&voba=D) | 京谷 賢太郎 | 無技能／數值核對 | 官方卡文無技能；數值、卡圖與牌組引用已檢查 |
 | [HV-D04-006](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-D04-006&voba=D) | 松川 一静 | 無技能／數值核對 | 官方卡文無技能；數值、卡圖與牌組引用已檢查 |
 | [HV-P04-024](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P04-024&voba=N) | 松川 一静 | 無技能／數值核對 | 官方卡文無技能；數值、卡圖與牌組引用已檢查 |

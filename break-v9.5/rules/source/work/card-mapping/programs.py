@@ -2,7 +2,7 @@
 from model import *
 
 P('P01-002',PAY(G(3),NUM('attack',4),BAN('enter_character',role='receive',printed_receive_gte=6)))
-P('P01-003',IF(ALL(C('source.entry_origin','eq','hand'),HAND(3),RN('toss','影山 飛雄')),NUM('attack',2),BAN('enter_character',role='block',max_count=2)))
+P('P01-003',IF(ALL(C('source.entry_origin','eq','hand'),HAND(3),RN('toss','影山 飛雄')),OPT(NUM('attack',2),BAN('enter_character',role='block',max_count=2))))
 P('P01-006',PAY(G(2),SEARCH(1,dict(names=['日向 翔陽','オープン攻撃']),visibility='reveal'),ON('character_entry','this_turn',NUM('attack',2,'$event.character'),filters=dict(names=['日向 翔陽']))))
 P('P01-008',PAY(G(2),IF(COUNT(named('山口 忠'),1),NUM('block',2)),KW('doshat',6)))
 P('P01-010',REVEAL(),IF(RESULTS('revealed',tags=['烏野']),WATCH_NUM('toss','toss',-2)),BOTTOM_RESULT())

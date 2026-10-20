@@ -25,7 +25,7 @@
     "proposed_shared_extensions": 1,
     "unresolved_target_membership_profiles": 1,
     "program_node_counts": {
-      "sequence": 1052,
+      "sequence": 1053,
       "payment_branch": 192,
       "pay_guts": 127,
       "numeric": 319,
@@ -33,6 +33,7 @@
       "conditional": 236,
       "all": 36,
       "compare": 168,
+      "optional": 7,
       "deck_selection": 16,
       "watch": 44,
       "count_compare": 52,
@@ -55,7 +56,6 @@
       "rename_before_entry": 32,
       "choose_modes": 9,
       "draw_to_hand_size": 2,
-      "optional": 6,
       "external_action": 5,
       "parameter_absent": 1,
       "force_judgment_failure": 1,
@@ -672,55 +672,72 @@
                   "kind": "sequence",
                   "steps": [
                     {
-                      "kind": "numeric",
-                      "operation": "add",
-                      "parameter": "attack",
-                      "value": 2,
-                      "target": "source",
-                      "bind": "target",
-                      "target_scope": {
-                        "mode": "single",
-                        "binding": "reference",
-                        "membership": "snapshot_on_resolution"
+                      "kind": "optional",
+                      "then": {
+                        "kind": "sequence",
+                        "steps": [
+                          {
+                            "kind": "numeric",
+                            "operation": "add",
+                            "parameter": "attack",
+                            "value": 2,
+                            "target": "source",
+                            "bind": "target",
+                            "target_scope": {
+                              "mode": "single",
+                              "binding": "reference",
+                              "membership": "snapshot_on_resolution"
+                            },
+                            "duration": "current_turn_cleanup_or_role_exit",
+                            "evaluation_order": [
+                              "resolve_target",
+                              "bind_target",
+                              "evaluate_value_and_guard",
+                              "apply"
+                            ],
+                            "node_id": "program.steps[0].then.steps[0].then.steps[0]",
+                            "shared_rule_ids": [
+                              "duration.target_instance",
+                              "numeric.accumulate",
+                              "numeric.negative"
+                            ],
+                            "category_tags": [
+                              "數值"
+                            ],
+                            "classification_role": "effect",
+                            "polarity": "beneficial"
+                          },
+                          {
+                            "kind": "ban_action",
+                            "action": "enter_character",
+                            "actor": "opponent",
+                            "duration": "next_opponent_turn",
+                            "scope": {
+                              "role": "block",
+                              "max_count": 2
+                            },
+                            "node_id": "program.steps[0].then.steps[0].then.steps[1]",
+                            "shared_rule_ids": [
+                              "entry.limit",
+                              "permission.deny"
+                            ],
+                            "category_tags": [
+                              "行動權限"
+                            ],
+                            "classification_role": "effect",
+                            "polarity": "adverse"
+                          }
+                        ],
+                        "node_id": "program.steps[0].then.steps[0].then",
+                        "shared_rule_ids": [
+                          "effect.order"
+                        ]
                       },
-                      "duration": "current_turn_cleanup_or_role_exit",
-                      "evaluation_order": [
-                        "resolve_target",
-                        "bind_target",
-                        "evaluate_value_and_guard",
-                        "apply"
-                      ],
+                      "bind": "optional",
                       "node_id": "program.steps[0].then.steps[0]",
                       "shared_rule_ids": [
-                        "duration.target_instance",
-                        "numeric.accumulate",
-                        "numeric.negative"
-                      ],
-                      "category_tags": [
-                        "數值"
-                      ],
-                      "classification_role": "effect",
-                      "polarity": "beneficial"
-                    },
-                    {
-                      "kind": "ban_action",
-                      "action": "enter_character",
-                      "actor": "opponent",
-                      "duration": "next_opponent_turn",
-                      "scope": {
-                        "role": "block",
-                        "max_count": 2
-                      },
-                      "node_id": "program.steps[0].then.steps[1]",
-                      "shared_rule_ids": [
-                        "entry.limit",
-                        "permission.deny"
-                      ],
-                      "category_tags": [
-                        "行動權限"
-                      ],
-                      "classification_role": "effect",
-                      "polarity": "adverse"
+                        "effect.independent"
+                      ]
                     }
                   ],
                   "node_id": "program.steps[0].then",
@@ -745,6 +762,7 @@
             "condition.checkpoint",
             "condition.snapshot",
             "duration.target_instance",
+            "effect.independent",
             "effect.order",
             "entry.limit",
             "entry.name_roles",
@@ -95339,12 +95357,12 @@
     "status": "STRICT_PROGRAM_CONTRACT_PASSED_NOT_GAME_VALIDATED",
     "schema_artifact": "BREAK-card-program-schema.json",
     "profiles": 545,
-    "nodes": 3132,
+    "nodes": 3134,
     "known_node_kinds": 48
   },
   "validation": {
     "artifact": "BREAK-card-mapping-validation.json",
-    "checks": 79,
+    "checks": 80,
     "failed": 0,
     "scope": "data integrity, source expectations, selected condition projections; no game engine integration"
   }

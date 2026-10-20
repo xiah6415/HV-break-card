@@ -1,6 +1,6 @@
 {
   "status": "DATA_MAPPING_CHECKS_NOT_FULL_GAME_SIMULATION",
-  "passed": 79,
+  "passed": 80,
   "failed": 0,
   "cards": 541,
   "skill_profiles": 362,
@@ -55,6 +55,11 @@
       "title": "被動觸發的精確名稱與卡片識別統一",
       "passed": true,
       "qa_id": null
+    },
+    {
+      "title": "P01-003符合條件的完整後段可選執行或略過",
+      "passed": true,
+      "qa_id": "1120"
     },
     {
       "title": "未將任何初稿標為引擎可執行",

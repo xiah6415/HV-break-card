@@ -1,10 +1,10 @@
 {
   "status": "CONTRACT_AND_SCOPED_REFERENCE_CHECKS_NOT_GAME_SIMULATION",
-  "passed": 63,
+  "passed": 64,
   "failed": 0,
   "structure_counts": {
     "profiles": 545,
-    "nodes": 3132,
+    "nodes": 3134,
     "known_node_kinds": 48
   },
   "checks": [
@@ -133,7 +133,11 @@
       "passed": true
     },
     {
-      "title": "除兩項指定資料補正外，其餘卡片效果內容保持一致",
+      "title": "除三項指定資料補正外，其餘卡片效果內容保持一致",
+      "passed": true
+    },
+    {
+      "title": "P01-003僅新增完整後段可選分支，不改條件／數值／限制",
       "passed": true
     },
     {
@@ -261,7 +265,7 @@
       "passed": true
     }
   ],
-  "mapping_sha256": "031957f521584570bca643358d89efbede6de3898330fbc2c9200ed50f6d82b7",
+  "mapping_sha256": "74977ec605f84bf576712fefb7c7e8a83fbce9d78634d3abe96be53c78936f07",
   "limitations": [
     "Candidate ID pools are prefiltered; this suite does not implement every card filter",
     "No state movement, trigger queue, expiry, undo or multiplayer integration",

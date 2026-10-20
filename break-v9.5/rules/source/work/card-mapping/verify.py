@@ -44,6 +44,7 @@ protection=nodes('P04-070','protect_numeric_decrease')[0]
 check('P04-070全體保護範圍明示且成員界線未定時不能放行',protection['target_scope']=={'mode':'all','binding':'all_matches','membership':'unresolved'} and 'TARGET_MEMBERSHIP_UNRESOLVED' in prof('P04-070')['flags'] and not prof('P04-070')['runtime_approved'])
 check('全部直接作用目標明示單體／多人／全體',all(n.get('target_scope',{}).get('mode') in ['single','multiple','all'] for p in profiles for n in walk(p['program']) if n.get('kind') in ['numeric','protect_numeric_decrease','parameter_absent','rename_before_entry']))
 check('被動觸發的精確名稱與卡片識別統一',all(name==key(name) for p in profiles for n in walk(p['activation']) for k in ['names','exclude_names','covered_names'] for name in n.get(k,[])))
+check('P01-003符合條件的完整後段可選執行或略過',len(nodes('P01-003','optional'))==1 and [n['kind'] for n in nodes('P01-003','optional')[0]['then']['steps']]==['numeric','ban_action'],'1120')
 check('未將任何初稿標為引擎可執行',not any(p['runtime_approved'] or p['game_integrated'] for p in profiles))
 check('全部共用規則引用存在',all(set(p['shared_rule_ids'])<=rules for p in profiles))
 check('分段節點ID在各技能內唯一',all(len([n['node_id'] for n in walk(p['program']) if 'node_id'in n])==len({n['node_id'] for n in walk(p['program']) if 'node_id'in n}) for p in profiles))

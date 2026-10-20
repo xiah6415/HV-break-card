@@ -156,9 +156,10 @@ class Game {
     }
     return got.length;
   }
-  sdraw(p, n = 1) { if (p.restrict.no_add) { this.log(`${p.name} 被岩泉封鎖，${this.src || '技能'}的抽牌無效`, 'warn'); return 0; } return this.draw(p, n, this.src || '技能'); }
+  skillHandAllowed(p) { return !p.restrict.no_add && sharedRules.permission(this,{action:'add_hand',player:p.idx,origin:'skill'}).allowed; }
+  sdraw(p, n = 1) { sharedRules.assertReady(this); if (!this.skillHandAllowed(p)) { this.log(`${p.name} 被岩泉封鎖，${this.src || '技能'}的抽牌無效`, 'warn'); return 0; } return this.draw(p, n, this.src || '技能'); }
   async sadd(p, c, src, index = src.indexOf(c)) {
-    if (p.restrict.no_add) { this.log(`${p.name} 被岩泉封鎖，無法加入手牌`, 'warn'); return false; }
+    if (!this.skillHandAllowed(p)) { this.log(`${p.name} 被岩泉封鎖，無法加入手牌`, 'warn'); return false; }
     sharedRules.assertReady(this);
     if (src[index] !== c) throw new Error('加入手牌的實體來源不符');
     this.moveCard(src, p.hand, index);
@@ -173,7 +174,7 @@ class Game {
     return c;
   }
   async optionalRetrieve(p, prompt, candidates) {
-    if (!candidates.length || p.restrict.no_add) return null;
+    if (!candidates.length || !this.skillHandAllowed(p)) return null;
     return this.ask(p, { kind: 'retrieve', prompt, options: [...candidates.map(c => ({ label: nm(c) + ' ' + c, card: c, value: c })), { label: '不加入手牌', value: null }] });
   }
   async revealTop(p, source, eligible) {
@@ -184,8 +185,8 @@ class Game {
     });
     const card = p.deck[p.deck.length - 1] || null;
     const matches = card && eligible(card);
-    const canTake = matches && !p.restrict.no_add;
-    const reason = !card ? '牌庫已空，沒有可翻開的牌。' : !matches ? '沒有符合條件的牌，已放回牌庫底。' : p.restrict.no_add ? '符合條件，但受到禁止加入手牌的效果影響，已放回牌庫底。' : '符合條件：可以加入手牌，也可以放回牌庫底。';
+    const canTake = matches && this.skillHandAllowed(p);
+    const reason = !card ? '牌庫已空，沒有可翻開的牌。' : !matches ? '沒有符合條件的牌，已放回牌庫底。' : !this.skillHandAllowed(p) ? '符合條件，但受到禁止加入手牌的效果影響，已放回牌庫底。' : '符合條件：可以加入手牌，也可以放回牌庫底。';
     if (card) this.log(`${source}翻開：${nm(card)}（${card}）`);
     if (card && !canTake) this.moveCard(p.deck, p.deck, p.deck.length - 1, 0);
     const ctx = { revealed: card, source, reason };
@@ -267,11 +268,11 @@ class Game {
     const other = area === 'toss' ? 'receive' : area === 'attack' ? 'toss' : null;
     return entryNames(c).filter(name => !other || name !== this.cardName(p, other));
   }
-  canEnter(p, area, c) { return st(c, { serve: 'srv', block: 'blk', receive: 'rcv', toss: 'tos', attack: 'atk' }[area]) != null && this.legalEntryNames(p, area, c).length > 0; }
+  canEnter(p, area, c, options={}) { return !(area==='receive'&&p.restrict.no_rcv6&&st(c,'rcv')>=6) && sharedRules.entryAllowed(this,p,c,area,options) && st(c, { serve: 'srv', block: 'blk', receive: 'rcv', toss: 'tos', attack: 'atk' }[area]) != null && this.legalEntryNames(p, area, c).length > 0; }
   async enterCharacter(p, area, c, fromDrop = false) {
     sharedRules.assertReady(this);
     const names = this.legalEntryNames(p, area, c);
-    if (!this.canEnter(p, area, c)) throw new Error('不能以相同名稱登場');
+    if (!this.canEnter(p, area, c,{origin:fromDrop?'skill':'rule',entryOrigin:fromDrop?'drop':'hand'})) throw new Error('不能以相同名稱登場，或受到登場限制');
     let name = nm(c);
     if (c === 'PR-057') name = await this.ask(p, { kind: 'name', prompt: `着地上手組。：選擇登場名稱（${AREA_ZH[area]}區，本回合有效）`, ctx: { card: c, area }, options: names.map(value => ({ label: value, value })) });
     if (!names.includes(name)) throw new Error('無效的登場名稱');
@@ -416,7 +417,7 @@ class Game {
     }
     return await this.receiveTurn(p);
   }
-  blockMax(p) { return p.restrict.one_blocker ? 1 : p.restrict.two_blockers ? 2 : 3; }
+  blockMax(p) { const legacy=p.restrict.one_blocker?1:p.restrict.two_blockers?2:3;return [3,2,1].find(n=>n<=legacy&&sharedRules.permission(this,{action:'enter_character',player:p.idx,origin:'rule',role:'center_blocker',entryOrigin:'hand',entryCount:n}).allowed)||0; }
   blockCands(p) { return [...new Set(p.handC().filter(c => st(c, 'blk') != null))]; }
   evalBlock(p, combo, off = this.ball.off) {
     const o = p.opp, evInHand = p.hand.some(x => !isC(x));
@@ -474,7 +475,7 @@ class Game {
     await this.eventLoop(p, 'drw', {});
     this.rulePhase = 'rcv';
     // receive
-    const cs = [...new Set(p.handC().filter(c => st(c, 'rcv') != null && !(p.restrict.no_rcv6 && st(c, 'rcv') >= 6)))];
+    const cs = [...new Set(p.handC().filter(c => this.canEnter(p,'receive',c)))];
     if (!cs.length) this.lost(p, '沒有能接球的角色');
     const c = await this.ask(p, { kind: 'receiver', prompt: `來球：${ball.type === 'serve' ? '發球' : ball.type === 'block' ? '攔網回球' : '攻擊'} ${off}。選擇接球角色`, ball, options: cs.map(x => ({ label: `${nm(x)}　接 ${this.rcvPreview(p, x)}`, card: x, value: x })) });
     await this.enterCharacter(p, 'receive', c); this.src = nm(c);
@@ -534,6 +535,7 @@ class Game {
     return { type: 'attack', off: offense };
   }
   rcvPreview(p, c) {
+    if(!this.canEnter(p,'receive',c))return '不可登場';
     const preview=sharedRules.entryPreview(this,p,c,'receive','rcv');
     let r = preview.value - (preview.protected?0:p.restrict.rcv_minus||0);
     const g = p.guts('receive') + (p.area.receive.length ? 1 : 0);
@@ -550,13 +552,6 @@ class Game {
     let atk = this.parameter(p,'attack','atk');
     const g = p.guts('attack');
     const t = p.ts.setter;
-    if (a === 'P01-002' && g >= 3 && await this.yes(p, 'skill', '日向：付 3 Guts → 攻擊 +4，對手下回合不能派原始接球 ≥6？', { card: a })) { await this.pay(p, 'attack', 3); atk += 4; this.scheduleRestriction(o, 'no_rcv6', 1, false, this.cardReference(p, 'attack')); }
-    if (a === 'P01-003' && !fromDrop && p.hand.length <= 3 && nm(t) === '影山 飛雄') { atk += 2; this.scheduleRestriction(o, 'two_blockers', 1, false, this.cardReference(p, 'attack')); this.log('日向 003：攻擊 +2，對手下回合最多 2 人攔網'); }
-    if (a === 'P01-035' && p.hand.some(isA) && await this.yes(p, 'skill', `岩泉：棄 1 張青城 → 攻擊 +2${o.hand.length <= 4 ? '，對手下回合不能用技能加牌' : ''}？`, { card: a })) {
-      await this.discard(p, '選 1 張青城棄掉', isA); atk += 2;
-      if (o.hand.length <= 4) { this.scheduleRestriction(o, 'no_add', 1, false, this.cardReference(p, 'attack')); this.log(`岩泉：${o.name} 下回合不能用技能加牌`, 'warn'); }
-    }
-    if (a === 'D04-002' && nm(t) === '及川 徹' && g >= 2 && await this.yes(p, 'skill', '岩泉：付 2 Guts → 攻擊 +3？', { card: a })) { await this.pay(p, 'attack', 2); atk += 3 + (p.sets.length < o.sets.length ? 1 : 0); }
     if (this.cardName(p, 'attack') === '日向 翔陽' && p.ts.hin) atk += p.ts.hin;
     p.ts.atk = atk; p.ts.attacker = a; p.ts.attackerRef = this.cardReference(p, 'attack');
     this.log(`${p.name} 攻擊手 ${nm(a)}：攻 ${atk}`);
@@ -582,12 +577,12 @@ class Game {
       if (!T || !(T.includes(timing) || (drawWindow && T.includes('drw')))) continue;
       if (p.ts.used[c] && ['P03-090', 'P03-096', 'P03-087', 'P04-088', 'P04-089'].includes(c)) continue;
       const ok = {
-        'PR-029': () => !p.restrict.no_add && p.drop.some(x => isHin(x) && x !== 'PR-057' || nm(x) === '影山 飛雄'),
-        'P03-090': () => !p.restrict.no_add && p.ev.some(x => x !== 'P03-090'),
+        'PR-029': () => this.skillHandAllowed(p) && p.drop.some(x => isHin(x) && x !== 'PR-057' || nm(x) === '影山 飛雄'),
+        'P03-090': () => this.skillHandAllowed(p) && p.ev.some(x => x !== 'P03-090'),
         'P03-086': () => !!p.ts.setter && ['影山 飛雄', '菅原 孝支', '及川 徹'].includes(nm(p.ts.setter)),
         'P01-078': () => !!p.ts.attacker,
         'D01-012': () => !!p.ts.attacker, 'P01-074': () => !!p.ts.attacker,
-        'P03-096': () => (!p.restrict.no_add && p.deck.length > 0) || this.courtTargets(p).some(t => this.cardName(p, t.key) === '日向 翔陽'),
+        'P03-096': () => (this.skillHandAllowed(p) && p.deck.length > 0) || this.courtTargets(p).some(t => this.cardName(p, t.key) === '日向 翔陽'),
         'P03-087': () => this.uniformCourt(p),
       }[c];
       if (ok && ok()) res.push({ card: c, label: nm(c) });
@@ -734,7 +729,7 @@ const AI = {
       case 'defend': {
         const cheap = req.combos[0] && req.combos[0].cards.length === 1;
         if (cheap) return 'block';
-        const anyRcv = p.handC().some(c => st(c, 'rcv') != null && rcvPotential(g, p, c).v + rcvPotential(g, p, c).boost >= g.ball.off);
+        const anyRcv = p.handC().some(c => g.canEnter(p,'receive',c) && rcvPotential(g, p, c).v + rcvPotential(g, p, c).boost >= g.ball.off);
         return anyRcv ? 'receive' : 'block';
       }
       case 'block': return 0;
