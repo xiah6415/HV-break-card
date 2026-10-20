@@ -1,6 +1,6 @@
 # BREAK 對練台 — 交接文件（Claude → Codex，2026-10-19）
 
-> 最新本機整合（2026-10-20）：P01-013、P01-088、P04-089改走資料驅動共用結算，舊三張效果移除；其餘44張維持原流程。approvals.json以完整資料組指紋核准，runtime-data.json只含47張印刷身分與3技能，原全卡封存資料核准仍0。decisions.js／legacy.js接現有玩家選擇、Loss與Undo，測試／界線見rules/README.md及最新memory.md。本批尚未推送部署；下方「尚未接入」是隔離核心批次歷史。
+> 最新本機整合（2026-10-20，實作提交f8b3cc9）：P01-013、P01-088、P04-089改走資料驅動共用結算，舊三張效果移除；其餘44張維持原流程。approvals.json以完整資料組指紋核准，runtime-data.json只含47張印刷身分與3技能，原全卡封存資料核准仍0。decisions.js／legacy.js接現有玩家選擇、Loss與Undo，測試／界線見rules/README.md及最新memory.md。本批尚未推送部署；下方「尚未接入」是隔離核心批次歷史。
 
 > 本機保存：實作提交a0490f9，尚未推送或部署，公開版仍af6d8c6。rules/source及rules/rebuild.py可獨立重建本批資料；後續請同步來源、data與manifest，避免只改外層副本。
 

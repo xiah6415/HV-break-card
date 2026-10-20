@@ -475,3 +475,7 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 畫面：指定結算操作在1280／390／320寬通過，含可不抽牌、指定角色、三個重複付款選項、付款Undo與結束回合；原e2e在1280／375／320寬各完成3局，無pageerror／橫向溢出，手機手牌與面板幾何檢查通過。最初受限環境啟動Chrome失敗，改由已核准的本機測試啟動完成；不是iPhone Safari真機測試。
 - 限制：橋接僅本批有限抽牌／自己手牌棄置／正數加值／條件。跨回合監聽、登場、Guts等費用與完整新生命週期尚未移交；多人需要持續實體與權威狀態。完全無變化事件保守停用，未擅自消除裁定疑義。原手動翻牌／交棒／Loss仍由舊控制器負責。
 - 成果：outputs/BREAK-shared-integration-update.md、validation.json與evidence.json。HANDOFF／ROADMAP／rules/README已更新。將本批以本機提交保存；未推送部署或同步iCloud，公開版仍af6d8c6。
+
+## 首批接入本機版本保存（2026-10-20）
+- 實作提交f8b3cc9：Integrate three approved skills through shared settlement decisions。包含共用資料橋接、3張核准技能、建置頁、15情境、Undo及畫面測試與交接文件。仍未推送部署；公開版af6d8c6，master於此提交領先origin/master 3個提交。
+- 下一步先完成跨結算持續實體身分／完整控制器，再接監聽與登場；不要將當次結算暫時ID用於多人或直接擴大核准範圍。
