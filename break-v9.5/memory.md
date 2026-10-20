@@ -670,3 +670,7 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 未觀察動作65→39張、條件真假未齊61→46張（重疊36、聯集73→49）；數字未含獨立102檢查額外分支，不當作完整覆蓋。技能動作true仍可能只付款／移牌；本批29張另核對實際效果，不能推廣為所有125整卡核准。
 - 索引／原批次／核心54／coverage及build通過，fuzz3000平均3.70 rallies、6組對戰各300通過。引擎／UI／index／core／legacy／全庫資料／approvals／runtime／card-support逐位元組未變，無UI修改未重跑e2e。核准22／正式47卡保持，未驗證全庫完整組合／host／Undo，技能登場只驗證核心入口。
 - HANDOFF／ROADMAP／rules README／BATCH同步；成果outputs/BREAK-conditions-update.md、evidence.json、validation.json。下一輪按49張缺口分組與全庫匯入接續；僅本機保存，未推送部署或同步iCloud。
+
+
+## 候選條件局面本機保存（2026-10-20）
+- 實作提交 edab5a800ebd554a208e103f85cb6d0d554f8833；原29張技能路徑均觸發，102獨立檢查／1764批次局面與規定回歸通過。剩餘覆蓋缺口49張，核准22／正式47卡維持；未推送部署或同步iCloud。
