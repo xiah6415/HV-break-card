@@ -1,10 +1,8 @@
-/* BREAK v9: deck input/validation. UMD, no runtime dependencies. */
+/* BREAK v9: deck input/validation. UMD, pinned library admission. */
 (function(root) {
 'use strict';
-function normalCode(s) {
-  if (typeof s !== 'string') throw Error('卡號必須是文字');
-  return s.trim().replace(/\.webp$/i, '').replace(/^HVBP-/i, 'BP-').replace(/^HV-/i, '');
-}
+const library = typeof module !== 'undefined' && module.exports ? require('./card-library') : root.BreakCardLibrary;
+function normalCode(s) { return library.code(s) || library.normal(s); }
 function parseDeck(source, defs) {
   const input = typeof source === 'string' ? JSON.parse(source) : source;
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw Error('牌組格式必須是物件');
@@ -16,6 +14,7 @@ function parseDeck(source, defs) {
   for (const item of pairs) {
     if (!Array.isArray(item) || item.length !== 2) throw Error('每筆卡片須為 [卡號, 張數]');
     const code = normalCode(item[0]), count = item[1];
+    library.requirePlayable(code);
     if (!Object.prototype.hasOwnProperty.call(defs, code)) throw Error('尚未收錄卡片：' + code);
     if (!Number.isSafeInteger(count) || count < 1 || count > 40) throw Error('張數無效：' + code);
     cards[code] = (cards[code] || 0) + count;

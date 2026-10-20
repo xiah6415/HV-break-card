@@ -57,7 +57,9 @@ const DEF = {
   'P04-089': ['3年間ありがとう!!!', 'E', 0, 0, 0, 0, 0, 5, A, 0, '［接球］每回合 1 次：抽 1、青城 3 年接球 +1；再棄 1 張青城 3 年角色 → +2'],
   'P01-088': ['お前達は 強いよ', 'E', 0, 0, 0, 0, 0, 4, A, 0, '［接球］最多抽 1，青城角色 1 人接球 +1；手牌 ≤3 時同一角色再 +1'],
 };
-const HIN = new Set(['P02-001', 'P01-002', 'P01-004', 'BP-002', 'P01-003', 'PR-053']);
+const library = typeof module !== 'undefined' && module.exports ? require('./card-library') : root.BreakCardLibrary;
+for (const card of Object.values(library.data.cards)) if (card.playable && !Object.hasOwn(DEF, card.code)) DEF[card.code] = card.definition;
+const HIN = new Set(Object.keys(DEF).filter(c => library.card(c).printedName === '日向翔陽'));
 const DECKS = {
   k1014: { name: '烏野1014', cards: { 'D01-005': 2, 'P01-003': 1, 'P03-046': 2, 'P03-057': 1, 'P01-013': 1, 'P02-003': 1, 'P01-011': 2, 'P02-001': 1, 'P03-051': 2, 'PR-057': 1, 'D01-009': 1, 'P01-006': 4, 'P03-048': 3, 'PR-032': 1, 'PR-043': 1, 'P01-002': 3, 'P01-004': 2, 'BP-002': 3, 'D01-012': 2, 'P01-074': 1, 'P01-078': 2, 'P03-086': 1, 'P03-090': 1, 'PR-029': 1 } },
   k1014c: { name: '1014c（接 6 強化）', cards: { 'D01-005': 2, 'P03-046': 2, 'P01-013': 1, 'P02-003': 1, 'P01-011': 3, 'PR-033': 2, 'P02-001': 1, 'P03-051': 2, 'PR-057': 1, 'D01-009': 1, 'P01-006': 4, 'P03-048': 3, 'PR-032': 1, 'PR-043': 1, 'P01-002': 3, 'P01-004': 2, 'BP-002': 3, 'D01-012': 2, 'P01-078': 2, 'P03-086': 1, 'P03-090': 1, 'PR-029': 1 } },
@@ -74,25 +76,33 @@ const st = (c, k) => DEF[c][IDX[k]];
 const val = c => DEF[c][7];
 const sch = c => DEF[c][8];
 const yr = c => DEF[c][9];
-const isK = c => sch(c) === K;
-const isA = c => sch(c) === A;
+const hasSchool = (c, s) => library.school(c, s);
+const hasYear = (c, n) => library.year(c, n);
+const isK = c => hasSchool(c, K);
+const isA = c => hasSchool(c, A);
 const short = c => nm(c).split(' ')[0];
 const entryNames = c => c === 'PR-057' ? ['日向 翔陽', '西谷 夕'] : [nm(c)];
 const recvName = c => nm(c);
 const atkName = c => nm(c);
 const isHin = c => HIN.has(c);
-const kuroEligible = c => isK(c) && (yr(c) === 2 || yr(c) === 3 || c === 'PR-057');
+const kuroEligible = c => isK(c) && (hasYear(c, 2) || hasYear(c, 3));
 const EVT = {
   'D01-012': ['atk'], 'P01-074': ['atk'], 'P01-078': ['atk'], 'P03-086': ['tos'], 'P03-090': ['drw'], 'PR-029': ['drw'],
   'P03-096': ['atk', 'rcv', 'blk'], 'P03-087': ['atk', 'rcv'], 'P01-087': ['srv', 'tos'], 'P04-088': ['atk'], 'P04-089': ['rcv'], 'P01-088': ['rcv'],
 };
-function validateDecks() {
-  for (const k in DECKS) {
-    const d = DECKS[k].cards; let t = 0, e = 0;
-    for (const c in d) { if (!DEF[c]) throw new Error('missing ' + c); t += d[c]; if (!isC(c)) e += d[c]; }
-    if (t !== 40 || e > 8) throw new Error(k + ' size ' + t + ' ev ' + e);
+function validateDeck(cards) {
+  if (!cards || typeof cards !== 'object' || Array.isArray(cards)) throw Error('牌組清單無效');
+  let total = 0, events = 0;
+  for (const [c, n] of Object.entries(cards)) {
+    const code = library.requirePlayable(c);
+    if (code !== c || !Object.hasOwn(DEF, c)) throw Error('請先匯入標準卡號：' + c);
+    if (!Number.isSafeInteger(n) || n < 1 || n > 40) throw Error('張數無效：' + c);
+    total += n; if (!isC(c)) events += n;
   }
+  if (total !== 40) throw Error('牌組必須 40 張，目前 ' + total + ' 張');
+  if (events > 8) throw Error('Event 最多 8 張，目前 ' + events + ' 張');
 }
+function validateDecks() { for (const deck of Object.values(DECKS)) validateDeck(deck.cards); }
 validateDecks();
 
 function rng(seed) { let a = seed >>> 0; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
@@ -117,11 +127,13 @@ class Player {
   guts(a) { return Math.max(0, this.area[a].length - 1); }
   top(a) { const s = this.area[a]; return s.length ? s[s.length - 1] : null; }
   chars() { return AREAS.map(a => this.top(a)).filter(Boolean); }
-  allSchool(s) { return this.chars().every(c => sch(c) === s); }
+  allSchool(s) { return this.chars().every(c => hasSchool(c, s)); }
 }
 
 class Game {
   constructor(opts) {
+    if (!Array.isArray(opts.decks) || opts.decks.length !== 2) throw Error('需要兩副牌組');
+    for (const key of opts.decks) { if (!Object.hasOwn(DECKS, key)) throw Error('找不到牌組：' + key); validateDeck(DECKS[key].cards); }
     this.rand = rng(opts.seed == null ? (Date.now() & 0xffffffff) : opts.seed);
     this.logFn = opts.onLog || (() => {});
     this.reveal = opts.reveal == null ? -1 : opts.reveal; this.src = '';
@@ -299,7 +311,7 @@ class Game {
   }
   uniformCourt(p) {
     const chars = this.courtTargets(p);
-    return chars.length > 0 && [K, 'ユース'].some(s => chars.every(t => sch(t.card).split('/').includes(s)));
+    return chars.length > 0 && [K, 'ユース'].some(s => chars.every(t => hasSchool(t.card, s)));
   }
   courtGuts(p) { return AREAS.flatMap(area => p.area[area].slice(0, -1).map((card, index) => ({ area, index, card }))); }
   async payCourt(p, need) {
@@ -664,7 +676,7 @@ function rcvPotential(g, p, c) {
   let boost = 0;
   if (isK(c) && rest.includes('P01-013') && c !== 'P01-013') boost += 2;
   if (isA(c) && rest.includes('P01-088')) boost += 1;
-  if (isA(c) && yr(c) === 3 && rest.includes('P04-089')) boost += 1;
+  if (isA(c) && hasYear(c, 3) && rest.includes('P04-089')) boost += 1;
   return { v, boost, rest };
 }
 const AI = {
@@ -791,6 +803,6 @@ const AI = {
   },
 };
 
-const api = { DEF, DECKS, HIN, AREAS, AREA_ZH, EVT, Game, AI, nm, isC, st, val, sch, yr, short, canChain, recvName, atkName, isHin, entryNames };
+const api = { DEF, DECKS, HIN, AREAS, AREA_ZH, EVT, Game, AI, nm, isC, st, val, sch, yr, short, canChain, recvName, atkName, isHin, entryNames, hasSchool, hasYear, validateDeck };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.BreakEngine = api;
 })(typeof window !== 'undefined' ? window : globalThis);

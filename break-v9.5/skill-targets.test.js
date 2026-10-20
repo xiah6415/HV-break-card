@@ -86,10 +86,8 @@ async function check(name, run) { try { await run(); console.log('PASS', name); 
     assert(!g.playable(p, 'rcv').some(x => x.card === 'P03-087'));
     p.area.receive = ['P03-046', 'P01-004']; assert(g.playable(p, 'rcv').some(x => x.card === 'P03-087'));
     p.area.serve = ['P03-046']; assert(!g.playable(p, 'rcv').some(x => x.card === 'P03-087'));
-    const old = E.DEF['P01-004'][8];
-    try { p.area.serve = []; E.DEF['P01-004'][8] = 'ユース'; assert(g.uniformCourt(p));
-      E.DEF['P01-004'][8] = '疑似ユース'; assert(!g.uniformCourt(p));
-    } finally { E.DEF['P01-004'][8] = old; }
+    p.area.serve = []; p.area.receive = ['P03-022']; assert(g.uniformCourt(p));
+    p.area.receive = ['P03-015']; assert(!g.uniformCourt(p));
   });
   await check('parameter choices exclude dash, include zero, and turn end removes numeric bonuses', async () => {
     const { g, p } = fixture(async (g, p, r) => { assert(!r.options.some(o => o.value === 'srv' || o.value === 'blk')); assert(r.options.some(o => o.value === 'tos')); return 'tos'; });
