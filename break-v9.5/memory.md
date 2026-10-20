@@ -573,3 +573,7 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 新restriction畫面1280／390／320通過P01-003拒絕／Undo改接受、接球候選、付款Undo保留限制、第三位攔網阻擋、禁止技能抽牌但正常抽牌保留、手動翻牌看結果／置底／Undo及回合到期。原passive／entry／watch／legacy三尺寸與原e2e1280／375／320各3局通過，無pageerror／橫向溢出，手機手牌／面板高度檢查通過。Chrome模擬，非iPhone Safari真機。舊identity／skill-basics測試改為驗證共用ban與真實場上舉球，保留原加值／付款／期限斷言。
 - 支援18無技能、20主要情境、9部分；HANDOFF／ROADMAP／RULES-AUDIT／rules README更新。下一批接剩餘接球／舉球的可選回收、球總值、A-pass與手動翻牌等機制；其他舊卡限制仍有lifecycle路徑，完整登場取代／多人授權尚未整合，不能直接擴大核准。
 - 成果outputs/BREAK-restriction-update.md、validation.json及evidence.json；本機提交保存，未推送部署或同步iCloud，公開版最後紀錄af6d8c6。
+
+## 攻擊登場／下回合權限本機保存（2026-10-20）
+- 實作提交 0eb91c61c2b2cf28574a646cc756456c26244d14，包含四張資料程序、三種共用權限限制、P01-003可選分支補正與完整測試／文件。上述測試已通過；本批未推送、部署或同步iCloud。
+- 下一批維持剩餘接球／舉球登場的可選回收、球總值、A-pass與手動翻牌機制；核准14張，其餘33卡仍需逐機制驗證。
