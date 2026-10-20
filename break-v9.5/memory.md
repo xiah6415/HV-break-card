@@ -549,3 +549,7 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 新passive畫面1280／390／320完成西谷先結算、Guts／手牌付款與Undo、月島側攔／Event放置Undo，手機手牌可移到面板上方與46%面板上限通過；原entry／watch／legacy三尺寸及原e2e1280／375／320各3局通過，無pageerror／橫向溢出。Chrome模擬，非iPhone Safari真機。初版測試代理仍回覆舊付款格式／舊cost名稱，已改成明確Guts集合與實體選項，保留原規則／守恆斷言；新Undo局面一度配置同名接托，已修正測試配牌，產品同名限制保留。
 - 支援18無技能、19主要情境、10部分；HANDOFF／ROADMAP／RULES-AUDIT／rules README更新。其餘舊登場被動仍在監聽後，下一批逐步遷移剩餘登場技能與下回合限制；A-pass／翻牌等其他關鍵字、改球總值、完整登場取代與多人授權未整合，不能直接擴大核准。
 - 成果outputs/BREAK-passive-update.md、validation.json及evidence.json；本機提交保存，未推送部署或同步iCloud，公開版最後紀錄af6d8c6。
+
+## 自身登場被動同列本機版本保存（2026-10-20）
+- 實作提交29cd702：Integrate self-entry passives with ordered watchers and exact payments。包含四張完整程序核准、本人被動／監聽排序、精確Guts／手牌與Event放置費用、月島可拒絕／側攔與實際攔網值、34情境／13還原點／三尺寸操作與交接資料。
+- 下一批依資料接剩餘自身登場被動與下回合限制；不要將其他關鍵字／改球總值／登場取代直接核准。核准10張，其他37卡沿用舊控制器。未推送部署或同步iCloud，公開版最後紀錄af6d8c6。
