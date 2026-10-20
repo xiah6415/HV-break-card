@@ -8,8 +8,8 @@ const sampleCodes=['P03-004','P03-022','P01-014','P01-001','P01-009','P01-024','
 const sample={name:'新卡測試：無技能角色',cards:Object.fromEntries(sampleCodes.map(c=>[c,4]))};
 (async()=>{
  assert.deepEqual(L.data.counts,{cards:541,profiles:545,playable:212,basic:183,locked:329});
- assert.equal(added.length,165);assert.equal(Object.keys(E.DEF).length,212);assert.equal(bridge.approvals.length,22);
- assert.equal(require('./rules/runtime-data.json').catalog.cards.length,212);
+ assert.equal(added.length,165);assert.equal(Object.keys(E.DEF).length,541);assert.equal(bridge.approvals.length,22);
+ assert.equal(require('./rules/runtime-data.json').catalog.cards.length,541);
  for(const [p,sha] of Object.entries(L.data.sources))assert.equal(digest(fs.readFileSync(p)),sha);
  let versions=0,aliases=0;
  for(const card of catalog.cards){
@@ -17,7 +17,7 @@ const sample={name:'新卡測試：無技能角色',cards:Object.fromEntries(sam
   for(const profile of card.profiles)for(const v of profile.variants){assert.equal(L.code(v.image_file),m.code);aliases++;}
   const b=fs.readFileSync(assets.images[m.code].file);assert.equal(digest(b),assets.images[m.code].sha256);assert.equal(b.toString('ascii',0,4),'RIFF');assert.equal(b.toString('ascii',8,12),'WEBP');
   if(assets.images[m.code].origin==='pinned_source')assert.equal(digest(Buffer.concat([Buffer.from('blob '+b.length+'\0'),b]),'sha1'),assets.images[m.code].source_blob_sha1);
-  if(!m.playable){assert(!Object.hasOwn(E.DEF,m.code));assert.throws(()=>DT.parseDeck({cards:{[m.code]:40}},E.DEF),/尚未開放/);assert.throws(()=>DT.parseDeck({cards:{[m.code]:40}},{...E.DEF,[m.code]:m.definition}),/尚未開放/);}
+  if(!m.playable){assert(Object.hasOwn(E.DEF,m.code));assert.throws(()=>DT.parseDeck({cards:{[m.code]:40}},E.DEF),/尚未開放/);assert.throws(()=>DT.parseDeck({cards:{[m.code]:40}},{...E.DEF,[m.code]:m.definition}),/尚未開放/);}
  }
  assert.equal(versions,545);assert.equal(aliases,713);
  for(const m of added){

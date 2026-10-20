@@ -8,7 +8,7 @@ const path = require('node:path');
     for (const [width, height] of [[1280, 900], [390, 844], [320, 568]]) {
       const page = await browser.newPage({ viewport: { width, height }, isMobile: width < 700, hasTouch: width < 700 });
       page.setDefaultTimeout(10000); const errors = []; page.on('pageerror', e => errors.push(e.message));
-      await page.setContent(fs.readFileSync('index.html', 'utf8'), { waitUntil: 'domcontentloaded' });
+      await page.setContent(fs.readFileSync('index.html', 'utf8'), { waitUntil: 'domcontentloaded' });await page.selectOption('#gameMode','strict');
       await page.evaluate(() => {
         const E = window.BreakEngine;
         E.Game = class extends E.Game {

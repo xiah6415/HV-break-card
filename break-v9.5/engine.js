@@ -58,7 +58,7 @@ const DEF = {
   'P01-088': ['お前達は 強いよ', 'E', 0, 0, 0, 0, 0, 4, A, 0, '［接球］最多抽 1，青城角色 1 人接球 +1；手牌 ≤3 時同一角色再 +1'],
 };
 const library = typeof module !== 'undefined' && module.exports ? require('./card-library') : root.BreakCardLibrary;
-for (const card of Object.values(library.data.cards)) if (card.playable && !Object.hasOwn(DEF, card.code)) DEF[card.code] = card.definition;
+for (const card of Object.values(library.data.cards)) if (!Object.hasOwn(DEF, card.code)) DEF[card.code] = card.definition;
 const HIN = new Set(Object.keys(DEF).filter(c => library.card(c).printedName === '日向翔陽'));
 const DECKS = {
   k1014: { name: '烏野1014', cards: { 'D01-005': 2, 'P01-003': 1, 'P03-046': 2, 'P03-057': 1, 'P01-013': 1, 'P02-003': 1, 'P01-011': 2, 'P02-001': 1, 'P03-051': 2, 'PR-057': 1, 'D01-009': 1, 'P01-006': 4, 'P03-048': 3, 'PR-032': 1, 'PR-043': 1, 'P01-002': 3, 'P01-004': 2, 'BP-002': 3, 'D01-012': 2, 'P01-074': 1, 'P01-078': 2, 'P03-086': 1, 'P03-090': 1, 'PR-029': 1 } },
@@ -90,11 +90,12 @@ const EVT = {
   'D01-012': ['atk'], 'P01-074': ['atk'], 'P01-078': ['atk'], 'P03-086': ['tos'], 'P03-090': ['drw'], 'PR-029': ['drw'],
   'P03-096': ['atk', 'rcv', 'blk'], 'P03-087': ['atk', 'rcv'], 'P01-087': ['srv', 'tos'], 'P04-088': ['atk'], 'P04-089': ['rcv'], 'P01-088': ['rcv'],
 };
-function validateDeck(cards) {
+function validateDeck(cards, mode='strict') {
+  library.checkMode(mode);
   if (!cards || typeof cards !== 'object' || Array.isArray(cards)) throw Error('牌組清單無效');
   let total = 0, events = 0;
   for (const [c, n] of Object.entries(cards)) {
-    const code = library.requirePlayable(c);
+    const code = library.requirePlayable(c, mode);
     if (code !== c || !Object.hasOwn(DEF, c)) throw Error('請先匯入標準卡號：' + c);
     if (!Number.isSafeInteger(n) || n < 1 || n > 40) throw Error('張數無效：' + c);
     total += n; if (!isC(c)) events += n;
@@ -132,8 +133,9 @@ class Player {
 
 class Game {
   constructor(opts) {
+    this.mode = library.checkMode(opts.mode || 'strict');
     if (!Array.isArray(opts.decks) || opts.decks.length !== 2) throw Error('需要兩副牌組');
-    for (const key of opts.decks) { if (!Object.hasOwn(DECKS, key)) throw Error('找不到牌組：' + key); validateDeck(DECKS[key].cards); }
+    for (const key of opts.decks) { if (!Object.hasOwn(DECKS, key)) throw Error('找不到牌組：' + key); validateDeck(DECKS[key].cards, this.mode); }
     this.rand = rng(opts.seed == null ? (Date.now() & 0xffffffff) : opts.seed);
     this.logFn = opts.onLog || (() => {});
     this.reveal = opts.reveal == null ? -1 : opts.reveal; this.src = '';
@@ -274,7 +276,7 @@ class Game {
     const active = this.activeParameter(p, key, param);
     if (active && p.ts[active] != null) p.ts[active] += amount;
     const zh = { srv: '發球', blk: '攔網', rcv: '接球', tos: '舉球', atk: '攻擊' };
-    this.log(`${this.cardName(p, key)}（${this.courtTargets(p).find(t => t.key === key).label}）：${zh[param]} +${amount}`);
+    this.log(`${this.cardName(p, key)}（${this.courtTargets(p).find(t => t.key === key).label}）：${zh[param]} ${amount >= 0 ? '+' : ''}${amount}`);
   }
   legalEntryNames(p, area, c) {
     const other = area === 'toss' ? 'receive' : area === 'attack' ? 'toss' : null;
@@ -385,12 +387,42 @@ class Game {
     for (const key of Object.keys(p.effects)) if (key.startsWith('side:')) delete p.effects[key];
     if (sides.length) this.log(`側攔 ${sides.map(nm).join('、')} → 棄牌區`, 'guts');
   }
-  finishTurn(p) { delete p.ts.blockEntryReceipts; p.effects = {}; p.restrict = {}; p.ts.finished = true; turnEffects.finish(this, this.turnNo); sharedRules.finishTurn(this); }
+  finishTurn(p) { for (const q of this.players) if (q !== p) for (const [key, fx] of Object.entries(q.effects)) if (fx.manual?.turn === this.turnNo) { if (this.validEffect(q,key)) for (const [param,delta] of Object.entries(fx.manual.mods)) fx.mods[param] -= delta; delete fx.manual; } delete p.ts.blockEntryReceipts; p.effects = {}; p.restrict = {}; p.ts.finished = true; turnEffects.finish(this, this.turnNo); sharedRules.finishTurn(this); }
   beginTurn(p) { if (this.turnP) this.finishTurn(this.turnP); this.turnP = p; this.turnNo++; p.restrict = {...p.pending, ...turnEffects.begin(this, p.idx)}; p.pending = {}; p.ts = { used: {} }; p.newCount = {}; this.src = ''; this.rulePhase = 'drw'; sharedRules.beginTurn(this, p); }
+  currentOutgoing(p, outgoing) {
+    const off = outgoing.type === 'serve' ? this.parameter(p, 'serve', 'srv') : outgoing.type === 'attack' ? p.ts.toss + p.ts.atk : outgoing.off;
+    return {...outgoing, off:Number.isFinite(off) ? off : outgoing.off};
+  }
+  async manualAction(p, command) {
+    if (this.mode !== 'numeric' || this.turnP !== p || this.sharedRulesPending || !command || typeof command !== 'object') throw Error('此時不能手動調整');
+    const q = this.players[command.player ?? p.idx]; if (!q) throw Error('無效的玩家');
+    if (command.kind === 'draw') { if (!q.deck.length) throw Error('牌庫已空'); this.draw(q, 1, '手動修正'); }
+    else if (command.kind === 'discard') {
+      if (!q.hand.length) throw Error('手牌已空');
+      if (q !== p) await this.discard(q, '手動修正：請自行選1張棄牌');
+      else { const i = q.hand.findIndex((c, i) => this.sameReference(command.ref, this.cardReference(q, 'hand', i))); if (i < 0) throw Error('手牌已改變，請重選'); const c = this.moveCard(q.hand, q.drop, i); this.log(`${q.name} 手動棄掉 ${nm(c)}`); }
+    } else if (['adjust','ball'].includes(command.kind)) {
+      if (![1,-1].includes(command.delta)) throw Error('每次調整1點');
+      if (command.kind === 'ball') { if (!this.ball) throw Error('目前沒有來球'); this.ball.off += command.delta; this.log(`手動修正：來球總值 ${command.delta > 0 ? '+' : ''}${command.delta} → ${this.ball.off}`); }
+      else {
+        if (!Object.hasOwn(IDX, command.param) || !this.sameReference(command.ref, this.roleReference(q, command.key))) throw Error('角色已改變，請重選');
+        const before = this.parameter(q, command.key, command.param); if (before == null) throw Error('不能調整「－」');
+        this.boostParameter(q, command.key, command.param, command.delta);
+        const applied = this.parameter(q, command.key, command.param) - before;
+        if (applied) { const fx = this.effect(q, command.key); fx.manual ||= {turn:this.turnNo, mods:{}}; fx.manual.mods[command.param] = (fx.manual.mods[command.param] || 0) + applied; this.log(`手動修正：${q.name} ${this.cardName(q,command.key)} ${{srv:'發球',blk:'攔網',rcv:'接球',tos:'舉球',atk:'攻擊'}[command.param]} ${before} → ${before + applied}`); }
+        else this.log('手動修正未生效：此數值受到保護', 'warn');
+      }
+    } else throw Error('未知的手動操作');
+  }
   async confirmTurnEnd(p, outgoing) {
-    if (!p.agent.wantsAck) return;
-    const label = { serve: '發球', attack: '進攻', block: '攔網回球' }[outgoing.type];
-    await this.ask(p, { kind: 'turnEnd', prompt: `${label}準備完成：${outgoing.off}。尚未交棒，可結束回合或喊 Loss`, outgoing, options: [{ label: '結束回合', value: true }] });
+    for (;;) {
+      outgoing = this.currentOutgoing(p, outgoing);
+      if (!p.agent.wantsAck) return outgoing;
+      const label = { serve:'發球', attack:'進攻', block:'攔網回球' }[outgoing.type];
+      const answer = await this.ask(p, { kind:'turnEnd', canManual:this.mode==='numeric', prompt:`${label}準備完成：${outgoing.off}。尚未交棒，可結束回合或喊 Loss`, outgoing, options:[{label:'結束回合',value:true}] });
+      if (answer?.__manual && this.mode === 'numeric') { try { await this.manualAction(p,answer.__manual); } catch (e) { this.log(e.message,'warn'); } continue; }
+      return this.currentOutgoing(p,outgoing);
+    }
   }
 
   // ---------- serve
@@ -406,7 +438,7 @@ class Game {
     let off = this.parameter(p,'serve','srv');
 
     await this.eventLoop(p, 'srv', { serveChar: c });
-    await this.confirmTurnEnd(p, { type: 'serve', off });
+    off = (await this.confirmTurnEnd(p, { type: 'serve', off }))?.off ?? off;
     this.finishTurn(p);
     this.log(`${p.name} 發球 ${nm(c)} → 威力 ${off}`);
     return { type: 'serve', off };
@@ -518,8 +550,8 @@ class Game {
     const a = await this.ask(p, { kind: 'attacker', prompt: '選擇攻擊角色', options: as.map(x => ({ label: `${nm(x)}　攻 ${st(x, 'atk')}${isHin(x) && p.ts.hin ? ' +2' : x === 'PR-057' ? '（登場時選名稱）' : ''}`, card: x, value: x })) });
     await this.enterAttack(p, a, false);
     await this.eventLoop(p, 'atk', {});
-    const offense = p.ts.toss + p.ts.atk;
-    await this.confirmTurnEnd(p, { type: 'attack', off: offense });
+    let offense = p.ts.toss + p.ts.atk;
+    offense = (await this.confirmTurnEnd(p, { type: 'attack', off: offense }))?.off ?? offense;
     this.finishTurn(p);
     this.log(`${p.name} 攻擊 ${nm(p.ts.attacker)}：舉 ${p.ts.toss} ＋ 攻 ${p.ts.atk} ＝ 進攻 ${offense}`, 'atk');
     this.tag(p.idx + ':attack');
@@ -561,6 +593,11 @@ class Game {
         if (sharedRules.canPlay(this, p, c, timing)) res.push({card:c,label:nm(c)});
         continue;
       }
+      if (this.mode === 'numeric' && !library.card(c).playable) {
+        const phases = library.card(c).activationPhases, phase = {srv:'serve',drw:'draw',rcv:'receive',tos:'toss',atk:'attack',blk:'block'}[timing];
+        if (!isC(c) && p.agent.wantsAck && (phases.includes(phase) || timing==='rcv'&&phases.includes('draw'))) res.push({card:c,label:nm(c)+'（技能未自動化）'});
+        continue;
+      }
       const T = EVT[c];
       if (isC(c)) {
         continue;
@@ -581,10 +618,12 @@ class Game {
     this.rulePhase = timing;
     for (;;) {
       const opts = this.playable(p, timing);
-      if (!opts.length) return;
+      const canManual = this.mode === 'numeric' && !!p.agent.wantsAck;
+      if (!opts.length && !canManual) return;
       const zh = { srv: '發球階段', drw: '抽牌階段', rcv: '接球判定前', tos: '舉球階段', atk: '攻擊階段', blk: '攔網階段' }[timing];
       const status = timing === 'blk' ? `目前攔網 ${p.ts.blk} vs 進攻 ${this.ball.off}` : timing === 'rcv' ? `目前接球 ${p.ts.rcv} vs 來球 ${this.ball.off}` : timing === 'atk' ? `目前進攻 ${p.ts.toss + p.ts.atk}` : timing === 'tos' ? `目前舉球 ${p.ts.toss}` : '';
-      const pick = await this.ask(p, { kind: 'event', timing, prompt: `${zh}：要使用卡片嗎？${status ? '　' + status : ''}`, options: [...opts.map(o => ({ label: o.label, card: o.card, value: o.card })), { label: timing === 'rcv' ? '完成事件，判定接球' : '結束，進入下一步', value: null }] });
+      const pick = await this.ask(p, { kind: 'event', canManual, timing, prompt: `${zh}：要使用卡片嗎？${status ? '　' + status : ''}`, options: [...opts.map(o => ({ label: o.label, card: o.card, value: o.card })), { label: timing === 'rcv' ? '完成事件，判定接球' : '結束，進入下一步', value: null }] });
+      if (pick?.__manual && canManual) { try { await this.manualAction(p,pick.__manual); } catch(e) { this.log(e.message,'warn'); } continue; }
       if (!pick) return;
       await this.resolve(p, pick, timing);
     }
@@ -593,6 +632,10 @@ class Game {
     sharedRules.assertReady(this);
     this.rulePhase = timing;
     const o = p.opp; this.src = nm(c);
+    if (this.mode === 'numeric' && !library.card(c).playable) {
+      if (!this.playable(p,timing).some(o=>o.card===c)) throw Error('此卡現在不能使用');
+      this.moveCode(p.hand,p.ev,c);this.log(`${p.name} 放入 ${nm(c)}：技能未自動化，請手動處理`,'ev');return;
+    }
     if (sharedRules.handles(c)) return sharedRules.resolve(this, p, c, timing);
     return sharedRules.legacyEffect(this, () => this.resolveLegacy(p, c, timing));
   }

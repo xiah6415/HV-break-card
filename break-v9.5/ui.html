@@ -74,6 +74,10 @@ select { font: inherit; padding: 10px; border-radius: 8px; border: 1px solid var
 .ci { display: block; width: 100%; aspect-ratio: 300 / 419; max-width: 100%; border-radius: 5px; background: var(--sunk); object-fit: cover; box-shadow: 0 1px 2px rgb(0 0 0 / .25); }
 .cbtn { border: 0; padding: 0; background: none; cursor: pointer; position: relative; display: block; width: 100%; border-radius: 6px; }
 
+.card-visual { position: relative; display:block; width:100%; }
+.skill-pending { position:absolute; inset:auto 0 2px; background:#302d2dec; color:#fff; padding:2px; text-align:center; font-size:8px; line-height:1.2; border-radius:3px; }
+.manual-grid { display:grid;gap:8px; min-width:0; }
+.manual-grid select { max-width:100%; min-width:0; width:100%; }
 /* ---------- board */
 .game { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; margin-top: 8px; min-width: 0; }
 .game > *, .side > *, .strip > *, .net > * { min-width: 0; }
@@ -350,6 +354,7 @@ p.imp-bad { padding-left: 0; }
   <section id="setup" class="setup">
     <div class="panel">
       <h2>你的牌組</h2>
+      <label class="field" for="gameMode">對戰模式<select id="gameMode"><option value="numeric" selected>數值模式（含手動技能）</option><option value="strict">嚴格模式（已支援卡片）</option></select></label>
       <label class="field" for="myDeck">牌組<select id="myDeck"><option value="k1014">烏野1014</option><option value="k1014c">1014c（接 6 強化）</option><option value="quick">烏野快攻版</option><option value="k1010">烏野1010</option><option value="seijoh">青葉城西（第四彈）</option><option value="hk_axis">烏野 日向影山軸</option></select></label>
       <div class="deckstrip" id="myStrip"></div>
       <button class="chip" type="button" id="editDeck">匯入／編輯自訂牌組</button>
@@ -393,7 +398,7 @@ p.imp-bad { padding-left: 0; }
   </section>
 </div>
 
-<div class="dock" id="dock" hidden><div class="in"><div class="dock-head"><div class="dock-summary" id="dockSummary">目前操作</div><button class="chip undo-button" id="undoBtn" type="button" disabled>Undo</button><button class="chip dock-toggle" id="dockToggle" type="button" aria-expanded="true" aria-controls="dockQ dockOpts">收合面板</button></div><div class="q" id="dockQ"></div><div class="opts" id="dockOpts"></div></div></div>
+<div class="dock" id="dock" hidden><div class="in"><div class="dock-head"><div class="dock-summary" id="dockSummary">目前操作</div><button class="chip" id="manualBtn" type="button" hidden>手動</button><button class="chip undo-button" id="undoBtn" type="button" disabled>Undo</button><button class="chip dock-toggle" id="dockToggle" type="button" aria-expanded="true" aria-controls="dockQ dockOpts">收合面板</button></div><div class="q" id="dockQ"></div><div class="opts" id="dockOpts"></div></div></div>
 <div class="sheet" id="sheet" hidden><div class="box" id="sheetBox"></div></div>
 <div class="turn-screen" id="turnScreen" role="dialog" aria-modal="true" aria-labelledby="turnTitle" aria-describedby="turnDetail" hidden><div class="turn-card" id="turnCard"></div></div>
 
@@ -419,14 +424,19 @@ p.imp-bad { padding-left: 0; }
   const MY_DECKS = ['k1014', 'k1014c', 'quick', 'k1010', 'seijoh', 'hk_axis'];
   const AI_DECKS = ['seijoh', 'hk_axis', 'k1014', 'k1014c', 'quick', 'k1010'];
   const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
-  try { const saved = store.get('bk_custom_deck'); if (saved) { DECKS.custom = DT.parseDeck(saved, DEF); MY_DECKS.push('custom'); } } catch (e) { console.warn('自訂牌組載入失敗：' + e.message); }
-  try { const saved = store.get('bk_custom_ai_deck'); if (saved) { DECKS.custom_ai = DT.parseDeck(saved, DEF); AI_DECKS.push('custom_ai'); } } catch (e) { console.warn('AI 自訂牌組載入失敗：' + e.message); }
+  if (store.get('bk_game_mode') === 'strict') $('gameMode').value = 'strict';
+  const modeOptions = () => ({mode:$('gameMode').value});
+  try { const saved = store.get('bk_custom_deck'); if (saved) { DECKS.custom = DT.parseDeck(saved, DEF, {mode:'numeric'}); MY_DECKS.push('custom'); } } catch (e) { console.warn('自訂牌組載入失敗：' + e.message); }
+  try { const saved = store.get('bk_custom_ai_deck'); if (saved) { DECKS.custom_ai = DT.parseDeck(saved, DEF, {mode:'numeric'}); AI_DECKS.push('custom_ai'); } } catch (e) { console.warn('AI 自訂牌組載入失敗：' + e.message); }
   const STAT = [['srv', '發'], ['blk', '攔'], ['rcv', '接'], ['tos', '舉'], ['atk', '攻']];
-  const img = c => `<img class="ci" src="${IMG[c] || ''}" alt="${esc(CL.card(c)?.name || c)}" loading="lazy" draggable="false">`;
+  const cardImage = c => `<img class="ci" src="${IMG[c] || ''}" alt="${esc(CL.card(c)?.name || c)}" loading="lazy" draggable="false">`;
   const esc = s => String(s).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
 
+  const img = c => !CL.card(c)?.playable ? `<span class="card-visual">${cardImage(c)}<span class="skill-pending">技能未自動化</span></span>` : cardImage(c);
+
   // ---------- setup
-  function fill(sel, keys, saved) { sel.innerHTML = keys.map(k => `<option value="${k}">${esc(DECKS[k].name)}</option>`).join(''); if (saved && keys.includes(saved)) sel.value = saved; }
+  function usableDeck(k) { try { E.validateDeck(DECKS[k].cards, modeOptions().mode); return true; } catch(e) { return false; } }
+  function fill(sel, keys, saved) { sel.innerHTML = keys.map(k => `<option value="${k}" ${usableDeck(k)?'':'disabled'}>${esc(DECKS[k].name)}${usableDeck(k)?'':'（僅數值模式）'}</option>`).join(''); sel.value = saved && keys.includes(saved) && usableDeck(saved) ? saved : keys.find(usableDeck); }
   function strip(key) { return Object.entries(DECKS[key].cards).sort((a, b) => (isC(a[0]) === isC(b[0]) ? 0 : isC(a[0]) ? -1 : 1)).map(([c, n]) => `<figure><button class="cbtn" type="button" data-card="${c}">${img(c)}</button><span>×${n}</span></figure>`).join(''); }
   fill($('myDeck'), MY_DECKS, store.get('bk_my')); fill($('aiDeck'), AI_DECKS, store.get('bk_ai') || 'seijoh');
   if (store.get('bk_speed')) $('speed').value = store.get('bk_speed');
@@ -434,6 +444,7 @@ p.imp-bad { padding-left: 0; }
   $('turnPromptStyle').onchange = () => { store.set('bk_turn_prompt', $('turnPromptStyle').value); scheduleTransition(turnNotice); };
   const refresh = () => { $('myStrip').innerHTML = strip($('myDeck').value); $('aiStrip').innerHTML = strip($('aiDeck').value); };
   $('myDeck').onchange = $('aiDeck').onchange = refresh; refresh();
+  $('gameMode').onchange = () => { store.set('bk_game_mode', $('gameMode').value); const me=$('myDeck').value, ai=$('aiDeck').value; fill($('myDeck'),MY_DECKS,me);fill($('aiDeck'),AI_DECKS,ai);refresh(); };
 
   // ---------- custom deck importer：查卡網站分享連結＋JSON（Claude 2026-10-20）
   const TARGET = {
@@ -451,15 +462,15 @@ p.imp-bad { padding-left: 0; }
     const box = $('sharePreview');
     if (!box || !$('shareURL')) return null;
     let info;
-    try { info = DT.inspectDeck(DT.decodeShare($('shareURL').value), DEF); }
+    try { info = DT.inspectDeck(DT.decodeShare($('shareURL').value), DEF, modeOptions()); }
     catch (e) { box.innerHTML = `<p class="imp-bad">${esc(e.message)}</p>`; return null; }
     const lockedSet = new Set(info.locked.map(l => l.code));
     const all = [...Object.entries(info.cards), ...info.locked.map(l => [l.code, l.count])].sort((x, y) => { const cx = CL.card(x[0])?.kind === 'C', cy = CL.card(y[0])?.kind === 'C'; return cx === cy ? 0 : cx ? -1 : 1; });
     box.innerHTML = `<div class="imp-head"><b>${esc(info.name)}</b><span>${info.total} 張・Event ${info.events}</span></div>
       <div class="deckstrip imp-strip">${all.map(([c, n]) => `<figure class="${lockedSet.has(c) ? 'imp-locked' : ''}"><button class="cbtn" type="button" data-card="${c}">${img(c)}</button><span>×${n}</span>${lockedSet.has(c) ? '<em>未開放</em>' : ''}</figure>`).join('')}</div>
       ${info.ok ? `<p class="imp-good">可以匯入</p><button class="opt primary" type="button" id="shareSave">匯入為${TARGET[target].label}牌組</button>`
-        : `<ul class="imp-bad">${info.problems.map(x => `<li>${esc(x)}</li>`).join('')}</ul>${info.locked.length ? '<p class="sub">技能尚未自動化的卡目前不能上場；之後「數值模式」上線會改為照數值使用。</p>' : ''}`}`;
-    if (info.ok) $('shareSave').onclick = () => { try { saveDeck(target, DT.parseDeck({ n: info.name, c: Object.entries(info.cards) }, DEF)); closeSheet(); } catch (e) { box.insertAdjacentHTML('beforeend', `<p class="imp-bad">${esc(e.message)}</p>`); } };
+        : `<ul class="imp-bad">${info.problems.map(x => `<li>${esc(x)}</li>`).join('')}</ul>${info.locked.length ? '<p class="sub">技能尚未自動化的卡目前不能上場；可切換「數值模式」照數值使用。</p>' : ''}`}`;
+    if (info.ok) $('shareSave').onclick = () => { try { saveDeck(target, DT.parseDeck({ n: info.name, c: Object.entries(info.cards) }, DEF, modeOptions())); closeSheet(); } catch (e) { box.insertAdjacentHTML('beforeend', `<p class="imp-bad">${esc(e.message)}</p>`); } };
     return info;
   }
   function openImporter(target, prefill = '') {
@@ -471,8 +482,8 @@ p.imp-bad { padding-left: 0; }
         <div class="opts"><button class="opt primary" type="button" id="shareGo">讀取</button><a class="opt quiet" href="https://weilun2022.github.io/haikyu-cards/" target="_blank" rel="noopener">開啟查卡網站組牌</a></div>
         <div id="sharePreview" aria-live="polite"></div>
       </section>
-      <details class="imp-json"><summary>進階：用 JSON 匯入／編輯（目前收錄 ${Object.keys(DEF).length} 種卡）</summary>
-      <p>c: [["P01-002",3], ...]。必須 40 張、Event ≤8；支援標準卡號及卡圖檔名；尚未開放的技能卡會拒絕匯入。</p><textarea id="customJSON" spellcheck="false" style="width:100%;height:36vh;min-height:150px;background:var(--sunk);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px;font:12px monospace"></textarea><p id="customError" role="alert" style="color:var(--bad)"></p><div class="opts"><button class="opt primary" type="button" id="saveCustom">驗證並儲存</button><button class="opt" type="button" id="copyCustom">複製 JSON</button><button class="opt" type="button" id="copyShare">複製分享碼</button></div></details>`);
+      <details class="imp-json"><summary>進階：用 JSON 匯入／編輯（可組牌 ${modeOptions().mode==='numeric'?CL.data.counts.cards:CL.data.counts.playable} 種卡）</summary>
+      <p>c: [["P01-002",3], ...]。必須 40 張、Event ≤8；支援標準卡號及卡圖檔名；數值模式可匯入未自動化卡；嚴格模式會拒絕。</p><textarea id="customJSON" spellcheck="false" style="width:100%;height:36vh;min-height:150px;background:var(--sunk);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px;font:12px monospace"></textarea><p id="customError" role="alert" style="color:var(--bad)"></p><div class="opts"><button class="opt primary" type="button" id="saveCustom">驗證並儲存</button><button class="opt" type="button" id="copyCustom">複製 JSON</button><button class="opt" type="button" id="copyShare">複製分享碼</button></div></details>`);
     $('customJSON').value = DT.exportDeck(source);
     $('shareGo').onclick = () => sharePreview(target);
     $('shareURL').addEventListener('keydown', e => { if (e.key === 'Enter') sharePreview(target); });
@@ -480,12 +491,12 @@ p.imp-bad { padding-left: 0; }
     shareInput.addEventListener('paste', () => setTimeout(() => { if (shareInput.isConnected && $('shareURL') === shareInput) sharePreview(target); }, 0));
     if (prefill) { $('shareURL').value = prefill; sharePreview(target); }
     $('saveCustom').onclick = () => {
-      try { saveDeck(target, DT.parseDeck($('customJSON').value, DEF)); closeSheet(); }
+      try { saveDeck(target, DT.parseDeck($('customJSON').value, DEF, modeOptions())); closeSheet(); }
       catch (e) { $('customError').textContent = e.message; }
     };
     const copy = text => { if (navigator.clipboard?.writeText) navigator.clipboard.writeText(text).catch(() => { $('customError').textContent = '複製失敗，請手動選取文字'; }); else { $('customJSON').select(); $('customError').textContent = '請手動複製選取的文字'; } };
     $('copyCustom').onclick = () => copy($('customJSON').value);
-    $('copyShare').onclick = () => { try { copy(DT.encodeShare(DT.parseDeck($('customJSON').value, DEF))); } catch (e) { $('customError').textContent = e.message; } };
+    $('copyShare').onclick = () => { try { copy(DT.encodeShare(DT.parseDeck($('customJSON').value, DEF, modeOptions()))); } catch (e) { $('customError').textContent = e.message; } };
   }
   $('editDeck').onclick = () => openImporter('me');
   $('editAiDeck').onclick = () => openImporter('ai');
@@ -503,19 +514,19 @@ p.imp-bad { padding-left: 0; }
     const stats = meta.kind === 'C' ? `<div class="statrow">${STAT.map(([, z], i) => `<span><b>${meta.stats[i] == null ? '－' : meta.stats[i]}</b>${z}</span>`).join('')}</div>` : '';
     const text = esc(DEF[c]?.[10] || meta.skill || '沒有技能（白板）。').replace(/\n/g, '<br>');
     const variants = meta.versions.length > 1 ? `<p class="sub">此卡有 ${meta.versions.length} 組卡文資料，尚待確認版本。</p>${meta.versions.map((v, i) => `<details><summary>卡文版本 ${i + 1}</summary><p>${esc(v.skill).replace(/\n/g, '<br>')}</p></details>`).join('')}` : '';
-    openSheet(`${fromLibrary ? '<button class="chip" type="button" id="backLibrary">返回卡庫</button>' : ''}<div class="detail"><div>${img(c)}</div><div style="display:grid;gap:8px;min-width:0;overflow-wrap:anywhere"><h3>${esc(meta.name)}</h3><div class="sub">${esc(meta.number)}・${esc(meta.affiliation)}${meta.kind === 'C' ? '' : '・EVENT'}</div>${stats}<div>${text}</div>${variants}<div class="sub"><b>${supportLabel(support)}</b>${!meta.playable ? '<p>目前可查閱卡片；技能尚未開放對戰，無法匯入牌組。</p>' : ''}${support.gaps.map(x => `<p>${esc(x)}</p>`).join('')}<p><a href="${esc(meta.source)}" target="_blank" rel="noopener noreferrer">查看官方卡片</a></p></div></div></div>`);
+    openSheet(`${fromLibrary ? '<button class="chip" type="button" id="backLibrary">返回卡庫</button>' : ''}<div class="detail"><div>${img(c)}</div><div style="display:grid;gap:8px;min-width:0;overflow-wrap:anywhere"><h3>${esc(meta.name)}</h3><div class="sub">${esc(meta.number)}・${esc(meta.affiliation)}${meta.kind === 'C' ? '' : '・EVENT'}</div>${stats}<div>${text}</div>${variants}<div class="sub"><b>${supportLabel(support)}</b>${!meta.playable ? `<p>技能未自動化。${modeOptions().mode==='numeric'?'可按印刷數值組牌，效果請手動處理。':'嚴格模式尚未開放此卡。'}</p>` : ''}${support.gaps.map(x => `<p>${esc(x)}</p>`).join('')}<p><a href="${esc(meta.source)}" target="_blank" rel="noopener noreferrer">查看官方卡片</a></p></div></div></div>`);
     if (fromLibrary) $('backLibrary').onclick = openLibrary;
   }
-  function supportLabel(card) { return { basic: '無技能卡：數值已核對', 'scenario-tested': '主要技能情境已測試', partial: '部分技能待補', locked: '尚未開放對戰' }[card.status]; }
+  function supportLabel(card) { return { basic: '無技能卡：數值已核對', 'scenario-tested': '主要技能情境已測試', partial: '部分技能待補', locked: '技能未自動化' }[card.status]; }
   function renderLibrary() {
-    const cards = CL.search(libraryView.query, libraryView.status), shown = cards.slice(0, libraryView.limit);
+    const cards = CL.search(libraryView.query, libraryView.status, modeOptions().mode), shown = cards.slice(0, libraryView.limit);
     $('libraryCount').textContent = `找到 ${cards.length} 張，顯示 ${shown.length} 張`;
-    $('libraryList').innerHTML = shown.map(card => `<button class="chip" type="button" data-support-card="${card.code}" style="text-align:left;white-space:normal;overflow-wrap:anywhere">${card.code} ${esc(card.name)}<small style="display:block">${card.playable ? '可對戰 · ' : ''}${supportLabel(card)}</small></button>`).join('') || '<p>沒有符合的卡片</p>';
+    $('libraryList').innerHTML = shown.map(card => `<button class="chip" type="button" data-support-card="${card.code}" style="text-align:left;white-space:normal;overflow-wrap:anywhere">${card.code} ${esc(card.name)}<small style="display:block">${card.playable || modeOptions().mode==='numeric' ? '可組牌 · ' : '嚴格模式未開放 · '}${supportLabel(card)}</small></button>`).join('') || '<p>沒有符合的卡片</p>';
     $('libraryMore').hidden = shown.length === cards.length;
   }
   function openLibrary() {
     const n = CL.data.counts;
-    openSheet(`<h3>全卡庫與支援狀態</h3><p>${n.cards} 張卡片可查閱，${n.playable} 張可對戰（含 ${n.basic} 張無技能卡）；${n.locked} 張技能卡尚未開放。</p><p class="sub">點卡片查看卡圖、數值與效果。主要情境通過仍不等於所有技能組合皆已驗證。</p><label>搜尋卡號、名稱或所屬<input id="libraryQuery" type="search" placeholder="例如：P03-004、日向、稲荷崎" style="width:100%;min-width:0;box-sizing:border-box"></label><label>顯示範圍<select id="libraryStatus" style="width:100%"><option value="all">全部卡片</option><option value="playable">可對戰</option><option value="locked">尚未開放</option></select></label><p class="sub" id="libraryCount" aria-live="polite"></p><div id="libraryList" style="display:grid;gap:8px"></div><button class="chip" type="button" id="libraryMore">顯示更多</button>`);
+    openSheet(`<h3>全卡庫與支援狀態</h3><p>${n.cards} 張卡片可查閱，${modeOptions().mode==='numeric'?n.cards:n.playable} 張可對戰（${modeOptions().mode==='numeric'?'數值':'嚴格'}模式，含 ${n.basic} 張無技能卡）；${n.locked} 張技能卡尚未自動化。</p><p class="sub">點卡片查看卡圖、數值與效果。主要情境通過仍不等於所有技能組合皆已驗證。</p><label>搜尋卡號、名稱或所屬<input id="libraryQuery" type="search" placeholder="例如：P03-004、日向、稲荷崎" style="width:100%;min-width:0;box-sizing:border-box"></label><label>顯示範圍<select id="libraryStatus" style="width:100%"><option value="all">全部卡片</option><option value="playable">可對戰</option><option value="locked">技能未自動化</option></select></label><p class="sub" id="libraryCount" aria-live="polite"></p><div id="libraryList" style="display:grid;gap:8px"></div><button class="chip" type="button" id="libraryMore">顯示更多</button>`);
     $('libraryQuery').value = libraryView.query; $('libraryStatus').value = libraryView.status;
     $('libraryQuery').oninput = () => { libraryView.query = $('libraryQuery').value; libraryView.limit = 60; renderLibrary(); };
     $('libraryStatus').onchange = () => { libraryView.status = $('libraryStatus').value; libraryView.limit = 60; renderLibrary(); };
@@ -527,6 +538,19 @@ p.imp-bad { padding-left: 0; }
   function pileSheet(title, cards) {
     openSheet(`<h3>${title}（${cards.length}）</h3>${cards.length ? `<div class="grid6">${cards.map(c => `<button class="cbtn" type="button" data-card="${c}">${img(c)}</button>`).join('')}</div>` : '<div class="sub">沒有卡片</div>'}`);
   }
+
+  $('manualBtn').onclick = () => {
+    const ticket = pending; if (!ticket?.req.canManual || game?.mode !== 'numeric') return;
+    const targets = game.players.flatMap(p => game.courtTargets(p).map(t=>({...t,player:p.idx,ref:game.roleReference(p,t.key)})));
+    openSheet(`<h3>手動調整</h3><p class="sub">未自動化技能的條件與費用請自行確認。數值修正到本回合結束或角色離場，可用Undo撤回。</p><div class="manual-grid"><label>數值對象<select id="manualTarget">${targets.map((t,i)=>`<option value="${i}">${t.player?'AI':'我方'} ${esc(E.AREA_ZH[t.key]||'側攔')} ${esc(nm(t.card))}</option>`).join('')}${game.ball?'<option value="ball">來球總值</option>':''}</select></label><label>數值<select id="manualParam">${STAT.map(([k,z])=>`<option value="${k}">${z}</option>`).join('')}</select></label><p id="manualValue" aria-live="polite"></p><div class="opts"><button class="opt" id="manualMinus">−1</button><button class="opt" id="manualPlus">＋1</button></div><label>抽／棄牌對象<select id="manualPlayer"><option value="0">我方</option><option value="1">AI（棄牌由AI選）</option></select></label><div class="opts"><button class="opt" id="manualDraw">抽1張</button></div><label>我方要棄的牌<select id="manualDiscardCard">${game.players[0].hand.map((c,i)=>`<option value="${i}">${esc(nm(c))} ${c}</option>`).join('')}</select></label><button class="opt" id="manualDiscard">棄1張</button></div>`);
+    const refreshManual=()=>{const ball=$('manualTarget').value==='ball',t=targets[+$('manualTarget').value];for(const o of $('manualParam').options)o.disabled=ball || !t || E.st(t.card,o.value)==null;if(!ball&&$('manualParam').selectedOptions[0]?.disabled)$('manualParam').value=[...$('manualParam').options].find(o=>!o.disabled)?.value||'';const value=ball?game.ball?.off:t?game.parameter(game.players[t.player],t.key,$('manualParam').value):null;$('manualValue').textContent=value==null?'沒有可調整數值':`目前 ${value}`;$('manualPlus').disabled=$('manualMinus').disabled=value==null;$('manualDraw').disabled=!game.players[+$('manualPlayer').value].deck.length;$('manualDiscard').disabled=!game.players[+$('manualPlayer').value].hand.length;$('manualDiscardCard').disabled=$('manualPlayer').value==='1';};
+    const send=command=>{closeSheet();if(pending===ticket)answer({__manual:command});};
+    $('manualTarget').onchange=$('manualParam').onchange=$('manualPlayer').onchange=refreshManual;
+    for(const [id,delta]of [['manualMinus',-1],['manualPlus',1]])$(id).onclick=()=>{const t=targets[+$('manualTarget').value];send($('manualTarget').value==='ball'?{kind:'ball',delta}:{kind:'adjust',player:t.player,key:t.key,param:$('manualParam').value,ref:t.ref,delta});};
+    $('manualDraw').onclick=()=>send({kind:'draw',player:+$('manualPlayer').value});
+    $('manualDiscard').onclick=()=>{const player=+$('manualPlayer').value;send({kind:'discard',player,...(player===0?{ref:game.cardReference(game.players[0],'hand',+$('manualDiscardCard').value)}:{})});};
+    refreshManual();
+  };
 
   // ---------- game state
   let game = null, session = null, pending = null, picked = new Set(), logBuf = [];
@@ -607,7 +631,7 @@ p.imp-bad { padding-left: 0; }
     if (!req) return null;
     switch (req.kind) {
       case 'serve': return 'serve'; case 'receiver': return 'receive'; case 'setter': return 'toss'; case 'attacker': return 'attack';
-      case 'event': return isC(c) ? 'drop' : 'ev';
+      case 'event': return c ? isC(c) ? 'drop' : 'ev' : null;
       case 'discard': return 'drop'; case 'cost': return 'ev';
       case 'block': return 'block';
       default: return null;
@@ -892,6 +916,7 @@ p.imp-bad { padding-left: 0; }
     const logHTML = logBuf.slice(-200).map(([s, c]) => `<div class="${c || ''}">${esc(s)}</div>`).join('');
     $('logSide').innerHTML = logHTML; $('logSide').scrollTop = $('logSide').scrollHeight;
     const dock = $('dock'); dock.hidden = false;
+    $('manualBtn').hidden = !(game.mode==='numeric' && pending?.req.canManual);
     if (game.winner) {
       dock.classList.remove('wait');
       $('dockQ').textContent = game.winner.idx === 0 ? '你贏了！' : 'AI 贏了';
@@ -1020,7 +1045,7 @@ p.imp-bad { padding-left: 0; }
     store.set('bk_my', my); store.set('bk_ai', ai); store.set('bk_speed', String(speed));
     session?.stop();
     session = new window.BreakUndoTools.UndoSession(E, {
-      decks: [my, ai], human, ai: Object.assign({}, E.AI, { label: 'AI', delay: speed }),
+      decks: [my, ai], mode: modeOptions().mode, human, ai: Object.assign({}, E.AI, { label: 'AI', delay: speed }),
       onGame(g) {
         game = g; logBuf = []; pending = null; turnNotice = null; renderTransition(); picked = new Set(); staged = null; blk = null; lossArm = false;
         prevTop = {}; prevVal = {}; prevBall = null; flashMsg = ''; clearTimeout(flashT);

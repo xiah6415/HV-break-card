@@ -8,7 +8,7 @@ const path = require('node:path');
     for (const [width, height] of [[1280, 900], [390, 844], [320, 568]]) {
       const page = await browser.newPage({ viewport: { width, height }, isMobile: width < 700, hasTouch: width < 700 });
       const errors = []; page.on('pageerror', error => errors.push(error.message));
-      await page.setContent(fs.readFileSync('index.html', 'utf8'), { waitUntil: 'domcontentloaded' });
+      await page.setContent(fs.readFileSync('index.html', 'utf8'), { waitUntil: 'domcontentloaded' });await page.selectOption('#gameMode','strict');
       await page.click('#supportBtn');
       const counts = await page.evaluate(() => BreakCardLibrary.data.counts);
       assert.equal(await page.locator('[data-support-card]').count(), Math.min(60, counts.cards));

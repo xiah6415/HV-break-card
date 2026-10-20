@@ -13,7 +13,7 @@ const site='https://weilun2022.github.io/haikyu-cards/?deck=';
   const page=await browser.newPage({viewport:{width,height},isMobile:width<500,hasTouch:width<500}),errors=[];
   page.on('pageerror',e=>errors.push(e.message));
   const url=pathToFileURL(path.resolve('index.html')).href;
-  await page.goto(url,{waitUntil:'domcontentloaded'});await page.evaluate(()=>localStorage.clear());await page.reload({waitUntil:'domcontentloaded'});
+  await page.goto(url,{waitUntil:'domcontentloaded'});await page.evaluate(()=>localStorage.clear());await page.reload({waitUntil:'domcontentloaded'});await page.selectOption('#gameMode','strict');
   // 鎖定卡：列出名稱與張數，不給匯入
   await page.click('#editDeck');await page.fill('#shareURL',site+badCode);await page.click('#shareGo');
   const bad=await page.textContent('#sharePreview');assert.match(bad,/尚未開放對戰的技能卡 4 張/);assert.ok(bad.includes(lockedCard.name));
@@ -27,7 +27,7 @@ const site='https://weilun2022.github.io/haikyu-cards/?deck=';
   assert.equal(await page.inputValue('#aiDeck'),'custom_ai');
   const sw=await page.evaluate(()=>document.documentElement.scrollWidth);assert.ok(sw<=width,'橫向溢出 '+sw);
   // 重新載入後保留
-  await page.reload({waitUntil:'domcontentloaded'});assert.equal(await page.inputValue('#myDeck'),'custom');assert.equal(await page.inputValue('#aiDeck'),'custom_ai');
+  await page.reload({waitUntil:'domcontentloaded'});await page.selectOption('#gameMode','strict');assert.equal(await page.inputValue('#myDeck'),'custom');assert.equal(await page.inputValue('#aiDeck'),'custom_ai');
   // ?deck= 自動帶入
   await page.goto(url+'?deck='+okCode,{waitUntil:'domcontentloaded'});await page.waitForSelector('#shareSave');
   assert.ok(!(await page.evaluate(()=>location.search)).includes('deck='));

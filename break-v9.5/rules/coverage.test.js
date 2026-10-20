@@ -15,7 +15,7 @@ assert.equal(card('PR-057').category,'core_gap');assert(profile('PR-057').reason
 // More than one blocker must survive, even when one causes preflight to stop early.
 assert(profile('PR-081').reasons.some(x=>x.detail.includes('blockout')));assert(profile('PR-081').reasons.some(x=>x.key.startsWith('move_quantity:one_of_exact')));
 assert.equal(card('P04-070').category,'ruling_review');assert(profile('P04-070').reasons.some(x=>x.detail.includes('TARGET_MEMBERSHIP_UNRESOLVED')));assert.equal(card('P02-064').category,'ruling_review');assert.equal(card('P03-077').profile_ids.length,2);assert.equal(card('P03-077').category,'ruling_review');
-assert.equal(card('P01-015').category,'reuse_candidate');assert.equal(card('P01-015').live_approved,false);assert.equal(card('P01-015').in_runtime_catalog,false);assert(r.profiles.filter(p=>p.category==='reuse_candidate').every(p=>p.kernel_admission.passed&&!p.live_approved&&!p.reasons.length));
+assert.equal(card('P01-015').category,'reuse_candidate');assert.equal(card('P01-015').live_approved,false);assert.equal(card('P01-015').in_runtime_catalog,true);assert(r.profiles.filter(p=>p.category==='reuse_candidate').every(p=>p.kernel_admission.passed&&!p.live_approved&&!p.reasons.length));
 assert(r.profiles.some(p=>p.reasons.some(x=>x.path.startsWith('formal_cost.steps'))),'formal costs must contribute blockers');
 for(const gap of r.gap_groups){assert.equal(gap.affected_cards,new Set(gap.card_nos).size);assert.equal(gap.single_gap_group_cards,gap.single_gap_group_card_nos.length);for(const no of gap.single_gap_group_card_nos)assert.deepEqual(r.cards.find(c=>c.card_no===no).gap_groups,[gap.key]);}
 assert.deepEqual(hashes(),before);assert.deepEqual(buildCoverage(),r,'inventory must be deterministic');

@@ -25,7 +25,7 @@ async function makeTrace() {
       const page = await browser.newPage({ viewport: { width, height }, isMobile: true, hasTouch: true });
       page.setDefaultTimeout(10000);
       const errors = []; page.on('pageerror', error => errors.push(error.message));
-      await page.setContent(fs.readFileSync('index.html', 'utf8'), { waitUntil: 'domcontentloaded' });
+      await page.setContent(fs.readFileSync('index.html', 'utf8'), { waitUntil: 'domcontentloaded' });await page.selectOption('#gameMode','strict');
       await page.evaluate(() => { Date.now = () => 1; });
       await page.selectOption('#myDeck', 'hk_axis');
       await page.selectOption('#aiDeck', 'seijoh');

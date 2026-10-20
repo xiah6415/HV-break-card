@@ -15,12 +15,12 @@ async function advance(page){
  try{for(const [width,height]of [[1280,900],[390,844],[320,568]]){
   const page=await browser.newPage({viewport:{width,height},isMobile:width<500,hasTouch:width<500}),errors=[],dialogs=[];
   page.on('pageerror',e=>errors.push(e.message));page.on('dialog',async d=>{dialogs.push(d.message());await d.dismiss();});
-  await page.goto(pathToFileURL(path.resolve('index.html')).href,{waitUntil:'domcontentloaded'});await page.evaluate(()=>localStorage.clear());await page.reload({waitUntil:'domcontentloaded'});
-  assert.equal(await page.evaluate(()=>Object.keys(BreakEngine.DEF).length),212);
+  await page.goto(pathToFileURL(path.resolve('index.html')).href,{waitUntil:'domcontentloaded'});await page.evaluate(()=>localStorage.clear());await page.reload({waitUntil:'domcontentloaded'});await page.selectOption('#gameMode','strict');await page.selectOption('#turnPromptStyle','manual');
+  assert.equal(await page.evaluate(()=>Object.keys(BreakEngine.DEF).length),541);
   await page.click('#supportBtn');assert.match(await page.textContent('#sheetBox'),/541 張卡片可查閱，212 張可對戰/);
   await page.selectOption('#libraryStatus','locked');assert.match(await page.textContent('#libraryCount'),/329 張/);
   await page.fill('#libraryQuery','P04-097');await page.click('[data-support-card="P04-097"]');
-  assert.match(await page.textContent('#sheetBox'),/尚未開放對戰/);await page.waitForFunction(()=>document.querySelector('.detail img').naturalWidth>0);
+  assert.match(await page.textContent('#sheetBox'),/技能未自動化/);await page.waitForFunction(()=>document.querySelector('.detail img').naturalWidth>0);
   assert.equal(await page.locator('.detail h3').textContent(),await page.evaluate(()=>BreakCardLibrary.card('P04-097').name));assert.equal(await page.locator('.detail img').getAttribute('alt'),await page.locator('.detail h3').textContent());
   await page.click('#backLibrary');assert.equal(await page.inputValue('#libraryQuery'),'P04-097');assert.equal(await page.inputValue('#libraryStatus'),'locked');
   await page.selectOption('#libraryStatus','playable');await page.fill('#libraryQuery','月島螢 P03-004');assert.match(await page.textContent('#libraryCount'),/找到 1 張/);await page.click('[data-support-card="P03-004"]');
@@ -30,7 +30,7 @@ async function advance(page){
   await page.click('#editDeck');await page.click('.imp-json summary');await page.fill('#customJSON',JSON.stringify({cards:{'P04-097':40}}));await page.click('#saveCustom');assert.match(await page.textContent('#customError'),/尚未開放/);
   await page.fill('#customJSON',JSON.stringify(sample));await page.click('#saveCustom');assert.equal(await page.inputValue('#myDeck'),'custom');assert.equal(await page.locator('#setup img[src="x"]').count(),0);assert.deepEqual(dialogs,[]);
   for(const image of await page.locator('#myStrip img').all()){await image.scrollIntoViewIfNeeded();await image.evaluate(i=>new Promise((resolve,reject)=>{if(i.complete)return i.naturalWidth?resolve():reject(Error('broken card image'));i.onload=resolve;i.onerror=()=>reject(Error('broken card image'));}));}
-  await page.reload({waitUntil:'domcontentloaded'});assert.equal(await page.inputValue('#myDeck'),'custom');await page.evaluate(()=>{Date.now=()=>7;});await page.selectOption('#speed','200');await page.click('#startBtn');
+  await page.reload({waitUntil:'domcontentloaded'});await page.selectOption('#gameMode','strict');await page.selectOption('#turnPromptStyle','manual');assert.equal(await page.inputValue('#myDeck'),'custom');await page.evaluate(()=>{Date.now=()=>7;});await page.selectOption('#speed','200');await page.click('#startBtn');
   for(let i=0;i<120&&!await page.locator('#dockOpts [data-act="ack"]').count();i++)await advance(page);
   assert.equal(await page.locator('#dockOpts [data-act="ack"]').count(),1,'reach real new-card draw phase');const before=await snap(page);
   await page.click('#dockOpts [data-act="ack"]');await page.waitForSelector('.hand .hc.sel');const after=await snap(page);await page.click('#undoBtn');await page.waitForSelector('#dockOpts [data-act="ack"]');assert.deepEqual(await snap(page),before);await page.click('#dockOpts [data-act="ack"]');await page.waitForSelector('.hand .hc.sel');assert.deepEqual(await snap(page),after);

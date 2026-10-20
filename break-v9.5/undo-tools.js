@@ -126,7 +126,7 @@ class UndoSession {
       }
     }));
     const g = new this.engine.Game({
-      seed: this.seed, decks: this.options.decks, reveal: this.localPlayer, agents,
+      seed: this.seed, decks: this.options.decks, mode: this.options.mode, reveal: this.localPlayer, agents,
       onLog: (s, cls) => { if (active()) this.options.onLog?.(s, cls); },
       onNotice: async notice => {
         await this.ready(token);

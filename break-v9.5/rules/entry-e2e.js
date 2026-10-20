@@ -5,7 +5,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
   const browser=await chromium.launch({executablePath:process.env.PLAYWRIGHT_EXECUTABLE||undefined});
   try{for(const [width,height] of [[1280,900],[390,844],[320,568]]){
     const page=await browser.newPage({viewport:{width,height},isMobile:width<700,hasTouch:width<700});page.setDefaultTimeout(10000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
-    await page.setContent(fs.readFileSync('index.html','utf8'),{waitUntil:'domcontentloaded'});
+    await page.setContent(fs.readFileSync('index.html','utf8'),{waitUntil:'domcontentloaded'});await page.selectOption('#gameMode','strict');
     await page.evaluate(()=>{const E=window.BreakEngine;E.Game=class extends E.Game{async run(){window.entryGame=this;const [p,o]=this.players;for(const q of this.players){q.hand=[];q.deck=[];q.drop=[];q.ev=[];q.sets=[];for(const a in q.area)q.area[a]=[];}
       this.rallyNo=1;this.server=1;this.beginTurn(o);o.hand=['P04-088'];o.area.attack=['D04-002'];o.ts.attacker='D04-002';o.ts.atk=7;o.deck=['D04-003'];p.hand=['P03-057','P03-057','D01-009','P01-011','P01-004'];
       await this.resolve(o,'P04-088','atk');this.beginTurn(p);this.ball={type:'attack',off:6};this.target=0;await this.receiveTurn(p);this.winner=p;return p;

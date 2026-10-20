@@ -26,7 +26,7 @@ const snapshot = page => page.evaluate(() => ({
       const page = await browser.newPage({ viewport: { width, height }, isMobile: width < 700, hasTouch: width < 700 });
       page.setDefaultTimeout(10000);
       const errors = []; page.on('pageerror', error => errors.push(error.message));
-      await page.setContent(fs.readFileSync('index.html', 'utf8'), { waitUntil: 'domcontentloaded' });
+      await page.setContent(fs.readFileSync('index.html', 'utf8'), { waitUntil: 'domcontentloaded' });await page.selectOption('#gameMode','strict');
       await page.selectOption('#turnPromptStyle', 'manual'); // This suite verifies explicit acknowledgment/replay; auto mode has its own regression.
       await page.evaluate(() => { Date.now = () => 7; });
       await page.selectOption('#myDeck', 'k1014'); await page.selectOption('#aiDeck', 'seijoh');
@@ -103,9 +103,8 @@ const snapshot = page => page.evaluate(() => ({
           assert(await page.locator('#endTurn').isVisible());
           assert(await page.locator('[data-act="loss"]').isVisible(), 'Loss must remain available until explicit turn end');
           assert((await page.locator('#rallyStatus').textContent()).includes(`本球發球：${server === 0 ? '你' : 'AI'}`));
-          const banner = await page.locator('#rallyStatus').boundingBox();
-          const opponent = await page.locator('#oppSide').boundingBox();
-          assert(banner.y >= opponent.y + opponent.height - 1, 'server banner must remain in flow below opponent information and slots');
+          const statusGeometry = await page.evaluate(() => ({top:document.getElementById('rallyStatus').getBoundingClientRect().top,opponentBottom:document.getElementById('oppSide').getBoundingClientRect().bottom}));
+          assert(statusGeometry.top >= statusGeometry.opponentBottom - 1, 'server banner must remain in flow below opponent information and slots');
           const before = await snapshot(page);
           await page.waitForTimeout(260); assert.deepEqual(await snapshot(page), before, 'AI cannot move before turn end');
           seen.add('end-' + req.outgoing.type);

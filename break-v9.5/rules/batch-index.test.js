@@ -13,7 +13,8 @@ for(const [axis,terms]of Object.entries(index.postings))for(const term of Object
 for(const phase of ['serve','draw','block','receive','toss','attack'])for(const mechanism of ['numeric','draw','pay_guts','retrieve','watch']){
  assert.deepEqual(query(index,{category:'reuse_candidate',phase,mechanism}),Object.values(index.profiles).filter(p=>p.category==='reuse_candidate'&&p.phase.includes(phase)&&p.mechanism.includes(mechanism)).map(p=>p.profile_id).sort());
 }
-assert.equal(query(index,{category:'reuse_candidate',runtime:'true'}).length,0);
+assert.equal(query(index,{category:'reuse_candidate',runtime:'true'}).length,125);
+const runtime=require('./runtime-data.json');for(const p of runtime.catalog.cards.flatMap(c=>c.profiles).filter(p=>!p.runtime_approved))assert.equal(p.program,null,'metadata inclusion never admits a skill');
 assert.deepEqual(query(index,{mechanism:'does-not-exist'}),[]);assert.deepEqual(query(index,{mechanism:[]}),[]);
 assert.deepEqual(query(JSON.parse(JSON.stringify(index)),{category:'__proto__'}),[]);
 assert.throws(()=>query(index,{unknown:'draw'}),/Unknown index axis/);

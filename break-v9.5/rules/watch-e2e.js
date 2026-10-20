@@ -5,7 +5,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
   const browser=await chromium.launch({executablePath:process.env.PLAYWRIGHT_EXECUTABLE||undefined});
   try {for(const [width,height] of [[1280,900],[390,844],[320,568]]){
     const page=await browser.newPage({viewport:{width,height},isMobile:width<700,hasTouch:width<700});page.setDefaultTimeout(10000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
-    await page.setContent(fs.readFileSync('index.html','utf8'),{waitUntil:'domcontentloaded'});
+    await page.setContent(fs.readFileSync('index.html','utf8'),{waitUntil:'domcontentloaded'});await page.selectOption('#gameMode','strict');
     await page.evaluate(()=>{
       const E=window.BreakEngine,choose=E.AI.choose;E.AI.choose=async function(g,p,r){if(r.kind==='rulesChoice')return (r.options.find(o=>o.card&&o.card!=='P01-087')||r.options[0]).value;return choose.call(this,g,p,r);};
       E.Game=class extends E.Game {async run(){window.watchGame=this;for(const q of this.players){q.hand=[];q.deck=[];q.drop=[];q.ev=[];q.sets=[];for(const a in q.area)q.area[a]=[];}

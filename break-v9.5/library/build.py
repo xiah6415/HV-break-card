@@ -31,6 +31,8 @@ def library_data():
         record = records[profile['variants'][0]['record_id']]
         basic = len(card['profiles']) == 1 and profile['program'] is None
         playable = code in support or basic
+        if len(card['profiles']) > 1:
+            assert all(p['variants'][0]['printed']['parameters'] == printed['parameters'] for p in card['profiles']), 'Numerical variant must be selected explicitly'
         stats = [None if printed['parameters'][p] == 'dash' else printed['parameters'][p] for p in PARAMS] if printed['type'] == 'character' else [0] * 5
         assert all(n is None or type(n) is int for n in stats)
         value = max(1, round(max([v or 0 for v in stats]) * .8 + 1))
@@ -43,7 +45,7 @@ def library_data():
                      printedName=printed['name'], kind='C' if printed['type'] == 'character' else 'E', stats=stats,
                      schoolTags=printed['affiliation_tags'], yearTags=printed['year_tags'], positionTags=printed['position_tags'],
                      affiliation=profile['variants'][0]['raw_affiliation'], hasSkill=not basic, playable=playable,
-                     status=status, versions=variants, source='https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=' + quote(card['card_no']) + '&voba=' + quote(profile['variants'][0]['rarity']),
+                     status=status, versions=variants, activationPhases=(profile.get('activation') or {}).get('activation_phases', []), source='https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=' + quote(card['card_no']) + '&voba=' + quote(profile['variants'][0]['rarity']),
                      image=assets['images'][code]['file'], skill='' if basic else record.get('skill_zh') or record.get('skill_jp') or '')
         entry['definition'] = [entry['name'], entry['kind'], *stats, value, '/'.join(entry['schoolTags']), entry['yearTags'][0] if entry['yearTags'] else 0, entry['skill']]
         cards[code] = entry

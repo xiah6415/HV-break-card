@@ -31,7 +31,7 @@ async function advance(page) {
       const page = await browser.newPage({ viewport: { width, height }, isMobile: true, hasTouch: true });
       const errors = [];
       page.on('pageerror', error => errors.push(error.message));
-      await page.setContent(html, { waitUntil: 'domcontentloaded' });
+      await page.setContent(html, { waitUntil: 'domcontentloaded' });await page.selectOption('#gameMode','strict');
       await page.selectOption('#turnPromptStyle', 'manual'); // This suite verifies explicit acknowledgment/replay; auto mode has its own regression.
       await page.evaluate(() => { Date.now = () => 7; });
       await page.selectOption('#aiDeck', 'hk_axis');

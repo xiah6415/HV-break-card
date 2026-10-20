@@ -7,7 +7,7 @@ const path = require('node:path');
     const pg = await b.newPage({ viewport: { width: w, height: h }, colorScheme: scheme, isMobile: mobile, hasTouch: mobile });
     const errs = []; pg.on('pageerror', e => errs.push(e.message)); pg.on('console', m => m.type() === 'error' && !/ERR_TUNNEL|fonts|net::/.test(m.text()) && errs.push(m.text()));
     const html = require('fs').readFileSync('index.html', 'utf8');
-    await pg.setContent(html, { waitUntil: 'domcontentloaded' });
+    await pg.setContent(html, { waitUntil: 'domcontentloaded' });await pg.selectOption('#gameMode','strict');
     await pg.selectOption('#speed', '200');
     await pg.click('#startBtn');
     if (mobile) {
