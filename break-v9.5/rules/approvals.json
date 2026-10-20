@@ -16,6 +16,11 @@
       "profile_sha256": "0f79e0addd662b8c8e22938a687f8a110cc4a70a4f2707e3ef05f308354300af",
       "scope": "legacy finite settlement: draw / positive numeric / own-hand discard; no persistent watches or entry",
       "tests": "rules/legacy.test.js; rules/legacy-undo.test.js; rules/legacy-e2e.js"
+    },
+    "HV-P01-087:42a6e01669b4ec97": {
+      "profile_sha256": "2423a208a7eb93517ac69903ec16e88598d10b0b83a98a411f5da98897351c33",
+      "scope": "draw / chosen Oikawa toss bonus / persistent next-opponent hand_added watch / affected-player discard / trigger order",
+      "tests": "rules/watch.test.js; rules/watch-undo.test.js; rules/watch-e2e.js"
     }
   }
 }

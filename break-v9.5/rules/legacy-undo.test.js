@@ -14,7 +14,7 @@ class Scenario extends E.Game {
 }
 (async()=>{
   const queue=[],errors=[];let logs=[];
-  const snapshot=g=>copy({players:g.players.map(p=>{const {g,agent,...data}=p;return data;}),cards:g.cardState,turnEffects:g.turnEffects,logs,turn:g.turnNo,src:g.src});
+  const snapshot=g=>copy({players:g.players.map(p=>{const {g,agent,...data}=p;return data;}),cards:g.cardState,turnEffects:g.turnEffects,sharedRulesState:g.sharedRulesState,sharedRulesPending:g.sharedRulesPending,sharedRulesEvents:g.sharedRulesEvents,sharedRulesDepth:g.sharedRulesDepth,rulePhase:g.rulePhase,logs,turn:g.turnNo,src:g.src});
   const session=new UndoSession({Game:Scenario},{seed:7,decks:['k1014','seijoh'],ai:E.AI,
     human:{wantsAck:true,choose:(g,p,req)=>new Promise(resolve=>queue.push({req,resolve,state:snapshot(g),index:session.entries.length}))},
     onGame(){logs=[];},onLog(s){logs.push(s);},onError(e){errors.push(e);}});

@@ -159,8 +159,10 @@ class Game {
   sdraw(p, n = 1) { if (p.restrict.no_add) { this.log(`${p.name} 被岩泉封鎖，${this.src || '技能'}的抽牌無效`, 'warn'); return 0; } return this.draw(p, n, this.src || '技能'); }
   async sadd(p, c, src, index = src.indexOf(c)) {
     if (p.restrict.no_add) { this.log(`${p.name} 被岩泉封鎖，無法加入手牌`, 'warn'); return false; }
+    sharedRules.assertReady(this);
     if (src[index] !== c) throw new Error('加入手牌的實體來源不符');
     this.moveCard(src, p.hand, index);
+    await sharedRules.handAdded(this, p, this.cardReference(p, 'hand').id, this.cardState.revision);
     for (let i = 0; i < (p.restrict.oremo || 0); i++) if (p.hand.length) await this.discard(p, '俺も思った☆：加入手牌後棄 1 張');
     return true;
   }
@@ -345,6 +347,7 @@ class Game {
       await this.notice({ type: 'loss', player: loser.idx, reason: lossReason, winner: loser.opp.idx, final: !loser.sets.length });
       this.turnP = null;
       turnEffects.loss(this);
+      sharedRules.loss(this);
       for (const p of this.players) { p.pending = {}; p.restrict = {}; p.ts = {}; p.effects = {}; }
       this.ball = null; this.target = null;
       const winner = loser.opp;
@@ -365,8 +368,8 @@ class Game {
     for (const key of Object.keys(p.effects)) if (key.startsWith('side:')) delete p.effects[key];
     if (sides.length) this.log(`側攔 ${sides.map(nm).join('、')} → 棄牌區`, 'guts');
   }
-  finishTurn(p) { p.effects = {}; p.restrict = {}; p.ts.finished = true; turnEffects.finish(this, this.turnNo); }
-  beginTurn(p) { if (this.turnP) this.finishTurn(this.turnP); this.turnP = p; this.turnNo++; p.restrict = {...p.pending, ...turnEffects.begin(this, p.idx)}; p.pending = {}; p.ts = { used: {} }; p.newCount = {}; this.src = ''; }
+  finishTurn(p) { p.effects = {}; p.restrict = {}; p.ts.finished = true; turnEffects.finish(this, this.turnNo); sharedRules.finishTurn(this); }
+  beginTurn(p) { if (this.turnP) this.finishTurn(this.turnP); this.turnP = p; this.turnNo++; p.restrict = {...p.pending, ...turnEffects.begin(this, p.idx)}; p.pending = {}; p.ts = { used: {} }; p.newCount = {}; this.src = ''; this.rulePhase = 'drw'; sharedRules.beginTurn(this, p); }
   async confirmTurnEnd(p, outgoing) {
     if (!p.agent.wantsAck) return;
     const label = { serve: '發球', attack: '進攻', block: '攔網回球' }[outgoing.type];
@@ -376,6 +379,7 @@ class Game {
   // ---------- serve
   async serveTurn(p) {
     this.beginTurn(p);
+    this.rulePhase = 'srv';
     await this.notice({ type: 'serve', player: p.idx });
     const o = p.opp;
     const cs = [...new Set(p.handC().filter(c => st(c, 'srv') != null))];
@@ -434,6 +438,7 @@ class Game {
     return res.slice(0, 12);
   }
   async blockTurn(p, combos) {
+    this.rulePhase = 'blk';
     const pick = await this.ask(p, { kind: 'block', build: { cands: this.blockCands(p), max: this.blockMax(p) }, prompt: `組攔網（需 ≥ ${this.ball.off}）`, options: combos.map((cb, i) => ({ label: `${cb.cards.map(short).join('＋')}　攔 ${cb.total}${cb.tsu ? '（含月島 +6）' : ''}${cb.natsu ? '（還要用日向夏 +1）' : ''}`, value: i, cards: cb.cards })) });
     let cb, center;
     if (pick && typeof pick === 'object') {
@@ -467,6 +472,7 @@ class Game {
     if (p.agent.wantsAck) await this.ask(p, { kind: 'ack', prompt: `抽牌階段：來球 ${ball.type === 'serve' ? '發球' : ball.type === 'block' ? '攔網回球' : '攻擊'} ${off}，先抽 1 張`, options: [{ label: '抽 1 張', value: true }] });
     this.draw(p, 1, '抽牌階段');
     await this.eventLoop(p, 'drw', {});
+    this.rulePhase = 'rcv';
     // receive
     const cs = [...new Set(p.handC().filter(c => st(c, 'rcv') != null && !(p.restrict.no_rcv6 && st(c, 'rcv') >= 6)))];
     if (!cs.length) this.lost(p, '沒有能接球的角色');
@@ -501,6 +507,7 @@ class Game {
     if (r < ball.off) this.lost(p, `接球 ${r} 小於來球 ${ball.off}`);
     this.log(`接球成功（${r} ≥ ${ball.off}）`);
     // toss
+    this.rulePhase = 'tos';
     const ts = [...new Set(p.handC().filter(x => this.canEnter(p, 'toss', x)))];
     if (!ts.length) this.lost(p, '沒有能舉球的角色');
     const t = await this.ask(p, { kind: 'setter', prompt: '選擇舉球角色', options: ts.map(x => ({ label: `${nm(x)}　舉 ${st(x, 'tos')}`, card: x, value: x })) });
@@ -518,6 +525,7 @@ class Game {
     this.log(`${p.name} 舉球 ${nm(t)}：${toss}`);
     await this.eventLoop(p, 'tos', {});
     // attack
+    this.rulePhase = 'atk';
     const as = [...new Set(p.handC().filter(x => this.canEnter(p, 'attack', x)))];
     if (!as.length) this.lost(p, '沒有能攻擊的角色');
     const a = await this.ask(p, { kind: 'attacker', prompt: '選擇攻擊角色', options: as.map(x => ({ label: `${nm(x)}　攻 ${st(x, 'atk')}${isHin(x) && p.ts.hin ? ' +2' : x === 'PR-057' ? '（登場時選名稱）' : ''}`, card: x, value: x })) });
@@ -563,6 +571,7 @@ class Game {
 
   // ---------- events
   playable(p, timing) {
+    if (this.sharedRulesPending) return [];
     const o = p.opp, res = [];
     // Draw-phase cards remain available until the receive check resolves.
     const drawWindow = timing === 'drw' || timing === 'rcv';
@@ -584,7 +593,6 @@ class Game {
         'PR-029': () => !p.restrict.no_add && p.drop.some(x => isHin(x) && x !== 'PR-057' || nm(x) === '影山 飛雄'),
         'P03-090': () => !p.restrict.no_add && p.ev.some(x => x !== 'P03-090'),
         'P03-086': () => !!p.ts.setter && ['影山 飛雄', '菅原 孝支', '及川 徹'].includes(nm(p.ts.setter)),
-        'P01-087': () => ['serve', 'toss'].some(a => p.top(a) && nm(p.top(a)) === '及川 徹'),
         'P01-078': () => !!p.ts.attacker,
         'D01-012': () => !!p.ts.attacker, 'P01-074': () => !!p.ts.attacker,
         'P03-096': () => (!p.restrict.no_add && p.deck.length > 0) || this.courtTargets(p).some(t => this.cardName(p, t.key) === '日向 翔陽'),
@@ -596,6 +604,7 @@ class Game {
     return res;
   }
   async eventLoop(p, timing, ctx) {
+    this.rulePhase = timing;
     for (;;) {
       const opts = this.playable(p, timing);
       if (!opts.length) return;
@@ -607,8 +616,14 @@ class Game {
     }
   }
   async resolve(p, c, timing) {
+    sharedRules.assertReady(this);
+    this.rulePhase = timing;
     const o = p.opp; this.src = nm(c);
     if (sharedRules.handles(c)) return sharedRules.resolve(this, p, c, timing);
+    return sharedRules.legacyEffect(this, () => this.resolveLegacy(p, c, timing));
+  }
+  async resolveLegacy(p, c, timing) {
+    const o = p.opp;
     if (isC(c)) {
       this.moveCode(p.hand, p.drop, c);
       if (c === 'P03-057') {
@@ -650,7 +665,6 @@ class Game {
         }
         break;
       }
-      case 'P01-087': { this.sdraw(p, 1); if (timing === 'tos' && p.ts.setter && nm(p.ts.setter) === '及川 徹') p.ts.toss += 1; this.scheduleRestriction(o, 'oremo', 1, true, this.cardReference(p, 'ev')); this.log(`${o.name} 下回合每次非抽牌加手牌要棄 1`, 'warn'); break; }
       case 'P01-078': {
         this.sdraw(p, 2);
         if (p.hand.length) await this.discard(p, 'オープン攻撃：抽 2 後棄 1 張');
@@ -790,7 +804,7 @@ const AI = {
         return (opts.find(o => o.value === '日向 翔陽') || opts[0]).value;
       }
       case 'target': {
-        const active = { rcv: 'receive', atk: 'attack', blk: 'block' }[req.timing];
+        const active = { srv: 'serve', tos: 'toss', rcv: 'receive', atk: 'attack', blk: 'block' }[req.timing];
         return (opts.find(o => o.value === active) || opts[0]).value;
       }
       case 'parameter': {

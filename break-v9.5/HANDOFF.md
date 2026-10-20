@@ -1,5 +1,7 @@
 # BREAK 對練台 — 交接文件（Claude → Codex，2026-10-19）
 
+> 最新共用監聽（2026-10-20）：P01-087已依共用資料接入及川目標與下回合非抽牌加牌監聽；核准4張，其餘43張舊路徑。sharedRulesState保存watch／序號／收據，sharedRulesPending保存可重演命令／基準／答案／待選／工作佇列；legacyEffect讓整個舊技能完成後才觸發，來源離場、到期與Loss處理已接合。watch.test20情境、watch-undo12個完整還原點通過，詳細驗證見最新memory與rules/README。尚未部署；其他監聽事件族／登場／保護及多人續接仍待整合。下方3張核准與「佇列尚未整合」為歷史。
+
 > 最新持續身分／期限（2026-10-20，實作提交d2d77d3）：identity.js已接原引擎所有實際移牌與首批3張共用結算，Game.cardState跨結算保存ID／角色代次；新增lifecycle.js保存既有6種下回合限制，正常結束／Loss清理，修正restrict到期後仍可能影響回合外加牌。17身分／期限情境、原Undo加入完整cardState與turnEffects比對；詳細驗證見memory.md及rules/README.md。新核心跨回合watch／佇列／登場控制器仍未整合；核准仍3張，未推送部署。下方暫時ID描述是前批歷史。
 
 > 最新本機整合（2026-10-20，實作提交f8b3cc9）：P01-013、P01-088、P04-089改走資料驅動共用結算，舊三張效果移除；其餘44張維持原流程。approvals.json以完整資料組指紋核准，runtime-data.json只含47張印刷身分與3技能，原全卡封存資料核准仍0。decisions.js／legacy.js接現有玩家選擇、Loss與Undo，測試／界線見rules/README.md及最新memory.md。本批尚未推送部署；下方「尚未接入」是隔離核心批次歷史。

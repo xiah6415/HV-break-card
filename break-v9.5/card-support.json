@@ -1149,12 +1149,15 @@
         "1238",
         "1239"
       ],
-      "status": "partial",
-      "gaps": [
-        "抽牌、疊加棄牌已實作；目前只加當次及川舉球，尚缺其他場上及川目標及無效打出。"
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "rules/watch.test.js",
+        "rules/watch-undo.test.js",
+        "rules/watch-e2e.js"
       ],
-      "tests": [],
-      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P01-087"
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P01-087",
+      "settlement": "shared-rules-local-watch-migration"
     },
     "P04-088": {
       "name": "ドンピシャ!!!",

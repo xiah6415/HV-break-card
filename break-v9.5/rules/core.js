@@ -561,6 +561,16 @@ class Kernel {
   drawRule(player,n=1) { return this._atomic(()=>{const result=this._draw(player,n,this._context(null,player),'rule');this._drain();return result;}); }
   advancePhase(phase,step='free') { return this._atomic(()=>{legal(this.state.stage==='rally'&&!this.state.queue.length,'Phase boundary is not idle');legal(['serve','block','draw','receive','toss','attack','end'].includes(phase)&&['start','entry','free','judge'].includes(step),'Unknown phase checkpoint');if(this.state.turn.phase==='draw'&&phase!=='draw')this.state.effects=this.state.effects.filter(e=>e.duration.kind!=='this_draw_phase');this.state.turn.phase=phase;this.state.turn.step=step;}); }
   flushTriggers() { return this._atomic(()=>this._drain()); }
+  notifyHandAdded(player,id,operation='add_hand') {
+    legal(this.card(id).zone===player+'.hand','Hand notification does not match the actual card');
+    return this.notifyHandAdditions([{player,card:id,operation}]);
+  }
+  notifyHandAdditions(events) { return this._atomic(()=>{
+    legal(this.state.stage==='rally'&&this.state.turn.step==='free'&&!this.state.queue.length,'Hand notification requires an idle host checkpoint');
+    legal(Array.isArray(events)&&events.length>0,'Actual host hand-add events required');
+    for(const e of events){legal(['draw','add_hand'].includes(e.operation)&&this.card(e.card).owner===e.player,'Hand-add event identity mismatch');this._emit({type:'hand_added',player:e.player,card:e.card,operation:e.operation});}
+    this._drain();return {performed:true};
+  }); }
   beginTurn(player,phase='draw') { return this._atomic(()=>{legal(this.state.stage==='rally'&&this.state.turn.step==='cleaned'&&player===1-this.state.turn.player,'Previous turn must be cleaned and handed to the opponent');this.state.turn={id:this.state.turn.id+1,player,phase,step:'free'};for(const e of this.state.effects)if(e.duration.kind==='next_opponent_turn'&&e.duration.activeTurn===null&&e.duration.player===player)e.duration.activeTurn=this.state.turn.id;}); }
   endTurn() { return this._atomic(()=>{legal(this.state.stage==='rally'&&this.state.turn.step==='free'&&!this.state.queue.length,'Cannot end outside an idle free step');this._emit({type:'turn_end',player:this.state.turn.player});this._drain();this._cleanup(false);this.state.turn.step='cleaned';}); }
   _cleanup(loss) { this.state.effects=this.state.effects.filter(e=>!loss&&e.duration.kind==='next_opponent_turn'&&e.duration.activeTurn===null);this.state.locks=[];this.state.events.push({type:'cleanup',reason:loss?'loss':'turn_end'}); }

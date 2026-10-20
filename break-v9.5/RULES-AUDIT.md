@@ -5,8 +5,8 @@
 47 張均已對到官方卡號、名稱、數值與位置；6 組預設牌組全部納入。角色數值與目前引擎一致。
 
 - 無技能／數值核對：18 張。
-- 主要技能情境通過：16 張。
-- 部分技能待補：13 張。
+- 主要技能情境通過：17 張。
+- 部分技能待補：12 張。
 
 「主要技能情境通過」只代表列出的測試通過，不是所有目標、技能組合或規則均已驗證。部分技能卡仍可在現有對練台使用，限制見下表。官方 Q&A 編號是來源索引，不代表每則 Q&A 都已自動化。
 
@@ -28,7 +28,7 @@
 1. 將新目標／參數介面套用到其餘卡片的已知限制。
 2. 其他事件的場上目標、可不抽牌，以及無變化時不能打出／失效處理。
 3. 登場技能的可不發動、中側攔技能選擇、各效果期限與負值。
-4. 剩餘 13 張部分技能逐項補測後，再進入牌組串接階段。
+4. 剩餘 12 張部分技能逐項補測後，再進入牌組串接階段。
 
 ## 本機流程與正式模式待分離項目
 
@@ -84,7 +84,7 @@
 | [HV-D04-011](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-D04-011&voba=D) | 京谷 賢太郎 | 無技能／數值核對 | 官方卡文無技能；數值、卡圖與牌組引用已檢查 |
 | [HV-D04-006](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-D04-006&voba=D) | 松川 一静 | 無技能／數值核對 | 官方卡文無技能；數值、卡圖與牌組引用已檢查 |
 | [HV-P04-024](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P04-024&voba=N) | 松川 一静 | 無技能／數值核對 | 官方卡文無技能；數值、卡圖與牌組引用已檢查 |
-| [HV-P01-087](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-087&voba=N) | 俺も思った☆ | 部分技能待補 | 抽牌、疊加棄牌已實作；目前只加當次及川舉球，尚缺其他場上及川目標及無效打出。 |
+| [HV-P01-087](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-087&voba=N) | 俺も思った☆ | 主要情境通過 | 本機共用資料：選任一場上及川舉球+1，保存下回合非抽牌加手牌監聽；完整技能後逐張觸發，由效果持有人排順序、受影響玩家選棄牌。；`rules/watch.test.js`／`rules/watch-undo.test.js`／`rules/watch-e2e.js` |
 | [HV-P04-088](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P04-088&voba=S) | ドンピシャ!!! | 主要技能情境通過 | `skill-basics.test.js` |
 | [HV-P04-089](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P04-089&voba=N) | 3年間ありがとう!!! | 主要情境通過 | 本機共用結算：抽牌、指定場上青城三年角色，可選棄牌費用對同一目標追加+2，保留同名限次。；`rules/legacy.test.js`／`rules/legacy-undo.test.js`／`rules/legacy-e2e.js` |
 | [HV-P01-088](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-088&voba=N) | お前達は 強いよ | 主要情境通過 | 本機共用結算：抽0／1張、指定場上青城角色，結算時手牌≤3同一目標追加+1；無變化分支保守停用。；`rules/legacy.test.js`／`rules/legacy-undo.test.js`／`rules/legacy-e2e.js` |

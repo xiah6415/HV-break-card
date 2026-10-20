@@ -82,9 +82,9 @@ function validate(g){const s=g.cardSnapshot();I.validate(g,s);return s;}
     g.finishTurn(o);assert.deepEqual(o.restrict,{});assert.deepEqual(g.turnEffects.effects,[]);g.beginTurn(p);assert.deepEqual(p.restrict,{});
   });
   await check('Repeated delayed discard effects stack once; next turns do not reactivate them',async()=>{
-    const {g,p,o}=fixture();p.hand=['P01-087','P01-087'];p.deck=['D01-009','D01-009'];
-    await g.resolve(p,'P01-087','tos');await g.resolve(p,'P01-087','tos');assert.equal(o.pending.oremo,2);assert.equal(g.turnEffects.effects.length,2);
-    g.beginTurn(o);assert.equal(o.restrict.oremo,2);g.beginTurn(p);assert.deepEqual(o.restrict,{});g.beginTurn(o);assert(!o.restrict.oremo);
+    const {g,p,o}=fixture();p.hand=['P01-087','P01-087'];p.deck=['D01-009','D01-009'];p.area.serve=['P01-033'];
+    await g.resolve(p,'P01-087','tos');await g.resolve(p,'P01-087','tos');assert.equal(g.sharedRulesState.effects.length,2);assert(!o.pending.oremo);
+    g.beginTurn(o);assert(g.sharedRulesState.effects.every(e=>e.duration.activeTurn===g.turnNo));g.beginTurn(p);assert.deepEqual(g.sharedRulesState.effects,[]);g.beginTurn(o);assert(!o.restrict.oremo);
   });
   await check('Every existing delayed restriction uses the same serializable timing lifecycle',async()=>{
     const {g,p,o}=fixture();p.hand=['P01-004'];const source=g.cardReference(p,'hand');

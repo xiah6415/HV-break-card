@@ -23,12 +23,12 @@ async function settle({kernel,invoke,ask,publish,options,maxChoices=64}) {
     let step;
     try { step=attempt(kernel,baseline,invoke,answers); }
     catch(error) { kernel.restore(baseline);throw error; }
-    if(!step.boundary) { publish(step.state,true);return step.result; }
+    if(!step.boundary) { publish(step.state,true,{baseline,answers,request:null});return step.result; }
     if(i===maxChoices)throw new Error('Settlement decision limit reached');
     const {request,state}=step.boundary;
     const available=options(request,state,answers);
     if(!available.length)throw new Error('No legal continuation');
-    publish(state,false);
+    publish(state,false,{baseline,answers,request});
     // Loss/Undo cancellation escapes here: no late publish or rollback can overwrite the host.
     const answer=await ask(request,state,available);
     if(!available.some(value=>JSON.stringify(value)===JSON.stringify(answer)))throw new Error('Invalid settlement answer');

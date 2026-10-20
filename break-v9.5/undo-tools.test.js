@@ -9,7 +9,7 @@ function state(g, logs) {
     players: g.players.map(p => { const { g, agent, ...data } = p; return data; }),
     dice: g.dice, firstServer: g.firstServer, turn: g.turnNo, owner: g.turnP?.idx,
     ball: g.ball, target: g.target, rally: g.rallyNo, src: g.src, stats: g.stats,
-    cardState: g.cardState, turnEffects: g.turnEffects,
+    cardState: g.cardState, turnEffects: g.turnEffects, sharedRulesState: g.sharedRulesState, sharedRulesPending: g.sharedRulesPending, sharedRulesEvents: g.sharedRulesEvents, sharedRulesDepth: g.sharedRulesDepth, rulePhase: g.rulePhase,
     winner: g.winner?.idx, logs
   });
 }
