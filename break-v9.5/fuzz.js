@@ -6,6 +6,8 @@ const Rand = { label: 'R', async choose(g, p, req) { const o = req.options; if (
     const a = decks[s % decks.length], b = decks[(s * 7 + 3) % decks.length];
     const g = new E.Game({ seed: s, decks: [a, b], agents: [s % 2 ? Rand : E.AI, Rand] });
     await g.run(); n++; rallies += g.rallyNo;
+    const physical = g.cardSnapshot();
+    if (Object.keys(physical.cards).length !== 80) throw new Error('Physical identity conservation failed');
     // invariants: card count conservation
     for (const p of g.players) {
       const total = p.deck.length + p.hand.length + p.drop.length + p.ev.length + p.sets.length + Object.values(p.area).reduce((x, y) => x + y.length, 0);

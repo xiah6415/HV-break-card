@@ -1,10 +1,11 @@
-/* Bounded host adapter: transient IDs are valid for one finite settlement.
-   Watches, entry, cross-player moves and deferred effects must not use this adapter. */
+/* Bounded settlement adapter using the host's persistent physical identities.
+   Full kernel watches/entry lifecycle still requires a persistent controller. */
 (function(root) {
 'use strict';
 const node=typeof module!=='undefined'&&module.exports;
 const {Kernel}=node?require('./core'):root.BreakRulesCore;
 const {attempt,settle}=node?require('./decisions'):root.BreakRulesDecisions;
+const identity=node?require('./identity'):root.BreakCardIdentity;
 const data=node?require('./runtime-data.json'):root.BreakRulesData;
 const copy=x=>JSON.parse(JSON.stringify(x));
 const phase={srv:'serve',drw:'draw',rcv:'receive',tos:'toss',atk:'attack',blk:'block'};
@@ -18,13 +19,19 @@ function transaction(g,p,c,timing) {
   if(!handles(c)||!p.hand.includes(c)||g.turnP!==p)throw new Error('Not an admitted settlement');
   if(byShort[c].profiles[0].limit&&p.ts.used?.[c])throw new Error('Same-name skill already used this turn');
   const k=new Kernel({catalog:data.catalog,ruleIds:data.ruleIds,fingerprint:data.fingerprint,mode:'live'});
+  const physical=identity.snapshot(g);
   k.state.turn={id:Math.max(1,g.turnNo),player:p.idx,phase:phase[timing],step:'free'};
   const short={},slots={},basePlayers=g.players.map(q=>copy({hand:q.hand,deck:q.deck,drop:q.drop,ev:q.ev,sets:q.sets,area:q.area,ts:q.ts,effects:q.effects,newCount:q.newCount}));
   for(const q of g.players) {
     for(const [zone,cards] of Object.entries({hand:q.hand,deck:q.deck,drop:q.drop,event:q.ev,sets:q.sets,...q.area,...Object.fromEntries((q.ts.sides||[]).map((x,i)=>['side:'+i,[x]]))})) {
-      for(const code of cards) {
+      for(const [index,code] of cards.entries()) {
         const def=byShort[code];if(!def)throw new Error('Printed identity missing: '+code);
-        const id=k.addCard(def.card_no,q.idx,zone);short[id]=code;
+        const temporary=k.addCard(def.card_no,q.idx,zone);
+        const hostZone=zone==='event'?'ev':zone.startsWith('side:')?'sides':zone;
+        const id=physical.zones[q.idx+'.'+hostZone][zone.startsWith('side:')?+zone.slice(5):index];
+        const card=k.state.cards[temporary];delete k.state.cards[temporary];
+        card.id=id;card.incarnation=physical.cards[id].incarnation;k.state.cards[id]=card;
+        k.zone(q.idx,zone)[index]=id;short[id]=code;
       }
     }
     for(const t of g.courtTargets(q)) {
@@ -65,6 +72,14 @@ function transaction(g,p,c,timing) {
   }
   let eventCursor=0,effectCursor=base.effects.length,announced=false;
   function publish(state,complete) {
+    const next=copy(physical);
+    for(const key of Object.keys(next.zones)) {
+      const [player,zone]=key.split('.');
+      next.zones[key]=zone==='sides'?[...state.zones[player+'.side:0'],...state.zones[player+'.side:1']]:[...state.zones[player+'.'+(zone==='ev'?'event':zone)]];
+      for(const id of next.zones[key]){next.cards[id].zone=key;next.cards[id].incarnation=state.cards[id].incarnation;}
+    }
+    next.revision=physical.revision+state.events.filter(e=>e.type==='move').length;
+    identity.restore(g,next);
     // Projection always starts from the same host checkpoint, never from an earlier preview.
     for(const q of g.players) {
       const b=basePlayers[q.idx],codes=z=>state.zones[q.idx+'.'+z].map(id=>short[id]);
@@ -75,7 +90,7 @@ function transaction(g,p,c,timing) {
         for(const [old,param] of Object.entries(params)) {
           const delta=state.effects.slice(base.effects.length).filter(e=>e.kind==='numeric'&&e.target.id===id&&e.parameter===param).reduce((n,e)=>n+e.value,0);
           if(!delta)continue;
-          if(q.effects[slot.key]?.card!==short[id])q.effects[slot.key]={card:short[id],mods:{}};
+          if(q.effects[slot.key]?.card!==short[id] || q.effects[slot.key].ref && (q.effects[slot.key].ref.id!==id||q.effects[slot.key].ref.incarnation!==state.cards[id].incarnation))q.effects[slot.key]={card:short[id],ref:{id,incarnation:state.cards[id].incarnation},mods:{}};
           const fx=q.effects[slot.key];fx.mods ||= {};fx.mods[old]=(fx.mods[old]||0)+delta;
           const active=g.activeParameter(q,slot.key,old);if(active&&q.ts[active]!=null)q.ts[active]+=delta;
         }

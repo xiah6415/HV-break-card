@@ -1012,14 +1012,125 @@ const api={settle,attempt,ChoiceBoundary};
 if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.BreakRulesDecisions=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
 
+/* Physical identity beside the legacy card-code arrays. All production moves
+   must pass through this module; mismatched arrays are rejected, never guessed. */
+(function(root) {
+'use strict';
+const copy=x=>JSON.parse(JSON.stringify(x));
+const areas=['serve','block','receive','toss','attack'];
+const zones=['deck','hand','drop','ev','sets',...areas,'sides'];
+const empty=Object.freeze([]);
+function list(g,key,create=false) {
+  const [owner,zone]=key.split('.'),p=g.players[owner];
+  if(areas.includes(zone))return p.area[zone];
+  if(zone==='sides')return p.ts.sides||(create?(p.ts.sides=[]):empty);
+  return p[zone];
+}
+function keys(g) {return g.players.flatMap(p=>zones.map(z=>p.idx+'.'+z));}
+function visible(state) {
+  return new Set(Object.entries(state.zones).flatMap(([key,ids])=>areas.includes(key.split('.')[1])?ids.slice(-1):key.endsWith('.sides')?ids:[]));
+}
+function validate(g,state) {
+  if(state.version!==1||!Number.isInteger(state.next)||state.next<1||!Number.isInteger(state.revision)||state.revision<0)throw new Error('Unsupported physical identity version');
+  if(JSON.stringify(Object.keys(state.zones).sort())!==JSON.stringify(keys(g).sort()))throw new Error('Physical identity zones do not match');
+  const seen=new Set();
+  for(const key of keys(g)) {
+    const ids=state.zones[key],codes=list(g,key);
+    if(!ids||ids.length!==codes.length)throw new Error('Untracked card mutation in '+key);
+    ids.forEach((id,i)=>{
+      const c=state.cards[id];
+      if(seen.has(id)||!c||c.id!==id||!Number.isInteger(c.incarnation)||c.incarnation<0||c.zone!==key||c.owner!==+key.split('.')[0]||c.code!==codes[i])throw new Error('Physical identity mismatch in '+key);
+      seen.add(id);
+    });
+  }
+  if(seen.size!==Object.keys(state.cards).length)throw new Error('Physical card conservation failed');
+}
+function ensure(g) {
+  if(!g.cardState) {
+    const state={version:1,next:1,revision:0,cards:{},zones:{}};
+    for(const key of keys(g))state.zones[key]=list(g,key).map(code=>{
+      const id='card-'+state.next++;state.cards[id]={id,code,owner:+key.split('.')[0],zone:key,incarnation:0};return id;
+    });
+    g.cardState=state;
+  }
+  validate(g,g.cardState);return g.cardState;
+}
+function keyOf(g,array) {const key=keys(g).find(key=>list(g,key)===array);if(!key)throw new Error('Movement requires a registered card zone');return key;}
+function move(g,from,to,index,at) {
+  const state=ensure(g),src=typeof from==='string'?from:keyOf(g,from),dst=typeof to==='string'?to:keyOf(g,to);
+  const a=list(g,src),b=list(g,dst,true);
+  if(!Number.isInteger(index)||index<0||index>=a.length)throw new Error('Invalid physical-card index');
+  if(src.split('.')[0]!==dst.split('.')[0])throw new Error('Ownership transfer is not supported');
+  const position=at===undefined?b.length-(a===b?1:0):at;
+  if(!Number.isInteger(position)||position<0||position>b.length-(a===b?1:0))throw new Error('Invalid destination index');
+  const before=visible(state),id=state.zones[src][index],code=a[index];
+  a.splice(index,1);state.zones[src].splice(index,1);
+  b.splice(position,0,code);state.zones[dst].splice(position,0,id);state.cards[id].zone=dst;
+  const after=visible(state);
+  for(const changed of new Set([...before,...after]))if(before.has(changed)!==after.has(changed))state.cards[changed].incarnation++;
+  state.revision++;validate(g,state);return {id,code};
+}
+function shuffle(g,array,random) {
+  const state=ensure(g),key=keyOf(g,array),ids=state.zones[key];
+  for(let i=array.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[array[i],array[j]]=[array[j],array[i]];[ids[i],ids[j]]=[ids[j],ids[i]];}
+  state.revision++;validate(g,state);
+}
+function snapshot(g) {return copy(ensure(g));}
+function restore(g,state) {
+  const next=copy(state),old=g.cardState;
+  // Validate ownership, codes and conservation before touching host arrays.
+  const shadow={players:g.players.map(p=>({idx:p.idx,area:{},ts:{}}))};
+  for(const key of keys(g)) {
+    const [owner,zone]=key.split('.'),p=shadow.players[owner],codes=next.zones[key]?.map(id=>next.cards[id]?.code);
+    if(!codes)throw new Error('Missing snapshot zone');
+    if(areas.includes(zone))p.area[zone]=codes;else if(zone==='sides')p.ts.sides=codes;else p[zone]=codes;
+  }
+  validate(shadow,next);
+  if(old) {
+    const ids=Object.keys(old.cards).sort();
+    if(JSON.stringify(ids)!==JSON.stringify(Object.keys(next.cards).sort())||ids.some(id=>old.cards[id].code!==next.cards[id].code||old.cards[id].owner!==next.cards[id].owner))throw new Error('Physical identity snapshot belongs to another game');
+  }
+  for(const key of keys(g)) {
+    const target=list(g,key,true);target.splice(0,target.length,...list(shadow,key));
+  }
+  g.cardState=next;validate(g,next);
+}
+const api={ensure,move,shuffle,snapshot,restore,validate,list,areas};
+if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.BreakCardIdentity=api;
+})(typeof globalThis!=='undefined'?globalThis:this);
+
+/* Serializable, source-independent next-opponent-turn restrictions. */
+(function(root) {
+'use strict';
+function state(g) {return g.turnEffects ||= {version:1,next:1,effects:[]};}
+function schedule(g,player,key,value,{stack=false,source=null}={}) {
+  if(g.turnP?.idx===player)throw new Error('Next opponent effect must target the other player');
+  const s=state(g),effect={id:'turn-effect-'+s.next++,player,key,value,stack,source:source?{...source}:null,createdTurn:g.turnNo,activeTurn:null};
+  s.effects.push(effect);
+  const pending=g.players[player].pending;
+  pending[key]=stack?(pending[key]||0)+value:value;return effect;
+}
+function begin(g,player) {
+  const s=state(g),active={};
+  s.effects=s.effects.filter(e=>e.activeTurn===null);
+  for(const e of s.effects)if(e.player===player){e.activeTurn=g.turnNo;active[e.key]=e.stack?(active[e.key]||0)+e.value:e.value;}
+  return active;
+}
+function finish(g,turn) {if(g.turnEffects)g.turnEffects.effects=g.turnEffects.effects.filter(e=>e.activeTurn!==turn);}
+function loss(g) {if(g.turnEffects)g.turnEffects.effects=[];}
+const api={schedule,begin,finish,loss};
+if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.BreakTurnEffects=api;
+})(typeof globalThis!=='undefined'?globalThis:this);
+
 window.BreakRulesData={"catalog": {"cards": [{"card_no": "HV-P01-013", "display_name": "縁下 力", "type": "character", "profiles": [{"profile_id": "HV-P01-013:02f39fe84104ce51", "source_skill_sha256": "02f39fe84104ce51cf7d1c993c49359bab764a3b626709ef9728cb474db0f35d", "status": "STRUCTURED_FIRST_PASS_NOT_ENGINE_VALIDATED", "game_integrated": false, "runtime_approved": true, "activation": {"skill_type": "active", "activation_phases": ["receive"], "source_zones": ["hand"], "trigger": null, "window": "free_step_after_required_draw_and_entry_checks", "reveal_source_on_declaration": true, "explicit_phase_gate_only": true}, "formal_cost": {"kind": "formal_declaration_cost", "steps": [{"kind": "move_self", "destination": "owner.drop", "reason": "declaration_cost", "node_id": "formal_cost", "shared_rule_ids": ["move.owner"], "category_tags": ["資源與移動"], "classification_role": "payment", "polarity": null}], "must_be_complete": true, "performed_for_this_skill_only": true, "shared_rule_ids": ["cost.declaration"]}, "limit": null, "program": {"kind": "sequence", "steps": [{"kind": "numeric", "operation": "add", "parameter": "receive", "value": 2, "target": {"kind": "selector", "actor": "self", "zone": "court", "filters": {"role": "character", "tags": ["烏野"]}, "node_id": "program.steps[0].target", "shared_rule_ids": ["identity.exact_tags", "identity.multi", "target.explicit_selector", "zone.not_guts"]}, "bind": "target", "target_scope": {"mode": "single", "binding": "choose", "membership": "snapshot_on_resolution"}, "duration": "current_turn_cleanup_or_role_exit", "evaluation_order": ["resolve_target", "bind_target", "evaluate_value_and_guard", "apply"], "node_id": "program.steps[0]", "shared_rule_ids": ["duration.target_instance", "numeric.accumulate", "numeric.negative", "selection.chooser"], "category_tags": ["數值"], "classification_role": "effect", "polarity": "beneficial"}], "node_id": "program", "shared_rule_ids": ["effect.order"]}, "shared_rule_ids": ["cost.declaration", "duration.target_instance", "effect.order", "entry.name_roles", "entry.parameter", "identity.exact_tags", "identity.multi", "identity.printed", "numeric.accumulate", "numeric.negative", "selection.chooser", "target.explicit_selector", "zone.not_guts"], "official_qa_ids_for_trace_only": ["1129", "1130"], "qa_not_used_as_automatic_effect_binding": true, "variants": [{"variant_id": "HV-P01-013:record:20", "record_id": "20", "image_file": "HV-P01-013-N.webp", "rarity": "N", "printed": {"name": "縁下力", "display_name": "縁下 力", "type": "character", "affiliation_tags": ["烏野"], "year_tags": [2], "position_tags": ["WS"], "parameters": {"serve": 1, "block": 0, "receive": 2, "toss": 0, "attack": 0}}, "raw_affiliation": "烏野·2年", "legacy_school_tags": ["烏野"]}], "flags": [], "practice_override": null}], "record_count": 1, "skill_text_variant_conflict": false}, {"card_no": "HV-P02-003", "display_name": "月島 蛍", "type": "character", "profiles": [{"profile_id": "HV-P02-003:36a76760c72a2d9f", "variants": [{"variant_id": "HV-P02-003:record:408", "record_id": "408", "image_file": "HV-P02-003-I.webp", "rarity": "I", "printed": {"name": "月島蛍", "display_name": "月島 蛍", "type": "character", "affiliation_tags": ["烏野"], "year_tags": [1], "position_tags": ["MB"], "parameters": {"serve": 1, "block": 2, "receive": 3, "toss": 0, "attack": 2}}, "raw_affiliation": "烏野·1年", "legacy_school_tags": ["烏野"]}, {"variant_id": "HV-P02-003:record:409", "record_id": "409", "image_file": "HV-P02-003-IP.webp", "rarity": "IP", "printed": {"name": "月島蛍", "display_name": "月島 蛍", "type": "character", "affiliation_tags": ["烏野"], "year_tags": [1], "position_tags": ["MB"], "parameters": {"serve": 1, "block": 2, "receive": 3, "toss": 0, "attack": 2}}, "raw_affiliation": "烏野·1年", "legacy_school_tags": ["烏野"]}], "program": null}], "record_count": 2, "skill_text_variant_conflict": false}, {"card_no": "HV-D01-005", "display_name": "西谷 夕", "type": "character", "profiles": [{"profile_id": "HV-D01-005:a059c31e2e93eb3f", "variants": [{"variant_id": "HV-D01-005:record:130", "record_id": "130", "image_file": "HV-D01-005-D.webp", "rarity": "D", "printed": {"name": "西谷夕", "display_name": "西谷 夕", "type": "character", "affiliation_tags": ["烏野"], "year_tags": [2], "position_tags": ["Li"], "parameters": {"serve": "dash", "block": "dash", "receive": 5, "toss": 0, "attack": 0}}, "raw_affiliation": "烏野·2年", "legacy_school_tags": ["烏野"]}], "program": null}], "record_count": 1, "skill_text_variant_conflict": false}, {"card_no": "HV-P01-011", "display_name": "西谷 夕", "type": "character", "profiles": [{"profile_id": "HV-P01-011:3973e022e93220f9", "variants": [{"variant_id": "HV-P01-011:record:16", "record_id": "16", "image_file": "HV-P01-011-R.webp", "rarity": "R", "printed": {"name": "西谷夕", "display_name": "西谷 夕", "type": "character", "affiliation_tags": ["烏野"], "year_tags": [2], "position_tags": ["Li"], "parameters": {"serve": "dash", "block": "dash", "receive": 6, "toss": 0, "attack": 0}}, "raw_affiliation": "烏野·2年", "legacy_school_tags": ["烏野"]}, {"variant_id": "HV-P01-011:record:17", "record_id": "17", "image_file": "HV-P01-011-RP.webp", "rarity": "RP", "printed": {"name": "西谷夕", "display_name": "西谷 夕", "type": "character", "affiliation_tags": ["烏野"], "year_tags": [2], "position_tags": ["Li"], "parameters": {"serve": "dash", "block": "dash", "receive": 6, "toss": 0, "attack": 0}}, "raw_affiliation": "烏野·2年", "legacy_school_tags": ["烏野"]}], "program": null}], "record_count": 2, "skill_text_variant_conflict": false}, {"card_no": "HV-PR-033", "display_name": "西谷 夕", "type": "character", "profiles": [{"profile_id": "HV-PR-033:3973e022e93220f9", "variants": [{"variant_id": "HV-PR-033:record:553", "record_id": "553", "image_file": "HV-PR-033-P.webp", "rarity": "P", "printed": {"name": "西谷夕", "display_name": "西谷 夕", "type": "character", "affiliation_tags": ["烏野"], "year_tags": [2], "position_tags": ["Li"], "parameters": {"serve": "dash", "block": "dash", "receive": 6, "toss": 0, "attack": 0}}, "raw_affiliation": "烏野·2年", "legacy_school_tags": ["烏野"]}], "program": null}], "record_count": 1, "skill_text_variant_conflict": false}, {"card_no": "HV-P02-001", "display_name": "日向 翔陽", "type": "character", "profiles": [{"profile_id": "HV-P02-001:665a40fac9bf5cff", "variants": [{"variant_id": "HV-P02-001:record:405", "record_id": "405", "image_file": "HV-P02-001-S.webp", "rarity": "S", "printed": {"name": "日向翔陽", "display_name": "日向 翔陽", "type": "character", "affiliation_tags": ["烏野"], "year_tags": [1], "position_tags": ["MB"], "parameters": {"serve": 2, "block": 2, "receive": 0, "toss": 0, "attack": 3}}, "raw_affiliation": "烏野·1年", "legacy_school_tags": ["烏野"]}], "program": null}], "record_count": 1, "skill_text_variant_conflict": false}, {"card_no": "HV-P03-051", "display_name": "西谷 夕", "type": "character", "profiles": [{"profile_id": "HV-P03-051:5c3ece8a20fa0fde", "variants": [{"variant_id": "HV-P03-051:record:657", "record_id": "657", "image_file": "HV-P03-051-N.webp", "rarity": "N", "printed": {"name": "西谷夕", "display_name": "西谷 夕", "type": "character", "affiliation_tags": ["烏野"], "year_tags": [2], "position_tags": ["Li"], "parameters": {"serve": "dash", "block": "dash", "receive": 5, "toss": 0, "attack": 0}}, "raw_affiliation": "烏野·2年", "legacy_school_tags": ["烏野"]}], "program": null}], "record_count": 1, "skill_text_variant_conflict": false}, {"card_no": "HV-PR-022", "display_name": "澤村 大地", "type": "character", "profiles": [{"profile_id": "HV-PR-022:8c782e52ddf08a2b", "variants": [{"variant_id": "HV-PR-022:record:232", "record_id": "232", "image_file": "HV-PR-022-P.webp", "rarity": "P", "printed": {"name": "澤村大地", "display_name": "澤村 大地", "type": "character", "affiliation_tags": ["烏野"], "year_tags": [3], "position_tags": ["WS"], "parameters": {"serve": 1, "block": 0, "receive": 5, "toss": 0, "attack": 0}}, "raw_affiliation": "烏野·3年", "legacy_school_tags": ["烏野"]}], "program": null}], "record_count": 1, "skill_text_variant_conflict": false}, {"card_no": "HV-PR-057", "display_name": "着地上手組。", "type": "character", "profiles": [{"profile_id": "HV-PR-057:176e0879716dad7d", "variants": [{"variant_id": "HV-PR-057:record:576", "record_id": "576", "image_file": "HV-PR-057-P.webp", "rarity": "P", "printed": {"name": "着地上手組。", "display_name": "着地上手組。", "type": "character", "affiliation_tags": ["烏野"], "year_tags": [1, 2], "position_tags": ["Li", "MB"], "parameters": {"serve": "dash", "block": "dash", "receive": 5, "toss": 0, "attack": 3}}, "raw_affiliation": "烏野・1年,烏野・2年", "legacy_school_tags": ["烏野"]}], "program": null}], "record_count": 1, "skill_text_variant_conflict": false}, {"card_no": "HV-D01-009", "display_name": "菅原 孝支", "type": "character", "profiles": [{"profile_id": "HV-D01-009:3973e022e93220f9", "variants": [{"variant_id": "HV-D01-009:record:134", "record_id": "134", "image_file": "HV-D01-009-D.webp", "rarity": "D", "printed": {"name": "菅原孝支", "display_name": "菅原 孝支", "type": "character", "affiliation_tags": ["烏野"], "year_tags": [3], "position_tags": ["S"], "parameters": {"serve": 1, "block": 1, "receive": 2, "toss": 2, "attack": 3}}, "raw_affiliation": "烏野·3年", "legacy_school_tags": ["烏野"]}], "program": null}], "record_count": 1, "skill_text_variant_conflict": false}, {"card_no": "HV-P01-006", "display_name": "影山 飛雄", "type": "character", "profiles": [{"profile_id": "HV-P01-006:8da7a3a89948f68e", "variants": [{"variant_id": "HV-P01-006:record:9", "record_id": "9", "image_file": "HV-P01-006-I.webp", "rarity": "I", "printed": {"name": "影山飛雄", "display_name": "影山 飛雄", "type": "character", "affiliation_tags": ["烏野"], "year_tags": [1], "position_tags": ["S"], "parameters": {"serve": 1, "block": 1, "receive": 1, "toss": 1, "attack": 2}}, "raw_affiliation": "烏野·1年", "legacy_school_tags": ["烏野"]}, {"variant_id": "HV-P01-006:record:10", "record_id": "10", "image_file": "HV-P01-006-IP.webp", "rarity": "IP", "printed": {"name": "影山飛雄", "display_name": "影山 飛雄", "type": "character", "affiliation_tags": ["烏野"], "year_tags": [1], "position_tags": ["S"], "parameters": {"serve": 1, "block": 1, "receive": 1, "toss": 1, "attack": 2}}, "raw_affiliation": "烏野·1年", "legacy_school_tags": ["烏野"]}], "program": null}], "record_count": 2, "skill_text_variant_conflict": false}, {"card_no": "HV-P03-048", "display_name": "影山 飛雄", "type": "character", "profiles": [{"profile_id": "HV-P03-048:3973e022e93220f9", "variants": [{"variant_id": "HV-P03-048:record:653", "record_id": "653", "image_file": "HV-P03-048-K.webp", "rarity": "K", "printed": {"name": "影山飛雄", "display_name": "影山 飛雄", "type": "character", "affiliation_tags": ["烏野"], "year_tags": [1], "position_tags": ["S"], "parameters": {"serve": 1, "block": 3, "receive": 0, "toss": 2, "attack": 2}}, "raw_affiliation": "烏野·1年", "legacy_school_tags": ["烏野"]}, {"variant_id": "HV-P03-048:record:654", "record_id": "654", "image_file": "HV-P03-048-KP.webp", "rarity": "KP", "printed": {"name": "影山飛雄", "display_name": "影山 飛雄", "type": "character", "affiliation_tags": ["烏野"], "year_tags": [1], "position_tags": ["S"], "parameters": {"serve": 1, "block": 3, "receive": 0, "toss": 2, "attack": 2}}, "raw_affiliation": "烏野·1年", "legacy_school_tags": ["烏野"]}, {"variant_id": "HV-P03-048:record:652", "record_id": "652", "image_file": "HV-P03-048-R.webp", "rarity": "R", "printed": {"name": "影山飛雄", "display_name": "影山 飛雄", "type": "character", "affiliation_tags": ["烏野"], "year_tags": [1], "position_tags": ["S"], "parameters": {"serve": 1, "block": 3, "receive": 0, "toss": 2, "attack": 2}}, "raw_affiliation": "烏野·1年", "legacy_school_tags": ["烏野"]}], "program": null}], "record_count": 3, "skill_text_variant_conflict": false}, {"card_no": "HV-PR-032", "display_name": "影山 飛雄", "type": "character", "profiles": [{"profile_id": "HV-PR-032:3973e022e93220f9", "variants": [{"variant_id": "HV-PR-032:record:552", "record_id": "552", "image_file": "HV-PR-032-P.webp", "rarity": "P", "printed": {"name": "影山飛雄", "display_name": "影山 飛雄", "type": "character", "affiliation_tags": ["烏野"], "year_tags": [1], "position_tags": ["S"], "parameters": {"serve": 4, "block": 1, "receive": 2, "toss": 2, "attack": 1}}, "raw_affiliation": "烏野·1年", "legacy_school_tags": ["烏野"]}], "program": null}], "record_count": 1, "skill_text_variant_conflict": false}, {"card_no": "HV-PR-043", "display_name": "影山 飛雄", "type": "character", "profiles": [{"profile_id": "HV-PR-043:3973e022e93220f9", "variants": [{"variant_id": "HV-PR-043:record:566", "record_id": "566", "image_file": "HV-PR-043-P.webp", "rarity": "P", "printed": {"name": "影山飛雄", "display_name": "影山 飛雄", "type": "character", "affiliation_tags": ["烏野"], "year_tags": [1], "position_tags": ["S"], "parameters": {"serve": 3, "block": 3, "receive": 0, "toss": 2, "attack": 0}}, "raw_affiliation": "烏野·1年", "legacy_school_tags": ["烏野"]}], "program": null}], "record_count": 1, "skill_text_variant_conflict": false}, {"card_no": "HV-PR-054", "display_name": "影山 飛雄", "type": "character", "profiles": [{"profile_id": "HV-PR-054:3973e022e93220f9", "variants": [{"variant_id": "HV-PR-054:record:1039", "record_id": "1039", "image_file": "HV-PR-054-P.webp", "rarity": "P", "printed": {"name": "影山飛雄", "display_name": "影山 飛雄", "type": "character", "affiliation_tags": ["烏野"], "year_tags": [1], "position_tags": ["S"], "parameters": {"serve": 5, "block": 1, "receive": 1, "toss": 2, "attack": 1}}, "raw_affiliation": "烏野・1年", "legacy_school_tags": ["烏野"]}], "program": null}], "record_count": 1, "skill_text_variant_conflict": false}, {"card_no": "HV-P01-002", "display_name": "日向 翔陽", "type": "character", "profiles": [{"profile_id": "HV-P01-002:1d197ca6a9e8803f", "variants": [{"variant_id": "HV-P01-002:record:2", "record_id": "2", "image_file": "HV-P01-002-I.webp", "rarity": "I", "printed": {"name": "日向翔陽", "display_name": "日向 翔陽", "type": "character", "affiliation_tags": ["烏野"], "year_tags": [1], "position_tags": ["MB"], "parameters": {"serve": 2, "block": 3, "receive": 1, "toss": 0, "attack": 1}}, "raw_affiliation": "烏野·1年", "legacy_school_tags": ["烏野"]}, {"variant_id": "HV-P01-002:record:3", "record_id": "3", "image_file": "HV-P01-002-IP.webp", "rarity": "IP", "printed": {"name": "日向翔陽", "display_name": "日向 翔陽", "type": "character", "affiliation_tags": ["烏野"], "year_tags": [1], "position_tags": ["MB"], "parameters": {"serve": 2, "block": 3, "receive": 1, "toss": 0, "attack": 1}}, "raw_affiliation": "烏野·1年", "legacy_school_tags": ["烏野"]}], "program": null}], "record_count": 2, "skill_text_variant_conflict": false}, {"card_no": "HV-P01-004", "display_name": "日向 翔陽", "type": "character", "profiles": [{"profile_id": "HV-P01-004:3973e022e93220f9", "variants": [{"variant_id": "HV-P01-004:record:6", "record_id": "6", "image_file": "HV-P01-004-K.webp", "rarity": "K", "printed": {"name": "日向翔陽", "display_name": "日向 翔陽", "type": "character", "affiliation_tags": ["烏野"], "year_tags": [1], "position_tags": ["MB"], "parameters": {"serve": 2, "block": 0, "receive": 5, "toss": 0, "attack": 3}}, "raw_affiliation": "烏野·1年", "legacy_school_tags": ["烏野"]}, {"variant_id": "HV-P01-004:record:7", "record_id": "7", "image_file": "HV-P01-004-KP.webp", "rarity": "KP", "printed": {"name": "日向翔陽", "display_name": "日向 翔陽", "type": "character", "affiliation_tags": ["烏野"], "year_tags": [1], "position_tags": ["MB"], "parameters": {"serve": 2, "block": 0, "receive": 5, "toss": 0, "attack": 3}}, "raw_affiliation": "烏野·1年", "legacy_school_tags": ["烏野"]}, {"variant_id": "HV-P01-004:record:5", "record_id": "5", "image_file": "HV-P01-004-R.webp", "rarity": "R", "printed": {"name": "日向翔陽", "display_name": "日向 翔陽", "type": "character", "affiliation_tags": ["烏野"], "year_tags": [1], "position_tags": ["MB"], "parameters": {"serve": 2, "block": 0, "receive": 5, "toss": 0, "attack": 3}}, "raw_affiliation": "烏野·1年", "legacy_school_tags": ["烏野"]}], "program": null}], "record_count": 3, "skill_text_variant_conflict": false}, {"card_no": "HV-P01-003", "display_name": "日向 翔陽", "type": "character", "profiles": [{"profile_id": "HV-P01-003:aab9ac3325afd747", "variants": [{"variant_id": "HV-P01-003:record:4", "record_id": "4", "image_file": "HV-P01-003-S.webp", "rarity": "S", "printed": {"name": "日向翔陽", "display_name": "日向 翔陽", "type": "character", "affiliation_tags": ["烏野"], "year_tags": [1], "position_tags": ["MB"], "parameters": {"serve": 1, "block": 2, "receive": 2, "toss": 0, "attack": 2}}, "raw_affiliation": "烏野·1年", "legacy_school_tags": ["烏野"]}], "program": null}], "record_count": 1, "skill_text_variant_conflict": false}, {"card_no": "HVBP-002", "display_name": "日向 翔陽", "type": "character", "profiles": [{"profile_id": "HVBP-002:f764d2827234a77c", "variants": [{"variant_id": "HVBP-002:record:185", "record_id": "185", "image_file": "HVBP-002-P.webp", "rarity": "P", "printed": {"name": "日向翔陽", "display_name": "日向 翔陽", "type": "character", "affiliation_tags": ["烏野"], "year_tags": [1], "position_tags": ["MB"], "parameters": {"serve": 1, "block": 1, "receive": 1, "toss": 0, "attack": 2}}, "raw_affiliation": "烏野·1年", "legacy_school_tags": ["烏野"]}], "program": null}], "record_count": 1, "skill_text_variant_conflict": false}, {"card_no": "HV-PR-053", "display_name": "日向 翔陽", "type": "character", "profiles": [{"profile_id": "HV-PR-053:3973e022e93220f9", "variants": [{"variant_id": "HV-PR-053:record:1038", "record_id": "1038", "image_file": "HV-PR-053-P.webp", "rarity": "P", "printed": {"name": "日向翔陽", "display_name": "日向 翔陽", "type": "character", "affiliation_tags": ["烏野"], "year_tags": [1], "position_tags": ["MB"], "parameters": {"serve": 3, "block": 3, "receive": 2, "toss": 0, "attack": 3}}, "raw_affiliation": "烏野・1年", "legacy_school_tags": ["烏野"]}], "program": null}], "record_count": 1, "skill_text_variant_conflict": false}, {"card_no": "HV-D01-004", "display_name": "山口　忠", "type": "character", "profiles": [{"profile_id": "HV-D01-004:3973e022e93220f9", "variants": [{"variant_id": "HV-D01-004:record:129", "record_id": "129", "image_file": "HV-D01-004-D.webp", "rarity": "D", "printed": {"name": "山口忠", "display_name": "山口　忠", "type": "character", "affiliation_tags": ["烏野"], "year_tags": [1], "position_tags": ["MB"], "parameters": {"serve": 5, "block": 3, "receive": 3, "toss": 0, "attack": 1}}, "raw_affiliation": "烏野·1年", "legacy_school_tags": ["烏野"]}], "program": null}], "record_count": 1, "skill_text_variant_conflict": false}, {"card_no": "HV-P03-046", "display_name": "赤木 路成", "type": "character", "profiles": [{"profile_id": "HV-P03-046:e8609ef7f3c1eb0b", "variants": [{"variant_id": "HV-P03-046:record:648", "record_id": "648", "image_file": "HV-P03-046-N.webp", "rarity": "N", "printed": {"name": "赤木路成", "display_name": "赤木 路成", "type": "character", "affiliation_tags": ["稲荷崎"], "year_tags": [3], "position_tags": ["Li"], "parameters": {"serve": "dash", "block": "dash", "receive": 5, "toss": 0, "attack": 0}}, "raw_affiliation": "稲荷崎·3年", "legacy_school_tags": ["稲荷崎"]}], "program": null}], "record_count": 1, "skill_text_variant_conflict": false}, {"card_no": "HV-P03-057", "display_name": "黒川 広樹", "type": "character", "profiles": [{"profile_id": "HV-P03-057:77235a8a9fc3e575", "variants": [{"variant_id": "HV-P03-057:record:665", "record_id": "665", "image_file": "HV-P03-057-N.webp", "rarity": "N", "printed": {"name": "黒川広樹", "display_name": "黒川 広樹", "type": "character", "affiliation_tags": ["烏野"], "year_tags": [], "position_tags": ["WS"], "parameters": {"serve": 0, "block": 1, "receive": 0, "toss": 0, "attack": 2}}, "raw_affiliation": "烏野", "legacy_school_tags": ["烏野"]}], "program": null}], "record_count": 1, "skill_text_variant_conflict": false}, {"card_no": "HV-D01-012", "display_name": "ブロード攻撃", "type": "event", "profiles": [{"profile_id": "HV-D01-012:c2bcbffd79dc8084", "variants": [{"variant_id": "HV-D01-012:record:137", "record_id": "137", "image_file": "HV-D01-012-D.webp", "rarity": "D", "printed": {"name": "ブロード攻撃", "display_name": "ブロード攻撃", "type": "event", "affiliation_tags": ["烏野"], "year_tags": [], "position_tags": [], "parameters": null}, "raw_affiliation": "烏野", "legacy_school_tags": ["烏野"]}], "program": null}], "record_count": 1, "skill_text_variant_conflict": false}, {"card_no": "HV-P01-074", "display_name": "烏養 一繋", "type": "event", "profiles": [{"profile_id": "HV-P01-074:6e0e556e01e0486d", "variants": [{"variant_id": "HV-P01-074:record:100", "record_id": "100", "image_file": "HV-P01-074-N.webp", "rarity": "N", "printed": {"name": "烏養一繋", "display_name": "烏養 一繋", "type": "event", "affiliation_tags": ["烏野"], "year_tags": [], "position_tags": ["元監督"], "parameters": null}, "raw_affiliation": "烏野", "legacy_school_tags": ["烏野"]}, {"variant_id": "HV-P01-074:record:101", "record_id": "101", "image_file": "HV-P01-074-NP.webp", "rarity": "NP", "printed": {"name": "烏養一繋", "display_name": "烏養 一繋", "type": "event", "affiliation_tags": ["烏野"], "year_tags": [], "position_tags": ["元監督"], "parameters": null}, "raw_affiliation": "烏野", "legacy_school_tags": ["烏野"]}], "program": null}], "record_count": 2, "skill_text_variant_conflict": false}, {"card_no": "HV-P01-078", "display_name": "オープン攻撃", "type": "event", "profiles": [{"profile_id": "HV-P01-078:e11a00ab83b29477", "variants": [{"variant_id": "HV-P01-078:record:105", "record_id": "105", "image_file": "HV-P01-078-S.webp", "rarity": "S", "printed": {"name": "オープン攻撃", "display_name": "オープン攻撃", "type": "event", "affiliation_tags": ["烏野"], "year_tags": [], "position_tags": [], "parameters": null}, "raw_affiliation": "烏野", "legacy_school_tags": ["烏野"]}, {"variant_id": "HV-P01-078:record:106", "record_id": "106", "image_file": "HV-P01-078-SP.webp", "rarity": "SP", "printed": {"name": "オープン攻撃", "display_name": "オープン攻撃", "type": "event", "affiliation_tags": ["烏野"], "year_tags": [], "position_tags": [], "parameters": null}, "raw_affiliation": "烏野", "legacy_school_tags": ["烏野"]}], "program": null}], "record_count": 2, "skill_text_variant_conflict": false}, {"card_no": "HV-P03-086", "display_name": "プレーは大分 おりこうさんよな", "type": "event", "profiles": [{"profile_id": "HV-P03-086:68bd175549331599", "variants": [{"variant_id": "HV-P03-086:record:707", "record_id": "707", "image_file": "HV-P03-086-N.webp", "rarity": "N", "printed": {"name": "プレーは大分おりこうさんよな", "display_name": "プレーは大分 おりこうさんよな", "type": "event", "affiliation_tags": ["ユース", "稲荷崎"], "year_tags": [], "position_tags": [], "parameters": null}, "raw_affiliation": "稲荷崎/ユース", "legacy_school_tags": ["ユース", "稲荷崎"]}, {"variant_id": "HV-P03-086:record:708", "record_id": "708", "image_file": "HV-P03-086-NP.webp", "rarity": "NP", "printed": {"name": "プレーは大分おりこうさんよな", "display_name": "プレーは大分 おりこうさんよな", "type": "event", "affiliation_tags": ["ユース", "稲荷崎"], "year_tags": [], "position_tags": [], "parameters": null}, "raw_affiliation": "稲荷崎/ユース", "legacy_school_tags": ["ユース", "稲荷崎"]}], "program": null}], "record_count": 2, "skill_text_variant_conflict": false}, {"card_no": "HV-P03-090", "display_name": "おれにバレーボール教えてくれて ありがとう", "type": "event", "profiles": [{"profile_id": "HV-P03-090:4e66d3f76e3f23c0", "variants": [{"variant_id": "HV-P03-090:record:714", "record_id": "714", "image_file": "HV-P03-090-S.webp", "rarity": "S", "printed": {"name": "おれにバレーボール教えてくれてありがとう", "display_name": "おれにバレーボール教えてくれて ありがとう", "type": "event", "affiliation_tags": ["音駒"], "year_tags": [], "position_tags": [], "parameters": null}, "raw_affiliation": "音駒", "legacy_school_tags": ["音駒"]}, {"variant_id": "HV-P03-090:record:715", "record_id": "715", "image_file": "HV-P03-090-SP.webp", "rarity": "SP", "printed": {"name": "おれにバレーボール教えてくれてありがとう", "display_name": "おれにバレーボール教えてくれて ありがとう", "type": "event", "affiliation_tags": ["音駒"], "year_tags": [], "position_tags": [], "parameters": null}, "raw_affiliation": "音駒", "legacy_school_tags": ["音駒"]}], "program": null}], "record_count": 2, "skill_text_variant_conflict": false}, {"card_no": "HV-PR-029", "display_name": "鬼と 鬼だな", "type": "event", "profiles": [{"profile_id": "HV-PR-029:3b751c576ca8bdc6", "variants": [{"variant_id": "HV-PR-029:record:239", "record_id": "239", "image_file": "HV-PR-029-P.webp", "rarity": "P", "printed": {"name": "鬼と鬼だな", "display_name": "鬼と 鬼だな", "type": "event", "affiliation_tags": ["烏野"], "year_tags": [], "position_tags": [], "parameters": null}, "raw_affiliation": "烏野", "legacy_school_tags": ["烏野"]}], "program": null}], "record_count": 1, "skill_text_variant_conflict": false}, {"card_no": "HV-P03-096", "display_name": "日向 夏", "type": "event", "profiles": [{"profile_id": "HV-P03-096:fc6c90f1c12f3f19", "variants": [{"variant_id": "HV-P03-096:record:724", "record_id": "724", "image_file": "HV-P03-096-N.webp", "rarity": "N", "printed": {"name": "日向夏", "display_name": "日向 夏", "type": "event", "affiliation_tags": ["烏野"], "year_tags": [], "position_tags": [], "parameters": null}, "raw_affiliation": "烏野", "legacy_school_tags": ["烏野"]}, {"variant_id": "HV-P03-096:record:725", "record_id": "725", "image_file": "HV-P03-096-NP.webp", "rarity": "NP", "printed": {"name": "日向夏", "display_name": "日向 夏", "type": "event", "affiliation_tags": ["烏野"], "year_tags": [], "position_tags": [], "parameters": null}, "raw_affiliation": "烏野", "legacy_school_tags": ["烏野"]}], "program": null}], "record_count": 2, "skill_text_variant_conflict": false}, {"card_no": "HV-P03-087", "display_name": "周りの上手さに引っ張られる", "type": "event", "profiles": [{"profile_id": "HV-P03-087:80ad15f599d2319f", "variants": [{"variant_id": "HV-P03-087:record:709", "record_id": "709", "image_file": "HV-P03-087-N.webp", "rarity": "N", "printed": {"name": "周りの上手さに引っ張られる", "display_name": "周りの上手さに引っ張られる", "type": "event", "affiliation_tags": ["ユース", "烏野"], "year_tags": [], "position_tags": [], "parameters": null}, "raw_affiliation": "烏野/ユース", "legacy_school_tags": ["ユース", "烏野"]}], "program": null}], "record_count": 1, "skill_text_variant_conflict": false}, {"card_no": "HV-P01-033", "display_name": "及川 徹", "type": "character", "profiles": [{"profile_id": "HV-P01-033:a4a4329efea6ea7c", "variants": [{"variant_id": "HV-P01-033:record:47", "record_id": "47", "image_file": "HV-P01-033-I.webp", "rarity": "I", "printed": {"name": "及川徹", "display_name": "及川 徹", "type": "character", "affiliation_tags": ["青葉城西"], "year_tags": [3], "position_tags": ["S"], "parameters": {"serve": 5, "block": 0, "receive": 0, "toss": 1, "attack": 0}}, "raw_affiliation": "青葉城西·3年", "legacy_school_tags": ["青葉城西"]}, {"variant_id": "HV-P01-033:record:48", "record_id": "48", "image_file": "HV-P01-033-IP.webp", "rarity": "IP", "printed": {"name": "及川徹", "display_name": "及川 徹", "type": "character", "affiliation_tags": ["青葉城西"], "year_tags": [3], "position_tags": ["S"], "parameters": {"serve": 5, "block": 0, "receive": 0, "toss": 1, "attack": 0}}, "raw_affiliation": "青葉城西·3年", "legacy_school_tags": ["青葉城西"]}], "program": null}], "record_count": 2, "skill_text_variant_conflict": false}, {"card_no": "HV-D04-003", "display_name": "及川 徹", "type": "character", "profiles": [{"profile_id": "HV-D04-003:3973e022e93220f9", "variants": [{"variant_id": "HV-D04-003:record:1220", "record_id": "1220", "image_file": "HV-D04-003-D.webp", "rarity": "D", "printed": {"name": "及川徹", "display_name": "及川 徹", "type": "character", "affiliation_tags": ["青葉城西"], "year_tags": [3], "position_tags": ["S"], "parameters": {"serve": 5, "block": 0, "receive": 1, "toss": 2, "attack": 2}}, "raw_affiliation": "青葉城西･3年", "legacy_school_tags": ["青葉城西"]}], "program": null}], "record_count": 1, "skill_text_variant_conflict": false}, {"card_no": "HV-P04-027", "display_name": "渡 親治", "type": "character", "profiles": [{"profile_id": "HV-P04-027:3973e022e93220f9", "variants": [{"variant_id": "HV-P04-027:record:1112", "record_id": "1112", "image_file": "HV-P04-027-R.webp", "rarity": "R", "printed": {"name": "渡親治", "display_name": "渡 親治", "type": "character", "affiliation_tags": ["青葉城西"], "year_tags": [2], "position_tags": ["Li"], "parameters": {"serve": "dash", "block": "dash", "receive": 6, "toss": 0, "attack": 0}}, "raw_affiliation": "青葉城西·2年", "legacy_school_tags": ["青葉城西"]}, {"variant_id": "HV-P04-027:record:1113", "record_id": "1113", "image_file": "HV-P04-027-RP.webp", "rarity": "RP", "printed": {"name": "渡親治", "display_name": "渡 親治", "type": "character", "affiliation_tags": ["青葉城西"], "year_tags": [2], "position_tags": ["Li"], "parameters": {"serve": "dash", "block": "dash", "receive": 6, "toss": 0, "attack": 0}}, "raw_affiliation": "青葉城西·2年", "legacy_school_tags": ["青葉城西"]}], "program": null}], "record_count": 2, "skill_text_variant_conflict": false}, {"card_no": "HV-P01-039", "display_name": "渡 親治", "type": "character", "profiles": [{"profile_id": "HV-P01-039:abdfca8487be7638", "variants": [{"variant_id": "HV-P01-039:record:55", "record_id": "55", "image_file": "HV-P01-039-N.webp", "rarity": "N", "printed": {"name": "渡親治", "display_name": "渡 親治", "type": "character", "affiliation_tags": ["青葉城西"], "year_tags": [2], "position_tags": ["Li"], "parameters": {"serve": "dash", "block": "dash", "receive": 5, "toss": 1, "attack": 0}}, "raw_affiliation": "青葉城西·2年", "legacy_school_tags": ["青葉城西"]}], "program": null}], "record_count": 1, "skill_text_variant_conflict": false}, {"card_no": "HV-D04-010", "display_name": "国見 英", "type": "character", "profiles": [{"profile_id": "HV-D04-010:3973e022e93220f9", "variants": [{"variant_id": "HV-D04-010:record:1227", "record_id": "1227", "image_file": "HV-D04-010-D.webp", "rarity": "D", "printed": {"name": "国見英", "display_name": "国見 英", "type": "character", "affiliation_tags": ["青葉城西"], "year_tags": [1], "position_tags": ["WS"], "parameters": {"serve": 1, "block": 2, "receive": 5, "toss": 0, "attack": 2}}, "raw_affiliation": "青葉城西･1年", "legacy_school_tags": ["青葉城西"]}], "program": null}], "record_count": 1, "skill_text_variant_conflict": false}, {"card_no": "HV-P04-026", "display_name": "花巻 貴大", "type": "character", "profiles": [{"profile_id": "HV-P04-026:3973e022e93220f9", "variants": [{"variant_id": "HV-P04-026:record:1111", "record_id": "1111", "image_file": "HV-P04-026-N.webp", "rarity": "N", "printed": {"name": "花巻貴大", "display_name": "花巻 貴大", "type": "character", "affiliation_tags": ["青葉城西"], "year_tags": [3], "position_tags": ["WS"], "parameters": {"serve": 1, "block": 3, "receive": 5, "toss": 0, "attack": 0}}, "raw_affiliation": "青葉城西·3年", "legacy_school_tags": ["青葉城西"]}], "program": null}], "record_count": 1, "skill_text_variant_conflict": false}, {"card_no": "HV-P01-035", "display_name": "岩泉 一", "type": "character", "profiles": [{"profile_id": "HV-P01-035:14f54c719c0c554a", "variants": [{"variant_id": "HV-P01-035:record:50", "record_id": "50", "image_file": "HV-P01-035-S.webp", "rarity": "S", "printed": {"name": "岩泉一", "display_name": "岩泉 一", "type": "character", "affiliation_tags": ["青葉城西"], "year_tags": [3], "position_tags": ["WS"], "parameters": {"serve": 1, "block": 3, "receive": 1, "toss": 0, "attack": 2}}, "raw_affiliation": "青葉城西·3年", "legacy_school_tags": ["青葉城西"]}, {"variant_id": "HV-P01-035:record:51", "record_id": "51", "image_file": "HV-P01-035-SP.webp", "rarity": "SP", "printed": {"name": "岩泉一", "display_name": "岩泉 一", "type": "character", "affiliation_tags": ["青葉城西"], "year_tags": [3], "position_tags": ["WS"], "parameters": {"serve": 1, "block": 3, "receive": 1, "toss": 0, "attack": 2}}, "raw_affiliation": "青葉城西·3年", "legacy_school_tags": ["青葉城西"]}], "program": null}], "record_count": 2, "skill_text_variant_conflict": false}, {"card_no": "HV-D04-004", "display_name": "岩泉 一", "type": "character", "profiles": [{"profile_id": "HV-D04-004:3973e022e93220f9", "variants": [{"variant_id": "HV-D04-004:record:1221", "record_id": "1221", "image_file": "HV-D04-004-D.webp", "rarity": "D", "printed": {"name": "岩泉一", "display_name": "岩泉 一", "type": "character", "affiliation_tags": ["青葉城西"], "year_tags": [3], "position_tags": ["WS"], "parameters": {"serve": 5, "block": 0, "receive": 4, "toss": 0, "attack": 3}}, "raw_affiliation": "青葉城西･3年", "legacy_school_tags": ["青葉城西"]}], "program": null}], "record_count": 1, "skill_text_variant_conflict": false}, {"card_no": "HV-D04-002", "display_name": "岩泉 一", "type": "character", "profiles": [{"profile_id": "HV-D04-002:b1ed68c6c8b9fdd2", "variants": [{"variant_id": "HV-D04-002:record:1218", "record_id": "1218", "image_file": "HV-D04-002-D.webp", "rarity": "D", "printed": {"name": "岩泉一", "display_name": "岩泉 一", "type": "character", "affiliation_tags": ["青葉城西"], "year_tags": [3], "position_tags": ["WS"], "parameters": {"serve": 3, "block": 3, "receive": 0, "toss": 0, "attack": 1}}, "raw_affiliation": "青葉城西･3年", "legacy_school_tags": ["青葉城西"]}, {"variant_id": "HV-D04-002:record:1219", "record_id": "1219", "image_file": "HV-D04-002-DP.webp", "rarity": "DP", "printed": {"name": "岩泉一", "display_name": "岩泉 一", "type": "character", "affiliation_tags": ["青葉城西"], "year_tags": [3], "position_tags": ["WS"], "parameters": {"serve": 3, "block": 3, "receive": 0, "toss": 0, "attack": 1}}, "raw_affiliation": "青葉城西･3年", "legacy_school_tags": ["青葉城西"]}], "program": null}], "record_count": 2, "skill_text_variant_conflict": false}, {"card_no": "HV-D04-011", "display_name": "京谷 賢太郎", "type": "character", "profiles": [{"profile_id": "HV-D04-011:3973e022e93220f9", "variants": [{"variant_id": "HV-D04-011:record:1228", "record_id": "1228", "image_file": "HV-D04-011-D.webp", "rarity": "D", "printed": {"name": "京谷賢太郎", "display_name": "京谷 賢太郎", "type": "character", "affiliation_tags": ["青葉城西"], "year_tags": [2], "position_tags": ["WS"], "parameters": {"serve": 4, "block": 2, "receive": 3, "toss": 0, "attack": 3}}, "raw_affiliation": "青葉城西･2年", "legacy_school_tags": ["青葉城西"]}], "program": null}], "record_count": 1, "skill_text_variant_conflict": false}, {"card_no": "HV-D04-006", "display_name": "松川 一静", "type": "character", "profiles": [{"profile_id": "HV-D04-006:3973e022e93220f9", "variants": [{"variant_id": "HV-D04-006:record:1223", "record_id": "1223", "image_file": "HV-D04-006-D.webp", "rarity": "D", "printed": {"name": "松川一静", "display_name": "松川 一静", "type": "character", "affiliation_tags": ["青葉城西"], "year_tags": [3], "position_tags": ["MB"], "parameters": {"serve": 2, "block": 3, "receive": 3, "toss": 0, "attack": 3}}, "raw_affiliation": "青葉城西･3年", "legacy_school_tags": ["青葉城西"]}], "program": null}], "record_count": 1, "skill_text_variant_conflict": false}, {"card_no": "HV-P04-024", "display_name": "松川 一静", "type": "character", "profiles": [{"profile_id": "HV-P04-024:3973e022e93220f9", "variants": [{"variant_id": "HV-P04-024:record:1108", "record_id": "1108", "image_file": "HV-P04-024-N.webp", "rarity": "N", "printed": {"name": "松川一静", "display_name": "松川 一静", "type": "character", "affiliation_tags": ["青葉城西"], "year_tags": [3], "position_tags": ["MB"], "parameters": {"serve": 1, "block": 3, "receive": 0, "toss": 1, "attack": 3}}, "raw_affiliation": "青葉城西·3年", "legacy_school_tags": ["青葉城西"]}], "program": null}], "record_count": 1, "skill_text_variant_conflict": false}, {"card_no": "HV-P01-087", "display_name": "俺も思った☆", "type": "event", "profiles": [{"profile_id": "HV-P01-087:42a6e01669b4ec97", "variants": [{"variant_id": "HV-P01-087:record:117", "record_id": "117", "image_file": "HV-P01-087-N.webp", "rarity": "N", "printed": {"name": "俺も思った☆", "display_name": "俺も思った☆", "type": "event", "affiliation_tags": ["青葉城西"], "year_tags": [], "position_tags": [], "parameters": null}, "raw_affiliation": "青葉城西", "legacy_school_tags": ["青葉城西"]}], "program": null}], "record_count": 1, "skill_text_variant_conflict": false}, {"card_no": "HV-P04-088", "display_name": "ドンピシャ!!!", "type": "event", "profiles": [{"profile_id": "HV-P04-088:d9dd5b37373f3814", "variants": [{"variant_id": "HV-P04-088:record:1197", "record_id": "1197", "image_file": "HV-P04-088-S.webp", "rarity": "S", "printed": {"name": "ドンピシャ!!!", "display_name": "ドンピシャ!!!", "type": "event", "affiliation_tags": ["青葉城西"], "year_tags": [], "position_tags": [], "parameters": null}, "raw_affiliation": "青葉城西", "legacy_school_tags": ["青葉城西"]}], "program": null}], "record_count": 1, "skill_text_variant_conflict": false}, {"card_no": "HV-P04-089", "display_name": "3年間ありがとう!!!", "type": "event", "profiles": [{"profile_id": "HV-P04-089:2a2c4f7d069ac0af", "source_skill_sha256": "2a2c4f7d069ac0af4f4c0efdaadfe2799a4dcd1e30c009cc082fb5ade6169926", "status": "STRUCTURED_FIRST_PASS_NOT_ENGINE_VALIDATED", "game_integrated": false, "runtime_approved": true, "activation": {"skill_type": "event", "activation_phases": ["receive"], "source_zones": ["hand"], "trigger": null, "window": "free_step_after_required_draw_and_entry_checks", "reveal_source_on_declaration": false, "explicit_phase_gate_only": true}, "formal_cost": null, "limit": {"kind": "same_name_turn_lock", "owner": "controller", "name_basis": "effective_name", "apply_after": "last_step_if_any_skill_effect_performed", "scope": "this_turn", "shared_rule_ids": ["limit.same_name"]}, "program": {"kind": "sequence", "steps": [{"kind": "draw", "actor": "self", "count": 1, "count_mode": "exact", "bind": "drawn", "node_id": "program.steps[0]", "shared_rule_ids": ["hand.draw_subset", "hand.restriction", "resource.shortfall", "trigger.actual_event"], "category_tags": ["資源與移動"], "classification_role": "effect", "polarity": "beneficial"}, {"kind": "numeric", "operation": "add", "parameter": "receive", "value": 1, "target": {"kind": "selector", "actor": "self", "zone": "court", "filters": {"role": "character", "tags": ["青葉城西"], "years": [3]}, "node_id": "program.steps[1].target", "shared_rule_ids": ["identity.exact_tags", "identity.multi", "target.explicit_selector", "zone.not_guts"]}, "bind": "target", "target_scope": {"mode": "single", "binding": "choose", "membership": "snapshot_on_resolution"}, "duration": "current_turn_cleanup_or_role_exit", "evaluation_order": ["resolve_target", "bind_target", "evaluate_value_and_guard", "apply"], "node_id": "program.steps[1]", "shared_rule_ids": ["duration.target_instance", "numeric.accumulate", "numeric.negative", "selection.chooser"], "category_tags": ["數值"], "classification_role": "effect", "polarity": "beneficial"}, {"kind": "payment_branch", "payment": {"kind": "sequence", "steps": [{"kind": "move", "pool": {"kind": "selector", "actor": "self", "zone": "hand", "filters": {"type": "character", "tags": ["青葉城西"], "years": [3]}, "node_id": "program.steps[2].payment.steps[0].pool", "shared_rule_ids": ["identity.exact_tags", "identity.multi", "target.explicit_selector"]}, "destination": "owner.drop", "count": 1, "count_mode": "exact", "bind": "moved", "node_id": "program.steps[2].payment.steps[0]", "shared_rule_ids": ["move.owner", "resource.shortfall", "selection.chooser"], "category_tags": ["資源與移動"], "classification_role": "payment", "polarity": null}], "node_id": "program.steps[2].payment", "shared_rule_ids": ["effect.order"]}, "then": {"kind": "sequence", "steps": [{"kind": "numeric", "operation": "add", "parameter": "receive", "value": 2, "target": "$target", "bind": "target", "target_scope": {"mode": "single", "binding": "reference", "membership": "snapshot_on_resolution"}, "duration": "current_turn_cleanup_or_role_exit", "evaluation_order": ["resolve_target", "bind_target", "evaluate_value_and_guard", "apply"], "depends_on_result": "target.selected_target", "if_result_has_no_target": "skip_this_step_only", "node_id": "program.steps[2].then.steps[0]", "shared_rule_ids": ["duration.target_instance", "effect.dependent_target", "numeric.accumulate", "numeric.negative"], "category_tags": ["數值"], "classification_role": "effect", "polarity": "beneficial"}], "node_id": "program.steps[2].then", "shared_rule_ids": ["effect.order"]}, "optional": true, "require_complete": true, "bind_payment_result": "paid", "node_id": "program.steps[2]", "shared_rule_ids": ["cost.effect_branch"]}], "node_id": "program", "shared_rule_ids": ["effect.order"]}, "shared_rule_ids": ["cost.effect_branch", "duration.target_instance", "effect.dependent_target", "effect.order", "event.normal_play", "event.phase", "event.place_not_play", "hand.draw_subset", "hand.restriction", "identity.exact_tags", "identity.multi", "limit.same_name", "move.owner", "numeric.accumulate", "numeric.negative", "permission.layers", "resource.shortfall", "selection.chooser", "target.explicit_selector", "trigger.actual_event", "zone.not_guts"], "official_qa_ids_for_trace_only": [], "qa_not_used_as_automatic_effect_binding": true, "variants": [{"variant_id": "HV-P04-089:record:1198", "record_id": "1198", "image_file": "HV-P04-089-N.webp", "rarity": "N", "printed": {"name": "3年間ありがとう!!!", "display_name": "3年間ありがとう!!!", "type": "event", "affiliation_tags": ["青葉城西"], "year_tags": [], "position_tags": [], "parameters": null}, "raw_affiliation": "青葉城西", "legacy_school_tags": ["青葉城西"]}, {"variant_id": "HV-P04-089:record:1199", "record_id": "1199", "image_file": "HV-P04-089-NP.webp", "rarity": "NP", "printed": {"name": "3年間ありがとう!!!", "display_name": "3年間ありがとう!!!", "type": "event", "affiliation_tags": ["青葉城西"], "year_tags": [], "position_tags": [], "parameters": null}, "raw_affiliation": "青葉城西", "legacy_school_tags": ["青葉城西"]}], "flags": [], "practice_override": null}], "record_count": 2, "skill_text_variant_conflict": false}, {"card_no": "HV-P01-088", "display_name": "お前達は 強いよ", "type": "event", "profiles": [{"profile_id": "HV-P01-088:5acc349448fd5084", "source_skill_sha256": "5acc349448fd5084f38e64a570e89932bebae92b7c905bcf96d282dea7771d23", "status": "STRUCTURED_FIRST_PASS_NOT_ENGINE_VALIDATED", "game_integrated": false, "runtime_approved": true, "activation": {"skill_type": "event", "activation_phases": ["receive"], "source_zones": ["hand"], "trigger": null, "window": "free_step_after_required_draw_and_entry_checks", "reveal_source_on_declaration": false, "explicit_phase_gate_only": true}, "formal_cost": null, "limit": null, "program": {"kind": "sequence", "steps": [{"kind": "draw", "actor": "self", "count": 1, "count_mode": "upto", "bind": "drawn", "node_id": "program.steps[0]", "shared_rule_ids": ["hand.draw_subset", "hand.restriction", "resource.shortfall", "trigger.actual_event"], "category_tags": ["資源與移動"], "classification_role": "effect", "polarity": "beneficial"}, {"kind": "numeric", "operation": "add", "parameter": "receive", "value": 1, "target": {"kind": "selector", "actor": "self", "zone": "court", "filters": {"role": "character", "tags": ["青葉城西"]}, "node_id": "program.steps[1].target", "shared_rule_ids": ["identity.exact_tags", "identity.multi", "target.explicit_selector", "zone.not_guts"]}, "bind": "target", "target_scope": {"mode": "single", "binding": "choose", "membership": "snapshot_on_resolution"}, "duration": "current_turn_cleanup_or_role_exit", "evaluation_order": ["resolve_target", "bind_target", "evaluate_value_and_guard", "apply"], "node_id": "program.steps[1]", "shared_rule_ids": ["duration.target_instance", "numeric.accumulate", "numeric.negative", "selection.chooser"], "category_tags": ["數值"], "classification_role": "effect", "polarity": "beneficial"}, {"kind": "conditional", "condition": {"kind": "compare", "field": "self.hand.count", "op": "lte", "value": 3, "checkpoint": "when_condition_reached", "node_id": "program.steps[2].condition", "shared_rule_ids": ["condition.checkpoint"]}, "then": {"kind": "sequence", "steps": [{"kind": "numeric", "operation": "add", "parameter": "receive", "value": 1, "target": "$target", "bind": "target", "target_scope": {"mode": "single", "binding": "reference", "membership": "snapshot_on_resolution"}, "duration": "current_turn_cleanup_or_role_exit", "evaluation_order": ["resolve_target", "bind_target", "evaluate_value_and_guard", "apply"], "depends_on_result": "target.selected_target", "if_result_has_no_target": "skip_this_step_only", "node_id": "program.steps[2].then.steps[0]", "shared_rule_ids": ["duration.target_instance", "effect.dependent_target", "numeric.accumulate", "numeric.negative"], "category_tags": ["數值"], "classification_role": "effect", "polarity": "beneficial"}], "node_id": "program.steps[2].then", "shared_rule_ids": ["effect.order"]}, "evaluate_once": true, "node_id": "program.steps[2]", "shared_rule_ids": ["condition.checkpoint", "condition.snapshot"]}], "node_id": "program", "shared_rule_ids": ["effect.order"]}, "shared_rule_ids": ["condition.checkpoint", "condition.snapshot", "duration.target_instance", "effect.dependent_target", "effect.order", "event.normal_play", "event.phase", "event.place_not_play", "hand.draw_subset", "hand.restriction", "identity.exact_tags", "identity.multi", "numeric.accumulate", "numeric.negative", "permission.layers", "resource.shortfall", "selection.chooser", "target.explicit_selector", "trigger.actual_event", "zone.not_guts"], "official_qa_ids_for_trace_only": [], "qa_not_used_as_automatic_effect_binding": true, "variants": [{"variant_id": "HV-P01-088:record:118", "record_id": "118", "image_file": "HV-P01-088-N.webp", "rarity": "N", "printed": {"name": "お前達は強いよ", "display_name": "お前達は 強いよ", "type": "event", "affiliation_tags": ["青葉城西"], "year_tags": [], "position_tags": [], "parameters": null}, "raw_affiliation": "青葉城西", "legacy_school_tags": ["青葉城西"]}], "flags": [], "practice_override": null}], "record_count": 1, "skill_text_variant_conflict": false}]}, "approved": ["HV-P01-013:02f39fe84104ce51", "HV-P01-088:5acc349448fd5084", "HV-P04-089:2a2c4f7d069ac0af"], "ruleIds": ["deck.size", "zone.unlimited", "entry.cover", "entry.center_first", "entry.parameter", "numeric.negative", "event.normal_play", "event.phase", "numeric.accumulate", "permission.layers", "flow.sequence", "resource.shortfall", "judge.compare", "loss.declare", "loss.not_turn_end", "loss.before_interval", "loss.cleanup", "interval.refill", "effect.order", "permission.deny", "cost.effect_branch", "duration.generated", "trigger.players", "trigger.entry", "move.owner", "hand.draw_subset", "selection.upto", "window.entry_before_event", "cost.guts_side", "trigger.own_order", "condition.checkpoint", "entry.limit", "cost.guts_source", "selection.cap", "identity.printed", "entry.printed_limit", "entry.origin", "condition.after_move", "trigger.each_entry", "effect.independent", "duration.target_instance", "selection.exact_modes", "numeric.fixed_order", "effect.mandatory", "cost.active_window", "cost.declaration", "identity.multi", "zone.event_pool", "condition.uniform", "condition.related_selection", "identity.name_scope", "skill.source_scope", "trigger.pending_public", "skill.invalidate", "identity.pre_entry_name", "numeric.choose_parameter", "reveal.remainder", "hand.restriction", "flow.draw_start", "duration.same_turn", "trigger.skipped_window", "entry.name_roles", "event.place_not_play", "hand.draw_vs_add", "trigger.per_object", "duration.no_turn", "count.cards_not_icons", "condition.distinct_affiliations", "target.explicit_selector", "selection.chooser", "numeric.final_totals", "zone.not_guts", "zone.guts_requires_character", "count.includes_source", "cost.guts_sum", "move.updated_pool", "condition.role_alias", "reveal.icon_filter", "identity.current_name", "trigger.actual_event", "trigger.repeat_and_payment", "skill.selector", "count.distinct_names", "condition.after_payment", "condition.snapshot", "numeric.absent", "external.action", "keyword.doshat", "judge.checkpoint", "condition.nonempty_results", "entry.side_capacity", "zone.court", "selection.optional_exact", "keyword.two_attack", "deck.return_empty", "limit.effect_instance", "condition.phase_scope", "condition.independent_branches", "effect.dependent_target", "condition.clause_scope", "numeric.ball_kind", "numeric.protection", "condition.uniform_or", "zone.event_count_all_types", "limit.same_name", "zone.exposed_not_entry", "keyword.back_attack", "identity.exact_tags", "cost.paid_predicate", "move.remainder_group", "move.reveal_hidden", "move.exchange", "keyword.multi_attack", "condition.exclusive_branch", "zone.empty_toss", "limit.activation_not_watch", "condition.uniform_union", "cost.amount_branch", "numeric.permanent_fixed", "effect.continuous_layers", "effect.replacement", "permission.target_immunity", "keyword.one_touch", "keyword.feint", "keyword.blockout", "keyword.a_pass", "flow.current_skill_after_skip", "numeric.total_independent", "selection.hidden_information", "loss.voluntary_window", "entry.placement_not_entry"], "fingerprint": "b617f6e722a77fd023714b518f7852f3da299f42a858757dd18251b999ad6a1c"};
-/* Bounded host adapter: transient IDs are valid for one finite settlement.
-   Watches, entry, cross-player moves and deferred effects must not use this adapter. */
+/* Bounded settlement adapter using the host's persistent physical identities.
+   Full kernel watches/entry lifecycle still requires a persistent controller. */
 (function(root) {
 'use strict';
 const node=typeof module!=='undefined'&&module.exports;
 const {Kernel}=node?require('./core'):root.BreakRulesCore;
 const {attempt,settle}=node?require('./decisions'):root.BreakRulesDecisions;
+const identity=node?require('./identity'):root.BreakCardIdentity;
 const data=node?require('./runtime-data.json'):root.BreakRulesData;
 const copy=x=>JSON.parse(JSON.stringify(x));
 const phase={srv:'serve',drw:'draw',rcv:'receive',tos:'toss',atk:'attack',blk:'block'};
@@ -1033,13 +1144,19 @@ function transaction(g,p,c,timing) {
   if(!handles(c)||!p.hand.includes(c)||g.turnP!==p)throw new Error('Not an admitted settlement');
   if(byShort[c].profiles[0].limit&&p.ts.used?.[c])throw new Error('Same-name skill already used this turn');
   const k=new Kernel({catalog:data.catalog,ruleIds:data.ruleIds,fingerprint:data.fingerprint,mode:'live'});
+  const physical=identity.snapshot(g);
   k.state.turn={id:Math.max(1,g.turnNo),player:p.idx,phase:phase[timing],step:'free'};
   const short={},slots={},basePlayers=g.players.map(q=>copy({hand:q.hand,deck:q.deck,drop:q.drop,ev:q.ev,sets:q.sets,area:q.area,ts:q.ts,effects:q.effects,newCount:q.newCount}));
   for(const q of g.players) {
     for(const [zone,cards] of Object.entries({hand:q.hand,deck:q.deck,drop:q.drop,event:q.ev,sets:q.sets,...q.area,...Object.fromEntries((q.ts.sides||[]).map((x,i)=>['side:'+i,[x]]))})) {
-      for(const code of cards) {
+      for(const [index,code] of cards.entries()) {
         const def=byShort[code];if(!def)throw new Error('Printed identity missing: '+code);
-        const id=k.addCard(def.card_no,q.idx,zone);short[id]=code;
+        const temporary=k.addCard(def.card_no,q.idx,zone);
+        const hostZone=zone==='event'?'ev':zone.startsWith('side:')?'sides':zone;
+        const id=physical.zones[q.idx+'.'+hostZone][zone.startsWith('side:')?+zone.slice(5):index];
+        const card=k.state.cards[temporary];delete k.state.cards[temporary];
+        card.id=id;card.incarnation=physical.cards[id].incarnation;k.state.cards[id]=card;
+        k.zone(q.idx,zone)[index]=id;short[id]=code;
       }
     }
     for(const t of g.courtTargets(q)) {
@@ -1080,6 +1197,14 @@ function transaction(g,p,c,timing) {
   }
   let eventCursor=0,effectCursor=base.effects.length,announced=false;
   function publish(state,complete) {
+    const next=copy(physical);
+    for(const key of Object.keys(next.zones)) {
+      const [player,zone]=key.split('.');
+      next.zones[key]=zone==='sides'?[...state.zones[player+'.side:0'],...state.zones[player+'.side:1']]:[...state.zones[player+'.'+(zone==='ev'?'event':zone)]];
+      for(const id of next.zones[key]){next.cards[id].zone=key;next.cards[id].incarnation=state.cards[id].incarnation;}
+    }
+    next.revision=physical.revision+state.events.filter(e=>e.type==='move').length;
+    identity.restore(g,next);
     // Projection always starts from the same host checkpoint, never from an earlier preview.
     for(const q of g.players) {
       const b=basePlayers[q.idx],codes=z=>state.zones[q.idx+'.'+z].map(id=>short[id]);
@@ -1090,7 +1215,7 @@ function transaction(g,p,c,timing) {
         for(const [old,param] of Object.entries(params)) {
           const delta=state.effects.slice(base.effects.length).filter(e=>e.kind==='numeric'&&e.target.id===id&&e.parameter===param).reduce((n,e)=>n+e.value,0);
           if(!delta)continue;
-          if(q.effects[slot.key]?.card!==short[id])q.effects[slot.key]={card:short[id],mods:{}};
+          if(q.effects[slot.key]?.card!==short[id] || q.effects[slot.key].ref && (q.effects[slot.key].ref.id!==id||q.effects[slot.key].ref.incarnation!==state.cards[id].incarnation))q.effects[slot.key]={card:short[id],ref:{id,incarnation:state.cards[id].incarnation},mods:{}};
           const fx=q.effects[slot.key];fx.mods ||= {};fx.mods[old]=(fx.mods[old]||0)+delta;
           const active=g.activeParameter(q,slot.key,old);if(active&&q.ts[active]!=null)q.ts[active]+=delta;
         }
@@ -1147,6 +1272,8 @@ if(node)module.exports=api;else root.BreakRulesLegacy=api;
 'use strict';
 const N = null, K = '烏野', A = '青城';
 const sharedRules = typeof module !== 'undefined' && module.exports ? require('./rules/legacy') : root.BreakRulesLegacy;
+const cardIdentity = typeof module !== 'undefined' && module.exports ? require('./rules/identity') : root.BreakCardIdentity;
+const turnEffects = typeof module !== 'undefined' && module.exports ? require('./rules/lifecycle') : root.BreakTurnEffects;
 // code: [name, kind, srv, blk, rcv, tos, atk, value, school, year, text]
 const DEF = {
   // ---- 烏野
@@ -1272,7 +1399,15 @@ class Game {
     this.players = [new Player(this, 0, opts.decks[0], opts.agents[0]), new Player(this, 1, opts.decks[1], opts.agents[1])];
     this.ball = null; this.rallyNo = 0; this.turnNo = 0; this.server = null; this.winner = null; this.stats = {};
   }
-  shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(this.rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } }
+  shuffle(a) { if (this.cardState) return cardIdentity.shuffle(this, a, () => this.rand()); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(this.rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } }
+  moveCard(from, to, index, at) { return cardIdentity.move(this, from, to, index, at).code; }
+  moveCode(from, to, code, at) { const index = from.indexOf(code); if (index < 0) throw new Error('來源區沒有指定卡片'); return this.moveCard(from, to, index, at); }
+  cardSnapshot() { return cardIdentity.snapshot(this); }
+  cardReference(p, zone, index) { const state = cardIdentity.ensure(this),ids = state.zones[p.idx + '.' + zone],id = ids[index ?? ids.length - 1]; return id ? {id,incarnation:state.cards[id].incarnation} : null; }
+  roleReference(p, key) { return key.startsWith('side:') ? this.cardReference(p, 'sides', +key.slice(5)) : this.cardReference(p, key); }
+  sameReference(a, b) { return !!a && !!b && a.id === b.id && a.incarnation === b.incarnation; }
+  validEffect(p, key) { const fx = p.effects[key]; return !!fx && (!fx.ref || this.sameReference(fx.ref, this.roleReference(p, key))); }
+  scheduleRestriction(p, key, value, stack, source) { return turnEffects.schedule(this, p.idx, key, value, {stack,source}); }
   log(s, cls) { this.logFn(s, cls); }
   tag(k) { this.stats[k] = (this.stats[k] || 0) + 1; }
   async ask(p, req) { this.update(); req.canLoss = this.turnP === p && !['mulligan', 'roll', 'lossConfirm'].includes(req.kind); const r = await p.agent.choose(this, p, req); if (r && r.__loss && req.canLoss) this.lost(p, '主動 Loss（放棄這球）'); return r; }
@@ -1282,7 +1417,7 @@ class Game {
   // ---------- card movement
   draw(p, n = 1, why = '') {
     const got = [];
-    for (let i = 0; i < n; i++) { if (!p.deck.length) { this.log(`${p.name} 牌庫空，無法抽牌`, 'warn'); break; } const c = p.deck.pop(); p.hand.push(c); got.push(c); p.newCount[c] = (p.newCount[c] || 0) + 1; }
+    for (let i = 0; i < n; i++) { if (!p.deck.length) { this.log(`${p.name} 牌庫空，無法抽牌`, 'warn'); break; } const c = this.moveCard(p.deck, p.hand, p.deck.length - 1); got.push(c); p.newCount[c] = (p.newCount[c] || 0) + 1; }
     if (got.length) {
       const tag = why ? `（${why}）` : '';
       if (p.idx === this.reveal) this.log(`${p.name}${tag}抽到：${got.map(nm).join('、')}`, 'draw');
@@ -1291,9 +1426,10 @@ class Game {
     return got.length;
   }
   sdraw(p, n = 1) { if (p.restrict.no_add) { this.log(`${p.name} 被岩泉封鎖，${this.src || '技能'}的抽牌無效`, 'warn'); return 0; } return this.draw(p, n, this.src || '技能'); }
-  async sadd(p, c, src) {
+  async sadd(p, c, src, index = src.indexOf(c)) {
     if (p.restrict.no_add) { this.log(`${p.name} 被岩泉封鎖，無法加入手牌`, 'warn'); return false; }
-    rm(src, c); p.hand.push(c);
+    if (src[index] !== c) throw new Error('加入手牌的實體來源不符');
+    this.moveCard(src, p.hand, index);
     for (let i = 0; i < (p.restrict.oremo || 0); i++) if (p.hand.length) await this.discard(p, '俺も思った☆：加入手牌後棄 1 張');
     return true;
   }
@@ -1318,7 +1454,7 @@ class Game {
     const canTake = matches && !p.restrict.no_add;
     const reason = !card ? '牌庫已空，沒有可翻開的牌。' : !matches ? '沒有符合條件的牌，已放回牌庫底。' : p.restrict.no_add ? '符合條件，但受到禁止加入手牌的效果影響，已放回牌庫底。' : '符合條件：可以加入手牌，也可以放回牌庫底。';
     if (card) this.log(`${source}翻開：${nm(card)}（${card}）`);
-    if (card && !canTake) p.deck.unshift(p.deck.pop());
+    if (card && !canTake) this.moveCard(p.deck, p.deck, p.deck.length - 1, 0);
     const ctx = { revealed: card, source, reason };
     let take = null;
     if (canTake) take = await this.ask(p, {
@@ -1334,13 +1470,13 @@ class Game {
       result: !card ? '沒有翻牌' : take === card ? '加入手牌' : '放回牌庫底'
     });
     if (card) {
-      if (take === card) { const top = [p.deck.pop()]; await this.sadd(p, card, top); this.log(`${source}：${nm(card)} 加入手牌`); }
-      else { if (canTake) p.deck.unshift(p.deck.pop()); this.log(`${source}：${nm(card)} 放回牌庫底。${reason}`, 'draw'); }
+      if (take === card) { await this.sadd(p, card, p.deck, p.deck.length - 1); this.log(`${source}：${nm(card)} 加入手牌`); }
+      else { if (canTake) this.moveCard(p.deck, p.deck, p.deck.length - 1, 0); this.log(`${source}：${nm(card)} 放回牌庫底。${reason}`, 'draw'); }
     } else this.log(`${source}：${reason}`, 'warn');
   }
   async discard(p, prompt, filter) {
     const c = await this.pickHand(p, prompt, filter);
-    if (c) { rm(p.hand, c); p.drop.push(c); this.log(`${p.name} 棄掉 ${nm(c)}`); }
+    if (c) { this.moveCode(p.hand, p.drop, c); this.log(`${p.name} 棄掉 ${nm(c)}`); }
     return c;
   }
   async pay(p, a, n) {
@@ -1350,8 +1486,10 @@ class Game {
       const r = await this.ask(p, { kind: 'guts', multi: true, need: n, area: a, prompt: `付 ${n} Guts：從${AREA_ZH[a]}區選 ${n} 張（最上面的角色不能付）`, options: s.slice(0, -1).map((c, i) => ({ label: nm(c), card: c, value: i })) });
       if (Array.isArray(r) && new Set(r).size === n && r.every(i => i >= 0 && i < s.length - 1)) idx = [...new Set(r)].sort((x, y) => y - x);
     }
-    const paid = idx ? idx.map(i => s.splice(i, 1)[0]).reverse() : s.splice(0, n); p.drop.push(...paid); if (paid.length) this.log(`${p.name} 付 ${paid.length} Guts（${AREA_ZH[a]}區）：${paid.map(nm).join('、')} → 棄牌區`, 'guts'); return paid; }
-  place(p, a, c) { rm(p.hand, c); p.area[a].push(c); delete p.effects[a]; }
+    const dropStart = p.drop.length;
+    const paid = idx ? idx.map(i => this.moveCard(s, p.drop, i, dropStart)).reverse() : Array.from({length: Math.min(n, Math.max(0, s.length - 1))}, () => this.moveCard(s, p.drop, 0));
+    if (paid.length) this.log(`${p.name} 付 ${paid.length} Guts（${AREA_ZH[a]}區）：${paid.map(nm).join('、')} → 棄牌區`, 'guts'); return paid; }
+  place(p, a, c) { this.moveCode(p.hand, p.area[a], c); delete p.effects[a]; }
   courtTargets(p) {
     return [...AREAS.map(key => ({ key, card: p.top(key), label: AREA_ZH[key] + '區' })),
       ...(p.ts.sides || []).map((card, i) => ({ key: 'side:' + i, card, label: '側攔 ' + (i + 1) }))].filter(t => t.card);
@@ -1359,19 +1497,19 @@ class Game {
   cardName(p, key) {
     const c = this.courtTargets(p).find(t => t.key === key)?.card;
     if (!c) return '';
-    return p.effects[key]?.card === c && p.effects[key].name || nm(c);
+    return p.effects[key]?.card === c && this.validEffect(p, key) && p.effects[key].name || nm(c);
   }
   effect(p, key) {
     const card = this.courtTargets(p).find(t => t.key === key)?.card;
     if (!card) throw new Error('目標角色已離場');
-    if (p.effects[key]?.card !== card) p.effects[key] = { card, mods: {} };
+    if (p.effects[key]?.card !== card || !this.validEffect(p, key)) p.effects[key] = { card, ref: this.roleReference(p, key), mods: {} };
     return p.effects[key];
   }
   activeParameter(p, key, param) {
     if (p.ts.finished) return null;
-    if (key === 'receive' && param === 'rcv' && p.ts.receiver === p.top(key)) return 'rcv';
-    if (key === 'toss' && param === 'tos' && p.ts.setter === p.top(key)) return 'toss';
-    if (key === 'attack' && param === 'atk' && p.ts.attacker === p.top(key)) return 'atk';
+    if (key === 'receive' && param === 'rcv' && p.ts.receiver === p.top(key) && (!p.ts.receiverRef || this.sameReference(p.ts.receiverRef, this.roleReference(p, key)))) return 'rcv';
+    if (key === 'toss' && param === 'tos' && p.ts.setter === p.top(key) && (!p.ts.setterRef || this.sameReference(p.ts.setterRef, this.roleReference(p, key)))) return 'toss';
+    if (key === 'attack' && param === 'atk' && p.ts.attacker === p.top(key) && (!p.ts.attackerRef || this.sameReference(p.ts.attackerRef, this.roleReference(p, key)))) return 'atk';
     if ((key === 'block' || key.startsWith('side:')) && param === 'blk' && p.ts.blockers) return 'blk';
     return null;
   }
@@ -1382,7 +1520,7 @@ class Game {
     // Block is an aggregate; per-character values remain separate.
     if (active && active !== 'blk' && p.ts[active] != null) return p.ts[active];
     const fx = p.effects[key];
-    return st(card, param) + (fx?.card === card ? fx.mods?.[param] || 0 : 0);
+    return st(card, param) + (fx?.card === card && this.validEffect(p, key) ? fx.mods?.[param] || 0 : 0);
   }
   boostParameter(p, key, param, amount) {
     if (this.parameter(p, key, param) == null) return;
@@ -1403,7 +1541,7 @@ class Game {
     let name = nm(c);
     if (c === 'PR-057') name = await this.ask(p, { kind: 'name', prompt: `着地上手組。：選擇登場名稱（${AREA_ZH[area]}區，本回合有效）`, ctx: { card: c, area }, options: names.map(value => ({ label: value, value })) });
     if (!names.includes(name)) throw new Error('無效的登場名稱');
-    if (fromDrop) { rm(p.drop, c); p.area[area].push(c); delete p.effects[area]; }
+    if (fromDrop) { this.moveCode(p.drop, p.area[area], c); delete p.effects[area]; }
     else this.place(p, area, c);
     if (c === 'PR-057') { this.effect(p, area).name = name; this.log(`着地上手組。：本回合在${AREA_ZH[area]}區作為「${name}」`); }
   }
@@ -1431,7 +1569,7 @@ class Game {
     const answer = await this.ask(p, { kind: 'gutsCourt', multi: true, need, prompt: `影山：從各區選合計 ${need} Guts（每區最上方角色不能付）`, options: guts.map((g, value) => ({ value, card: g.card, label: AREA_ZH[g.area] + '區 · ' + nm(g.card) })) });
     const valid = Array.isArray(answer) && answer.length === need && new Set(answer).size === need && answer.every(i => Number.isInteger(i) && i >= 0 && i < guts.length);
     const chosen = (valid ? answer : guts.slice(0, need).map((_, i) => i)).map(i => guts[i]);
-    for (const area of AREAS) for (const g of chosen.filter(g => g.area === area).sort((a, b) => b.index - a.index)) p.drop.push(p.area[area].splice(g.index, 1)[0]);
+    for (const area of AREAS) for (const g of chosen.filter(g => g.area === area).sort((a, b) => b.index - a.index)) this.moveCard(p.area[area], p.drop, g.index);
     this.log(`影山：跨區支付 ${need} Guts → 棄牌區`); return true;
   }
 
@@ -1448,11 +1586,11 @@ class Game {
       const back = await this.ask(p, { kind: 'mulligan', role: p === server ? 'serve' : 'receive', multi: true, prompt: '起手調度：點選要放回牌庫的牌（可 0～6 張），放回幾張就重抽幾張', options: p.hand.map((c, i) => ({ label: nm(c), card: c, value: i })) });
       if (back && back.length) {
         const idx = [...new Set(back)].sort((a, b) => b - a);
-        const ret = idx.map(i => p.hand.splice(i, 1)[0]);
-        p.deck.push(...ret); this.shuffle(p.deck); this.draw(p, ret.length, '調度');
+        const ret = idx.map(i => this.moveCard(p.hand, p.deck, i));
+        this.shuffle(p.deck); this.draw(p, ret.length, '調度');
         this.log(`${p.name} 調度：放回 ${ret.length} 張並重抽`);
       } else this.log(`${p.name} 保留起手`);
-      p.sets = [p.deck.pop(), p.deck.pop()];
+      this.moveCard(p.deck, p.sets, p.deck.length - 1); this.moveCard(p.deck, p.sets, p.deck.length - 1);
     }
     for (;;) {
       this.rallyNo++;
@@ -1475,12 +1613,13 @@ class Game {
       }
       await this.notice({ type: 'loss', player: loser.idx, reason: lossReason, winner: loser.opp.idx, final: !loser.sets.length });
       this.turnP = null;
+      turnEffects.loss(this);
       for (const p of this.players) { p.pending = {}; p.restrict = {}; p.ts = {}; p.effects = {}; }
       this.ball = null; this.target = null;
       const winner = loser.opp;
       if (!loser.sets.length) { this.winner = winner; this.log(`${winner.name} 獲勝！`, 'win'); this.update(); return winner; }
       for (const p of this.players) { p.newCount = {}; if (p.hand.length < 6) this.draw(p, 6 - p.hand.length, 'インターバル補牌'); }
-      loser.hand.push(loser.sets.pop());
+      this.moveCard(loser.sets, loser.hand, loser.sets.length - 1);
       const setCard = loser.hand[loser.hand.length - 1]; loser.newCount[setCard] = (loser.newCount[setCard] || 0) + 1;
       this.log(`インターバル：雙方補到 6 張，${loser.name} 再把 1 張セットカード加入手牌${loser.idx === this.reveal ? '：' + nm(setCard) : ''}（剩 ${loser.sets.length}）`, 'draw');
       server = winner;
@@ -1489,15 +1628,14 @@ class Game {
   }
   lost(p, why) { const e = new LostSignal(why); e.who = p; throw e; }
   cleanupSides(p) {
-    const sides = p.ts.sides || [];
+    const sides = [...(p.ts.sides || [])];
     if (!sides.length) return;
-    p.ts.sides = [];
+    while (p.ts.sides.length) this.moveCard(p.ts.sides, p.drop, 0);
     for (const key of Object.keys(p.effects)) if (key.startsWith('side:')) delete p.effects[key];
-    p.drop.push(...sides);
     if (sides.length) this.log(`側攔 ${sides.map(nm).join('、')} → 棄牌區`, 'guts');
   }
-  finishTurn(p) { p.effects = {}; p.ts.finished = true; }
-  beginTurn(p) { if (this.turnP) this.finishTurn(this.turnP); this.turnP = p; this.turnNo++; p.restrict = p.pending; p.pending = {}; p.ts = { used: {} }; p.newCount = {}; this.src = ''; }
+  finishTurn(p) { p.effects = {}; p.restrict = {}; p.ts.finished = true; turnEffects.finish(this, this.turnNo); }
+  beginTurn(p) { if (this.turnP) this.finishTurn(this.turnP); this.turnP = p; this.turnNo++; p.restrict = {...p.pending, ...turnEffects.begin(this, p.idx)}; p.pending = {}; p.ts = { used: {} }; p.newCount = {}; this.src = ''; }
   async confirmTurnEnd(p, outgoing) {
     if (!p.agent.wantsAck) return;
     const label = { serve: '發球', attack: '進攻', block: '攔網回球' }[outgoing.type];
@@ -1573,11 +1711,11 @@ class Game {
       center = cb.tsu ? 'P02-003' : (pick.center && cb.cards.includes(pick.center) ? pick.center : cb.cards[0]);
     } else { cb = combos[pick]; center = cb.tsu ? 'P02-003' : cb.cards.slice().sort((a, b) => val(b) - val(a))[0]; }
     this.place(p, 'block', center); this.src = '月島';
-    const sides = cb.cards.filter(c => c !== center); for (const c of sides) rm(p.hand, c);
-    p.ts.sides = sides;
+    const sides = cb.cards.filter(c => c !== center); p.ts.sides = [];
+    for (const c of sides) this.moveCode(p.hand, p.ts.sides, c);
     if (cb.tsu) {
       const e = await this.pickHand(p, '月島：選 1 張 Event 放到 Event 區', x => !isC(x), 'cost');
-      rm(p.hand, e); p.ev.push(e); this.sdraw(p, 1);
+      this.moveCode(p.hand, p.ev, e); this.sdraw(p, 1);
       this.effect(p, 'block').mods.blk = 6;
     }
     p.ts.blk = cb.total; p.ts.blockers = cb.cards.slice();
@@ -1625,7 +1763,7 @@ class Game {
     if (c === 'PR-022' && ball.type !== 'block' && off <= 2) { p.ts.apass = 1; this.log('澤村：A 傳球(1)'); if (p.guts('receive') >= 1 && await this.yes(p, 'skill', '澤村：付 1 Guts 抽 1？', { card: c })) { await this.pay(p, 'receive', 1); this.sdraw(p, 1); } }
     if (c === 'P03-046' && ball.type === 'serve') { if (off <= 2) { this.sdraw(p, 1); this.log('赤木：抽 1'); } if (off >= 6) { r += 2; this.log('赤木：接球 +2'); } }
     if (c === 'P01-039' && off >= 6 && p.hand.some(isA) && await this.yes(p, 'skill', '渡：棄 1 張青城 → 接球 +1？', { card: c, need: off - r })) { await this.discard(p, '選 1 張青城棄掉', isA); r += 1; if (p.allSchool(A)) this.sdraw(p, 1); }
-    p.ts.rcv = r; p.ts.receiver = c;
+    p.ts.rcv = r; p.ts.receiver = c; p.ts.receiverRef = this.cardReference(p, 'receive');
     this.log(`${p.name} 接球 ${nm(c)}：${r} vs ${off}`);
     await this.eventLoop(p, 'rcv', {});
     r = p.ts.rcv;
@@ -1645,7 +1783,7 @@ class Game {
       await this.discard(p, '選 1 張青城棄掉', isA); toss += 1;
       if (o.hand.length >= 4) await this.discard(o, '及川 033：你要棄 1 張手牌');
     }
-    p.ts.toss = toss; p.ts.setter = t;
+    p.ts.toss = toss; p.ts.setter = t; p.ts.setterRef = this.cardReference(p, 'toss');
     this.log(`${p.name} 舉球 ${nm(t)}：${toss}`);
     await this.eventLoop(p, 'tos', {});
     // attack
@@ -1679,16 +1817,16 @@ class Game {
     let atk = st(a, 'atk');
     const g = p.guts('attack');
     const t = p.ts.setter;
-    if (a === 'P01-002' && g >= 3 && await this.yes(p, 'skill', '日向：付 3 Guts → 攻擊 +4，對手下回合不能派原始接球 ≥6？', { card: a })) { await this.pay(p, 'attack', 3); atk += 4; o.pending.no_rcv6 = 1; }
+    if (a === 'P01-002' && g >= 3 && await this.yes(p, 'skill', '日向：付 3 Guts → 攻擊 +4，對手下回合不能派原始接球 ≥6？', { card: a })) { await this.pay(p, 'attack', 3); atk += 4; this.scheduleRestriction(o, 'no_rcv6', 1, false, this.cardReference(p, 'attack')); }
     if (a === 'BP-002' && p.hand.length && await this.yes(p, 'skill', '日向：棄 1 張手牌 → 攻擊 +2？', { card: a })) { await this.discard(p, '選 1 張手牌棄掉（棄日向可當オープン的彈藥）'); atk += 2; }
-    if (a === 'P01-003' && !fromDrop && p.hand.length <= 3 && nm(t) === '影山 飛雄') { atk += 2; o.pending.two_blockers = 1; this.log('日向 003：攻擊 +2，對手下回合最多 2 人攔網'); }
+    if (a === 'P01-003' && !fromDrop && p.hand.length <= 3 && nm(t) === '影山 飛雄') { atk += 2; this.scheduleRestriction(o, 'two_blockers', 1, false, this.cardReference(p, 'attack')); this.log('日向 003：攻擊 +2，對手下回合最多 2 人攔網'); }
     if (a === 'P01-035' && p.hand.some(isA) && await this.yes(p, 'skill', `岩泉：棄 1 張青城 → 攻擊 +2${o.hand.length <= 4 ? '，對手下回合不能用技能加牌' : ''}？`, { card: a })) {
       await this.discard(p, '選 1 張青城棄掉', isA); atk += 2;
-      if (o.hand.length <= 4) { o.pending.no_add = 1; this.log(`岩泉：${o.name} 下回合不能用技能加牌`, 'warn'); }
+      if (o.hand.length <= 4) { this.scheduleRestriction(o, 'no_add', 1, false, this.cardReference(p, 'attack')); this.log(`岩泉：${o.name} 下回合不能用技能加牌`, 'warn'); }
     }
     if (a === 'D04-002' && nm(t) === '及川 徹' && g >= 2 && await this.yes(p, 'skill', '岩泉：付 2 Guts → 攻擊 +3？', { card: a })) { await this.pay(p, 'attack', 2); atk += 3 + (p.sets.length < o.sets.length ? 1 : 0); }
     if (this.cardName(p, 'attack') === '日向 翔陽' && p.ts.hin) atk += p.ts.hin;
-    p.ts.atk = atk; p.ts.attacker = a;
+    p.ts.atk = atk; p.ts.attacker = a; p.ts.attackerRef = this.cardReference(p, 'attack');
     this.log(`${p.name} 攻擊手 ${nm(a)}：攻 ${atk}`);
   }
 
@@ -1740,9 +1878,8 @@ class Game {
   async resolve(p, c, timing) {
     const o = p.opp; this.src = nm(c);
     if (sharedRules.handles(c)) return sharedRules.resolve(this, p, c, timing);
-    rm(p.hand, c);
     if (isC(c)) {
-      p.drop.push(c);
+      this.moveCode(p.hand, p.drop, c);
       if (c === 'P03-057') {
         p.ts.kurokawa = 1;
         const receiver = p.ts.receiver;
@@ -1754,7 +1891,7 @@ class Game {
       }
       return;
     }
-    p.ev.push(c); p.ts.used[c] = 1;
+    this.moveCode(p.hand, p.ev, c); p.ts.used[c] = 1;
     this.log(`${p.name} 打出 ${nm(c)}`, 'ev');
     switch (c) {
       case 'PR-029': {
@@ -1777,12 +1914,12 @@ class Game {
         const back = [...new Set(p.ev.filter(x => EVT[x] && EVT[x].length === 1 && EVT[x][0] === 'atk'))];
         if (await this.yes(p, 'skill', 'おりこう：放回牌庫底，從 Event 區最多拿 1 張攻擊 Event 回手？', {})) {
           const x = await this.optionalRetrieve(p, '最多選 1 張攻擊 Event 回手', back);
-          rm(p.ev, c); p.deck.unshift(c);
+          this.moveCode(p.ev, p.deck, c, 0);
           if (x && await this.sadd(p, x, p.ev)) this.log(`回收 ${nm(x)}`);
         }
         break;
       }
-      case 'P01-087': { this.sdraw(p, 1); if (timing === 'tos' && p.ts.setter && nm(p.ts.setter) === '及川 徹') p.ts.toss += 1; o.pending.oremo = (o.pending.oremo || 0) + 1; this.log(`${o.name} 下回合每次非抽牌加手牌要棄 1`, 'warn'); break; }
+      case 'P01-087': { this.sdraw(p, 1); if (timing === 'tos' && p.ts.setter && nm(p.ts.setter) === '及川 徹') p.ts.toss += 1; this.scheduleRestriction(o, 'oremo', 1, true, this.cardReference(p, 'ev')); this.log(`${o.name} 下回合每次非抽牌加手牌要棄 1`, 'warn'); break; }
       case 'P01-078': {
         this.sdraw(p, 2);
         if (p.hand.length) await this.discard(p, 'オープン攻撃：抽 2 後棄 1 張');
@@ -1795,7 +1932,7 @@ class Game {
         }
         break;
       }
-      case 'D01-012': { this.sdraw(p, 1); p.ts.atk += 1; if (this.cardName(p, 'toss') === '影山 飛雄' && this.cardName(p, 'attack') === '日向 翔陽') { o.pending.one_blocker = 1; this.log(`${o.name} 下回合最多派 1 人攔網`, 'warn'); } break; }
+      case 'D01-012': { this.sdraw(p, 1); p.ts.atk += 1; if (this.cardName(p, 'toss') === '影山 飛雄' && this.cardName(p, 'attack') === '日向 翔陽') { this.scheduleRestriction(o, 'one_blocker', 1, false, this.cardReference(p, 'ev')); this.log(`${o.name} 下回合最多派 1 人攔網`, 'warn'); } break; }
       case 'P01-074': { this.sdraw(p, 1); p.ts.atk += 1; if (o.ev.filter(x => EVT[x] && (EVT[x].includes('drw') || EVT[x].includes('rcv'))).length >= 5) p.ts.atk += 2; break; }
       case 'P03-096': {
         this.sdraw(p, 1);
@@ -1816,7 +1953,7 @@ class Game {
         }
         break;
       }
-      case 'P04-088': { this.sdraw(p, 1); p.ts.atk += 1; if (p.ts.atk >= 8) { o.pending.rcv_minus = 1; this.log(`${o.name} 下回合接球手 −1`, 'warn'); } break; }
+      case 'P04-088': { this.sdraw(p, 1); p.ts.atk += 1; if (p.ts.atk >= 8) { this.scheduleRestriction(o, 'rcv_minus', 1, false, this.cardReference(p, 'ev')); this.log(`${o.name} 下回合接球手 −1`, 'warn'); } break; }
     }
   }
 }

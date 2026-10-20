@@ -94,6 +94,7 @@ async function check(name, run) {
         p.sets = [pool.pop(), pool.pop()]; p.deck = pool; p.drop = [];
         p.area = { serve: [], block: [], receive: [], toss: [], attack: [] };
       }
+      delete g.cardState; // The fixture replaces the whole post-setup layout, before testing real movement.
       return { type: 'attack', off: 9 };
     };
     await assert.rejects(g.run(), error => error === STOP);

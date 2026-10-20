@@ -14,6 +14,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
             window.sharedGame=this;const p=this.players[0];this.beginTurn(p);this.rallyNo=1;this.server=0;
             p.hand=['P01-088','P04-089','P01-013','D04-003','D04-003'];p.deck=['D04-003','D04-003'];
             p.area.receive=['P04-026'];p.area.attack=['P01-004'];p.ts.receiver='P04-026';p.ts.rcv=5;
+            p.ts.receiverRef=this.cardReference(p,'receive');
             await this.resolve(p,'P01-088','rcv');await this.resolve(p,'P04-089','rcv');await this.resolve(p,'P01-013','rcv');
             await this.confirmTurnEnd(p,{type:'attack',off:4});this.finishTurn(p);this.winner=p;return p;
           }
@@ -38,6 +39,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
       await page.locator('#dockOpts [data-i]').last().click();await wait('縁下 力：選擇場上');await click('攻擊區');await page.waitForSelector('#endTurn');
       const state=await page.evaluate(()=>{const p=sharedGame.players[0];return {rcv:p.ts.rcv,attackReceive:sharedGame.parameter(p,'attack','rcv'),drop:p.drop.length,deck:p.deck.length,ev:p.ev};});
       assert.deepEqual(state,{rcv:9,attackReceive:7,drop:2,deck:1,ev:['P01-088','P04-089']});
+      assert.equal(await page.evaluate(()=>Object.keys(sharedGame.cardSnapshot().cards).length),49,'fixture physical cards conserved');
       assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'no horizontal overflow');
       assert.deepEqual(errors,[]);await page.click('#endTurn');await page.waitForSelector('[data-act="again"]');await page.close();
       console.log('shared settlement UI passed',width,height);

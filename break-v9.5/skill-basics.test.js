@@ -28,14 +28,14 @@ function fixture() {
   { const { g, p } = fixture(); p.hand = ['D04-002']; p.ts.setter = 'D04-003'; p.sets = []; p.opp.sets = ['D01-005']; p.area.attack = ['P01-033', 'P01-035'];
     await g.enterAttack(p, 'D04-002', false); assert.equal(p.ts.atk, 5); assert.equal(p.drop.length, 2);
   }
-  { const { g, p } = fixture(); p.hand = ['P01-035', 'D04-003']; p.opp.hand = Array(4).fill('D01-005');
+  { const { g, p } = fixture(); p.hand = ['P01-035', 'D04-003']; p.opp.hand = Array(4).fill('D01-005'); p.opp.deck = ['P01-002'];
     await g.enterAttack(p, 'P01-035', false); assert.equal(p.ts.atk, 4); assert.deepEqual(p.drop, ['D04-003']);
-    g.beginTurn(p.opp); const size = p.opp.hand.length; p.opp.deck = ['P01-002'];
+    g.beginTurn(p.opp); const size = p.opp.hand.length;
     assert.equal(g.sdraw(p.opp, 1), 0); assert.equal(p.opp.hand.length, size); assert.equal(g.draw(p.opp, 1), 1);
   }
-  { const { g, p } = fixture(); p.hand = ['P04-088']; p.deck = ['P01-013']; p.ts.attacker = 'D04-002'; p.ts.atk = 7;
+  { const { g, p } = fixture(); p.hand = ['P04-088', 'P04-088']; p.deck = ['P01-013']; p.ts.attacker = 'D04-002'; p.ts.atk = 7;
     await g.resolve(p, 'P04-088', 'atk'); assert.equal(p.ts.atk, 8); assert.equal(p.opp.pending.rcv_minus, 1);
-    p.hand.push('P04-088'); assert(!g.playable(p, 'atk').some(x => x.card === 'P04-088'));
+    assert(!g.playable(p, 'atk').some(x => x.card === 'P04-088'));
   }
   { const { g, p } = fixture(); p.hand = ['P01-039', 'D04-010']; p.deck = ['D04-003', 'P04-026']; g.ball.off = 6;
     await assert.rejects(g.receiveTurn(p), error => error === STOP);

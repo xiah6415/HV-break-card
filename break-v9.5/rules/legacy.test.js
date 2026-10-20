@@ -27,11 +27,11 @@ async function check(name,fn){await fn();cases.push({name,passed:true});}
   });
   for(const pay of [false,true])await check('Optional discard '+pay+' changes the same selected target exactly once',async()=>{
     const {g,p,logs}=setup(async(g,p,r)=>r.kind==='target'?'attack':r.kind==='skill'?pay:r.options.at(-1).value);
-    p.hand=['P04-089','D04-003','D04-003'];p.deck=['D04-003'];p.area.attack=['P01-035'];
+    p.hand=['P04-089','D04-003','D04-003'];p.deck=['P04-089','D04-003'];p.area.attack=['P01-035'];
     const before=cards(g);await g.resolve(p,'P04-089','rcv');assert.deepEqual(cards(g),before);
     assert.equal(g.parameter(p,'attack','rcv'),pay?4:2);assert.equal(p.ts.rcv,5);assert.equal(p.drop.length,pay?1:0);
     assert.equal(p.hand.length,pay?2:3);assert.equal(logs.filter(s=>s.includes('抽到')).length,1);assert.equal(logs.filter(s=>s.includes('棄掉')).length,pay?1:0);
-    p.hand.push('P04-089');assert(!bridge.canPlay(g,p,'P04-089','rcv'),'same-name limit survives a fresh transaction');
+    g.moveCard(p.deck,p.hand,0);assert(!bridge.canPlay(g,p,'P04-089','rcv'),'same-name limit survives a fresh transaction');
     await assert.rejects(g.resolve(p,'P04-089','rcv'),/already used/);
   });
   await check('No-add restriction skips the draw but preserves target bonuses',async()=>{
@@ -39,8 +39,8 @@ async function check(name,fn){await fn();cases.push({name,passed:true});}
     await g.resolve(p,'P01-088','rcv');assert.equal(p.deck.length,1);assert.equal(p.ts.rcv,7);assert.deepEqual(p.newCount,{});
   });
   await check('An inert optional event is unavailable; a compulsory draw may resolve without a target',async()=>{
-    const {g,p}=setup(async(g,p,r)=>r.kind==='skill'?false:r.options[0].value);p.area.receive=[];p.hand=['P01-088'];
-    assert(!bridge.canPlay(g,p,'P01-088','rcv'));p.deck=['D04-003'];assert(bridge.canPlay(g,p,'P01-088','rcv'));
+    const {g,p}=setup(async(g,p,r)=>r.kind==='skill'?false:r.options[0].value);p.area.receive=[];p.hand=['P01-088'];p.deck=['D04-003'];p.restrict.no_add=1;
+    assert(!bridge.canPlay(g,p,'P01-088','rcv'));delete p.restrict.no_add;assert(bridge.canPlay(g,p,'P01-088','rcv'));
     const options=[];p.agent.choose=async(g,p,r)=>{options.push(r.options.map(o=>o.value));return r.options[0].value;};
     await g.resolve(p,'P01-088','rcv');assert.deepEqual(options,[[1]],'zero draw would be inert and is not offered');assert.equal(p.hand.length,1);
   });
@@ -75,7 +75,7 @@ async function check(name,fn){await fn();cases.push({name,passed:true});}
     const {g,p}=setup(async()=> 'receive');p.hand=['P01-013'];p.area.receive=['P01-004'];p.ts.receiver='P01-004';p.ts.rcv=5;
     p.effects.receive={card:'P01-002',name:'過期名稱',mods:{rcv:9}};
     await g.resolve(p,'P01-013','rcv');assert.equal(p.ts.rcv,7);assert.equal(g.parameter(p,'receive','rcv'),7);
-    assert.deepEqual(p.effects.receive,{card:'P01-004',mods:{rcv:2}});
+    assert.deepEqual(p.effects.receive,{card:'P01-004',ref:g.cardReference(p,'receive'),mods:{rcv:2}});
   });
   console.log(JSON.stringify({passed:cases.length,failed:0,cases},null,2));
 })().catch(e=>{console.error(e);process.exitCode=1;});
