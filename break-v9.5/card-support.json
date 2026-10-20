@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "checkedOn": "2026-10-19",
+  "checkedOn": "2026-10-20",
   "rules": {
     "version": "1.06",
     "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/rules/pdf/rules_general_v1.06.pdf",
@@ -598,15 +598,15 @@
         "1810",
         "1811"
       ],
-      "status": "partial",
-      "gaps": [
-        "目前採玩家指定的接球前延長時機，且以接球防降為主；正式抽牌時機與各參數防降待分離核對。"
-      ],
+      "status": "scenario-tested",
+      "gaps": [],
       "tests": [
-        "rules-audit.test.js",
-        "events-timing.test.js"
+        "rules/entry.test.js",
+        "rules/entry-undo.test.js",
+        "rules/entry-e2e.js"
       ],
-      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P03-057"
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P03-057",
+      "settlement": "shared-rules-local-migration"
     },
     "D01-012": {
       "name": "ブロード攻撃",
@@ -1183,9 +1183,12 @@
       "status": "scenario-tested",
       "gaps": [],
       "tests": [
-        "skill-basics.test.js"
+        "rules/entry.test.js",
+        "rules/entry-undo.test.js",
+        "rules/entry-e2e.js"
       ],
-      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P04-088"
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P04-088",
+      "settlement": "shared-rules-local-migration"
     },
     "P04-089": {
       "name": "3年間ありがとう!!!",

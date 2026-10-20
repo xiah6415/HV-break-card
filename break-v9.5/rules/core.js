@@ -571,6 +571,28 @@ class Kernel {
     for(const e of events){legal(['draw','add_hand'].includes(e.operation)&&this.card(e.card).owner===e.player,'Hand-add event identity mismatch');this._emit({type:'hand_added',player:e.player,card:e.card,operation:e.operation});}
     this._drain();return {performed:true};
   }); }
+  // Host sends explicit entry receipts after the physical move and name choice.
+  // Historical entries may have left during the same skill: retain the event,
+  // but their old reference cannot receive a new numeric effect.
+  // Covering/exposing a card alone must never call this API.
+  notifyHostEvents(events) { return this._atomic(()=>{
+    legal(this.state.stage==='rally'&&this.state.turn.step==='free'&&!this.state.queue.length,'Host notification requires an idle checkpoint');
+    legal(Array.isArray(events)&&events.length>0,'Actual host events required');
+    for(const e of events) {
+      legal(this.card(e.card).owner===e.player,'Host event owner mismatch');
+      if(e.type==='hand_added') {
+        legal(['draw','add_hand'].includes(e.operation),'Unknown hand operation');
+        this._emit({type:e.type,player:e.player,card:e.card,operation:e.operation});
+      } else {
+        legal(e.type==='character_entry'&&e.card===e.character?.id&&this.card(e.card).printed.type==='character'&&Number.isInteger(e.character.incarnation)&&e.character.incarnation>=0&&e.character.incarnation<=this.card(e.card).incarnation&&['serve','receive','toss','attack','center_blocker','side_blocker'].includes(e.role),'Entry event identity mismatch');
+        if(e.character.incarnation===this.card(e.card).incarnation)legal(this.current(e.character)&&this.role(e.card)===e.role,'Current entry role mismatch');
+        legal(['hand','drop','guts'].includes(e.origin)&&['rule','skill'].includes(e.reason),'Unknown entry origin');
+        const c=this.card(e.card);c.entryOrigin=e.origin;c.entryReason=e.reason;c.entryTurn=this.state.turn.id;
+        this._emit({type:e.type,player:e.player,card:e.card,character:e.character,role:e.role,origin:e.origin});
+      }
+    }
+    this._drain();return {performed:true};
+  }); }
   beginTurn(player,phase='draw') { return this._atomic(()=>{legal(this.state.stage==='rally'&&this.state.turn.step==='cleaned'&&player===1-this.state.turn.player,'Previous turn must be cleaned and handed to the opponent');this.state.turn={id:this.state.turn.id+1,player,phase,step:'free'};for(const e of this.state.effects)if(e.duration.kind==='next_opponent_turn'&&e.duration.activeTurn===null&&e.duration.player===player)e.duration.activeTurn=this.state.turn.id;}); }
   endTurn() { return this._atomic(()=>{legal(this.state.stage==='rally'&&this.state.turn.step==='free'&&!this.state.queue.length,'Cannot end outside an idle free step');this._emit({type:'turn_end',player:this.state.turn.player});this._drain();this._cleanup(false);this.state.turn.step='cleaned';}); }
   _cleanup(loss) { this.state.effects=this.state.effects.filter(e=>!loss&&e.duration.kind==='next_opponent_turn'&&e.duration.activeTurn===null);this.state.locks=[];this.state.events.push({type:'cleanup',reason:loss?'loss':'turn_end'}); }

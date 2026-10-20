@@ -21,6 +21,16 @@
       "profile_sha256": "2423a208a7eb93517ac69903ec16e88598d10b0b83a98a411f5da98897351c33",
       "scope": "draw / chosen Oikawa toss bonus / persistent next-opponent hand_added watch / affected-player discard / trigger order",
       "tests": "rules/watch.test.js; rules/watch-undo.test.js; rules/watch-e2e.js"
+    },
+    "HV-P03-057:77235a8a9fc3e575": {
+      "profile_sha256": "50161442cd8ed6fe4252e5e62d79c87288e6f029eb23500e1b8642446324db34",
+      "scope": "actual character-entry watches / reference-bound receive bonus and decrease protection / next-opponent receive decrease",
+      "tests": "rules/entry.test.js; rules/entry-undo.test.js; rules/entry-e2e.js"
+    },
+    "HV-P04-088:d9dd5b37373f3814": {
+      "profile_sha256": "5f3c3ab12d741d5a834c9637416aef825661c1b5c59c410d6961224927d1acc1",
+      "scope": "actual character-entry watches / reference-bound receive bonus and decrease protection / next-opponent receive decrease",
+      "tests": "rules/entry.test.js; rules/entry-undo.test.js; rules/entry-e2e.js"
     }
   }
 }

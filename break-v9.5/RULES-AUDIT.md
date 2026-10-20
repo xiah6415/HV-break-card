@@ -5,14 +5,15 @@
 47 張均已對到官方卡號、名稱、數值與位置；6 組預設牌組全部納入。角色數值與目前引擎一致。
 
 - 無技能／數值核對：18 張。
-- 主要技能情境通過：17 張。
-- 部分技能待補：12 張。
+- 主要技能情境通過：18 張。
+- 部分技能待補：11 張。
 
 「主要技能情境通過」只代表列出的測試通過，不是所有目標、技能組合或規則均已驗證。部分技能卡仍可在現有對練台使用，限制見下表。官方 Q&A 編號是來源索引，不代表每則 Q&A 都已自動化。
 
 ## 本批已修正
 
-- 黒川生效時，接球預覽與實際防降、PR-057 雙學年判定一致。
+- 黒川改走資料：限抽牌階段棄手牌、後續烏野2/3年角色真正登場接球+2／全參數防降；不對已登場角色追溯、不把Guts露出當登場。多張可累加，原無依據的單次旗標刪除。
+- ドンピシャ改走資料：抽牌、選青城攻擊角色+1、達8才生成下個對手回合每次接球登場-1；正常結束／Loss到期，與回合玩家防降按共用順序結算。
 - PR-029、P02-001、P01-006、P03-086 的「最多」回收可選擇不拿。
 - オープン攻撃在日向舉球時仍可抽／棄，但不會違規登場同名日向。
 - 移除自由步驟 12 次的任意上限。
@@ -28,7 +29,7 @@
 1. 將新目標／參數介面套用到其餘卡片的已知限制。
 2. 其他事件的場上目標、可不抽牌，以及無變化時不能打出／失效處理。
 3. 登場技能的可不發動、中側攔技能選擇、各效果期限與負值。
-4. 剩餘 12 張部分技能逐項補測後，再進入牌組串接階段。
+4. 剩餘 11 張部分技能逐項補測後，再進入牌組串接階段。
 
 ## 本機流程與正式模式待分離項目
 
@@ -63,7 +64,7 @@
 | [HV-PR-053](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-PR-053&voba=P) | 日向 翔陽 | 無技能／數值核對 | 官方卡文無技能；數值、卡圖與牌組引用已檢查 |
 | [HV-D01-004](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-D01-004&voba=D) | 山口　忠 | 無技能／數值核對 | 官方卡文無技能；數值、卡圖與牌組引用已檢查 |
 | [HV-P03-046](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P03-046&voba=N) | 赤木 路成 | 主要技能情境通過 | `skill-basics.test.js` |
-| [HV-P03-057](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P03-057&voba=N) | 黒川 広樹 | 部分技能待補 | 目前採玩家指定的接球前延長時機，且以接球防降為主；正式抽牌時機與各參數防降待分離核對。；`rules-audit.test.js`；`events-timing.test.js` |
+| [HV-P03-057](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P03-057&voba=N) | 黒川 広樹 | 主要技能情境通過 | 共用登場監聽、全部參數防降、正式抽牌時機／多張累加、實體代次與期限；`rules/entry.test.js`／Undo／畫面。舊角色被動的任意排序尚未全面整合。 |
 | [HV-D01-012](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-D01-012&voba=D) | ブロード攻撃 | 部分技能待補 | 目前只加本次攻擊角色；需提供場上烏野角色指定，並核對混校牌組的目標限制。 |
 | [HV-P01-074](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-074&voba=N) | 烏養 一繋 | 部分技能待補 | 額外加成條件已實作；目前僅指定本次攻擊角色，尚未提供其他場上角色。 |
 | [HV-P01-078](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-078&voba=S) | オープン攻撃 | 部分技能待補 | 抽棄、次數及同名舉球限制已補測；PR-057 的可選名稱仍待名稱模組處理。；`rules-audit.test.js` |
@@ -85,7 +86,7 @@
 | [HV-D04-006](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-D04-006&voba=D) | 松川 一静 | 無技能／數值核對 | 官方卡文無技能；數值、卡圖與牌組引用已檢查 |
 | [HV-P04-024](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P04-024&voba=N) | 松川 一静 | 無技能／數值核對 | 官方卡文無技能；數值、卡圖與牌組引用已檢查 |
 | [HV-P01-087](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-087&voba=N) | 俺も思った☆ | 主要情境通過 | 本機共用資料：選任一場上及川舉球+1，保存下回合非抽牌加手牌監聽；完整技能後逐張觸發，由效果持有人排順序、受影響玩家選棄牌。；`rules/watch.test.js`／`rules/watch-undo.test.js`／`rules/watch-e2e.js` |
-| [HV-P04-088](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P04-088&voba=S) | ドンピシャ!!! | 主要技能情境通過 | `skill-basics.test.js` |
+| [HV-P04-088](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P04-088&voba=S) | ドンピシャ!!! | 主要技能情境通過 | 資料目標／攻擊達8判定、下回合每次接球登場-1／保護優先／到期；`rules/entry.test.js`／Undo／畫面；`skill-basics.test.js`。 |
 | [HV-P04-089](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P04-089&voba=N) | 3年間ありがとう!!! | 主要情境通過 | 本機共用結算：抽牌、指定場上青城三年角色，可選棄牌費用對同一目標追加+2，保留同名限次。；`rules/legacy.test.js`／`rules/legacy-undo.test.js`／`rules/legacy-e2e.js` |
 | [HV-P01-088](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-088&voba=N) | お前達は 強いよ | 主要情境通過 | 本機共用結算：抽0／1張、指定場上青城角色，結算時手牌≤3同一目標追加+1；無變化分支保守停用。；`rules/legacy.test.js`／`rules/legacy-undo.test.js`／`rules/legacy-e2e.js` |
 

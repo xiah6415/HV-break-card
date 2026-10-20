@@ -14,7 +14,7 @@ async function check(name, run) {
 }
 (async () => {
   await check('Kuro preview equals receive value, including dual-year PR-057 and immunity', async () => {
-    const { g, p } = fixture(); p.ts.kurokawa = 1; p.restrict.rcv_minus = 1;
+    const { g, p } = fixture(); p.hand=['P03-057','PR-022','PR-057','P01-004'];p.restrict.rcv_minus=1;await g.resolve(p,'P03-057','drw');
     assert.equal(g.rcvPreview(p, 'PR-022'), '7'); assert.equal(g.rcvPreview(p, 'PR-057'), '7');
     assert.equal(g.rcvPreview(p, 'P01-004'), '4');
   });

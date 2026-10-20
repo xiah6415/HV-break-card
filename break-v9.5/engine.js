@@ -256,7 +256,7 @@ class Game {
     return st(card, param) + (fx?.card === card && this.validEffect(p, key) ? fx.mods?.[param] || 0 : 0);
   }
   boostParameter(p, key, param, amount) {
-    if (this.parameter(p, key, param) == null) return;
+    if (this.parameter(p, key, param) == null || amount < 0 && sharedRules.protectedParameter(this,p,key,param)) return;
     const fx = this.effect(p, key); fx.mods ||= {}; fx.mods[param] = (fx.mods[param] || 0) + amount;
     const active = this.activeParameter(p, key, param);
     if (active && p.ts[active] != null) p.ts[active] += amount;
@@ -269,6 +269,7 @@ class Game {
   }
   canEnter(p, area, c) { return st(c, { serve: 'srv', block: 'blk', receive: 'rcv', toss: 'tos', attack: 'atk' }[area]) != null && this.legalEntryNames(p, area, c).length > 0; }
   async enterCharacter(p, area, c, fromDrop = false) {
+    sharedRules.assertReady(this);
     const names = this.legalEntryNames(p, area, c);
     if (!this.canEnter(p, area, c)) throw new Error('不能以相同名稱登場');
     let name = nm(c);
@@ -277,6 +278,9 @@ class Game {
     if (fromDrop) { this.moveCode(p.drop, p.area[area], c); delete p.effects[area]; }
     else this.place(p, area, c);
     if (c === 'PR-057') { this.effect(p, area).name = name; this.log(`着地上手組。：本回合在${AREA_ZH[area]}區作為「${name}」`); }
+    const activeRole={receive:'receiver',toss:'setter',attack:'attacker'}[area];
+    if(activeRole){p.ts[activeRole]=null;delete p.ts[activeRole+'Ref'];}
+    await sharedRules.charactersEntered(this,p,[{key:area,origin:fromDrop?'drop':'hand',reason:fromDrop?'skill':'rule'}]);
   }
   async chooseTarget(p, targets, prompt, timing) {
     if (!targets.length) { this.log('沒有符合條件的場上角色，略過這部分效果', 'warn'); return null; }
@@ -385,7 +389,7 @@ class Game {
     const cs = [...new Set(p.handC().filter(c => st(c, 'srv') != null))];
     if (!cs.length) this.lost(p, '沒有能發球的角色');
     const c = await this.ask(p, { kind: 'serve', prompt: '選擇發球角色', options: cs.map(x => ({ label: `${nm(x)}　發 ${st(x, 'srv')}`, card: x, value: x })) });
-    this.place(p, 'serve', c); this.src = nm(c);
+    await this.enterCharacter(p, 'serve', c); this.src = nm(c);
     let off = st(c, 'srv');
     if (c === 'P01-033' && p.hand.some(isA) && await this.yes(p, 'skill', `及川：棄 1 張青城 → 發球 +1${o.hand.length >= 4 ? '，對手棄 1' : ''}？`, { card: c })) {
       await this.discard(p, '選 1 張青城棄掉', isA); off += 1;
@@ -454,6 +458,7 @@ class Game {
       this.moveCode(p.hand, p.ev, e); this.sdraw(p, 1);
       this.effect(p, 'block').mods.blk = 6;
     }
+    await sharedRules.charactersEntered(this,p,[{key:'block'},...sides.map((c,i)=>({key:'side:'+i}))]);
     p.ts.blk = cb.total; p.ts.blockers = cb.cards.slice();
     this.log(`${p.name} 攔網 ${cb.cards.map(short).join('＋')}：攔 ${cb.total} vs ${this.ball.off}`);
     await this.eventLoop(p, 'blk', {});
@@ -478,10 +483,7 @@ class Game {
     if (!cs.length) this.lost(p, '沒有能接球的角色');
     const c = await this.ask(p, { kind: 'receiver', prompt: `來球：${ball.type === 'serve' ? '發球' : ball.type === 'block' ? '攔網回球' : '攻擊'} ${off}。選擇接球角色`, ball, options: cs.map(x => ({ label: `${nm(x)}　接 ${this.rcvPreview(p, x)}`, card: x, value: x })) });
     await this.enterCharacter(p, 'receive', c); this.src = nm(c);
-    const kuro = p.ts.kurokawa && kuroEligible(c);
-    let r = st(c, 'rcv') - (kuro ? 0 : (p.restrict.rcv_minus || 0));
-    if (p.restrict.rcv_minus && !kuro) this.log(`ドンピシャ!!!：${nm(c)} 接球 −${p.restrict.rcv_minus}`, 'warn');
-    if (kuro) { r += 2; this.log('黒川：接球 +2，數值不會被降低'); }
+    let r = this.parameter(p,'receive','rcv') - (sharedRules.protectedParameter(this,p,'receive','rcv')?0:p.restrict.rcv_minus||0);
     const g = p.guts('receive');
     if (c === 'D01-005' && g >= 3 && await this.yes(p, 'skill', '西谷：付 3 Guts → 抽 1、接球 +2？', { card: c, need: off - r })) { await this.pay(p, 'receive', 3); this.sdraw(p, 1); r += 2; }
     if (c === 'P03-051' && g >= 2 && await this.yes(p, 'skill', `西谷：付 2 Guts（全是烏野時）→ 接球 +2${ball.type === 'attack' && o.ts.attacker && st(o.ts.attacker, 'atk') === 0 ? '，對手攻擊手原始攻擊 0 → 對手進攻 −3' : ''}？`, { card: c, need: off - r })) {
@@ -512,7 +514,7 @@ class Game {
     if (!ts.length) this.lost(p, '沒有能舉球的角色');
     const t = await this.ask(p, { kind: 'setter', prompt: '選擇舉球角色', options: ts.map(x => ({ label: `${nm(x)}　舉 ${st(x, 'tos')}`, card: x, value: x })) });
     await this.enterCharacter(p, 'toss', t); this.src = nm(t);
-    let toss = st(t, 'tos') + (p.ts.apass || 0);
+    let toss = this.parameter(p,'toss','tos') + (p.ts.apass || 0);
     if (t === 'P01-006' && p.guts('toss') >= 2 && await this.yes(p, 'skill', '影山：付 2 Guts → 翻牌庫頂找日向/オープン，本回合日向攻擊 +2？', { card: t })) {
       await this.pay(p, 'toss', 2); p.ts.hin = 2;
       await this.revealTop(p, '影山', top => isHin(top) && top !== 'PR-057' || top === 'P01-078');
@@ -539,21 +541,20 @@ class Game {
     return { type: 'attack', off: offense };
   }
   rcvPreview(p, c) {
-    const kuro = p.ts.kurokawa && kuroEligible(c);
-    let r = st(c, 'rcv') - (kuro ? 0 : (p.restrict.rcv_minus || 0));
+    const preview=sharedRules.entryPreview(this,p,c,'receive','rcv');
+    let r = preview.value - (preview.protected?0:p.restrict.rcv_minus||0);
     const g = p.guts('receive') + (p.area.receive.length ? 1 : 0);
     const extra = [];
     if (c === 'D01-005' && g >= 3) extra.push('+2');
     if (c === 'P03-051' && g >= 2) extra.push('+2');
     if (c === 'P02-001' && p.sets.length + p.opp.sets.length <= 1 && g >= 3) extra.push('+6');
     if (c === 'P03-046' && this.ball.type === 'serve' && this.ball.off >= 6) extra.push('+2');
-    if (kuro) r += 2;
     return r + (extra.length ? `（技能 ${extra.join('')}）` : '');
   }
   async enterAttack(p, a, fromDrop) {
     const o = p.opp; this.src = nm(a);
     await this.enterCharacter(p, 'attack', a, fromDrop);
-    let atk = st(a, 'atk');
+    let atk = this.parameter(p,'attack','atk');
     const g = p.guts('attack');
     const t = p.ts.setter;
     if (a === 'P01-002' && g >= 3 && await this.yes(p, 'skill', '日向：付 3 Guts → 攻擊 +4，對手下回合不能派原始接球 ≥6？', { card: a })) { await this.pay(p, 'attack', 3); atk += 4; this.scheduleRestriction(o, 'no_rcv6', 1, false, this.cardReference(p, 'attack')); }
@@ -584,7 +585,6 @@ class Game {
       }
       const T = EVT[c];
       if (isC(c)) {
-        if (c === 'P03-057' && drawWindow && !p.ts.kurokawa) res.push({ card: c, label: '黒川（棄掉）：本回合 2/3 年烏野接球 +2' });
         continue;
       }
       if (!T || !(T.includes(timing) || (drawWindow && T.includes('drw')))) continue;
@@ -597,7 +597,6 @@ class Game {
         'D01-012': () => !!p.ts.attacker, 'P01-074': () => !!p.ts.attacker,
         'P03-096': () => (!p.restrict.no_add && p.deck.length > 0) || this.courtTargets(p).some(t => this.cardName(p, t.key) === '日向 翔陽'),
         'P03-087': () => this.uniformCourt(p),
-        'P04-088': () => p.ts.attacker && isA(p.ts.attacker),
       }[c];
       if (ok && ok()) res.push({ card: c, label: nm(c) });
     }
@@ -626,15 +625,6 @@ class Game {
     const o = p.opp;
     if (isC(c)) {
       this.moveCode(p.hand, p.drop, c);
-      if (c === 'P03-057') {
-        p.ts.kurokawa = 1;
-        const receiver = p.ts.receiver;
-        if (timing === 'rcv' && receiver && kuroEligible(receiver)) {
-          p.ts.rcv += 2 + (p.restrict.rcv_minus || 0);
-          this.log(`黒川：目前接球 +2，數值不會被降低 → ${p.ts.rcv}`);
-        }
-        this.log(`${p.name} 棄黒川：本回合 2/3 年烏野接球 +2`);
-      }
       return;
     }
     this.moveCode(p.hand, p.ev, c); p.ts.used[c] = 1;
@@ -698,7 +688,6 @@ class Game {
         }
         break;
       }
-      case 'P04-088': { this.sdraw(p, 1); p.ts.atk += 1; if (p.ts.atk >= 8) { this.scheduleRestriction(o, 'rcv_minus', 1, false, this.cardReference(p, 'ev')); this.log(`${o.name} 下回合接球手 −1`, 'warn'); } break; }
     }
   }
 }
@@ -715,15 +704,14 @@ function canChain(hand, rname, drop) {
 }
 function rcvPotential(g, p, c) {
   const off = g.ball.off;
-  const kuro = p.ts.kurokawa && kuroEligible(c);
-  let v = st(c, 'rcv') - (kuro ? 0 : (p.restrict.rcv_minus || 0));
+  const preview=sharedRules.entryPreview(g,p,c,'receive','rcv');
+  let v = preview.value - (preview.protected?0:p.restrict.rcv_minus||0);
   const gg = p.guts('receive') + (p.area.receive.length ? 1 : 0);
   if (c === 'D01-005' && gg >= 3) v += 2;
   if (c === 'P03-051' && gg >= 2) v += 2 + (g.ball.type === 'attack' && p.opp.ts.attacker && st(p.opp.ts.attacker, 'atk') === 0 ? 3 : 0);
   if (c === 'P02-001' && p.sets.length + p.opp.sets.length <= 1 && gg >= 3) v += 6;
   if (c === 'P03-046' && g.ball.type === 'serve' && off >= 6) v += 2;
   if (c === 'P01-039' && off >= 6 && p.hand.filter(isA).length >= 2) v += 1;
-  if (kuro) v += 2;
   const rest = p.hand.slice(); rest.splice(rest.indexOf(c), 1);
   let boost = 0;
   if (isK(c) && rest.includes('P01-013') && c !== 'P01-013') boost += 2;
@@ -821,11 +809,6 @@ const AI = {
             if (p.ts.rcv < g.ball.off && ['P01-013', 'P01-088', 'P04-089'].includes(c)) return c;
             if (c === 'P03-096' && p.ts.rcv < g.ball.off && g.cardName(p, 'receive') === '日向 翔陽') return c;
             if (c === 'P03-087' && p.ts.rcv < g.ball.off && g.cardName(p, 'receive') === '影山 飛雄' && g.courtGuts(p).length >= 6) return c;
-            if (c === 'P03-057') {
-              const receiver = p.ts.receiver;
-              if (p.ts.rcv < g.ball.off && receiver && kuroEligible(receiver)) return c;
-              continue;
-            }
             if (!EVT[c] || !EVT[c].includes('drw')) continue;
           }
           if (c === 'P01-078') {
@@ -837,7 +820,7 @@ const AI = {
             }
             return c;
           }
-          if (c === 'P03-057') continue;
+          if (c === 'P03-057' && !p.hand.some(x=>isC(x)&&kuroEligible(x))) continue;
           if (c === 'P03-086' && p.ts.toss >= 2) continue;
           return c;
         }

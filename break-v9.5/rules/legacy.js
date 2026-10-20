@@ -1,5 +1,5 @@
-/* Host settlement adapter with persistent, admitted hand-add watches.
-   Other event families and the full entry lifecycle remain unintegrated. */
+/* Host settlement adapter for hash-pinned finite skills and admitted watches.
+   Character passives still use the legacy controller. */
 (function(root) {
 'use strict';
 const node=typeof module!=='undefined'&&module.exports;
@@ -20,13 +20,19 @@ function stored(g) {
   if(s&&(s.version!==1||s.fingerprint!==data.fingerprint))throw new Error('Shared watcher data version mismatch');
   return s||{version:1,fingerprint:data.fingerprint,next:1,effects:[],receipts:[]};
 }
-function admitWatch(e) {
-  const steps=e.then?.steps,move=steps?.[0];
-  if(e.kind!=='watch'||e.event!=='hand_added'||e.duration.kind!=='next_opponent_turn'||JSON.stringify(e.filters)!==JSON.stringify({exclude_operations:['draw']})||e.then.kind!=='sequence'||steps.length!==1||move.kind!=='move'||move.pool.actor!=='opponent'||move.pool.zone!=='hand'||Object.keys(move.pool.filters).length||move.destination!=='owner.drop'||move.count!==1||move.count_mode!=='exact')throw new Error('Unintegrated persistent watcher mechanism');
+const watchSignatures=new Set();
+function signature(e) { return JSON.stringify([e.event,typeof e.duration==='string'?e.duration:e.duration.kind,e.filters||{},e.then,e.remaining_uses??e.remaining??null]); }
+(function walk(n){if(!n||typeof n!=='object')return;if(n.kind==='watch')watchSignatures.add(signature(n));for(const v of Object.values(n))if(v&&typeof v==='object')walk(v);})(data.catalog);
+function persistent(e) { return ['watch','protect'].includes(e.kind); }
+function admitEffect(e) {
+  const admittedFamily=e.event==='hand_added'&&e.duration.kind==='next_opponent_turn'||e.event==='character_entry'&&['this_turn','next_opponent_turn'].includes(e.duration.kind);
+  if(e.kind==='watch'&&admittedFamily&&watchSignatures.has(signature(e)))return;
+  if(e.kind==='protect'&&e.parameter==='all'&&e.duration.kind==='this_turn'&&e.ballOwner===null&&e.targets.length===1&&e.targets.every(r=>typeof r.id==='string'&&Number.isInteger(r.incarnation)))return;
+  throw new Error('Unintegrated persistent watcher mechanism');
 }
 function assertReady(g) {
   if(g.sharedRulesPending)throw new Error('A shared settlement is already awaiting a choice');
-  for(const e of stored(g).effects)admitWatch(e);
+  for(const e of stored(g).effects)admitEffect(e);
 }
 function beginTurn(g,p) {
   if(!g.sharedRulesState)return;
@@ -74,15 +80,15 @@ function transaction(g,p,c,timing,notification=null) {
       if(profile?.limit)k.state.locks.push({player:q.idx,turn:k.state.turn.id,name:profile.variants[0].printed.name});
     }
   }
-  // Keep only the admitted event family. Imported legacy numeric effects stay
+  // Keep only admitted persistent families. Imported legacy numeric effects stay
   // in the host; persisting them here too would apply every bonus twice.
   for(const e of saved.effects) {
-    admitWatch(e);
-    k.preflight(e.then);k.state.effects.push(copy(e));
+    admitEffect(e);
+    if(e.kind==='watch')k.preflight(e.then);k.state.effects.push(copy(e));
   }
   const source=notification?null:k.zone(p.idx,'hand').find(id=>short[id]===c),base=k.snapshot();
-  const command=notification?{kind:'hand_added',...notification}:{kind:'skill',player:p.idx,source,timing};
-  const invoke=notification?kernel=>kernel.notifyHandAdditions(notification.events):kernel=>kernel.card(source).printed.type==='event'?kernel.playEvent(source):kernel.useSkill(source);
+  const command=notification?{kind:'host_events',...notification}:{kind:'skill',player:p.idx,source,timing};
+  const invoke=notification?kernel=>kernel.notifyHostEvents(notification.events):kernel=>kernel.card(source).printed.type==='event'?kernel.playEvent(source):kernel.useSkill(source);
   function choices(req) {
     if(['target','payment_cards','move_cards'].includes(req.kind)) {
       if(req.count!==1)throw new Error('Adapter requires single physical-card choices');
@@ -104,7 +110,7 @@ function transaction(g,p,c,timing,notification=null) {
   }
   let eventCursor=0,effectCursor=base.effects.length,announced=false;
   function publish(state,complete,journal) {
-    for(const e of state.effects.filter(e=>e.kind==='watch'))admitWatch(e);
+    for(const e of state.effects.filter(persistent))admitEffect(e);
     const next=copy(physical);
     for(const key of Object.keys(next.zones)) {
       const [player,zone]=key.split('.');
@@ -135,7 +141,7 @@ function transaction(g,p,c,timing,notification=null) {
       }
     }
     if(complete) {
-      g.sharedRulesState={version:1,fingerprint:data.fingerprint,next:state.next,effects:copy(state.effects.filter(e=>e.kind==='watch')),receipts:notification?[...saved.receipts,...notification.events.map(e=>e.receipt)]:saved.receipts};
+      g.sharedRulesState={version:1,fingerprint:data.fingerprint,next:state.next,effects:copy(state.effects.filter(persistent)),receipts:notification?[...saved.receipts,...notification.events.map(e=>e.receipt)]:saved.receipts};
       g.sharedRulesPending=null;
       if(notification)g.sharedRulesEvents=[];
     } else {
@@ -150,8 +156,9 @@ function transaction(g,p,c,timing,notification=null) {
       else if(e.to.endsWith('.drop'))g.log(`${owner.name} 棄掉 ${byShort[code].display_name}`);
     }
     for(const e of state.effects.slice(effectCursor)) {
-      if(e.kind==='numeric') {const slot=slots[e.target.id];g.log(`${g.cardName(g.players[slot.player],slot.key)}（${labels[slot.key]||'側攔'}區）：${labels[e.parameter]} +${e.value}`);}
-      else if(e.kind==='watch')g.log(`效果：${g.players[e.actor].name}的下個回合，非抽牌加入手牌後需棄 1 張。`);
+      if(e.kind==='numeric') {const slot=slots[e.target.id];g.log(`${g.cardName(g.players[slot.player],slot.key)}（${labels[slot.key]||'側攔'}區）：${labels[e.parameter]} ${e.value<0?'−':'+'}${Math.abs(e.value)}`);}
+      else if(e.kind==='protect')g.log('登場效果：這位角色本回合的數值不會被降低。');
+      else if(e.kind==='watch')g.log(e.event==='hand_added'?`效果：${g.players[e.actor].name}的下個回合，非抽牌加入手牌後需棄 1 張。`:e.duration.kind==='this_turn'?'效果：本回合符合條件的角色登場時，接球 +2，數值不會被降低。':`效果：${g.players[e.actor].name}下個回合的接球角色登場時，接球 −1。`);
     }
     eventCursor=state.events.length;effectCursor=state.effects.length;
   }
@@ -177,7 +184,13 @@ function transaction(g,p,c,timing,notification=null) {
       const option=opts.find(o=>o.value===value);if(option)return option.answer;invalid=true;
     }
   }
-  return {possible:()=>possible([]),run:()=>settle({kernel:k,invoke,ask,publish,options:(req,state,answers)=>choices(req).filter(answer=>possible([...answers,{request:req,answer}]))})};
+  return {entryPreview:(code,area,param)=>{
+    k.restore(base);const id=k.zone(p.idx,'hand').find(id=>short[id]===code);
+    if(!id)throw new Error('Preview requires an actual hand card');
+    k.state.turn.phase=area;k.choose=req=>req.kind==='trigger_order'?req.options[0]:[req.options[0]];
+    k.enter(id,area);
+    return {value:k.parameter(id,param),protected:k._protected(k.reference(id),param,{controller:p.idx})};
+  },possible:()=>possible([]),run:()=>settle({kernel:k,invoke,ask,publish,options:(req,state,answers)=>choices(req).filter(answer=>possible([...answers,{request:req,answer}]))})};
 }
 function canPlay(g,p,c,timing) {
   if(g.sharedRulesPending||!handles(c)||g.turnP!==p||!p.hand.includes(c))return false;
@@ -187,11 +200,33 @@ function canPlay(g,p,c,timing) {
 }
 async function resolve(g,p,c,timing) { return transaction(g,p,c,timing).run(); }
 async function handAdded(g,p,id,revision) {
-  if(!stored(g).effects.some(e=>e.actor===p.idx&&e.duration.activeTurn===g.turnNo))return;
-  const receipt=`${g.turnNo}:${p.idx}:${id}:${revision}`;
+  assertReady(g);
+  if(!stored(g).effects.some(e=>e.kind==='watch'&&e.event==='hand_added'&&e.actor===p.idx&&e.duration.activeTurn===g.turnNo))return;
+  const receipt=`hand:${g.turnNo}:${p.idx}:${id}:${revision}`;
   if(stored(g).receipts.includes(receipt)||g.sharedRulesEvents?.some(e=>e.receipt===receipt))return;
   if(revision!==identity.ensure(g).revision)throw new Error('Stale hand-add notification');
-  (g.sharedRulesEvents ||= []).push({player:p.idx,card:id,operation:'add_hand',receipt});
+  (g.sharedRulesEvents ||= []).push({type:'hand_added',player:p.idx,card:id,operation:'add_hand',receipt});
+  if(!g.sharedRulesDepth)return flushHandEvents(g);
+}
+function active(e,g) { return e.duration.kind==='next_opponent_turn'?e.duration.activeTurn===g.turnNo:e.duration.turn===g.turnNo; }
+function protectedParameter(g,p,key,param) {
+  const ref=g.roleReference(p,key);
+  return stored(g).effects.some(e=>e.kind==='protect'&&active(e,g)&&(e.parameter==='all'||e.parameter===params[param])&&e.targets.some(r=>g.sameReference(r,ref)));
+}
+function entryPreview(g,p,code,area,param) {
+  if(!stored(g).effects.some(e=>e.kind==='watch'&&e.event==='character_entry'&&e.actor===p.idx&&active(e,g)))return {value:byShort[code].profiles[0].variants[0].printed.parameters[params[param]],protected:false};
+  return transaction(g,p,null,g.rulePhase||'drw',{events:[]}).entryPreview(code,area,params[param]);
+}
+async function charactersEntered(g,p,entries) {
+  assertReady(g);
+  if(!stored(g).effects.some(e=>e.kind==='watch'&&e.event==='character_entry'&&e.actor===p.idx&&active(e,g)))return;
+  const revision=identity.ensure(g).revision;
+  for(const {key,origin='hand',reason='rule'} of entries) {
+    const character=g.roleReference(p,key),receipt=`entry:${g.turnNo}:${p.idx}:${character.id}:${character.incarnation}:${revision}`;
+    if(stored(g).receipts.includes(receipt)||g.sharedRulesEvents?.some(e=>e.receipt===receipt))continue;
+    const role=key==='block'?'center_blocker':key.startsWith('side:')?'side_blocker':key;
+    (g.sharedRulesEvents ||= []).push({type:'character_entry',player:p.idx,card:character.id,character,role,origin,reason,receipt});
+  }
   if(!g.sharedRulesDepth)return flushHandEvents(g);
 }
 async function flushHandEvents(g) {
@@ -203,6 +238,6 @@ async function legacyEffect(g,run) {
   try {const result=await run();complete=true;return result;}
   finally {g.sharedRulesDepth--;if(complete&&!g.sharedRulesDepth)await flushHandEvents(g);}
 }
-const api={handles,canPlay,resolve,assertReady,handAdded,legacyEffect,beginTurn,finishTurn,loss,approvals:[...approved]};
+const api={charactersEntered,entryPreview,protectedParameter,handles,canPlay,resolve,assertReady,handAdded,legacyEffect,beginTurn,finishTurn,loss,approvals:[...approved]};
 if(node)module.exports=api;else root.BreakRulesLegacy=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

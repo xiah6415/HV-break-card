@@ -73,7 +73,7 @@ const conserve=g=>assert.equal(Object.keys(g.cardSnapshot().cards).length,Object
     const f=fixture();f.o.hand=['PR-029','P01-004'];await activate(f);let resolve;f.o.agent.choose=async()=>new Promise(r=>resolve=r);const pending=f.g.sadd(f.o,'P01-006',f.o.drop);await flush();
     const journal=copy(f.g.sharedRulesPending),before=copy(f.g.cardState);assert(journal.command.events.length===1);assert(journal.request.kind==='move_cards');
     assert.deepEqual(f.g.playable(f.o,'drw'),[]);await assert.rejects(f.g.resolve(f.o,'PR-029','drw'),/already awaiting/);assert.deepEqual(f.g.cardState,before,'an unresolved trigger blocks new legacy skills before placement');
-    const k=new Kernel({catalog:data.catalog,ruleIds:data.ruleIds,fingerprint:data.fingerprint,mode:'live',state:journal.baseline});const step=attempt(k,journal.baseline,x=>x.notifyHandAdditions(journal.command.events),journal.answers);assert.deepEqual(step.boundary.request,journal.request);assert.deepEqual(f.g.cardState,before);assert.equal(bridge.canPlay(f.g,f.o,'P01-088','rcv'),false);
+    const k=new Kernel({catalog:data.catalog,ruleIds:data.ruleIds,fingerprint:data.fingerprint,mode:'live',state:journal.baseline});const step=attempt(k,journal.baseline,x=>x.notifyHostEvents(journal.command.events),journal.answers);assert.deepEqual(step.boundary.request,journal.request);assert.deepEqual(f.g.cardState,before);assert.equal(bridge.canPlay(f.g,f.o,'P01-088','rcv'),false);
     resolve(journal.request.options[0]);await pending;assert.equal(f.g.sharedRulesPending,null);
   });
   await check('Normal turn end expires watchers; a later turn does not reactivate them',async()=>{

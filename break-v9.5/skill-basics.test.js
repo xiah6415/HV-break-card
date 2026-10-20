@@ -4,6 +4,7 @@ const STOP = Symbol('entry skill resolved');
 function fixture() {
   const g = new E.Game({ seed: 1, decks: ['k1014', 'seijoh'], agents: [{ wantsAck: true, async choose(g, p, r) {
     if (r.kind === 'receiver') return p.hand.find(c => E.st(c, 'rcv') != null);
+    if (r.kind === 'target') return 'attack';
     if (r.kind === 'discard') return r.options[0].value;
     if (r.kind === 'event' || r.kind === 'retrieve') return null;
     return true;
@@ -33,8 +34,8 @@ function fixture() {
     g.beginTurn(p.opp); const size = p.opp.hand.length;
     assert.equal(g.sdraw(p.opp, 1), 0); assert.equal(p.opp.hand.length, size); assert.equal(g.draw(p.opp, 1), 1);
   }
-  { const { g, p } = fixture(); p.hand = ['P04-088', 'P04-088']; p.deck = ['P01-013']; p.ts.attacker = 'D04-002'; p.ts.atk = 7;
-    await g.resolve(p, 'P04-088', 'atk'); assert.equal(p.ts.atk, 8); assert.equal(p.opp.pending.rcv_minus, 1);
+  { const { g, p } = fixture(); p.hand = ['P04-088', 'P04-088']; p.deck = ['P01-013']; p.area.attack=['D04-002']; p.ts.attacker = 'D04-002'; p.ts.atk = 7;
+    await g.resolve(p, 'P04-088', 'atk'); assert.equal(p.ts.atk, 8); assert.equal(g.sharedRulesState.effects.filter(e=>e.event==='character_entry').length,1);assert(!p.opp.pending.rcv_minus);
     assert(!g.playable(p, 'atk').some(x => x.card === 'P04-088'));
   }
   { const { g, p } = fixture(); p.hand = ['P01-039', 'D04-010']; p.deck = ['D04-003', 'P04-026']; g.ball.off = 6;

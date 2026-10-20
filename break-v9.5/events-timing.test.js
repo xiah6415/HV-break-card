@@ -15,11 +15,12 @@ async function toSetter(g, p) {
   const { g, p } = fixture();
   p.hand = ['PR-029', 'PR-029', 'P03-090', 'P03-057'];
   p.drop = ['P01-002']; p.ev = ['P01-078'];
-  assert.deepEqual(available(g, p, 'rcv'), available(g, p, 'drw'));
+  assert.deepEqual(available(g,p,'drw').filter(c=>c!=='P03-057'), available(g,p,'rcv'));
+  assert(available(g,p,'drw').includes('P03-057'));assert(!available(g,p,'rcv').includes('P03-057'));
   assert.equal(available(g, p, 'rcv').filter(x => x === 'PR-029').length, 1);
   for (const timing of ['srv', 'tos', 'atk', 'blk']) assert.deepEqual(available(g, p, timing), []);
   p.restrict.no_add = 1;
-  assert.deepEqual(available(g, p, 'rcv'), ['P03-057'], 'hand-add restriction still applies');
+  assert.deepEqual(available(g, p, 'rcv'), [], 'draw-phase character skill cannot activate at receive');
   p.restrict = {}; p.ts.used['P03-090'] = 1; p.ts.kurokawa = 1;
   assert.deepEqual(available(g, p, 'rcv'), ['PR-029'], 'once-per-turn effects cannot be repeated');
   p.drop = []; assert.deepEqual(available(g, p, 'rcv'), [], 'retrieve still requires a valid target');
@@ -50,7 +51,7 @@ async function toSetter(g, p) {
   assert(flow.p.ev.includes('PR-029')); assert.equal(flow.p.deck.length, 0);
   assert.equal(seen.filter(x => x[0] === 'ack').length, 1, 'one normal draw per receive turn');
 
-  // Late activation must match early activation, including immunity to an existing reduction.
+  // Only early draw-phase activation watches subsequent entries; receive cannot activate retroactively.
   let cases = 0;
   for (const receiver of ['PR-022', 'PR-057', 'D01-005', 'P01-039']) {
     for (const reduction of [0, 3]) {
@@ -68,10 +69,11 @@ async function toSetter(g, p) {
         f.p.hand = [receiver, 'P03-057', 'P01-006']; f.p.restrict.rcv_minus = reduction;
         f.g.ball.off = -10; // Reach the comparison even when an ineligible receiver is reduced below zero.
         await toSetter(f.g, f.p);
-        assert.equal(f.p.drop.filter(c => c === 'P03-057').length, 1);
+        assert.equal(f.p.drop.filter(c => c === 'P03-057').length, timing==='drw'?1:0);
         values.push(f.p.ts.rcv);
       }
-      assert.equal(values[0], values[1], `${receiver}: early/late activation with reduction ${reduction}`);
+      const eligible=['PR-022','PR-057','D01-005'].includes(receiver);
+      assert.equal(values[0]-values[1],eligible?2+reduction:0,`${receiver}: actual future entry only`);
       cases++;
     }
   }
@@ -81,5 +83,5 @@ async function toSetter(g, p) {
   assert(recovery.p.hand.includes('D01-012'));
   recovery.p.hand.push('P03-090');
   assert(!available(recovery.g, recovery.p, 'rcv').includes('P03-090'));
-  console.log(`event timing: eligibility, restrictions, late retrieval, one draw, and ${cases} early/late skill comparisons passed`);
+  console.log(`event timing: eligibility, restrictions, late retrieval, one draw, and ${cases} canonical draw-only skill comparisons passed`);
 })().catch(error => { console.error(error); process.exit(1); });
