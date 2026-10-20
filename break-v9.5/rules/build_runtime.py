@@ -3,29 +3,29 @@ import copy
 import hashlib
 import json
 from pathlib import Path
+if __package__ in (None, ''):
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from rules.authority import build_authority
 
 
 def runtime_data():
     root = Path(__file__).parent
     catalog = json.loads((root / 'data/cards.json').read_text())
     approvals = json.loads((root / 'approvals.json').read_text())
-    support = json.loads((root.parent / 'card-support.json').read_text())['cards']
     library_data = json.loads((root.parent / 'card-library.json').read_text())
-    for path in ['rules/data/cards.json', 'card-support.json']:
-        assert hashlib.sha256((root.parent / path).read_bytes()).hexdigest() == library_data['sources'][path], 'Rebuild card library before runtime: ' + path
-    library = library_data['cards']
-    selected = dict(support)
-    selected.update({c: entry for c, entry in library.items() if c not in selected})
+    for path, digest in library_data['sources'].items():
+        assert hashlib.sha256((root.parent / path).read_bytes()).hexdigest() == digest, 'Rebuild card library before runtime: ' + path
+    authority = build_authority(catalog=catalog, approvals=approvals)
+    assert library_data['authority'] == authority, 'Library authority differs from runtime authority'
     cards = []
-    for short, legacy in selected.items():
-        card = copy.deepcopy(next(c for c in catalog['cards'] if c['card_no'] == legacy['number']))
-        if short in support:
-            assert len(card['profiles']) == 1, 'Legacy text variant must be selected explicitly'
+    for original in catalog['cards']:
+        card = copy.deepcopy(original)
         profile = card['profiles'][0]
         approval = approvals['profiles'].get(profile['profile_id'])
         if approval:
             digest = hashlib.sha256(json.dumps(profile, ensure_ascii=False, sort_keys=True).encode()).hexdigest()
-            assert digest == approval['profile_sha256'], 'Approved profile changed: ' + short
+            assert digest == approval['profile_sha256'], 'Approved profile changed: ' + card['card_no']
             profile['runtime_approved'] = True
         else:
             # Printed identity is available; no other first-pass skill is executable.
@@ -34,7 +34,7 @@ def runtime_data():
                        'printed_has_skill': bool(profile.get('program'))}
             card['profiles'] = [profile]
         cards.append(card)
-    result = {'catalog': {'cards': cards}, 'approved': list(approvals['profiles']),
+    result = {'catalog': {'cards': cards}, 'authority': authority, 'approved': list(approvals['profiles']),
               'ruleIds': [r['id'] for r in json.loads((root / 'data/shared-rules.json').read_text())['rules']]}
     result['fingerprint'] = hashlib.sha256(json.dumps(result, sort_keys=True).encode()).hexdigest()
     return result

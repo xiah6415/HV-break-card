@@ -21,6 +21,6 @@
 - card-library.json的playable與counts.playable繼續表示嚴格模式支援；numeric模式不改寫成新的技能核准。
 - JSON／分享解析接收`{mode:'numeric'}`或`{mode:'strict'}`；Game與UndoSession使用相同mode。為相容既有模擬與呼叫，程式API未指定mode時保持strict，網頁預設numeric。
 - coverage／batch索引中的in_runtime_catalog現在表示印刷身分已載入；125技能候選仍未核准，不能把runtime metadata存在當作正式技能通過。
-- 權限來源完整改造仍排REVIEW-PLAN第5步；14張有限事件尚未恢復。完整SHA＋固定舊技能白名單的核准來源改造，不應與數值模式可組牌混淆。
+- 權限來源完整改造已完成REVIEW-PLAN第5步，詳見AUTHORITY.md；14張有限事件尚未恢復。完整SHA＋固定舊技能白名單／無技能的自動核准，不與數值模式可組牌混淆。
 
 主要驗證入口：numeric.test.js、numeric-undo.test.js、numeric-e2e.js，以及既有嚴格模式的單元／模擬／瀏覽器回歸。最新實際通過範圍與公開版本見memory.md與outputs/BREAK-numeric-mode-update.md。

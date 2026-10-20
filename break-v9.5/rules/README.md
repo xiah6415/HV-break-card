@@ -1,5 +1,7 @@
 # BREAK 共用結算核心（實驗中）
 
+> 權限來源已統一：完整SHA共用核准＋固定7舊技能白名單＋明確無技能資料；card-support只負責說明，詳見../AUTHORITY.md。數值541／嚴格212不變。
+
 數值模式可組牌541、嚴格模式212，全541卡可查閱；22技能核准與125技能候選不變。新增165無技能角色、圖片／組牌入口／印刷身分與Undo驗證見[全卡庫匯入說明](../library/README.md)。
 
 共用分支現以`--branches`追加原49張缺口及真正後續監聽，共1,938局面；另66項結果及公開／私有選牌權判例檢查。core公開區域選牌歸controller、手牌維持owner；不擴大22核准。詳見[BATCH.md](BATCH.md)。
@@ -164,4 +166,4 @@ node rules/core.test.js
 
 ## 數值模式界線
 
-runtime全541卡存在只代表印刷metadata；program非null仍只有22完整SHA核准，固定舊技能7張及無技能由既有路徑處理。數值組牌／手動操作不改技能核准，125候選保持未批准。詳見../NUMERIC-MODE.md；下一步權限來源改造仍依REVIEW-PLAN第5步，不以card-support文字直接擴張核准。
+runtime全541卡存在只代表印刷metadata；program非null仍只有22完整SHA核准，固定舊技能7張及無技能由既有路徑處理。數值組牌／手動操作不改技能核准，125候選保持未批准。詳見../NUMERIC-MODE.md；權限來源改造已完成REVIEW-PLAN第5步，不以card-support文字直接擴張核准。

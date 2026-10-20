@@ -7,6 +7,8 @@ const {Kernel}=node?require('./core'):root.BreakRulesCore;
 const {attempt,settle}=node?require('./decisions'):root.BreakRulesDecisions;
 const identity=node?require('./identity'):root.BreakCardIdentity;
 const data=node?require('./runtime-data.json'):root.BreakRulesData;
+const library=node?require('../card-library'):root.BreakCardLibrary;
+if(JSON.stringify(data.authority)!==JSON.stringify(library.data.authority))throw Error('Library/runtime authority mismatch');
 const copy=x=>JSON.parse(JSON.stringify(x));
 const phase={srv:'serve',drw:'draw',rcv:'receive',tos:'toss',atk:'attack',blk:'block'};
 const params={srv:'serve',blk:'block',rcv:'receive',tos:'toss',atk:'attack'};
@@ -14,7 +16,7 @@ const labels={serve:'發球',block:'攔網',receive:'接球',toss:'舉球',attac
 const norm=s=>s.normalize('NFKC').replace(/\s/g,'');
 const byShort=Object.fromEntries(data.catalog.cards.map(c=>[c.card_no.replace(/^HV-?/,''),c]));
 const approved=new Set(data.approved);
-function handles(c) { return approved.has(byShort[c]?.profiles[0].profile_id); }
+function handles(c) { const grant=library.permission(c),profile=byShort[c]?.profiles[0];return grant?.kind==='shared'&&grant.profileId===profile?.profile_id&&profile.runtime_approved===true&&!!profile.program&&approved.has(grant.profileId); }
 function stored(g) {
   const s=g.sharedRulesState;
   if(s&&(s.version!==1||s.fingerprint!==data.fingerprint))throw new Error('Shared watcher data version mismatch');

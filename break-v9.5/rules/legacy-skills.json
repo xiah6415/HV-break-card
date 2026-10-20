@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "cards": {
+    "P01-006": {
+      "profile_id": "HV-P01-006:8da7a3a89948f68e",
+      "profile_sha256": "29b17d2f4337068e317dd2e6a30862f235ccff62cdcfa91b3b939244a138c8c2",
+      "scope": "Existing legacy controller only; retains documented partial-effect limitations"
+    },
+    "P01-078": {
+      "profile_id": "HV-P01-078:e11a00ab83b29477",
+      "profile_sha256": "74be8cb1373001d9d1ac69eaad647b89a8fc5b07afa6952f12b955315b3d5dd8",
+      "scope": "Existing legacy controller only; retains documented partial-effect limitations"
+    },
+    "P03-086": {
+      "profile_id": "HV-P03-086:68bd175549331599",
+      "profile_sha256": "b3cf333c33cede45862c536dd72647e6fcc5dc079b3c13fa50a44ad9909855f6",
+      "scope": "Existing legacy controller only; retains documented partial-effect limitations"
+    },
+    "P03-087": {
+      "profile_id": "HV-P03-087:80ad15f599d2319f",
+      "profile_sha256": "ae9d2f6ae2187170b8a76c1651b46a7a844b1fb3fa96b54895fd4db24dbc12c1",
+      "scope": "Existing legacy controller only; retains documented partial-effect limitations"
+    },
+    "PR-022": {
+      "profile_id": "HV-PR-022:8c782e52ddf08a2b",
+      "profile_sha256": "10f2271d4729df053d4b550d8db1ff12e6aea24b00c2c786be0054e85b330a7f",
+      "scope": "Existing legacy controller only; retains documented partial-effect limitations"
+    },
+    "PR-029": {
+      "profile_id": "HV-PR-029:3b751c576ca8bdc6",
+      "profile_sha256": "794281e79ce13b02356ba0e0cf331c68ac4191d12184945b04caf6a928192d0d",
+      "scope": "Existing legacy controller only; retains documented partial-effect limitations"
+    },
+    "PR-057": {
+      "profile_id": "HV-PR-057:176e0879716dad7d",
+      "profile_sha256": "65cc438792fb8f0f55699e81628e16c1f0de26a4db14729e70101060a506f1ec",
+      "scope": "Existing legacy controller only; retains documented partial-effect limitations"
+    }
+  }
+}

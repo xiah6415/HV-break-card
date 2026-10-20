@@ -4,6 +4,10 @@ import json
 import re
 from pathlib import Path
 from urllib.parse import quote
+if __package__ in (None, ''):
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from rules.authority import build_authority
 
 ROOT = Path(__file__).resolve().parent.parent
 PARAMS = ['serve', 'block', 'receive', 'toss', 'attack']
@@ -23,20 +27,24 @@ def library_data():
     records = {str(r['id']): r for r in database['cards']}
     support = json.loads((ROOT / 'card-support.json').read_text())['cards']
     assets = json.loads((ROOT / 'library/assets.json').read_text())
+    authority = build_authority(catalog=catalog)
     cards, aliases = {}, {}
     for card in catalog['cards']:
         code = normal(card['card_no'])
         profile = card['profiles'][0]
         printed = profile['variants'][0]['printed']
         record = records[profile['variants'][0]['record_id']]
-        basic = len(card['profiles']) == 1 and profile['program'] is None
-        playable = code in support or basic
+        permission = authority['cards'][code]['kind']
+        basic = permission == 'basic'
+        playable = permission != 'unapproved'
         if len(card['profiles']) > 1:
             assert all(p['variants'][0]['printed']['parameters'] == printed['parameters'] for p in card['profiles']), 'Numerical variant must be selected explicitly'
         stats = [None if printed['parameters'][p] == 'dash' else printed['parameters'][p] for p in PARAMS] if printed['type'] == 'character' else [0] * 5
         assert all(n is None or type(n) is int for n in stats)
         value = max(1, round(max([v or 0 for v in stats]) * .8 + 1))
-        status = support[code]['status'] if code in support else 'basic' if basic else 'locked'
+        status = 'basic' if basic else 'locked' if not playable else support.get(code, {}).get('status', 'partial')
+        if playable and not basic and status not in ['partial', 'scenario-tested']:
+            status = 'partial'
         variants = []
         for p in card['profiles']:
             raw = records[p['variants'][0]['record_id']]
@@ -53,12 +61,13 @@ def library_data():
             key = normal(alias)
             assert key not in aliases or aliases[key] == code, 'Ambiguous card alias'
             aliases[key] = code
-    assert len(cards) == 541 and sum(c['playable'] for c in cards.values()) == 212
+    assert len(cards) == len(catalog['cards']) == 541
+    assert sum(c['playable'] for c in cards.values()) == sum(authority['counts'][k] for k in ['basic', 'shared', 'legacy'])
     assert sum(c['status'] == 'basic' for c in cards.values()) == 183
     for code, asset in assets['images'].items():
         assert sha(ROOT / asset['file']) == asset['sha256'], 'Art changed: ' + code
-    return dict(schemaVersion=1, counts=dict(cards=len(cards), profiles=sum(len(c['profiles']) for c in catalog['cards']), playable=sum(c['playable'] for c in cards.values()), basic=183, locked=sum(not c['playable'] for c in cards.values())),
-                sources={p: sha(ROOT / p) for p in ['rules/data/cards.json', 'rules/source/work/card-taxonomy/database.json', 'card-support.json', 'library/assets.json']}, cards=cards, aliases=aliases)
+    return dict(schemaVersion=2, authority=authority, counts=dict(cards=len(cards), profiles=sum(len(c['profiles']) for c in catalog['cards']), playable=sum(c['playable'] for c in cards.values()), basic=183, locked=sum(not c['playable'] for c in cards.values())),
+                sources={p: sha(ROOT / p) for p in ['rules/data/cards.json', 'rules/source/work/card-taxonomy/database.json', 'card-support.json', 'library/assets.json', 'rules/approvals.json', 'rules/legacy-skills.json', 'rules/authority.py']}, cards=cards, aliases=aliases)
 
 def write_library():
     data = library_data()

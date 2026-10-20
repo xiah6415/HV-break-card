@@ -1,5 +1,7 @@
 # GitHub Pages部署交接
 
+> 2026-10-21權限改造已完成回歸，正在提交部署；最新index SHA256 `37ae5c8c1aa4f510908af48d4ffa21eef6493b665a9175c6e6f847728e4dc77c`。下方舊發布描述為歷史，結果見文末與最新memory。
+
 > 2026-10-21第4步先發／先接選擇已完成回歸，已部署d7723d9並完成18組公開頁操作核對；最新遊戲index SHA256 `d00327a2f0c1fd069496859be4338f6df46cd6aaf60a79ee8e8b743bf67afdff`。下方3fc2023／b5395cc是前批數值模式公開驗證，最新部署結果見文末及memory。
 
 日期：2026-10-20。數值模式批次已完成全部回歸、提交推送與公開核對。實作提交`3fc202359d07ec81bc379cb51ad241cb77b6ad38`，Pages built／無錯誤，公開index與本機SHA一致；本文件結果會再以純交接提交推送。前一版871c9cfe2aeab70d389ab55cb7a5dcd648e4756e已built，公開index與本機SHA一致，含Claude分享匯入ac6d6bc及手機／提示修正。
