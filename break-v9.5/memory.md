@@ -839,3 +839,10 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 37單元套件全部通過；first-service.test含8開局矩陣、平手、勝者唯一選擇權、調度順序、80實體、AI策略、非法值及Undo／舊回覆。規定build、fuzz3000、6組各300對戰通過；6瀏覽器套件通過，含18開局畫面操作（三尺寸×兩模式×先發／先接／AI勝出）及完整對局、回合／Loss、Undo、數值與手機狀態。Chrome模擬，非Safari真機。
 - 可組牌仍數值541／嚴格212，自動技能22共用SHA核准＋7舊流程（有既有限制）；技能核准、封存規則及圖片未改。交接見FIRST-SERVICE.md及outputs/BREAK-first-service-update.md／evidence.json／validation.json。本批接著提交推送並Pages部署，再核對公開index與已測SHA一致。
 - 下一步REVIEW-PLAN第5步：完整SHA＋固定舊技能白名單＋無技能權限來源改造，完成後才恢復14事件；本批沒有提前開放14事件、多人或AI難度。
+
+
+## 第4步先發／先接公開部署結果（2026-10-21）
+- 實作提交d7723d9e315a3d3c4a0acc75a4fdd718d450f5b3已推送master，Pages built／無錯誤；公開網址https://xiah6415.github.io/HV-break-card/break-v9.5/?v=d7723d9，HTTP200、index 3260448bytes、SHA256 d00327a2f0c1fd069496859be4338f6df46cd6aaf60a79ee8e8b743bf67afdff與已測本機完全一致。
+- 公開頁再跑18組開局操作：桌機1280、手機390／320×兩模式×先發／先接／AI勝出，Undo同骰點重選、實際調度與首球提示、80實體及無頁面錯誤／橫向溢出全通過。Chrome模擬，非Safari真機。
+- 第4步完成。可組牌數值541／嚴格212，自動技能22共用SHA核准＋7舊流程（部分有限制）不變，14事件未開放。更新交接結果後以純文件提交推送，不改已測index；最後文件提交建置核對記於外層outputs/BREAK-first-service-evidence.json。
+- 下一步第5步權限來源改造（完整SHA＋固定舊技能白名單＋無技能），完成後再恢復14有限事件；多人、多人Undo、AI難度延後。

@@ -1,6 +1,6 @@
 # GitHub Pages部署交接
 
-> 2026-10-21第4步先發／先接選擇已完成回歸，正在提交部署；最新遊戲index SHA256 `d00327a2f0c1fd069496859be4338f6df46cd6aaf60a79ee8e8b743bf67afdff`。下方3fc2023／b5395cc是前批數值模式公開驗證，最新部署結果見文末及memory。
+> 2026-10-21第4步先發／先接選擇已完成回歸，已部署d7723d9並完成18組公開頁操作核對；最新遊戲index SHA256 `d00327a2f0c1fd069496859be4338f6df46cd6aaf60a79ee8e8b743bf67afdff`。下方3fc2023／b5395cc是前批數值模式公開驗證，最新部署結果見文末及memory。
 
 日期：2026-10-20。數值模式批次已完成全部回歸、提交推送與公開核對。實作提交`3fc202359d07ec81bc379cb51ad241cb77b6ad38`，Pages built／無錯誤，公開index與本機SHA一致；本文件結果會再以純交接提交推送。前一版871c9cfe2aeab70d389ab55cb7a5dcd648e4756e已built，公開index與本機SHA一致，含Claude分享匯入ac6d6bc及手機／提示修正。
 
@@ -24,3 +24,9 @@ Claude分享連結已合併，claude-handoff/已刪除並保留外層bundle備�
 下一步第4步先發先接選擇，之後第5步權限來源改造，才恢復14事件。沒有新增技能核准、多人或AI難度。
 
 公開頁三尺寸已實測：預設數值／嚴格212切換、雙方分享匯入／重載保存、技能未自動化標記、卡圖及開始對戰，無頁面錯誤或橫向溢出。公開index HTTP200，共3258939bytes。最終純交接提交建置核對見外層outputs/BREAK-numeric-mode-evidence.json；不改本批遊戲指紋。
+
+## 第4步先發／先接公開部署結果（2026-10-21）
+- 實作提交d7723d9e315a3d3c4a0acc75a4fdd718d450f5b3已推送master，Pages built／無錯誤；公開網址https://xiah6415.github.io/HV-break-card/break-v9.5/?v=d7723d9，HTTP200、index 3260448bytes、SHA256 d00327a2f0c1fd069496859be4338f6df46cd6aaf60a79ee8e8b743bf67afdff與已測本機完全一致。
+- 公開頁再跑18組開局操作：桌機1280、手機390／320×兩模式×先發／先接／AI勝出，Undo同骰點重選、實際調度與首球提示、80實體及無頁面錯誤／橫向溢出全通過。Chrome模擬，非Safari真機。
+- 第4步完成。可組牌數值541／嚴格212，自動技能22共用SHA核准＋7舊流程（部分有限制）不變，14事件未開放。更新交接結果後以純文件提交推送，不改已測index；最後文件提交建置核對記於外層outputs/BREAK-first-service-evidence.json。
+- 下一步第5步權限來源改造（完整SHA＋固定舊技能白名單＋無技能），完成後再恢復14有限事件；多人、多人Undo、AI難度延後。
