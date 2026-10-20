@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "checkedOn": "2026-10-20",
+  "checkedOn": "2026-10-21",
   "rules": {
     "version": "1.06",
     "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/rules/pdf/rules_general_v1.06.pdf",
@@ -8,8 +8,7 @@
   },
   "scope": "官方資料核對與已測試情境；不等於所有規則、技能目標與組合均已自動化。",
   "houseRules": [
-    "抽牌事件在接球判定前也可使用，以及接不起球後手動按 Loss，保留使用者指定操作。",
-    "開局目前由擲骰勝者直接發球；官方規則另有選擇先發球與否，尚未實作。"
+    "抽牌事件在接球判定前也可使用，以及接不起球後手動按 Loss，保留使用者指定操作。"
   ],
   "cards": {
     "P01-013": {
@@ -1298,6 +1297,425 @@
       ],
       "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P01-088",
       "settlement": "shared-rules-local-migration"
+    },
+    "D01-011": {
+      "name": "バレーは!!! 常に上を向くスポーツだ",
+      "number": "HV-D01-011",
+      "rarity": "D",
+      "kind": "E",
+      "stats": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "affiliation": "烏野",
+      "position": "-",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-D01-011&voba=D",
+      "profileSha256": "54a23eac8ff55442150f33b00bb9d315b34c12da780d26cc7fb5e85072c09b20",
+      "qaIds": [
+        "1107"
+      ],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "rules/finite-events.test.js",
+        "rules/finite-undo.test.js",
+        "rules/finite-games.test.js",
+        "rules/finite-e2e.js"
+      ],
+      "settlement": "shared-rules-full-sha-approved"
+    },
+    "D03-013": {
+      "name": "今日 何をする？",
+      "number": "HV-D03-013",
+      "rarity": "D",
+      "kind": "E",
+      "stats": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "affiliation": "稲荷崎",
+      "position": "-",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-D03-013&voba=D",
+      "profileSha256": "9f252aab4e56b38b457477660bbdac24520718e7fb1c6a29c8459add65956665",
+      "qaIds": [
+        "1256"
+      ],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "rules/finite-events.test.js",
+        "rules/finite-undo.test.js",
+        "rules/finite-games.test.js",
+        "rules/finite-e2e.js"
+      ],
+      "settlement": "shared-rules-full-sha-approved"
+    },
+    "D04-012": {
+      "name": "…残念ながら―― お前は決めるに決まっている",
+      "number": "HV-D04-012",
+      "rarity": "D",
+      "kind": "E",
+      "stats": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "affiliation": "青葉城西",
+      "position": "-",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-D04-012&voba=D",
+      "profileSha256": "34550a3e16601afd51dab7afef0609212213f30e0ae0a659d91ec6971d07efab",
+      "qaIds": [
+        "1846",
+        "1847",
+        "1848"
+      ],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "rules/finite-events.test.js",
+        "rules/finite-undo.test.js",
+        "rules/finite-games.test.js",
+        "rules/finite-e2e.js"
+      ],
+      "settlement": "shared-rules-full-sha-approved"
+    },
+    "P01-075": {
+      "name": "清水 潔子",
+      "number": "HV-P01-075",
+      "rarity": "N",
+      "kind": "E",
+      "stats": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "affiliation": "烏野·3年",
+      "position": "マネージャー",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-075&voba=N",
+      "profileSha256": "02f039b007233e97fa26cdc871ada010296d3a4535f3e95af0df85cd18d86084",
+      "qaIds": [
+        "1212"
+      ],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "rules/finite-events.test.js",
+        "rules/finite-undo.test.js",
+        "rules/finite-games.test.js",
+        "rules/finite-e2e.js"
+      ],
+      "settlement": "shared-rules-full-sha-approved"
+    },
+    "P01-077": {
+      "name": "前のめりで行くぜ",
+      "number": "HV-P01-077",
+      "rarity": "N",
+      "kind": "E",
+      "stats": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "affiliation": "烏野",
+      "position": "-",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-077&voba=N",
+      "profileSha256": "fbd3bee10d078aa8fc973d07d2884a12c2d806804d176d46c369b7fe2a113a8a",
+      "qaIds": [
+        "1217"
+      ],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "rules/finite-events.test.js",
+        "rules/finite-undo.test.js",
+        "rules/finite-games.test.js",
+        "rules/finite-e2e.js"
+      ],
+      "settlement": "shared-rules-full-sha-approved"
+    },
+    "P01-080": {
+      "name": "猫又 育史",
+      "number": "HV-P01-080",
+      "rarity": "N",
+      "kind": "E",
+      "stats": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "affiliation": "音駒",
+      "position": "監督",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-080&voba=N",
+      "profileSha256": "478bd1546038c849afe9159a20a6e17a6c1a6dbd40dc4d98a131c57386d08c26",
+      "qaIds": [
+        "1226"
+      ],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "rules/finite-events.test.js",
+        "rules/finite-undo.test.js",
+        "rules/finite-games.test.js",
+        "rules/finite-e2e.js"
+      ],
+      "settlement": "shared-rules-full-sha-approved"
+    },
+    "P02-084": {
+      "name": "黒須 法宗",
+      "number": "HV-P02-084",
+      "rarity": "N",
+      "kind": "E",
+      "stats": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "affiliation": "稲荷崎",
+      "position": "監督",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P02-084&voba=N",
+      "profileSha256": "849da2b079e01b1f621e92dbeae31bc7577284370e47f3b5ae4b42c617c0a36a",
+      "qaIds": [
+        "1363"
+      ],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "rules/finite-events.test.js",
+        "rules/finite-undo.test.js",
+        "rules/finite-games.test.js",
+        "rules/finite-e2e.js"
+      ],
+      "settlement": "shared-rules-full-sha-approved"
+    },
+    "P02-100": {
+      "name": "灰羽 アリサ",
+      "number": "HV-P02-100",
+      "rarity": "N",
+      "kind": "E",
+      "stats": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "affiliation": "音駒",
+      "position": "応援団",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P02-100&voba=N",
+      "profileSha256": "d658ef8f1ad62fc7b955cdd6ed76aa41dc4a8ade2474bc7b8d40fae8c032b333",
+      "qaIds": [],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "rules/finite-events.test.js",
+        "rules/finite-undo.test.js",
+        "rules/finite-games.test.js",
+        "rules/finite-e2e.js"
+      ],
+      "settlement": "shared-rules-full-sha-approved"
+    },
+    "P03-081": {
+      "name": "コートの中には情報がいっぱいだ",
+      "number": "HV-P03-081",
+      "rarity": "R",
+      "kind": "E",
+      "stats": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "affiliation": "烏野/疑似ユース",
+      "position": "-",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P03-081&voba=R",
+      "profileSha256": "594de8bb9868b2d6fcffc5e0748e37eba8d4f05f36b8491abca8abca1e46b511",
+      "qaIds": [
+        "1822",
+        "1823"
+      ],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "rules/finite-events.test.js",
+        "rules/finite-undo.test.js",
+        "rules/finite-games.test.js",
+        "rules/finite-e2e.js"
+      ],
+      "settlement": "shared-rules-full-sha-approved"
+    },
+    "P03-084": {
+      "name": "雲雀田 吹",
+      "number": "HV-P03-084",
+      "rarity": "N",
+      "kind": "E",
+      "stats": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "affiliation": "全日本男子代表/ユース",
+      "position": "監督",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P03-084&voba=N",
+      "profileSha256": "ae475585c2768ef929d237d6601cd12781f4808c0508a94d15f3e9753f590b7d",
+      "qaIds": [
+        "1830",
+        "1831"
+      ],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "rules/finite-events.test.js",
+        "rules/finite-undo.test.js",
+        "rules/finite-games.test.js",
+        "rules/finite-e2e.js"
+      ],
+      "settlement": "shared-rules-full-sha-approved"
+    },
+    "P04-091": {
+      "name": "それが俺達の「勝つスタイル」です",
+      "number": "HV-P04-091",
+      "rarity": "N",
+      "kind": "E",
+      "stats": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "affiliation": "角川",
+      "position": "-",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P04-091&voba=N",
+      "profileSha256": "2a1930115a7fdd51c3b0706e63cd147f0d8be6ac565c997223a83d6af2ebe275",
+      "qaIds": [],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "rules/finite-events.test.js",
+        "rules/finite-undo.test.js",
+        "rules/finite-games.test.js",
+        "rules/finite-e2e.js"
+      ],
+      "settlement": "shared-rules-full-sha-approved"
+    },
+    "P04-092": {
+      "name": "なんつーか… 単純っスね",
+      "number": "HV-P04-092",
+      "rarity": "N",
+      "kind": "E",
+      "stats": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "affiliation": "角川",
+      "position": "-",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P04-092&voba=N",
+      "profileSha256": "123d1d1d68df380f3480ee4550a4b854abde0e5611dd912d140f453e7a39a902",
+      "qaIds": [],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "rules/finite-events.test.js",
+        "rules/finite-undo.test.js",
+        "rules/finite-games.test.js",
+        "rules/finite-e2e.js"
+      ],
+      "settlement": "shared-rules-full-sha-approved"
+    },
+    "P04-101": {
+      "name": "おっさんも本気出しちゃうんだぜ",
+      "number": "HV-P04-101",
+      "rarity": "N",
+      "kind": "E",
+      "stats": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "affiliation": "烏野/町内会",
+      "position": "-",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P04-101&voba=N",
+      "profileSha256": "41144c1992b3eb5fe39ca524d652a32b2a57429df815ccf35f1e99eb1ac5b3fb",
+      "qaIds": [
+        "1951",
+        "1952"
+      ],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "rules/finite-events.test.js",
+        "rules/finite-undo.test.js",
+        "rules/finite-games.test.js",
+        "rules/finite-e2e.js"
+      ],
+      "settlement": "shared-rules-full-sha-approved"
+    },
+    "PR-030": {
+      "name": "護りの音駒でリベロやるって チョー名誉だろ",
+      "number": "HV-PR-030",
+      "rarity": "P",
+      "kind": "E",
+      "stats": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "affiliation": "音駒",
+      "position": "-",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-PR-030&voba=P",
+      "profileSha256": "67ab54285dc5820aa1bfd44312fc1105d81b857ca2b9c8227ce98a2f8da60221",
+      "qaIds": [
+        "1422"
+      ],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "rules/finite-events.test.js",
+        "rules/finite-undo.test.js",
+        "rules/finite-games.test.js",
+        "rules/finite-e2e.js"
+      ],
+      "settlement": "shared-rules-full-sha-approved"
     }
   }
 }

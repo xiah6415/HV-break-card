@@ -22,8 +22,8 @@ async function toSetter(g, p) {
   p.restrict.no_add = 1;
   assert.deepEqual(available(g, p, 'rcv'), [], 'draw-phase character skill cannot activate at receive');
   p.restrict = {}; p.ts.used['P03-090'] = 1; p.ts.kurokawa = 1;
-  assert.deepEqual(available(g, p, 'rcv'), ['PR-029'], 'once-per-turn effects cannot be repeated');
-  p.drop = []; assert.deepEqual(available(g, p, 'rcv'), [], 'retrieve still requires a valid target');
+  assert.deepEqual(available(g, p, 'rcv'), ['PR-029','P03-090'], 'used Event may be placed with its skill invalid');
+  g.moveCode(p.drop,p.deck,'P01-002'); assert.deepEqual(available(g, p, 'rcv'), ['P03-090'], 'retrieve needs a target, but used Event may still be placed');
 
   // Skip the draw event window, then actually recover a setter before the receive check.
   const seen = [];
@@ -82,7 +82,8 @@ async function toSetter(g, p) {
   recovery.p.hand = ['P03-090']; recovery.p.ev = ['D01-012'];
   await recovery.g.resolve(recovery.p, 'P03-090', 'rcv');
   assert(recovery.p.hand.includes('D01-012'));
-  recovery.p.hand.push('P03-090');
-  assert(!available(recovery.g, recovery.p, 'rcv').includes('P03-090'));
+  recovery.g.moveCode(recovery.p.ev,recovery.p.hand,'P03-090');
+  assert(available(recovery.g, recovery.p, 'rcv').includes('P03-090'));
+  const deckBefore=recovery.p.deck.length;await recovery.g.resolve(recovery.p,'P03-090','rcv');assert.equal(recovery.p.deck.length,deckBefore);assert(recovery.p.hand.includes('D01-012'));
   console.log(`event timing: eligibility, restrictions, late retrieval, one draw, and ${cases} canonical draw-only skill comparisons passed`);
 })().catch(error => { console.error(error); process.exit(1); });

@@ -666,6 +666,7 @@ p.imp-bad { padding-left: 0; }
   const num = s => { const m = String(s).match(/-?\d+/); return m ? +m[0] : 0; };
   function preview(req, c) {
     const me = game.players[0], b = game.ball, out = { val: '', lines: [], tone: '' };
+    if (req.kind === 'event' && CL.permission(c)?.kind === 'shared' && me.ts.used?.[c]) return {val:'',lines:['技能已失效：這張只會放入 Event 區，不會再次抽牌或加值。'],tone:'warn'};
     const rest = me.hand.slice(); rest.splice(rest.indexOf(c), 1);
     if (req.kind === 'serve') { out.val = '發 ' + st(c, 'srv'); out.lines.push(`發球威力 ${st(c, 'srv')}${c === 'P01-033' ? '（可再發動技能 +1）' : ''}`); }
     if (req.kind === 'receiver') {

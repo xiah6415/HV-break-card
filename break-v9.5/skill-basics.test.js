@@ -38,7 +38,8 @@ function fixture() {
   }
   { const { g, p } = fixture(); p.hand = ['P04-088', 'P04-088']; p.deck = ['P01-013']; p.area.attack=['D04-002']; p.ts.attacker = 'D04-002'; p.ts.atk = 7;
     await g.resolve(p, 'P04-088', 'atk'); assert.equal(p.ts.atk, 8); assert.equal(g.sharedRulesState.effects.filter(e=>e.event==='character_entry').length,1);assert(!p.opp.pending.rcv_minus);
-    assert(!g.playable(p, 'atk').some(x => x.card === 'P04-088'));
+    assert(g.playable(p, 'atk').some(x => x.card === 'P04-088'));
+    const before=JSON.stringify(g.sharedRulesState.effects);await g.resolve(p,'P04-088','atk');assert.equal(p.ts.atk,8);assert.equal(JSON.stringify(g.sharedRulesState.effects),before);assert.equal(p.ev.length,2);
   }
   { const { g, p } = fixture(); p.hand = ['P01-039', 'D04-010']; p.deck = ['D04-003', 'P04-026']; g.ball.off = 6;
     await assert.rejects(g.receiveTurn(p), error => error === STOP);

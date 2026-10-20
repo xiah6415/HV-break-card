@@ -596,7 +596,7 @@ class Game {
     for (const c of p.hand) {
       if (seen.has(c)) continue; seen.add(c);
       if (sharedRules.handles(c)) {
-        if (sharedRules.canPlay(this, p, c, timing)) res.push({card:c,label:nm(c)});
+        if (sharedRules.canPlay(this, p, c, timing)) res.push({card:c,label:nm(c)+(p.ts.used?.[c]?'（技能已失效，僅放入Event區）':'')});
         continue;
       }
       if (this.mode === 'numeric' && library.permission(c)?.kind === 'unapproved') {
@@ -817,6 +817,8 @@ const AI = {
         const cards = opts.filter(x => x.value);
         for (const x of cards) {
           const c = x.value;
+          if (sharedRules.handles(c) && p.ts.used?.[c]) continue;
+          if (req.timing === 'rcv' && sharedRules.handles(c) && p.ts.rcv < g.ball.off) return c;
           if (req.timing === 'blk') { if (p.ts.blk < g.ball.off) return c; continue; }
           if (req.timing === 'rcv') {
             if (p.ts.rcv < g.ball.off && ['P01-013', 'P01-088', 'P04-089'].includes(c)) return c;

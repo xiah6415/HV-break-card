@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "status": "LOCAL_MIGRATION_NOT_PUBLISHED",
+  "status": "PUBLISHED_HASH_PINNED",
   "profiles": {
     "HV-P01-013:02f39fe84104ce51": {
       "profile_sha256": "7dae8ea6774a9166e8a9b45b434eb05db6ca95893c89f8d8f59aa0d670fb91e6",
@@ -111,6 +111,76 @@
       "profile_sha256": "b7e3284b958380df7627ec64345eb1761614970272675c6adc394be559b90219",
       "scope": "finite shared event batch: chosen court character/parameter, printed-icon physical counting, exact Event recovery and cumulative next-opponent blocker-entry ban",
       "tests": "rules/candidate.test.js; rules/candidate-undo.test.js; rules/candidate-e2e.js"
+    },
+    "HV-D01-011:83475c12d334e10c": {
+      "profile_sha256": "54a23eac8ff55442150f33b00bb9d315b34c12da780d26cc7fb5e85072c09b20",
+      "scope": "finite event: printed phase / draw / chosen own-character numeric / affiliation and actual Event-card count / same-name turn lock; no persistent effect",
+      "tests": "rules/finite-events.test.js; rules/finite-undo.test.js; rules/finite-games.test.js; rules/finite-e2e.js"
+    },
+    "HV-D03-013:00c7d365be26c1bb": {
+      "profile_sha256": "9f252aab4e56b38b457477660bbdac24520718e7fb1c6a29c8459add65956665",
+      "scope": "finite event: printed phase / draw / chosen own-character numeric / affiliation and actual Event-card count / same-name turn lock; no persistent effect",
+      "tests": "rules/finite-events.test.js; rules/finite-undo.test.js; rules/finite-games.test.js; rules/finite-e2e.js"
+    },
+    "HV-D04-012:2b84835888a5540b": {
+      "profile_sha256": "34550a3e16601afd51dab7afef0609212213f30e0ae0a659d91ec6971d07efab",
+      "scope": "finite event: printed phase / draw / chosen own-character numeric / affiliation and actual Event-card count / same-name turn lock; no persistent effect",
+      "tests": "rules/finite-events.test.js; rules/finite-undo.test.js; rules/finite-games.test.js; rules/finite-e2e.js"
+    },
+    "HV-P01-075:223453f109919783": {
+      "profile_sha256": "02f039b007233e97fa26cdc871ada010296d3a4535f3e95af0df85cd18d86084",
+      "scope": "finite event: printed phase / draw / chosen own-character numeric / affiliation and actual Event-card count / same-name turn lock; no persistent effect",
+      "tests": "rules/finite-events.test.js; rules/finite-undo.test.js; rules/finite-games.test.js; rules/finite-e2e.js"
+    },
+    "HV-P01-077:cc85f5688872b7a8": {
+      "profile_sha256": "fbd3bee10d078aa8fc973d07d2884a12c2d806804d176d46c369b7fe2a113a8a",
+      "scope": "finite event: printed phase / draw / chosen own-character numeric / affiliation and actual Event-card count / same-name turn lock; no persistent effect",
+      "tests": "rules/finite-events.test.js; rules/finite-undo.test.js; rules/finite-games.test.js; rules/finite-e2e.js"
+    },
+    "HV-P01-080:5b4dd2b51b4d3f86": {
+      "profile_sha256": "478bd1546038c849afe9159a20a6e17a6c1a6dbd40dc4d98a131c57386d08c26",
+      "scope": "finite event: printed phase / draw / chosen own-character numeric / affiliation and actual Event-card count / same-name turn lock; no persistent effect",
+      "tests": "rules/finite-events.test.js; rules/finite-undo.test.js; rules/finite-games.test.js; rules/finite-e2e.js"
+    },
+    "HV-P02-084:2a618af50ce89f3a": {
+      "profile_sha256": "849da2b079e01b1f621e92dbeae31bc7577284370e47f3b5ae4b42c617c0a36a",
+      "scope": "finite event: printed phase / draw / chosen own-character numeric / affiliation and actual Event-card count / same-name turn lock; no persistent effect",
+      "tests": "rules/finite-events.test.js; rules/finite-undo.test.js; rules/finite-games.test.js; rules/finite-e2e.js"
+    },
+    "HV-P02-100:ddd2defb67ea5c24": {
+      "profile_sha256": "d658ef8f1ad62fc7b955cdd6ed76aa41dc4a8ade2474bc7b8d40fae8c032b333",
+      "scope": "finite event: printed phase / draw / chosen own-character numeric / affiliation and actual Event-card count / same-name turn lock; no persistent effect",
+      "tests": "rules/finite-events.test.js; rules/finite-undo.test.js; rules/finite-games.test.js; rules/finite-e2e.js"
+    },
+    "HV-P03-081:9ee42ca21faead0a": {
+      "profile_sha256": "594de8bb9868b2d6fcffc5e0748e37eba8d4f05f36b8491abca8abca1e46b511",
+      "scope": "finite event: printed phase / draw / chosen own-character numeric / affiliation and actual Event-card count / same-name turn lock; no persistent effect",
+      "tests": "rules/finite-events.test.js; rules/finite-undo.test.js; rules/finite-games.test.js; rules/finite-e2e.js"
+    },
+    "HV-P03-084:abb1086608f93a8b": {
+      "profile_sha256": "ae475585c2768ef929d237d6601cd12781f4808c0508a94d15f3e9753f590b7d",
+      "scope": "finite event: printed phase / draw / chosen own-character numeric / affiliation and actual Event-card count / same-name turn lock; no persistent effect",
+      "tests": "rules/finite-events.test.js; rules/finite-undo.test.js; rules/finite-games.test.js; rules/finite-e2e.js"
+    },
+    "HV-P04-091:598a8bcb60979404": {
+      "profile_sha256": "2a1930115a7fdd51c3b0706e63cd147f0d8be6ac565c997223a83d6af2ebe275",
+      "scope": "finite event: printed phase / draw / chosen own-character numeric / affiliation and actual Event-card count / same-name turn lock; no persistent effect",
+      "tests": "rules/finite-events.test.js; rules/finite-undo.test.js; rules/finite-games.test.js; rules/finite-e2e.js"
+    },
+    "HV-P04-092:f9884b2f37263425": {
+      "profile_sha256": "123d1d1d68df380f3480ee4550a4b854abde0e5611dd912d140f453e7a39a902",
+      "scope": "finite event: printed phase / draw / chosen own-character numeric / affiliation and actual Event-card count / same-name turn lock; no persistent effect",
+      "tests": "rules/finite-events.test.js; rules/finite-undo.test.js; rules/finite-games.test.js; rules/finite-e2e.js"
+    },
+    "HV-P04-101:6d121175e9133dd1": {
+      "profile_sha256": "41144c1992b3eb5fe39ca524d652a32b2a57429df815ccf35f1e99eb1ac5b3fb",
+      "scope": "finite event: printed phase / draw / chosen own-character numeric / affiliation and actual Event-card count / same-name turn lock; no persistent effect",
+      "tests": "rules/finite-events.test.js; rules/finite-undo.test.js; rules/finite-games.test.js; rules/finite-e2e.js"
+    },
+    "HV-PR-030:e7e73df463e1be4e": {
+      "profile_sha256": "67ab54285dc5820aa1bfd44312fc1105d81b857ca2b9c8227ce98a2f8da60221",
+      "scope": "finite event: printed phase / draw / chosen own-character numeric / affiliation and actual Event-card count / same-name turn lock; no persistent effect",
+      "tests": "rules/finite-events.test.js; rules/finite-undo.test.js; rules/finite-games.test.js; rules/finite-e2e.js"
     }
   }
 }

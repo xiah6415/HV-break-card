@@ -1,6 +1,6 @@
 'use strict';
 const assert=require('node:assert/strict');
-const {runBatch}=require('./batch-smoke'),{buildIndex}=require('./batch-index'),{Kernel}=require('./core');
+const {runBatch}=require('./batch-smoke'),{buildHistoricalIndex:buildIndex}=require('./batch-test-index'),{Kernel}=require('./core');
 const catalog=require('./data/cards.json');
 const index=buildIndex(),r=runBatch({index});
 assert.equal(r.totals.profiles,125);assert.equal(r.totals.cases,1530);assert.equal(r.totals.errors,0);

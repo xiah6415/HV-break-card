@@ -31,8 +31,8 @@ async function check(name,fn){await fn();cases.push({name,passed:true});}
     const before=cards(g);await g.resolve(p,'P04-089','rcv');assert.deepEqual(cards(g),before);
     assert.equal(g.parameter(p,'attack','rcv'),pay?4:2);assert.equal(p.ts.rcv,5);assert.equal(p.drop.length,pay?1:0);
     assert.equal(p.hand.length,pay?2:3);assert.equal(logs.filter(s=>s.includes('抽到')).length,1);assert.equal(logs.filter(s=>s.includes('棄掉')).length,pay?1:0);
-    g.moveCard(p.deck,p.hand,0);assert(!bridge.canPlay(g,p,'P04-089','rcv'),'same-name limit survives a fresh transaction');
-    await assert.rejects(g.resolve(p,'P04-089','rcv'),/already used/);
+    g.moveCard(p.deck,p.hand,0);assert(bridge.canPlay(g,p,'P04-089','rcv'),'invalid skill still permits Event placement');
+    const prior=copy({deck:p.deck,fx:p.effects});await g.resolve(p,'P04-089','rcv');assert.deepEqual({deck:p.deck,fx:p.effects},prior);
   });
   await check('No-add restriction skips the draw but preserves target bonuses',async()=>{
     const {g,p}=setup(async(g,p,r)=>{assert.equal(r.kind,'target');return 'receive';});p.hand=['P01-088'];p.deck=['D04-003'];p.restrict.no_add=1;
@@ -48,9 +48,9 @@ async function check(name,fn){await fn();cases.push({name,passed:true});}
     const {g,p}=setup(async(g,p,r)=>{assert.equal(r.kind,'skill');return false;});p.hand=['P04-089'];p.deck=['D04-003'];p.area.receive=['D04-010'];
     assert(bridge.canPlay(g,p,'P04-089','rcv'));await g.resolve(p,'P04-089','rcv');assert.deepEqual(p.hand,['D04-003']);assert.equal(p.ts.rcv,5);
   });
-  await check('Wrong phase, missing hand card and used Turn1 are excluded without mutation',async()=>{
+  await check('Wrong phase and missing hand are excluded; invalid Turn1 Event remains placeable',async()=>{
     const {g,p}=setup(()=>{throw Error('no choice expected');});p.hand=['P01-013','P04-089'];p.ts.used['P04-089']=1;
-    const before=copy({hand:p.hand,deck:p.deck,used:p.ts.used});assert(!bridge.canPlay(g,p,'P01-013','drw'));assert(!bridge.canPlay(g,p,'P04-089','rcv'));assert(!bridge.canPlay(g,p,'P01-088','rcv'));
+    const before=copy({hand:p.hand,deck:p.deck,used:p.ts.used});assert(!bridge.canPlay(g,p,'P01-013','drw'));assert(bridge.canPlay(g,p,'P04-089','rcv'));assert(!bridge.canPlay(g,p,'P01-088','rcv'));
     assert.deepEqual({hand:p.hand,deck:p.deck,used:p.ts.used},before);
   });
   for(const lossAt of ['target','rulesChoice'])await check('Loss during '+lossAt+' retains completed placement/draw/target, with no later write',async()=>{
@@ -69,7 +69,7 @@ async function check(name,fn){await fn();cases.push({name,passed:true});}
     await g.resolve(p,'P01-013','rcv');assert.equal(p.ts.rcv,10);assert.equal(p.effects.receive.mods.rcv,5);assert.equal(g.cardName(p,'receive'),'日向 翔陽');g.finishTurn(p);assert.deepEqual(p.effects,{});
   });
   await check('Only the explicit twenty-two pinned profiles are admitted',async()=>{
-    assert.equal(bridge.approvals.length,22);assert(!bridge.handles('P03-087'));assert(bridge.handles('P03-057'));assert(bridge.handles('P04-088'));
+    assert.equal(bridge.approvals.length,36);assert(!bridge.handles('P03-087'));assert(bridge.handles('P03-057'));assert(bridge.handles('P04-088'));
   });
   await check('Stale effects from a replaced card cannot swallow or contaminate a new bonus',async()=>{
     const {g,p}=setup(async()=> 'receive');p.hand=['P01-013'];p.area.receive=['P01-004'];p.ts.receiver='P01-004';p.ts.rcv=5;

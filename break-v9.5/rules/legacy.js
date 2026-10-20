@@ -63,7 +63,7 @@ function entryAllowed(g,p,code,area,{origin='rule',entryOrigin='hand',entryCount
 function transaction(g,p,c,timing,notification=null) {
   if(g.sharedRulesPending)throw new Error('A shared settlement is already awaiting a choice');
   if(!notification&&(!handles(c)||!p.hand.includes(c)||g.turnP!==p))throw new Error('Not an admitted settlement');
-  if(!notification&&byShort[c].profiles[0].limit&&p.ts.used?.[c])throw new Error('Same-name skill already used this turn');
+  if(!notification&&byShort[c].profiles[0].variants[0].printed.type!=='event'&&byShort[c].profiles[0].limit&&p.ts.used?.[c])throw new Error('Same-name skill already used this turn');
   const saved=copy(stored(g));
   const k=new Kernel({catalog:data.catalog,ruleIds:data.ruleIds,fingerprint:data.fingerprint,mode:'live',practiceDrawBeforeReceive:true});
   const physical=identity.snapshot(g);
@@ -162,6 +162,7 @@ function transaction(g,p,c,timing,notification=null) {
         for(const [code,def] of Object.entries(byShort))if(def.profiles[0].variants[0].printed.name===lock.name)q.ts.used[code]=1;
       }
     }
+    if(complete && !notification && byShort[c].profiles[0].variants[0].printed.type==='event' && byShort[c].profiles[0].limit && basePlayers[p.idx].ts.used?.[c])g.log('同名技能本回合已失效：僅放入 Event 區，不執行效果。');
     if(complete) {
       g.sharedRulesState={version:1,fingerprint:data.fingerprint,next:state.next,effects:copy(durable(state)),receipts:notification?[...saved.receipts,...notification.events.map(e=>e.receipt)]:saved.receipts};
       g.sharedRulesPending=null;
@@ -237,7 +238,7 @@ function canPlay(g,p,c,timing) {
   if(g.sharedRulesPending||!handles(c)||g.turnP!==p||!p.hand.includes(c))return false;
   const profile=byShort[c].profiles[0];
   const window=profile.activation.activation_phases.includes(phase[timing])||phase[timing]==='receive'&&profile.practice_override?.extra_window==='before_receive_judgment';
-  if(!window||profile.limit&&p.ts.used?.[c])return false;
+  if(!window||profile.variants[0].printed.type!=='event'&&profile.limit&&p.ts.used?.[c])return false;
   return transaction(g,p,c,timing).possible();
 }
 async function resolve(g,p,c,timing) { return transaction(g,p,c,timing).run(); }

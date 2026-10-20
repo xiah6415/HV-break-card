@@ -1,0 +1,8 @@
+'use strict';
+const assert=require('node:assert/strict'),{codes,reviewedEngine}=require('./finite-fixtures'),L=require('../card-library');const {E,scope}=reviewedEngine();
+const tag={'D03-013':'稲荷崎','D04-012':'青葉城西','P02-084':'稲荷崎','P02-100':'音駒','P03-081':'疑似ユース','P03-084':'ユース','P04-091':'角川','P04-092':'角川','P04-101':'町内会','PR-030':'音駒'};
+(async()=>{const all=Object.values(L.data.cards).filter(c=>c.kind==='C'&&!c.hasSkill&&c.stats.every(n=>n!==null)),used={},games=[];
+ for(const code of codes){const names=new Set(),pool=all.filter(c=>c.schoolTags.includes(tag[code]||'烏野')),pick=pool.filter(c=>{if(names.has(c.printedName))return false;names.add(c.printedName);return true;}).slice(0,4);assert(pick.length>=2);const cards={[code]:8};for(let i=0;i<32;i++){const c=pick[i%pick.length].code;cards[c]=(cards[c]||0)+1;}E.DECKS.finite={name:'有限事件'+code,cards};used[code]=0;
+ for(const mode of ['strict','numeric'])for(let seed=0;seed<12;seed++){const g=new E.Game({seed,mode,decks:['finite','finite'],agents:[E.AI,E.AI],onLog:s=>{if(s.includes('使用 '+E.nm(code)))used[code]++;}});await g.run();assert(g.winner);const snap=g.cardSnapshot();assert.equal(Object.keys(snap.cards).length,80);for(const p of g.players){const expected=Object.entries(cards).flatMap(([c,n])=>Array(n).fill(c)).sort(),actual=Object.values(snap.cards).filter(c=>c.owner===p.idx).map(c=>c.code).sort();assert.deepEqual(actual,expected);}games.push({code,mode,seed});}
+ }delete E.DECKS.finite;console.log(JSON.stringify({passed:true,scope,games:games.length,cards:codes.length,strictAndNumeric:true,all80PhysicalIdentitiesConserved:true,actualSkillUses:used}));
+})().catch(e=>{console.error(e);process.exitCode=1;});

@@ -1,6 +1,6 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),crypto=require('node:crypto');
-const {fixture,runBatch}=require('./batch-smoke'),{buildIndex}=require('./batch-index');
+const {fixture,runBatch}=require('./batch-smoke'),{buildHistoricalIndex:buildIndex}=require('./batch-test-index');
 const {matchesPrinted}=require('./batch-fixtures');
 const catalog=require('./data/cards.json'),before=JSON.stringify(catalog);
 assert.throws(()=>matchesPrinted(catalog.cards[0].profiles[0],{unknown_fixture_filter:[]}),e=>e.code==='FIXTURE_GAP');
