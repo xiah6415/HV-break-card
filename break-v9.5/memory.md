@@ -512,3 +512,7 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - build／fuzz3000（每局80實體守恆）／6組test各300通過。新watch畫面1280／390／320實作雙向監聽、排序、六手牌選擇與Undo；手機長選單／Loss可捲、手牌可移到面板上方與46%面板上限檢查通過。原橋接畫面亦三尺寸通過；原e2e1280／375／320各3局、無pageerror或橫向溢出。Chrome模擬，非iPhone Safari真機。
 - card-support／RULES-AUDIT更新為18無技能、17主要情境、12部分，原全卡封存核准仍0。HANDOFF／ROADMAP／rules/README更新；成果outputs/BREAK-watch-update.md、validation.json及evidence.json。本機提交保存，未推送部署或同步iCloud；公開版仍af6d8c6。
 - 下一批接登場類觸發與數值保護，勿重做已完成的身分／非抽牌加牌佇列，也不能直接核准其他監聽族或把含隱藏資訊的本機基準當作多人傳輸資料。
+
+## 共用監聽／佇列本機版本保存（2026-10-20）
+- 實作提交948735b：Integrate persistent hand-add watchers and ordered trigger decisions。包含P01-087資料核准、跨回合watch、整個舊技能結束後批次觸發、結算順序／受影響玩家棄牌、等待檢查點與20情境／12還原點／桌機手機回歸，以及支援／交接文件。
+- 未推送部署或同步iCloud，公開版仍af6d8c6；下一批接登場觸發與數值保護。新核心本機核准4張，不能直接把其餘全卡首次映射放行。
