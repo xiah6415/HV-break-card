@@ -698,3 +698,7 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 全部32單元套件通過，含前批102及本批66、核心54及原Undo／橋接等回歸。離線14來源／7產物一致；build、fuzz3000平均3.68rallies、6組test各300通過。e2e1280／375／320各3局與watch1280／390／320通過，無頁面錯誤／溢出／遮牌，Chrome模擬非Safari真機。
 - core及生成index更新，index差異恰為內嵌新core；engine／UI／legacy／原卡資料／approvals／runtime／card-support逐位元組未變。核准22／正式卡庫47維持，未驗證全庫所有組合、host操作／完整Undo；當前opponent hand類別表示對方自行棄手牌，未來明示他人選私有牌須另立契約，不默認擴權。
 - HANDOFF／ROADMAP／rules README／BATCH同步，成果outputs/BREAK-branches-update.md、evidence.json、validation.json。下一階段進全庫數值／圖片／組牌匯入及正式遊戲投影／操作／Undo；僅本機保存，未推送部署或同步iCloud。
+
+
+## 共用分支與選擇權本機保存（2026-10-20）
+- 實作提交 56230576143e11017cf8e97648073539404e197c；1938批次／66獨立效果／32套件及規定模擬、桌機手機操作通過，原1764局面一致。公開區域選牌歸controller已修，QA1361現存側攔池與對方手牌選擇保留。核准22／正式47卡維持，下一步全庫匯入／host操作驗證；未推送部署或同步iCloud。
