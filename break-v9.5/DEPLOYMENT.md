@@ -1,19 +1,26 @@
-# BREAK v9.5 GitHub Pages
+# 第1步完成：本機成果推送與GitHub Pages部署
 
-- 入口：https://xiah6415.github.io/HV-break-card/break-v9.5/
-- 儲存庫：xiah6415/HV-break-card；Pages 來源：master 根目錄。
-- 此資料夾與既有卡牌查詢首頁共存，規則與 UI 沿用使用者提供的 haikyu-v9.5-diagnostic.zip。
-- 先讀 HANDOFF.md、AGENTS.md 與 memory.md；變更前後更新 memory.md。
-- 修改 ui.html / engine.js / deck-tools.js / undo-tools.js 後，以 python3 build.py 建置，勿直接編輯 index.html。
-- 規則支援檢查：node audit-support.js、node rules-audit.test.js、node skill-basics.test.js。card-support.json 修改後用 node audit-support.js --write 更新 RULES-AUDIT.md，再由 build.py 內嵌。
-- 翻牌流程：node reveal.test.js；桌機／手機按鈕、公開卡圖／放大、置底原因、空牌庫、AI 公開暫停與 Undo：node reveal-e2e.js（同下列 Playwright 環境變數）。
-- PR-057／P03-087／P03-096：node skill-targets.test.js、node skill-targets-undo.test.js；名稱、選角、選數值、跨區六 Guts 的三尺寸 UI 操作另跑 node skill-targets-e2e.js（同下列 Playwright 環境變數）。
-- 支援清單、官方來源與 HVBP 特殊卡號的 UI 驗證：node audit-e2e.js，沿用下列 Playwright 環境變數。
-- 檢查：node deck-tools.test.js、node events-timing.test.js、node flow.test.js、node turn-end.test.js、node undo-tools.test.js、node fuzz.js、node test.js 300；UI 改動另依 AGENTS.md 驗證，Undo 改動另跑 node undo-e2e.js（沿用下列 Playwright 環境變數）。
-- 回合／發球／Loss 全螢幕流程另跑 node flow-e2e.js（同下列 Playwright 環境變數），包含桌機與兩種手機完整對戰、確認前暫停、實際來球數值、手動 Loss、Undo 與最後一球。
-- 事件時機的手機操作另跑 node events-e2e.js（同下列 Playwright 環境變數）：略過抽牌窗口後在接球前使用回收事件並 Undo。
-- UI E2E：node e2e.js，需可用的 Playwright 與瀏覽器；可用 PLAYWRIGHT_MODULE 指定模組路徑、PLAYWRIGHT_EXECUTABLE 指定既有瀏覽器，E2E_OUTPUT_DIR 指定截圖目錄。包含桌機、375px 與 320px 手機尺寸、面板收合／調度選牌與完整對戰檢查。
-- 正常提交與推送 master 後，GitHub Pages 自動建置；不要使用 force push。
-- 初次部署原版 index.html SHA-256：3dd675e47cc4e7f34338b6866c6e96ab00553ca95797d92b3eb31f0b04deec35；後續手機 UI 修正由 ui.html 建置，實際版本以 Git 提交及 memory.md 結果為準。
-- 實際部署提交與驗證結果見 memory.md；iPhone Safari 真機結果由使用者補充。
-- Undo 與多人連線的同意／拒絕介面、主機同步及隱藏資訊界線見 [UNDO.md](UNDO.md)。目前發布的是 AI 對練 Undo，尚未接入多人連線。
+日期：2026-10-20。使用者審查後的第1步已完成：原29個未推送提交及本輪審查／部署計畫提交均已推送，首次公開建置提交為 `2bf1b8138f33e32e48710e27d878887c8a149fcf`，Pages狀態built、無建置錯誤。
+
+公開遊戲：https://xiah6415.github.io/HV-break-card/break-v9.5/?v=2bf1b81
+
+| 指標 | 已公開內容 |
+|---|---:|
+| 可查閱 | 541卡／545資料組 |
+| 可組牌 | 212：183無技能角色＋29技能卡 |
+| 共用資料自動結算 | 22張完整SHA核准 |
+| 既有控制器技能 | 7張，部分仍有已知限制，並非29張所有效果均完整驗證 |
+| 尚未開放的技能卡 | 329 |
+| 卡圖 | 541張，img/已一併部署 |
+
+GitHub登入與目標repo已透過git／官方GitHub CLI確認：帳號xiah6415，repo xiah6415/HV-break-card，ADMIN權限；Pages沿用master分支根目錄的既有legacy建置方式。沒有強制推送，沒有覆蓋遠端提交。原「28個」是審查時數量，開始執行時實際29個，另加本輪審查／部署交接提交；後續文件保存也會推送。
+
+公開index HTTP200，2,931,447bytes，SHA256 `3309de06c720befb6453f282a700064545bf40c9960dc03e99fb43ff3bd6e2f9`，與本機及上一批通過34套件／規定模擬的版本完全一致。541張公開卡圖逐張HTTP200及SHA256對照本機資產清單通過。
+
+公開頁在Chrome桌機1280、手機390／320模擬中驗證全卡庫查閱、新圖載入、開始對戰與無橫向溢出，沒有頁面錯誤。這是Chrome手機模擬，iPhone Safari仍請使用上方新網址測試。
+
+本輪沒有修改引擎、UI、卡片規則、核准清單或測試；離線重建結果與先前測試產物一致，因此沒有重跑未變動的整輪對戰。未追蹤claude-handoff/原樣保留，沒有納入部署提交。
+
+目前數值模式、手動調整、分享連結匯入、先發先接選擇、權限來源改造與14張事件均尚未實作。下一步依REVIEW-PLAN進行第2步「數值模式預設開＋手動面板，保留嚴格模式」，每步仍先寫memory計畫，完成就提交／推送／部署並回報三項數量與網址。
+
+本文件的部署結果會再以純文件提交保存並推送；最新建置提交見同目錄BREAK-deployment-evidence.json。這些交接提交不改遊戲index與卡圖內容。

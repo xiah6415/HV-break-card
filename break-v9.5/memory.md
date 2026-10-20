@@ -761,3 +761,10 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 檢查git／gh可用性、登入與目標repo xiah6415/HV-break-card及Pages來源。先離線建置確認index／541圖齊備與已測版本一致，保留上一批34套件／規定模擬與瀏覽器驗證證據；無新執行碼時不無故重跑整輪。
 - 提交需要的部署交接資訊並推送master，依既有Pages方式發佈含img/的break-v9.5；驗證公開index與本機SHA一致、541代表圖可取及新增圖內容一致，回報實際提交、212可組牌、22共用技能＋7舊流程與公開網址。不得把未開始的數值模式或14事件描述成完成。
 - 完成後更新memory／STATUS與outputs部署證據，提交推送交接結果；後續批次都遵循完成即部署。這一步先完成公開可用性，不混入新技能與UI改動。
+
+
+## 審查第1步推送與Pages部署結果（2026-10-20）
+- 已檢查遠端無新增提交，原29個未推送本機提交＋審查／部署計畫提交已推送master，首次公開建置2bf1b8138f33e32e48710e27d878887c8a149fcf，GitHub Pages legacy master根目錄建置built、無錯誤。git／官方CLI核對xiah6415帳號與ADMIN repo，未強推，未追蹤claude-handoff/保留不動。
+- 離線build成功且index與上一批34套件／規定模擬已測版本完全一致，未改引擎／UI／技能資料，不重跑整輪未變測試。公開index HTTP200、2,931,447bytes、SHA256 3309de06c720befb6453f282a700064545bf40c9960dc03e99fb43ff3bd6e2f9，與本機一致；公開541張img/逐張HTTP200與SHA256對照通過。
+- 公開網址https://xiah6415.github.io/HV-break-card/break-v9.5/?v=2bf1b81，Chrome1280／390／320實際驗證卡庫、新卡圖片、開始遊戲、無溢出／頁面錯誤；非Safari真機。可組牌212（183無技能＋29技能），自動結算共用SHA核准22＋舊流程7（部分有限制），541卡可查，329仍鎖定。
+- 更新DEPLOYMENT／STATUS／HANDOFF／ROADMAP／REVIEW-PLAN／library README及outputs/BREAK-deployment-update.md、evidence.json與public-library-phone.png。部署交接結果再以純文件提交推送，最終建置見outputs證據。第2步數值模式／手動面板未開始，分享匯入／先發先接／權限改造／14事件未實作。
