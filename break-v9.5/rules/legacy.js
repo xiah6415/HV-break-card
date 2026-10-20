@@ -52,7 +52,9 @@ function permission(g,action) {
   k.state.turn={id:Math.max(1,g.turnNo),player:g.turnP?.idx??action.player,phase:phase[g.rulePhase]||'draw',step:'free'};
   k.state.effects=effects.filter(e=>e.kind==='ban');return k.permission(action);
 }
-function entryAllowed(g,p,code,area,{origin='rule',entryOrigin='hand',entryCount=1}={}) {
+function blockEntered(g,p) {return g.turnP===p&&!p.ts.finished?(p.ts.blockEntryReceipts?.length||0):0;}
+function entryAllowed(g,p,code,area,{origin='rule',entryOrigin='hand',entryCount=null}={}) {
+  if(entryCount===null)entryCount=area==='block'||area.startsWith('side:')?blockEntered(g,p)+1:1;
   const printed=byShort[code]?.profiles[0].variants[0].printed;
   return !!printed&&permission(g,{action:'enter_character',player:p.idx,origin,entryOrigin,entryCount,role:area==='block'?'center_blocker':area.startsWith('side:')?'side_blocker':area,printed,name:printed.name}).allowed;
 }
@@ -61,9 +63,9 @@ function transaction(g,p,c,timing,notification=null) {
   if(!notification&&(!handles(c)||!p.hand.includes(c)||g.turnP!==p))throw new Error('Not an admitted settlement');
   if(!notification&&byShort[c].profiles[0].limit&&p.ts.used?.[c])throw new Error('Same-name skill already used this turn');
   const saved=copy(stored(g));
-  const k=new Kernel({catalog:data.catalog,ruleIds:data.ruleIds,fingerprint:data.fingerprint,mode:'live'});
+  const k=new Kernel({catalog:data.catalog,ruleIds:data.ruleIds,fingerprint:data.fingerprint,mode:'live',practiceDrawBeforeReceive:true});
   const physical=identity.snapshot(g);
-  k.state.turn={id:Math.max(1,g.turnNo),player:g.turnP?.idx??p.idx,phase:phase[timing],step:'free'};
+  k.state.turn={id:Math.max(1,g.turnNo),player:g.turnP?.idx??p.idx,phase:phase[timing],step:'free',blockEntries:g.players.map(q=>blockEntered(g,q))};
   k.state.next=Math.max(k.state.next,saved.next);
   if(g.ball)k.state.ball={owner:1-k.state.turn.player,kind:g.ball.type,offense:g.ball.off};
   const short={},slots={},basePlayers=g.players.map(q=>copy({hand:q.hand,deck:q.deck,drop:q.drop,ev:q.ev,sets:q.sets,area:q.area,ts:q.ts,effects:q.effects,newCount:q.newCount}));
@@ -198,7 +200,7 @@ function transaction(g,p,c,timing,notification=null) {
     const sourceName=req.kind==='trigger_order'?'效果':byShort[short[req.source]]?.display_name||g.src||'效果';
     const opts=available.map(answer=>{
       if(req.kind==='target') {
-        const id=answer[0],slot=slots[id];return {label:`${labels[slot.key]||'側攔'}區 · ${g.cardName(owner,slot.key)} · ${short[id]}`,card:short[id],value:slot.key,answer};
+        const id=answer[0],slot=slots[id];return {label:`${labels[slot.key]||'側攔'}區 · ${g.cardName(g.players[slot.player],slot.key)} · ${short[id]}`,card:short[id],value:slot.key,answer};
       }
       if(['payment_cards','move_cards'].includes(req.kind)) {const id=answer[0];return {label:`${byShort[short[id]].display_name} · ${short[id]}`,card:short[id],value:id,answer};}
       if(req.kind==='parameter')return {label:labels[answer],value:Object.keys(params).find(key=>params[key]===answer),answer};
@@ -210,10 +212,12 @@ function transaction(g,p,c,timing,notification=null) {
       return {label:req.kind==='optional'?answer?'執行登場效果':'不執行':req.kind==='draw_count'?answer?`抽 ${answer} 張`:'不抽牌':answer?payment?.kind==='pay_guts'?`支付 ${payment.count} Guts`:payment?.destination==='self.event'?'選 1 張事件放到 Event 區':'棄 1 張符合條件的手牌，追加效果':'不追加',value:answer,answer};
     });
     const kind=req.kind==='parameter'?'parameter':req.kind==='target'?'target':['activate_payment','optional'].includes(req.kind)?'skill':'rulesChoice';
-    const prompt=sourceName+'：'+({target:'選擇場上 1 位角色',draw_count:'選擇抽牌數量',activate_payment:paymentPrompt,optional:'是否執行這個登場效果？',payment_cards:req.destination==='self.event'?'選擇 1 張事件放到 Event 區':'選擇 1 張符合條件的手牌棄掉',parameter:'選擇這位角色要增加的參數',move_count:'最多選 1 張符合條件的牌加入手牌',move_cards:req.destination?.endsWith('.hand')?'從棄牌區選擇 1 張加入手牌':isPassive?'請選 1 張手牌棄掉':'非抽牌加入手牌後，請選 1 張手牌棄掉',trigger_order:'選擇同時觸發的結算順序'}[req.kind]);
+    const fromZones=[...new Set(req.options.filter(id=>typeof id==='string'&&state.cards[id]).map(id=>state.cards[id].zone.split('.')[1]))];
+    const fromLabel=fromZones.length===1?({event:'Event 區',drop:'棄牌區',hand:'手牌',deck:'牌庫'}[fromZones[0]]||'來源區'):'來源區';
+    const prompt=sourceName+'：'+({target:'選擇場上 1 位角色',draw_count:'選擇抽牌數量',activate_payment:paymentPrompt,optional:'是否執行這個登場效果？',payment_cards:req.destination==='self.event'?'選擇 1 張事件放到 Event 區':'選擇 1 張符合條件的手牌棄掉',parameter:`選擇這位角色要增加的參數${req.target?`（${g.cardName(g.players[slots[req.target.id].player],slots[req.target.id].key)}・${labels[slots[req.target.id]?.key]||'側攔'}區）`:''}`,move_count:'最多選 1 張符合條件的牌加入手牌',move_cards:req.destination?.endsWith('.hand')?`從${fromLabel}選擇 1 張加入手牌`:isPassive?'請選 1 張手牌棄掉':'非抽牌加入手牌後，請選 1 張手牌棄掉',trigger_order:'選擇同時觸發的結算順序'}[req.kind]);
     let invalid=false;
     for(;;) {
-      const value=await g.ask(owner,{kind,prompt:prompt+(invalid?'（請重新選擇有效選項）':''),timing,ctx:{card:short[req.source],...(req.kind==='parameter'?{target:slots[req.source]?.key}:{}),...(state.cards[req.source]?.zone===req.player+'.receive'&&g.ball?{need:g.ball.off-g.parameter(owner,slots[req.source].key,'rcv')}: {})},options:opts.map(({answer,...o})=>o)});
+      const value=await g.ask(owner,{kind,prompt:prompt+(invalid?'（請重新選擇有效選項）':''),timing,ctx:{card:short[req.source],...(req.kind==='parameter'?{target:slots[req.target?.id||req.source]?.key}:{}),...(state.cards[req.source]?.zone===req.player+'.receive'&&g.ball?{need:g.ball.off-g.parameter(owner,slots[req.source].key,'rcv')}: {})},options:opts.map(({answer,...o})=>o)});
       const option=opts.find(o=>o.value===value);if(option)return option.answer;invalid=true;
     }
   }
@@ -230,7 +234,8 @@ function transaction(g,p,c,timing,notification=null) {
 function canPlay(g,p,c,timing) {
   if(g.sharedRulesPending||!handles(c)||g.turnP!==p||!p.hand.includes(c))return false;
   const profile=byShort[c].profiles[0];
-  if(!profile.activation.activation_phases.includes(phase[timing])||profile.limit&&p.ts.used?.[c])return false;
+  const window=profile.activation.activation_phases.includes(phase[timing])||phase[timing]==='receive'&&profile.practice_override?.extra_window==='before_receive_judgment';
+  if(!window||profile.limit&&p.ts.used?.[c])return false;
   return transaction(g,p,c,timing).possible();
 }
 async function resolve(g,p,c,timing) { return transaction(g,p,c,timing).run(); }
@@ -254,6 +259,7 @@ function entryPreview(g,p,code,area,param) {
 }
 async function charactersEntered(g,p,entries) {
   assertReady(g);
+  for(const {key}of entries)if(key==='block'||key.startsWith('side:')){const ref=g.roleReference(p,key);if(!ref)throw new Error('Missing actual blocker receipt');const receipt=`${g.turnNo}:${p.idx}:${ref.id}:${ref.incarnation}:${key}`;p.ts.blockEntryReceipts ||= [];if(!p.ts.blockEntryReceipts.includes(receipt))p.ts.blockEntryReceipts.push(receipt);}
   const passive=entries.some(({key})=>{const code=g.courtTargets(p).find(t=>t.key===key)?.card;return byShort[code]?.profiles[0].activation?.skill_type==='passive';});
   if(!passive&&!stored(g).effects.some(e=>e.kind==='watch'&&e.event==='character_entry'&&e.actor===p.idx&&active(e,g)))return;
   const revision=identity.ensure(g).revision;
@@ -274,6 +280,6 @@ async function legacyEffect(g,run) {
   try {const result=await run();complete=true;return result;}
   finally {g.sharedRulesDepth--;if(complete&&!g.sharedRulesDepth)await flushHandEvents(g);}
 }
-const api={permission,entryAllowed,charactersEntered,entryPreview,protectedParameter,handles,canPlay,resolve,assertReady,handAdded,legacyEffect,beginTurn,finishTurn,loss,approvals:[...approved]};
+const api={permission,entryAllowed,blockEntered,charactersEntered,entryPreview,protectedParameter,handles,canPlay,resolve,assertReady,handAdded,legacyEffect,beginTurn,finishTurn,loss,approvals:[...approved]};
 if(node)module.exports=api;else root.BreakRulesLegacy=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

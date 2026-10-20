@@ -111,9 +111,9 @@ class Kernel {
       else if (key==='role') ok=this.roleMatches(event.role || role,v);
       else if (key==='role_any') ok=v.some(r=>this.roleMatches(event.role || role,r));
       else if (key==='type') ok=p.type===v;
-      else if (key==='skillless') ok=(!this.profile(id).program)===v;
-      else if (key==='play_icons_any') ok=v.some(x=>this.profile(id).activation?.activation_phases.includes(x));
-      else if (key==='play_icons_exact') ok=same([...v].sort(),[...(this.profile(id).activation?.activation_phases || [])].sort());
+      else if (key==='skillless') ok=(this.profile(id).printed_has_skill ?? !!this.profile(id).program)===!v;
+      else if (key==='play_icons_any') ok=v.some(x=>(this.profile(id).printed_play_icons ?? this.profile(id).activation?.activation_phases ?? []).includes(x));
+      else if (key==='play_icons_exact') ok=same([...v].sort(),[...(this.profile(id).printed_play_icons ?? this.profile(id).activation?.activation_phases ?? [])].sort());
       else if (key==='entry_origins') ok=v.includes(event.origin ?? c.entryOrigin);
       else if (key==='phase') ok=this.state.turn.phase===v;
       else if (key==='exclude_operations') ok=!v.includes(event.operation);
@@ -354,7 +354,7 @@ class Kernel {
         need(typeof target!=='string','Cannot choose character parameter on ball');
         const allowed=(params.includes('chosen')?PARAMS:params).filter(p=>this.parameter(target.id,p)!=='dash');
         if (!allowed.length) continue;
-        const p=this._decide('parameter',ctx,allowed); legal(allowed.includes(p),'Invalid parameter');params=[p];
+        const p=this._decide('parameter',ctx,allowed,{target:clone(target)}); legal(allowed.includes(p),'Invalid parameter');params=[p];
       }
       let value=node.value;
       if (typeof value==='object') {
@@ -450,7 +450,7 @@ class Kernel {
       case 'keyword': need(this.state.turn.phase==='block' && this.state.ball?.kind==='attack','One touch requires an incoming attack in block phase');this._numeric({target:'opponent_ball',target_scope:{mode:'single',binding:'reference',membership:'snapshot_on_resolution'},parameter:'attack_offense',value:-node.N,operation:'add'},ctx);this._jump('draw');return true;
       case 'enter': case 'enter_self': { const ids=node.kind==='enter_self'?[ctx.source.id]:this.pool(node.pool,ctx);let n=node.kind==='enter_self'?1:Math.min(node.count,ids.length);
         if(node.count_mode==='upto'){const max=n;n=this._decide('entry_count',ctx,Array.from({length:n+1},(_,i)=>i));legal(Number.isInteger(n)&&n>=0&&n<=max,'Invalid entry count');}
-        if(!n){ctx.bind.entered=null;return false;}need(n===1,'Multiple entry transaction not implemented');const id=node.kind==='enter_self'?ids[0]:this._selection(ids,1,ctx,'entry')[0];ctx.bind.entered=this._enter(id,ctx.controller,node.destination,ctx,'skill',node.as_side_blocker);return true; }
+        if(!n){ctx.bind.entered=null;return false;}need(n===1,'Multiple entry transaction not implemented');const id=node.kind==='enter_self'?ids[0]:this._selection(ids,1,ctx,'entry')[0];ctx.bind.entered=this._enter(id,ctx.controller,node.destination,ctx,'skill',node.as_side_blocker,true);return !!ctx.bind.entered; }
       default: throw new NeedsReview('Unsupported operation '+node.kind);
     }
   }
@@ -523,7 +523,7 @@ class Kernel {
     const performed=this._resolveSkill(p,ctx);
     this._drain();return {performed,invalid:false};
   }
-  _enter(id,player,area,ctx,origin='hand',side=false) {
+  _enter(id,player,area,ctx,origin='hand',side=false,skipRestricted=false) {
     const c=this.card(id),p=this.profile(id);let dest=area;
     if(side){dest=['side:0','side:1'].find(z=>!this.top(player,z));legal(dest,'No side blocker slot');need(this.top(player,'block'),'Centerless side-block exception is not implemented');}
     legal(COURT.includes(dest)&&c.printed.type==='character','Invalid character destination');
@@ -532,15 +532,18 @@ class Kernel {
     const name=this.effectiveName(id),other=dest==='attack'?this.top(player,'toss'):dest==='toss'?this.top(player,'receive'):null;
     legal(!other || this.effectiveName(other)!==name,'Same-name role entry forbidden');
     if(parameter==='block')legal(!['block','side:0','side:1'].map(z=>this.top(player,z)).filter(x=>x&&x!==id).some(x=>this.effectiveName(x)===name),'Same-name blockers forbidden');
-    const count=parameter==='block'?1+['block','side:0','side:1'].filter(z=>z!==dest&&this.top(player,z)).length:1;
-    legal(this.permission({action:'enter_character',player,origin:origin==='skill'?'skill':'rule',role:parameter==='block'?(side?'side_blocker':'center_blocker'):dest,
-      entryOrigin:c.zone.split('.')[1]==='hand'?'hand':this.role(id)==='guts'&&COURT.includes(c.zone.split('.')[1])?'guts':c.zone.split('.')[1],entryCount:count,name,printed:c.printed}).allowed,'Entry restriction');
+    const count=parameter==='block'?(this.state.turn.blockEntries?.[player]||0)+1:1;
+    const allowed=this.permission({action:'enter_character',player,origin:origin==='skill'?'skill':'rule',role:parameter==='block'?(side?'side_blocker':'center_blocker'):dest,
+      entryOrigin:c.zone.split('.')[1]==='hand'?'hand':this.role(id)==='guts'&&COURT.includes(c.zone.split('.')[1])?'guts':c.zone.split('.')[1],entryCount:count,name,printed:c.printed}).allowed;
+    if(!allowed&&skipRestricted)return null;
+    legal(allowed,'Entry restriction');
     need(p.activation?.skill_type!=='permanent_entry_name','Entry-name replacement not implemented');
     if(p.activation?.skill_type==='passive')this._admit(p);
     const sourceZone=c.zone.split('.')[1], entryOrigin=COURT.includes(sourceZone)&&this.role(id)==='guts'?'guts':sourceZone;
     this._move(id,player,dest,ctx,'explicit_entry');
     c.entryOrigin=entryOrigin;c.entryReason=origin==='skill'?'skill':'rule';c.entryTurn=this.state.turn.id;
     const event={type:'character_entry',player,card:id,character:this.reference(id),role:this.role(id),origin:entryOrigin,phase:this.state.turn.phase,window:this.state.turn.id+':'+this.state.turn.phase};
+    if(parameter==='block'){this.state.turn.blockEntries ||= [0,0];this.state.turn.blockEntries[player]++;}
     this._emit(event);this._enqueuePassive(id,event);return this.reference(id);
   }
   _jump(phase) { const old=this.state.turn.id+':'+this.state.turn.phase;this.state.queue=this.state.queue.filter(q=>q.window!==old);this.state.effects=this.state.effects.filter(e=>e.duration.kind!=='this_draw_phase');this.state.turn.phase=phase;this.state.turn.step='start';this.state.events.push({type:'phase_jump',from:old,to:phase}); }

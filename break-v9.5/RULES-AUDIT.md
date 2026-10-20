@@ -5,12 +5,14 @@
 47 張均已對到官方卡號、名稱、數值與位置；6 組預設牌組全部納入。角色數值與目前引擎一致。
 
 - 無技能／數值核對：18 張。
-- 主要技能情境通過：22 張。
-- 部分技能待補：7 張。
+- 主要技能情境通過：24 張。
+- 部分技能待補：5 張。
 
 「主要技能情境通過」只代表列出的測試通過，不是所有目標、技能組合或規則均已驗證。部分技能卡仍可在現有對練台使用，限制見下表。官方 Q&A 編號是來源索引，不代表每則 Q&A 都已自動化。
 
 ## 本批已修正
+
+- P01-074／D01-012／P03-090／P03-096四張候選改走共用事件資料，刪除舊效果；選場上合法角色、同一目標後段加值、原始圖示逐實體計數、真實目標參數與Event精確回收／同名限次已接。D01-012按QA1108累計本回合攔網登場，角色離場／替換不重置，禁止技能進場只略過該步、保留已付Guts。40情境（QA1108完整卡文後段為隔離核心驗證，D02-004未加入正式卡庫）、24完整Undo與三尺寸操作通過。P03-090無目標宣告仍保留共用疑義與partial狀態。
 
 - 接球／舉球P03-051／P02-001／P01-039／P01-033改走資料，球總值從基準投影、允許負進攻（總合0-2-9）、日向可回收剛付的實體Guts、及川任一非「－」參數可選且對手自行棄牌。53新情境（1個雙所屬為封存核心隔離測試）、57完整Undo還原點及三尺寸操作通過，核准18張，其餘29卡舊路徑。
 
@@ -71,13 +73,13 @@
 | [HV-D01-004](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-D01-004&voba=D) | 山口　忠 | 無技能／數值核對 | 官方卡文無技能；數值、卡圖與牌組引用已檢查 |
 | [HV-P03-046](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P03-046&voba=N) | 赤木 路成 | 主要技能情境通過 | 共用自身登場及來球條件，發球≤2抽牌／≥6接球+2；`rules/passive.test.js`／Undo／畫面。 |
 | [HV-P03-057](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P03-057&voba=N) | 黒川 広樹 | 主要技能情境通過 | 共用登場監聽、全部參數防降、正式抽牌時機／多張累加、實體代次與期限；`rules/entry.test.js`／Undo／畫面。舊角色被動的任意排序尚未全面整合。 |
-| [HV-D01-012](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-D01-012&voba=D) | ブロード攻撃 | 部分技能待補 | 目前只加本次攻擊角色；需提供場上烏野角色指定，並核對混校牌組的目標限制。 |
-| [HV-P01-074](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-074&voba=N) | 烏養 一繋 | 部分技能待補 | 額外加成條件已實作；目前僅指定本次攻擊角色，尚未提供其他場上角色。 |
+| [HV-D01-012](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-D01-012&voba=D) | ブロード攻撃 | 主要技能情境通過 | `rules/candidate.test.js`／`candidate-undo.test.js`／`candidate-e2e.js` |
+| [HV-P01-074](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-074&voba=N) | 烏養 一繋 | 主要技能情境通過 | `rules/candidate.test.js`／`candidate-undo.test.js`／`candidate-e2e.js` |
 | [HV-P01-078](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-078&voba=S) | オープン攻撃 | 部分技能待補 | 抽棄、次數及同名舉球限制已補測；PR-057 的可選名稱仍待名稱模組處理。；`rules-audit.test.js` |
 | [HV-P03-086](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P03-086&voba=N) | プレーは大分 おりこうさんよな | 主要技能情境通過 | `rules-audit.test.js` |
-| [HV-P03-090](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P03-090&voba=S) | おれにバレーボール教えてくれて ありがとう | 部分技能待補 | 回收與每回合次數已實作；目前只在可回收時提供，尚未分開處理打出事件與技能無效。 |
+| [HV-P03-090](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P03-090&voba=S) | おれにバレーボール教えてくれて ありがとう | 部分技能待補 | `rules/candidate.test.js`／`candidate-undo.test.js`／`candidate-e2e.js`；空目標宣告仍保守停用。 |
 | [HV-PR-029](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-PR-029&voba=P) | 鬼と 鬼だな | 部分技能待補 | 最多各一張可選擇不拿已修正；目前只在可回收時提供，空目標打出尚未提供。；`rules-audit.test.js`；`events-timing.test.js` |
-| [HV-P03-096](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P03-096&voba=N) | 日向 夏 | 主要技能情境通過 | `skill-targets.test.js`；`skill-targets-undo.test.js`；`skill-targets-e2e.js` |
+| [HV-P03-096](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P03-096&voba=N) | 日向 夏 | 主要技能情境通過 | `rules/candidate.test.js`／`candidate-undo.test.js`／`candidate-e2e.js` |
 | [HV-P03-087](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P03-087&voba=N) | 周りの上手さに引っ張られる | 主要技能情境通過 | `skill-targets.test.js`；`skill-targets-undo.test.js`；`skill-targets-e2e.js` |
 | [HV-P01-033](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-033&voba=%E9%A0%82) | 及川 徹 | 主要技能情境通過 | `rules/receive.test.js`／`receive-undo.test.js`／`receive-e2e.js` |
 | [HV-D04-003](https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-D04-003&voba=D) | 及川 徹 | 無技能／數值核對 | 官方卡文無技能；數值、卡圖與牌組引用已檢查 |

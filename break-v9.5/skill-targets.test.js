@@ -126,10 +126,10 @@ async function check(name, run) { try { await run(); console.log('PASS', name); 
   await check('chosen Hinata name controls Kageyama attack bonus and Broad Attack; two PR-057 copies can choose different names', async () => {
     assert(E.canChain(['PR-057', 'PR-057'], '日向 翔陽'));
     for (const name of ['日向 翔陽', '西谷 夕']) {
-      const { g, p } = fixture(async () => name); p.hand = ['PR-057', 'D01-012']; p.deck = [];
+      const { g, p } = fixture(async (g,p,r) => r.kind==='name'?name:r.kind==='target'?'attack':r.options[0].value); p.hand = ['PR-057', 'D01-012']; p.deck = [];
       p.area.toss = ['P01-006']; p.ts.setter = 'P01-006'; p.ts.toss = 1; p.ts.hin = 2;
       await g.enterAttack(p, 'PR-057', false); assert.equal(p.ts.atk, name === '日向 翔陽' ? 5 : 3);
-      await g.resolve(p, 'D01-012', 'atk'); assert.equal(!!p.opp.pending.one_blocker, name === '日向 翔陽');
+      await g.resolve(p, 'D01-012', 'atk'); assert(!p.opp.pending.one_blocker);assert.equal(g.sharedRulesState.effects.some(e=>e.kind==='ban'&&e.scope.max_count===1),name==='日向 翔陽');g.beginTurn(p.opp);assert.equal(g.blockMax(p.opp),name==='日向 翔陽'?1:3);
     }
   });
   console.log(`skill targets: ${passed} passed, ${failed} failed`); if (failed) process.exit(1);

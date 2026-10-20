@@ -43,7 +43,7 @@ class Scenario extends E.Game {
 })();
 function answer(r) {
   if (r.kind === 'name') return '日向 翔陽';
-  if (r.kind === 'target') return r.prompt.startsWith('日向夏') ? 'receive' : 'toss';
+  if (r.kind === 'target') return r.ctx?.card==='P03-096' ? 'receive' : 'toss';
   if (r.kind === 'parameter') return r.ctx.target === 'receive' ? 'rcv' : 'tos';
   if (r.kind === 'gutsCourt') return [0, 1, 2, 3, 4, 5];
   return true;

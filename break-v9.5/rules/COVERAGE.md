@@ -9,20 +9,20 @@ node rules/coverage.js > /tmp/break-library-coverage.json
 node rules/coverage.test.js
 ```
 
-使用repo內完整catalog、shared-rules、core、legacy、runtime與approvals；核對18張原profile完整SHA與runtime覆寫一致，檔案指紋會隨報告保存。formal_cost每個step、被動觸發與全部程序節點均掃描，不因第一個錯誤而漏掉後續阻塞。
+使用repo內完整catalog、shared-rules、core、legacy、runtime與approvals；核對22張原profile完整SHA與runtime覆寫一致，檔案指紋會隨報告保存。formal_cost每個step、被動觸發與全部程序節點均掃描，不因第一個錯誤而漏掉後續阻塞。
 
 ## 目前快照
 
 | 互斥卡號分類 | 張數 |
 |---|---:|
 | 無技能基礎資料 | 183 |
-| 現有對練台已核准技能 | 18 |
-| 現有機制測試候選 | 129 |
+| 現有對練台已核准技能 | 22 |
+| 現有機制測試候選 | 125 |
 | 遊戲橋接或未驗證結算形態缺口 | 72 |
 | 共用核心機制缺口 | 132 |
 | 卡文版本／判例／資料語意待覆核 | 7 |
 
-合計541卡／545資料組，有技能358卡。多版本卡採最保守分類；逐profile結果另外保留。183無技能僅18張在現有47卡庫；129候選僅4張在現有卡庫（P01-074、D01-012、P03-090、P03-096）。
+合計541卡／545資料組，有技能358卡。多版本卡採最保守分類；逐profile結果另外保留。183無技能僅18張在現有47卡庫；本批已將P01-074／D01-012／P03-090／P03-096四張候選接入核准，候選由129降至125，剩餘候選均在47卡庫外。
 
 候選定義是：實際Kernel admission／preflight通過、無已列出的core／host／review阻塞，而且尚未核准。它不表示原映射語意已核對、全部執行分支可達、所有組合皆正確或能立即在公開頁使用。
 

@@ -653,12 +653,15 @@
       "qaIds": [
         "1108"
       ],
-      "status": "partial",
-      "gaps": [
-        "目前只加本次攻擊角色；需提供場上烏野角色指定，並核對混校牌組的目標限制。"
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "rules/candidate.test.js",
+        "rules/candidate-undo.test.js",
+        "rules/candidate-e2e.js"
       ],
-      "tests": [],
-      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-D01-012"
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-D01-012",
+      "settlement": "shared-rules-local-migration"
     },
     "P01-074": {
       "name": "烏養 一繋",
@@ -680,12 +683,15 @@
       "qaIds": [
         "1211"
       ],
-      "status": "partial",
-      "gaps": [
-        "額外加成條件已實作；目前僅指定本次攻擊角色，尚未提供其他場上角色。"
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "rules/candidate.test.js",
+        "rules/candidate-undo.test.js",
+        "rules/candidate-e2e.js"
       ],
-      "tests": [],
-      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P01-074"
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P01-074",
+      "settlement": "shared-rules-local-migration"
     },
     "P01-078": {
       "name": "オープン攻撃",
@@ -764,10 +770,15 @@
       "qaIds": [],
       "status": "partial",
       "gaps": [
-        "回收與每回合次數已實作；目前只在可回收時提供，尚未分開處理打出事件與技能無效。"
+        "完全無變化事件的宣告／技能無效共用判定仍待釐清；目前無可回收目標或受禁加牌時保守停用，未開放空目標放置。"
       ],
-      "tests": [],
-      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P03-090"
+      "tests": [
+        "rules/candidate.test.js",
+        "rules/candidate-undo.test.js",
+        "rules/candidate-e2e.js"
+      ],
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P03-090",
+      "settlement": "shared-rules-local-migration"
     },
     "PR-029": {
       "name": "鬼と 鬼だな",
@@ -822,9 +833,13 @@
       "tests": [
         "skill-targets.test.js",
         "skill-targets-undo.test.js",
-        "skill-targets-e2e.js"
+        "skill-targets-e2e.js",
+        "rules/candidate.test.js",
+        "rules/candidate-undo.test.js",
+        "rules/candidate-e2e.js"
       ],
-      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P03-096"
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P03-096",
+      "settlement": "shared-rules-local-migration"
     },
     "P03-087": {
       "name": "周りの上手さに引っ張られる",

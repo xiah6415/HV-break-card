@@ -373,7 +373,7 @@ class Game {
     for (const key of Object.keys(p.effects)) if (key.startsWith('side:')) delete p.effects[key];
     if (sides.length) this.log(`側攔 ${sides.map(nm).join('、')} → 棄牌區`, 'guts');
   }
-  finishTurn(p) { p.effects = {}; p.restrict = {}; p.ts.finished = true; turnEffects.finish(this, this.turnNo); sharedRules.finishTurn(this); }
+  finishTurn(p) { delete p.ts.blockEntryReceipts; p.effects = {}; p.restrict = {}; p.ts.finished = true; turnEffects.finish(this, this.turnNo); sharedRules.finishTurn(this); }
   beginTurn(p) { if (this.turnP) this.finishTurn(this.turnP); this.turnP = p; this.turnNo++; p.restrict = {...p.pending, ...turnEffects.begin(this, p.idx)}; p.pending = {}; p.ts = { used: {} }; p.newCount = {}; this.src = ''; this.rulePhase = 'drw'; sharedRules.beginTurn(this, p); }
   async confirmTurnEnd(p, outgoing) {
     if (!p.agent.wantsAck) return;
@@ -414,7 +414,7 @@ class Game {
     }
     return await this.receiveTurn(p);
   }
-  blockMax(p) { const legacy=p.restrict.one_blocker?1:p.restrict.two_blockers?2:3;return [3,2,1].find(n=>n<=legacy&&sharedRules.permission(this,{action:'enter_character',player:p.idx,origin:'rule',role:'center_blocker',entryOrigin:'hand',entryCount:n}).allowed)||0; }
+  blockMax(p) { const legacy=p.restrict.one_blocker?1:p.restrict.two_blockers?2:3;return [3,2,1].find(n=>n<=legacy&&sharedRules.permission(this,{action:'enter_character',player:p.idx,origin:'rule',role:'center_blocker',entryOrigin:'hand',entryCount:sharedRules.blockEntered(this,p)+n}).allowed)||0; }
   blockCands(p) { return [...new Set(p.handC().filter(c => st(c, 'blk') != null))]; }
   evalBlock(p, combo, off = this.ball.off) {
     const o = p.opp, evInHand = p.hand.some(x => !isC(x));
@@ -554,14 +554,11 @@ class Game {
         continue;
       }
       if (!T || !(T.includes(timing) || (drawWindow && T.includes('drw')))) continue;
-      if (p.ts.used[c] && ['P03-090', 'P03-096', 'P03-087', 'P04-088', 'P04-089'].includes(c)) continue;
+      if (p.ts.used[c] && ['P03-087', 'P04-088', 'P04-089'].includes(c)) continue;
       const ok = {
         'PR-029': () => this.skillHandAllowed(p) && p.drop.some(x => isHin(x) && x !== 'PR-057' || nm(x) === '影山 飛雄'),
-        'P03-090': () => this.skillHandAllowed(p) && p.ev.some(x => x !== 'P03-090'),
         'P03-086': () => !!p.ts.setter && ['影山 飛雄', '菅原 孝支', '及川 徹'].includes(nm(p.ts.setter)),
         'P01-078': () => !!p.ts.attacker,
-        'D01-012': () => !!p.ts.attacker, 'P01-074': () => !!p.ts.attacker,
-        'P03-096': () => (this.skillHandAllowed(p) && p.deck.length > 0) || this.courtTargets(p).some(t => this.cardName(p, t.key) === '日向 翔陽'),
         'P03-087': () => this.uniformCourt(p),
       }[c];
       if (ok && ok()) res.push({ card: c, label: nm(c) });
@@ -605,12 +602,6 @@ class Game {
         }
         break;
       }
-      case 'P03-090': {
-        const cand = [...new Set(p.ev.filter(x => x !== 'P03-090'))];
-        const x = await this.ask(p, { kind: 'retrieve', prompt: 'ありがとう：選 1 張 Event 回手', options: cand.map(y => ({ label: nm(y), card: y, value: y })) });
-        if (await this.sadd(p, x, p.ev)) this.log(`回收 ${nm(x)}`);
-        break;
-      }
       case 'P03-086': {
         p.ts.toss = 2; this.log('舉球設為 2');
         const back = [...new Set(p.ev.filter(x => EVT[x] && EVT[x].length === 1 && EVT[x][0] === 'atk'))];
@@ -631,15 +622,6 @@ class Game {
             await this.enterAttack(p, h, true); p.ts.atk += 1; this.log(`オープン攻撃：${nm(h)} 登場，攻擊 → ${p.ts.atk}`);
           } else this.log('棄牌區沒有日向，オープン只抽牌');
         }
-        break;
-      }
-      case 'D01-012': { this.sdraw(p, 1); p.ts.atk += 1; if (this.cardName(p, 'toss') === '影山 飛雄' && this.cardName(p, 'attack') === '日向 翔陽') { this.scheduleRestriction(o, 'one_blocker', 1, false, this.cardReference(p, 'ev')); this.log(`${o.name} 下回合最多派 1 人攔網`, 'warn'); } break; }
-      case 'P01-074': { this.sdraw(p, 1); p.ts.atk += 1; if (o.ev.filter(x => EVT[x] && (EVT[x].includes('drw') || EVT[x].includes('rcv'))).length >= 5) p.ts.atk += 2; break; }
-      case 'P03-096': {
-        this.sdraw(p, 1);
-        const targets = this.courtTargets(p).filter(t => this.cardName(p, t.key) === '日向 翔陽');
-        const key = await this.chooseTarget(p, targets, '日向夏：選擇場上 1 位日向翔陽', timing);
-        if (key != null) await this.chooseParameter(p, key, 1, '日向夏', timing);
         break;
       }
       case 'P03-087': {

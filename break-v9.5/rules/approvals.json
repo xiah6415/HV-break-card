@@ -91,6 +91,26 @@
       "profile_sha256": "56e641263972d3f620a58dfa46b3732848e4df4e2a1a22d4602a1be4af693ef4",
       "scope": "self-entry receive / serve / toss: exact payment, paid-card and set-count conditions, optional physical recovery, arbitrary parameter and incoming attack total projection",
       "tests": "rules/receive.test.js; rules/receive-undo.test.js; rules/receive-e2e.js"
+    },
+    "HV-P01-074:6e0e556e01e0486d": {
+      "profile_sha256": "aa14464cf96b645f856be86bfccd7b80f931f6ea4cc30afe35553fbb12381ae3",
+      "scope": "finite shared event batch: chosen court character/parameter, printed-icon physical counting, exact Event recovery and cumulative next-opponent blocker-entry ban",
+      "tests": "rules/candidate.test.js; rules/candidate-undo.test.js; rules/candidate-e2e.js"
+    },
+    "HV-P03-090:4e66d3f76e3f23c0": {
+      "profile_sha256": "d440cdac75262d11aeea4fcfbf4c2a304aaf070717eadfae8279835e16781033",
+      "scope": "finite shared event batch: chosen court character/parameter, printed-icon physical counting, exact Event recovery and cumulative next-opponent blocker-entry ban",
+      "tests": "rules/candidate.test.js; rules/candidate-undo.test.js; rules/candidate-e2e.js"
+    },
+    "HV-P03-096:fc6c90f1c12f3f19": {
+      "profile_sha256": "347af215e1f2be0903500d3164101d2dc4e4df18047baaba32b9e1d3e42db211",
+      "scope": "finite shared event batch: chosen court character/parameter, printed-icon physical counting, exact Event recovery and cumulative next-opponent blocker-entry ban",
+      "tests": "rules/candidate.test.js; rules/candidate-undo.test.js; rules/candidate-e2e.js"
+    },
+    "HV-D01-012:c2bcbffd79dc8084": {
+      "profile_sha256": "b7e3284b958380df7627ec64345eb1761614970272675c6adc394be559b90219",
+      "scope": "finite shared event batch: chosen court character/parameter, printed-icon physical counting, exact Event recovery and cumulative next-opponent blocker-entry ban",
+      "tests": "rules/candidate.test.js; rules/candidate-undo.test.js; rules/candidate-e2e.js"
     }
   }
 }

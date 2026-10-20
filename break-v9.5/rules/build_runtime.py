@@ -22,7 +22,9 @@ def runtime_data():
             profile['runtime_approved'] = True
         else:
             # Printed identity is available; no other first-pass skill is executable.
-            profile = {'profile_id': profile['profile_id'], 'variants': profile['variants'], 'program': None}
+            profile = {'profile_id': profile['profile_id'], 'variants': profile['variants'], 'program': None,
+                       'printed_play_icons': (profile.get('activation') or {}).get('activation_phases', []),
+                       'printed_has_skill': bool(profile.get('program'))}
             card['profiles'] = [profile]
         cards.append(card)
     result = {'catalog': {'cards': cards}, 'approved': list(approvals['profiles']),
