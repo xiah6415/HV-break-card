@@ -818,3 +818,10 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - rules/rebuild.py封存14來源／7產物可重建一致；coverage與batch測試已改成區分印刷身分載入與技能核准。舊UI回歸明確選嚴格／手動提示；flow捲動幾何改單一原子快照，避免兩次讀取之間自動捲動造成誤報。
 - 前批871c9cfe2aeab70d389ab55cb7a5dcd648e4756e已Pages built，公開index SHA256 f7761d68d00d0ba965b5daafaec7855bef03ccda4a4c74c01d430438765641fb一致；Claude ac6d6bc已合併並刪除claude-handoff/（外層保存bundle）。本數值批次測試完成，接著提交／推送／部署，再記公開核對結果。
 - 交接見NUMERIC-MODE.md、STATUS.md、REVIEW-PLAN.md及outputs/BREAK-numeric-mode-update.md／validation.json／evidence.json。下一步第4步擲骰勝者選先發或先接，之後第5步完整SHA＋固定舊技能白名單＋無技能權限來源改造，才恢復14事件；多人、多人Undo與AI難度延後。
+
+
+## 第2步數值模式公開部署結果（2026-10-20）
+- 實作提交3fc202359d07ec81bc379cb51ad241cb77b6ad38已推送master並完成GitHub Pages built（無錯誤）；公開網址https://xiah6415.github.io/HV-break-card/break-v9.5/?v=3fc2023，HTTP200、index 3,258,939bytes、SHA256 0f265c1feeb3c02711f85e24496d891230d5854402fa15bb643f33754d8e5bf0，與已測本機產物完全一致。代表新圖P01-008公開內容與本機SHA相同，全部541圖片／資產清單仍與前批一致，未漏帶img/。
+- 公開頁Chrome1280／390／320實測預設數值、541metadata／嚴格212、雙方分享匯入與重載保存、未自動化標記、代表圖載入、開始對戰及無溢出／頁面錯誤全通過；不是iPhone Safari真機。可組牌數值541／嚴格212；自動技能22共用SHA＋7舊流程（有既有限制），新增自動技能0。
+- 依規定完成後保存memory／STATUS／HANDOFF／REVIEW-PLAN／ROADMAP／DEPLOYMENT與outputs成果；此部署結果再以純文件提交推送，不改已測index。最終交接提交與Pages核對保存外層outputs/BREAK-numeric-mode-evidence.json，避免把歷史首次部署版誤當最新碼。
+- 本輪Claude分享合併、手機狀態／過場修正、audit更新及第2步數值模式已完成；下一步第4步先發先接選擇，沒有提前進入第5步權限改造／14事件或多人。

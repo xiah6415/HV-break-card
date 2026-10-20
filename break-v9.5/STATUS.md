@@ -1,6 +1,6 @@
 # BREAK 對練台：Claude／Codex 整體狀態同步
 
-核對日期：2026-10-20。最新實作為數值模式批次，已完成回歸，提交後立即部署並以DEPLOYMENT.md與最新memory記錄公開版本。前批871c9cf已公開，含Claude ac6d6bc分享匯入及手機／過場修正。舊memory與HANDOFF段落保留歷史，不能覆蓋這份現況。
+核對日期：2026-10-20。最新實作為數值模式批次，已完成回歸並部署3fc2023，公開index與本機SHA一致，詳見DEPLOYMENT.md與最新memory。前批871c9cf已公開，含Claude ac6d6bc分享匯入及手機／過場修正。舊memory與HANDOFF段落保留歷史，不能覆蓋這份現況。
 
 ## 已完成與下一步
 
