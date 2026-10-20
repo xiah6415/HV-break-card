@@ -77,10 +77,11 @@ select { font: inherit; padding: 10px; border-radius: 8px; border: 1px solid var
 /* ---------- board */
 .game { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; margin-top: 8px; min-width: 0; }
 .game > *, .side > *, .strip > *, .net > * { min-width: 0; }
-.rally-status { position: sticky; top: max(0px, env(safe-area-inset-top, 0px)); z-index: 15; background: #172c30; color: #fff; border: 2px solid #ffba87; border-radius: 10px; padding: 9px 12px; display: grid; gap: 3px; box-shadow: 0 3px 8px rgb(0 0 0 / .16); }
-.rally-status strong { font-size: 19px; line-height: 1.35; }
-.rally-status span { font-size: 12px; color: #e5edef; }
-.main, .hand { scroll-margin-top: 86px; }
+.rally-status { position: relative; min-width: 0; background: #172c30; color: #fff; border: 2px solid #ffba87; border-radius: 10px; padding: 5px 8px; display: flex; align-items: center; gap: 8px; box-shadow: 0 3px 8px rgb(0 0 0 / .16); }
+.net-zone { min-width: 0; display: grid; gap: 4px; }
+.rally-status strong { font-size: 13px; line-height: 1.35; white-space: nowrap; flex: 0 1 auto; }
+.rally-status span { font-size: 11px; color: #e5edef; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.main, .hand { scroll-margin-top: 12px; }
 .loss-state b { color: var(--bad); }
 .side { border-radius: 14px; padding: 8px; display: grid; gap: 6px; }
 .side.opp { background: var(--teal-soft); }
@@ -372,6 +373,9 @@ p.imp-bad { padding-left: 0; }
         <li>沒有セットカード時再失分就輸。</li>
         <li>亮橘框的手牌可以直接點來出牌；點場上或手上的卡看完整效果。</li>
       </ul>
+      <label class="field" for="turnPromptStyle">回合／發球提示
+        <select id="turnPromptStyle"><option value="auto" selected>顯示 1 秒後繼續</option><option value="manual">點擊後繼續</option></select>
+      </label>
       <button class="btn" id="startBtn" type="button">開始對戰</button>
     </div>
   </section>
@@ -379,9 +383,8 @@ p.imp-bad { padding-left: 0; }
   <section id="game" hidden>
     <div class="lay">
       <div class="game">
-        <div class="rally-status" id="rallyStatus" role="status"></div>
         <div class="side opp" id="oppSide"></div>
-        <div class="net" id="net"></div>
+        <div class="net-zone"><div class="rally-status" id="rallyStatus" role="status"></div><div class="net" id="net"></div></div>
         <div class="side me" id="meSide"></div>
         <div class="spacer"></div>
       </div>
@@ -427,6 +430,8 @@ p.imp-bad { padding-left: 0; }
   function strip(key) { return Object.entries(DECKS[key].cards).sort((a, b) => (isC(a[0]) === isC(b[0]) ? 0 : isC(a[0]) ? -1 : 1)).map(([c, n]) => `<figure><button class="cbtn" type="button" data-card="${c}">${img(c)}</button><span>×${n}</span></figure>`).join(''); }
   fill($('myDeck'), MY_DECKS, store.get('bk_my')); fill($('aiDeck'), AI_DECKS, store.get('bk_ai') || 'seijoh');
   if (store.get('bk_speed')) $('speed').value = store.get('bk_speed');
+  if (store.get('bk_turn_prompt') === 'manual') $('turnPromptStyle').value = 'manual';
+  $('turnPromptStyle').onchange = () => { store.set('bk_turn_prompt', $('turnPromptStyle').value); scheduleTransition(turnNotice); };
   const refresh = () => { $('myStrip').innerHTML = strip($('myDeck').value); $('aiStrip').innerHTML = strip($('aiDeck').value); };
   $('myDeck').onchange = $('aiDeck').onchange = refresh; refresh();
 
@@ -444,6 +449,7 @@ p.imp-bad { padding-left: 0; }
   }
   function sharePreview(target) {
     const box = $('sharePreview');
+    if (!box || !$('shareURL')) return null;
     let info;
     try { info = DT.inspectDeck(DT.decodeShare($('shareURL').value), DEF); }
     catch (e) { box.innerHTML = `<p class="imp-bad">${esc(e.message)}</p>`; return null; }
@@ -470,7 +476,8 @@ p.imp-bad { padding-left: 0; }
     $('customJSON').value = DT.exportDeck(source);
     $('shareGo').onclick = () => sharePreview(target);
     $('shareURL').addEventListener('keydown', e => { if (e.key === 'Enter') sharePreview(target); });
-    $('shareURL').addEventListener('paste', () => setTimeout(() => sharePreview(target), 0));
+    const shareInput = $('shareURL');
+    shareInput.addEventListener('paste', () => setTimeout(() => { if (shareInput.isConnected && $('shareURL') === shareInput) sharePreview(target); }, 0));
     if (prefill) { $('shareURL').value = prefill; sharePreview(target); }
     $('saveCustom').onclick = () => {
       try { saveDeck(target, DT.parseDeck($('customJSON').value, DEF)); closeSheet(); }
@@ -485,8 +492,8 @@ p.imp-bad { padding-left: 0; }
 
   // ---------- sheets
   let sheetOnClose = null;
-  function openSheet(html, onClose = null) { closeSheet(); sheetOnClose = onClose; $('sheetBox').innerHTML = html + '<button class="chip closer" type="button" data-close="1">關閉</button>'; $('sheet').hidden = false; $('turnScreen').inert = true; $('sheetBox').querySelector('button')?.focus(); }
-  function closeSheet() { $('sheet').hidden = true; $('turnScreen').inert = false; const callback = sheetOnClose; sheetOnClose = null; callback?.(); }
+  function openSheet(html, onClose = null) { closeSheet(); clearTimeout(turnTimer); sheetOnClose = onClose; $('sheetBox').innerHTML = html + '<button class="chip closer" type="button" data-close="1">關閉</button>'; $('sheet').hidden = false; $('turnScreen').inert = true; $('sheetBox').querySelector('button')?.focus(); }
+  function closeSheet() { $('sheet').hidden = true; $('turnScreen').inert = false; const callback = sheetOnClose; sheetOnClose = null; callback?.(); scheduleTransition(turnNotice); }
   $('sheet').addEventListener('click', e => { if (e.target.id === 'sheet' || e.target.dataset.close) closeSheet(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
   const libraryView = {query: '', status: 'all', limit: 60};
@@ -523,17 +530,27 @@ p.imp-bad { padding-left: 0; }
 
   // ---------- game state
   let game = null, session = null, pending = null, picked = new Set(), logBuf = [];
-  let turnNotice = null, shownTransition = null, priorFocus = null;
+  let turnNotice = null, shownTransition = null, priorFocus = null, turnTimer = null;
   let staged = null;            // { card, i(option index) } — 預放中的卡
   let blk = null;               // { cards: [], center } — 攔網組裝中
   let prevTop = {}, prevVal = {}, prevBall = null, suppressClick = false, lossArm = false;
   const human = { label: '你', choose(g, p, req) { return new Promise(res => { pending = { req, res }; picked = new Set(); staged = null; lossArm = false; blk = req.kind === 'block' && req.build ? { cards: [], center: null } : null; setDockCollapsed(false); render(); if (req.kind === 'lossConfirm' || req.kind === 'turnEnd' || req.kind === 'mulligan' || handReq()) requestAnimationFrame(() => { measureDock(); if (window.matchMedia('(max-width: 699px)').matches) $('meSide').querySelector(req.kind === 'lossConfirm' || req.kind === 'turnEnd' ? '.main' : '.hand')?.scrollIntoView({ block: req.kind === 'lossConfirm' || req.kind === 'turnEnd' ? 'start' : 'nearest' }); }); }); } };
   function answer(v) { if (!pending) return; const r = pending.res; pending = null; picked = new Set(); staged = null; blk = null; r(v); render(); }
 
+  function finishTransition(source) {
+    if (!source || source !== turnNotice || source.game !== game || !$('sheet').hidden || session?.takeback || session?.token?.paused) return;
+    const done = source.resolve; turnNotice = null; renderTransition(); done();
+  }
+  function scheduleTransition(source) {
+    clearTimeout(turnTimer); turnTimer = null;
+    if (!source || $('turnPromptStyle').value !== 'auto' || !['serve', 'turn'].includes(source.data.type) || !$('sheet').hidden) return;
+    turnTimer = setTimeout(() => finishTransition(source), 1000);
+  }
   function renderTransition() {
     const source = turnNotice;
     if (source === shownTransition) return;
     shownTransition = source;
+    clearTimeout(turnTimer); turnTimer = null;
     const screen = $('turnScreen');
     screen.hidden = !source;
     document.querySelector('.wrap').inert = !!source;
@@ -571,10 +588,8 @@ p.imp-bad { padding-left: 0; }
     }
     const status = session?.status();
     $('turnCard').innerHTML = `<div class="turn-eyebrow">BREAK · 第 ${game.rallyNo} 球</div><h2 class="turn-title" id="turnTitle">${title}</h2><p class="turn-phase">${phase}</p>${middle}<p class="turn-detail" id="turnDetail">${esc(detail)}</p><div class="turn-actions"><button class="turn-next" id="turnNext" type="button">${action}</button><button class="turn-undo" id="turnUndo" type="button" ${status?.enabled ? '' : 'disabled'}>${status?.opponent ? '請求悔棋' : '返回上一步（Undo）'}</button></div>`;
-    $('turnNext').onclick = () => {
-      const done = turnNotice?.resolve;
-      turnNotice = null; renderTransition(); done?.();
-    };
+    $('turnNext').onclick = () => finishTransition(source);
+    scheduleTransition(source);
     $('turnUndo').onclick = () => $('undoBtn').onclick();
     $('turnNext').focus({ preventScroll: true });
   }
@@ -1015,7 +1030,7 @@ p.imp-bad { padding-left: 0; }
       },
       onLog: (s, cls) => logBuf.push([s, cls]),
       onUpdate: () => render(),
-      onNotice(g, data) { return new Promise(resolve => { turnNotice = { data, resolve }; render(); }); },
+      onNotice(g, data) { return new Promise(resolve => { turnNotice = { data, resolve, game: g }; render(); }); },
       onError(err) { pending = null; turnNotice = null; logBuf.push(['發生錯誤：' + err.message, 'lost']); render(); $('runtimeStatus').hidden = false; $('runtimeStatus').textContent = '❌ ' + err.message; console.error(err); }
     });
     $('setup').hidden = true; $('game').hidden = false; $('tbtns').hidden = false;

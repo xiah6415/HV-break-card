@@ -793,3 +793,10 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 測試：deck-tools.test.js 新增分享連結往返（7 種貼法）、舊 card_no 格式、鎖定卡清單、壞碼；新增 share-e2e.js（1280／390／320：鎖定卡阻擋、匯入我方與 AI、重新載入保留、?deck= 自動帶入、用匯入牌組開局、無橫向溢出、無頁面錯誤）全過。library-e2e.js、audit-e2e.js 因 JSON 區改為摺疊，填寫前加一次展開 summary；library-e2e 全過。
 - 注意：audit-e2e.js 在本分支「修改前」就已失敗（第 13 行預期 DEF 47 種，實際 60），屬既有過期斷言，請 Codex 更新。build、fuzz 3000（3.70 rallies）通過；test 300 與全部 *.test.js 結果見下一行。
 - test 300：k1014 vs 新青城 0.343、快攻 0.420、1014c 0.503、k1014 vs 日向影山軸 0.460、1010 vs 1014 0.527、青城鏡像 0.527；全部 *.test.js 通過。Claude 無推送權限：commit 以 git bundle 放在 repo 根目錄 claude-handoff/（未追蹤），請 Codex fetch 後合併推送並刪除該資料夾。
+
+
+## Claude分享匯入合併與手機審查修正結果（2026-10-20）
+- ac6d6bc已審查合併，保留雙方LZString分享連結／JSON匯入、預覽未知與鎖定警告／保存、?deck自動帶入。解碼器核對官方lz-string1.5.0一致並保留MIT；另加32KiB輸入／64KiB解壓限制、非文字卡號警告及貼上後舊視窗回呼取消。未追蹤claude-handoff/已移除，bundle備份在外層work/claude-review-merge。
+- 狀態列移到網子旁、非黏頂單行；手機逐小格捲動幾何確認不遮對手資訊。回合／發球提示預設1秒後繼續，可選手動並保存；Loss／翻牌仍確認，舊計時器在重開、Undo、設定改變或其他視窗停留時不越權回覆。
+- audit不再硬編47卡或舊技能狀態，改驗證541資料／212可玩與60分頁；逐步UI測試選手動提示，修正共用選牌誤判預放和舊黏頂要求。34單元、build、fuzz3000、6組test300與8組桌機手機瀏覽器套件通過，詳見outputs/BREAK-mobile-share-update.md／evidence.json／mobile-status-net.png。
+- 目前仍212可組牌、22共用SHA核准＋7舊流程（部分限制）、541可查、329鎖定。第3步已完成，這批先提交推送部署；第2步數值模式接續另寫計畫，14技能不提前開放。

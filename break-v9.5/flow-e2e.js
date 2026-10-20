@@ -27,6 +27,7 @@ const snapshot = page => page.evaluate(() => ({
       page.setDefaultTimeout(10000);
       const errors = []; page.on('pageerror', error => errors.push(error.message));
       await page.setContent(fs.readFileSync('index.html', 'utf8'), { waitUntil: 'domcontentloaded' });
+      await page.selectOption('#turnPromptStyle', 'manual'); // This suite verifies explicit acknowledgment/replay; auto mode has its own regression.
       await page.evaluate(() => { Date.now = () => 7; });
       await page.selectOption('#myDeck', 'k1014'); await page.selectOption('#aiDeck', 'seijoh');
       await page.selectOption('#speed', '200'); await page.click('#startBtn');
@@ -103,7 +104,8 @@ const snapshot = page => page.evaluate(() => ({
           assert(await page.locator('[data-act="loss"]').isVisible(), 'Loss must remain available until explicit turn end');
           assert((await page.locator('#rallyStatus').textContent()).includes(`本球發球：${server === 0 ? '你' : 'AI'}`));
           const banner = await page.locator('#rallyStatus').boundingBox();
-          assert(banner.y >= 0 && banner.y + banner.height <= height, 'server banner must remain visible while reviewing the court');
+          const opponent = await page.locator('#oppSide').boundingBox();
+          assert(banner.y >= opponent.y + opponent.height - 1, 'server banner must remain in flow below opponent information and slots');
           const before = await snapshot(page);
           await page.waitForTimeout(260); assert.deepEqual(await snapshot(page), before, 'AI cannot move before turn end');
           seen.add('end-' + req.outgoing.type);
@@ -125,7 +127,7 @@ const snapshot = page => page.evaluate(() => ({
         assert(i >= 0);
         const option = req.options[i], card = option.card && page.locator(`.hand .hc.sel .cbtn[data-card="${option.card}"]`).first();
         if (card && await card.count()) { await card.click(); await page.click('[data-act="confirm"]'); }
-        else { await page.click(`#dockOpts [data-i="${i}"]`); if (option.card && req.kind !== 'target' && !Object.hasOwn(req.ctx || {}, 'revealed')) await page.click('[data-act="confirm"]'); }
+        else { await page.click(`#dockOpts [data-i="${i}"]`); if (option.card && ['serve','receiver','setter','attacker','event','discard','cost'].includes(req.kind) && !Object.hasOwn(req.ctx || {}, 'revealed')) await page.click('[data-act="confirm"]'); }
       }
       await page.waitForSelector('[data-act="again"]');
       assert.equal(await page.locator('#dockQ').textContent(), winner === 0 ? '你贏了！' : 'AI 贏了');

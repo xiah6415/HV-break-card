@@ -10,6 +10,7 @@ const path = require('node:path');
         const page = await browser.newPage({ viewport: { width, height }, isMobile: width < 700, hasTouch: width < 700 });
         const errors = []; page.on('pageerror', e => errors.push(e.message));
         await page.setContent(fs.readFileSync('index.html', 'utf8'), { waitUntil: 'domcontentloaded' });
+        await page.selectOption('#turnPromptStyle', 'manual'); // This suite verifies explicit acknowledgment/replay; auto mode has its own regression.
         await page.evaluate(scenario => {
           const E = window.BreakEngine;
           E.Game = class extends E.Game {

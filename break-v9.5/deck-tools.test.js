@@ -51,3 +51,15 @@ console.log('deck-tools: all tests passed');
   assert.throws(() => DT.decodeShare(code.slice(0, 20)), /解碼失敗|不是牌組/);
   console.log('deck-tools share: all tests passed');
 }
+
+// Review hardening: reject expansion bombs and keep malformed identifiers in warnings.
+{
+ const DT=require('./deck-tools');
+ const bomb=DT.LZString.compressToEncodedURIComponent(JSON.stringify({n:'x'.repeat(70000),c:[['P01-002',40]]}));
+ assert.throws(()=>DT.LZString.decompressFromEncodedURIComponent(bomb),/解壓後過大/);
+ assert.throws(()=>DT.decodeShare(bomb),/解碼失敗/);
+ assert.throws(()=>DT.shareCode('x'.repeat(32769)),/過長/);
+ const bad=DT.inspectDeck({c:[[{},4],['UNKNOWN-A',2],['UNKNOWN-B',2],['P01-002',32]]},DEF);
+ assert(!bad.ok);assert.equal(bad.invalid.length,1);assert.equal(bad.unknown.length,2);
+ console.log('share review hardening: bounded expansion and complete malformed-card diagnostics passed');
+}

@@ -77,10 +77,11 @@ select { font: inherit; padding: 10px; border-radius: 8px; border: 1px solid var
 /* ---------- board */
 .game { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; margin-top: 8px; min-width: 0; }
 .game > *, .side > *, .strip > *, .net > * { min-width: 0; }
-.rally-status { position: sticky; top: max(0px, env(safe-area-inset-top, 0px)); z-index: 15; background: #172c30; color: #fff; border: 2px solid #ffba87; border-radius: 10px; padding: 9px 12px; display: grid; gap: 3px; box-shadow: 0 3px 8px rgb(0 0 0 / .16); }
-.rally-status strong { font-size: 19px; line-height: 1.35; }
-.rally-status span { font-size: 12px; color: #e5edef; }
-.main, .hand { scroll-margin-top: 86px; }
+.rally-status { position: relative; min-width: 0; background: #172c30; color: #fff; border: 2px solid #ffba87; border-radius: 10px; padding: 5px 8px; display: flex; align-items: center; gap: 8px; box-shadow: 0 3px 8px rgb(0 0 0 / .16); }
+.net-zone { min-width: 0; display: grid; gap: 4px; }
+.rally-status strong { font-size: 13px; line-height: 1.35; white-space: nowrap; flex: 0 1 auto; }
+.rally-status span { font-size: 11px; color: #e5edef; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.main, .hand { scroll-margin-top: 12px; }
 .loss-state b { color: var(--bad); }
 .side { border-radius: 14px; padding: 8px; display: grid; gap: 6px; }
 .side.opp { background: var(--teal-soft); }
@@ -372,6 +373,9 @@ p.imp-bad { padding-left: 0; }
         <li>沒有セットカード時再失分就輸。</li>
         <li>亮橘框的手牌可以直接點來出牌；點場上或手上的卡看完整效果。</li>
       </ul>
+      <label class="field" for="turnPromptStyle">回合／發球提示
+        <select id="turnPromptStyle"><option value="auto" selected>顯示 1 秒後繼續</option><option value="manual">點擊後繼續</option></select>
+      </label>
       <button class="btn" id="startBtn" type="button">開始對戰</button>
     </div>
   </section>
@@ -379,9 +383,8 @@ p.imp-bad { padding-left: 0; }
   <section id="game" hidden>
     <div class="lay">
       <div class="game">
-        <div class="rally-status" id="rallyStatus" role="status"></div>
         <div class="side opp" id="oppSide"></div>
-        <div class="net" id="net"></div>
+        <div class="net-zone"><div class="rally-status" id="rallyStatus" role="status"></div><div class="net" id="net"></div></div>
         <div class="side me" id="meSide"></div>
         <div class="spacer"></div>
       </div>
@@ -2306,8 +2309,9 @@ if (typeof module !== 'undefined' && module.exports) module.exports = api; else 
 /* BREAK v9: deck input/validation. UMD, pinned library admission. */
 (function(root) {
 'use strict';
-// lz-string 1.5.0 (MIT, (c) 2013 pieroxy) — 解碼查卡網站分享連結用
-const LZString = (function () { var LZString=function(){var r=String.fromCharCode,o="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",n="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$",e={};function t(r,o){if(!e[r]){e[r]={};for(var n=0;n<r.length;n++)e[r][r.charAt(n)]=n}return e[r][o]}var i={compressToBase64:function(r){if(null==r)return"";var n=i._compress(r,6,function(r){return o.charAt(r)});switch(n.length%4){default:case 0:return n;case 1:return n+"===";case 2:return n+"==";case 3:return n+"="}},decompressFromBase64:function(r){return null==r?"":""==r?null:i._decompress(r.length,32,function(n){return t(o,r.charAt(n))})},compressToUTF16:function(o){return null==o?"":i._compress(o,15,function(o){return r(o+32)})+" "},decompressFromUTF16:function(r){return null==r?"":""==r?null:i._decompress(r.length,16384,function(o){return r.charCodeAt(o)-32})},compressToUint8Array:function(r){for(var o=i.compress(r),n=new Uint8Array(2*o.length),e=0,t=o.length;e<t;e++){var s=o.charCodeAt(e);n[2*e]=s>>>8,n[2*e+1]=s%256}return n},decompressFromUint8Array:function(o){if(null==o)return i.decompress(o);for(var n=new Array(o.length/2),e=0,t=n.length;e<t;e++)n[e]=256*o[2*e]+o[2*e+1];var s=[];return n.forEach(function(o){s.push(r(o))}),i.decompress(s.join(""))},compressToEncodedURIComponent:function(r){return null==r?"":i._compress(r,6,function(r){return n.charAt(r)})},decompressFromEncodedURIComponent:function(r){return null==r?"":""==r?null:(r=r.replace(/ /g,"+"),i._decompress(r.length,32,function(o){return t(n,r.charAt(o))}))},compress:function(o){return i._compress(o,16,function(o){return r(o)})},_compress:function(r,o,n){if(null==r)return"";var e,t,i,s={},u={},a="",p="",c="",l=2,f=3,h=2,d=[],m=0,v=0;for(i=0;i<r.length;i+=1)if(a=r.charAt(i),Object.prototype.hasOwnProperty.call(s,a)||(s[a]=f++,u[a]=!0),p=c+a,Object.prototype.hasOwnProperty.call(s,p))c=p;else{if(Object.prototype.hasOwnProperty.call(u,c)){if(c.charCodeAt(0)<256){for(e=0;e<h;e++)m<<=1,v==o-1?(v=0,d.push(n(m)),m=0):v++;for(t=c.charCodeAt(0),e=0;e<8;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1}else{for(t=1,e=0;e<h;e++)m=m<<1|t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t=0;for(t=c.charCodeAt(0),e=0;e<16;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1}0==--l&&(l=Math.pow(2,h),h++),delete u[c]}else for(t=s[c],e=0;e<h;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1;0==--l&&(l=Math.pow(2,h),h++),s[p]=f++,c=String(a)}if(""!==c){if(Object.prototype.hasOwnProperty.call(u,c)){if(c.charCodeAt(0)<256){for(e=0;e<h;e++)m<<=1,v==o-1?(v=0,d.push(n(m)),m=0):v++;for(t=c.charCodeAt(0),e=0;e<8;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1}else{for(t=1,e=0;e<h;e++)m=m<<1|t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t=0;for(t=c.charCodeAt(0),e=0;e<16;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1}0==--l&&(l=Math.pow(2,h),h++),delete u[c]}else for(t=s[c],e=0;e<h;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1;0==--l&&(l=Math.pow(2,h),h++)}for(t=2,e=0;e<h;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1;for(;;){if(m<<=1,v==o-1){d.push(n(m));break}v++}return d.join("")},decompress:function(r){return null==r?"":""==r?null:i._decompress(r.length,32768,function(o){return r.charCodeAt(o)})},_decompress:function(o,n,e){var t,i,s,u,a,p,c,l=[],f=4,h=4,d=3,m="",v=[],g={val:e(0),position:n,index:1};for(t=0;t<3;t+=1)l[t]=t;for(s=0,a=Math.pow(2,2),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;switch(s){case 0:for(s=0,a=Math.pow(2,8),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;c=r(s);break;case 1:for(s=0,a=Math.pow(2,16),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;c=r(s);break;case 2:return""}for(l[3]=c,i=c,v.push(c);;){if(g.index>o)return"";for(s=0,a=Math.pow(2,d),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;switch(c=s){case 0:for(s=0,a=Math.pow(2,8),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;l[h++]=r(s),c=h-1,f--;break;case 1:for(s=0,a=Math.pow(2,16),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;l[h++]=r(s),c=h-1,f--;break;case 2:return v.join("")}if(0==f&&(f=Math.pow(2,d),d++),l[c])m=l[c];else{if(c!==h)return null;m=i+i.charAt(0)}v.push(m),l[h++]=i+m.charAt(0),i=m,0==--f&&(f=Math.pow(2,d),d++)}}};return i}(); return LZString; })();
+// lz-string 1.5.0 (MIT, (c) 2013 pieroxy), license: library/LZ-STRING-LICENSE.txt.
+// Local change: bound decoded output to 64 KiB before dictionary growth.
+const LZString = (function () { var LZString=function(){var r=String.fromCharCode,o="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",n="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$",e={};function t(r,o){if(!e[r]){e[r]={};for(var n=0;n<r.length;n++)e[r][r.charAt(n)]=n}return e[r][o]}var i={compressToBase64:function(r){if(null==r)return"";var n=i._compress(r,6,function(r){return o.charAt(r)});switch(n.length%4){default:case 0:return n;case 1:return n+"===";case 2:return n+"==";case 3:return n+"="}},decompressFromBase64:function(r){return null==r?"":""==r?null:i._decompress(r.length,32,function(n){return t(o,r.charAt(n))})},compressToUTF16:function(o){return null==o?"":i._compress(o,15,function(o){return r(o+32)})+" "},decompressFromUTF16:function(r){return null==r?"":""==r?null:i._decompress(r.length,16384,function(o){return r.charCodeAt(o)-32})},compressToUint8Array:function(r){for(var o=i.compress(r),n=new Uint8Array(2*o.length),e=0,t=o.length;e<t;e++){var s=o.charCodeAt(e);n[2*e]=s>>>8,n[2*e+1]=s%256}return n},decompressFromUint8Array:function(o){if(null==o)return i.decompress(o);for(var n=new Array(o.length/2),e=0,t=n.length;e<t;e++)n[e]=256*o[2*e]+o[2*e+1];var s=[];return n.forEach(function(o){s.push(r(o))}),i.decompress(s.join(""))},compressToEncodedURIComponent:function(r){return null==r?"":i._compress(r,6,function(r){return n.charAt(r)})},decompressFromEncodedURIComponent:function(r){return null==r?"":""==r?null:(r=r.replace(/ /g,"+"),i._decompress(r.length,32,function(o){return t(n,r.charAt(o))}))},compress:function(o){return i._compress(o,16,function(o){return r(o)})},_compress:function(r,o,n){if(null==r)return"";var e,t,i,s={},u={},a="",p="",c="",l=2,f=3,h=2,d=[],m=0,v=0;for(i=0;i<r.length;i+=1)if(a=r.charAt(i),Object.prototype.hasOwnProperty.call(s,a)||(s[a]=f++,u[a]=!0),p=c+a,Object.prototype.hasOwnProperty.call(s,p))c=p;else{if(Object.prototype.hasOwnProperty.call(u,c)){if(c.charCodeAt(0)<256){for(e=0;e<h;e++)m<<=1,v==o-1?(v=0,d.push(n(m)),m=0):v++;for(t=c.charCodeAt(0),e=0;e<8;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1}else{for(t=1,e=0;e<h;e++)m=m<<1|t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t=0;for(t=c.charCodeAt(0),e=0;e<16;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1}0==--l&&(l=Math.pow(2,h),h++),delete u[c]}else for(t=s[c],e=0;e<h;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1;0==--l&&(l=Math.pow(2,h),h++),s[p]=f++,c=String(a)}if(""!==c){if(Object.prototype.hasOwnProperty.call(u,c)){if(c.charCodeAt(0)<256){for(e=0;e<h;e++)m<<=1,v==o-1?(v=0,d.push(n(m)),m=0):v++;for(t=c.charCodeAt(0),e=0;e<8;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1}else{for(t=1,e=0;e<h;e++)m=m<<1|t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t=0;for(t=c.charCodeAt(0),e=0;e<16;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1}0==--l&&(l=Math.pow(2,h),h++),delete u[c]}else for(t=s[c],e=0;e<h;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1;0==--l&&(l=Math.pow(2,h),h++)}for(t=2,e=0;e<h;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1;for(;;){if(m<<=1,v==o-1){d.push(n(m));break}v++}return d.join("")},decompress:function(r){return null==r?"":""==r?null:i._decompress(r.length,32768,function(o){return r.charCodeAt(o)})},_decompress:function(o,n,e){var t,i,s,u,a,p,c,l=[],f=4,h=4,d=3,m="",v=[],outputSize=1,g={val:e(0),position:n,index:1};for(t=0;t<3;t+=1)l[t]=t;for(s=0,a=Math.pow(2,2),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;switch(s){case 0:for(s=0,a=Math.pow(2,8),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;c=r(s);break;case 1:for(s=0,a=Math.pow(2,16),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;c=r(s);break;case 2:return""}for(l[3]=c,i=c,v.push(c);;){if(g.index>o)return"";for(s=0,a=Math.pow(2,d),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;switch(c=s){case 0:for(s=0,a=Math.pow(2,8),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;l[h++]=r(s),c=h-1,f--;break;case 1:for(s=0,a=Math.pow(2,16),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;l[h++]=r(s),c=h-1,f--;break;case 2:return v.join("")}if(0==f&&(f=Math.pow(2,d),d++),l[c])m=l[c];else{if(c!==h)return null;m=i+i.charAt(0)}if((outputSize+=m.length)>65536)throw Error("分享資料解壓後過大");v.push(m),l[h++]=i+m.charAt(0),i=m,0==--f&&(f=Math.pow(2,d),d++)}}};return i}(); return LZString; })();
 const library = typeof module !== 'undefined' && module.exports ? require('./card-library') : root.BreakCardLibrary;
 function normalCode(s) { return library.code(s) || library.normal(s); }
 function parseDeck(source, defs) {
@@ -2339,6 +2343,7 @@ function parseDeck(source, defs) {
 function shareCode(text) {
   const raw = String(text == null ? '' : text).trim();
   if (!raw) throw Error('請貼上分享連結');
+  if (raw.length > 32768) throw Error('分享連結過長');
   const m = raw.match(/[?&#]deck=([^&#\n]+)/);
   let code = (m ? m[1] : raw).trim();
   if (!m && /^https?:\/\//i.test(raw)) throw Error('這個網址沒有 ?deck= 牌組資料');
@@ -2369,6 +2374,7 @@ function inspectDeck(source, defs) {
     if (!Array.isArray(item) || item.length !== 2) { res.invalid.push(String(item)); continue; }
     const [id, count] = item;
     if (!Number.isSafeInteger(count) || count < 1 || count > 40) { res.invalid.push(String(id)); continue; }
+    if (typeof id !== 'string') { res.invalid.push('卡號必須是文字'); continue; }
     const code = normalCode(id), meta = code && library.card(code);
     res.total += count;
     if (!meta) { res.unknown.push({ id: String(id), count }); continue; }
@@ -2577,6 +2583,8 @@ else root.BreakUndoTools = api;
   function strip(key) { return Object.entries(DECKS[key].cards).sort((a, b) => (isC(a[0]) === isC(b[0]) ? 0 : isC(a[0]) ? -1 : 1)).map(([c, n]) => `<figure><button class="cbtn" type="button" data-card="${c}">${img(c)}</button><span>×${n}</span></figure>`).join(''); }
   fill($('myDeck'), MY_DECKS, store.get('bk_my')); fill($('aiDeck'), AI_DECKS, store.get('bk_ai') || 'seijoh');
   if (store.get('bk_speed')) $('speed').value = store.get('bk_speed');
+  if (store.get('bk_turn_prompt') === 'manual') $('turnPromptStyle').value = 'manual';
+  $('turnPromptStyle').onchange = () => { store.set('bk_turn_prompt', $('turnPromptStyle').value); scheduleTransition(turnNotice); };
   const refresh = () => { $('myStrip').innerHTML = strip($('myDeck').value); $('aiStrip').innerHTML = strip($('aiDeck').value); };
   $('myDeck').onchange = $('aiDeck').onchange = refresh; refresh();
 
@@ -2594,6 +2602,7 @@ else root.BreakUndoTools = api;
   }
   function sharePreview(target) {
     const box = $('sharePreview');
+    if (!box || !$('shareURL')) return null;
     let info;
     try { info = DT.inspectDeck(DT.decodeShare($('shareURL').value), DEF); }
     catch (e) { box.innerHTML = `<p class="imp-bad">${esc(e.message)}</p>`; return null; }
@@ -2620,7 +2629,8 @@ else root.BreakUndoTools = api;
     $('customJSON').value = DT.exportDeck(source);
     $('shareGo').onclick = () => sharePreview(target);
     $('shareURL').addEventListener('keydown', e => { if (e.key === 'Enter') sharePreview(target); });
-    $('shareURL').addEventListener('paste', () => setTimeout(() => sharePreview(target), 0));
+    const shareInput = $('shareURL');
+    shareInput.addEventListener('paste', () => setTimeout(() => { if (shareInput.isConnected && $('shareURL') === shareInput) sharePreview(target); }, 0));
     if (prefill) { $('shareURL').value = prefill; sharePreview(target); }
     $('saveCustom').onclick = () => {
       try { saveDeck(target, DT.parseDeck($('customJSON').value, DEF)); closeSheet(); }
@@ -2635,8 +2645,8 @@ else root.BreakUndoTools = api;
 
   // ---------- sheets
   let sheetOnClose = null;
-  function openSheet(html, onClose = null) { closeSheet(); sheetOnClose = onClose; $('sheetBox').innerHTML = html + '<button class="chip closer" type="button" data-close="1">關閉</button>'; $('sheet').hidden = false; $('turnScreen').inert = true; $('sheetBox').querySelector('button')?.focus(); }
-  function closeSheet() { $('sheet').hidden = true; $('turnScreen').inert = false; const callback = sheetOnClose; sheetOnClose = null; callback?.(); }
+  function openSheet(html, onClose = null) { closeSheet(); clearTimeout(turnTimer); sheetOnClose = onClose; $('sheetBox').innerHTML = html + '<button class="chip closer" type="button" data-close="1">關閉</button>'; $('sheet').hidden = false; $('turnScreen').inert = true; $('sheetBox').querySelector('button')?.focus(); }
+  function closeSheet() { $('sheet').hidden = true; $('turnScreen').inert = false; const callback = sheetOnClose; sheetOnClose = null; callback?.(); scheduleTransition(turnNotice); }
   $('sheet').addEventListener('click', e => { if (e.target.id === 'sheet' || e.target.dataset.close) closeSheet(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
   const libraryView = {query: '', status: 'all', limit: 60};
@@ -2673,17 +2683,27 @@ else root.BreakUndoTools = api;
 
   // ---------- game state
   let game = null, session = null, pending = null, picked = new Set(), logBuf = [];
-  let turnNotice = null, shownTransition = null, priorFocus = null;
+  let turnNotice = null, shownTransition = null, priorFocus = null, turnTimer = null;
   let staged = null;            // { card, i(option index) } — 預放中的卡
   let blk = null;               // { cards: [], center } — 攔網組裝中
   let prevTop = {}, prevVal = {}, prevBall = null, suppressClick = false, lossArm = false;
   const human = { label: '你', choose(g, p, req) { return new Promise(res => { pending = { req, res }; picked = new Set(); staged = null; lossArm = false; blk = req.kind === 'block' && req.build ? { cards: [], center: null } : null; setDockCollapsed(false); render(); if (req.kind === 'lossConfirm' || req.kind === 'turnEnd' || req.kind === 'mulligan' || handReq()) requestAnimationFrame(() => { measureDock(); if (window.matchMedia('(max-width: 699px)').matches) $('meSide').querySelector(req.kind === 'lossConfirm' || req.kind === 'turnEnd' ? '.main' : '.hand')?.scrollIntoView({ block: req.kind === 'lossConfirm' || req.kind === 'turnEnd' ? 'start' : 'nearest' }); }); }); } };
   function answer(v) { if (!pending) return; const r = pending.res; pending = null; picked = new Set(); staged = null; blk = null; r(v); render(); }
 
+  function finishTransition(source) {
+    if (!source || source !== turnNotice || source.game !== game || !$('sheet').hidden || session?.takeback || session?.token?.paused) return;
+    const done = source.resolve; turnNotice = null; renderTransition(); done();
+  }
+  function scheduleTransition(source) {
+    clearTimeout(turnTimer); turnTimer = null;
+    if (!source || $('turnPromptStyle').value !== 'auto' || !['serve', 'turn'].includes(source.data.type) || !$('sheet').hidden) return;
+    turnTimer = setTimeout(() => finishTransition(source), 1000);
+  }
   function renderTransition() {
     const source = turnNotice;
     if (source === shownTransition) return;
     shownTransition = source;
+    clearTimeout(turnTimer); turnTimer = null;
     const screen = $('turnScreen');
     screen.hidden = !source;
     document.querySelector('.wrap').inert = !!source;
@@ -2721,10 +2741,8 @@ else root.BreakUndoTools = api;
     }
     const status = session?.status();
     $('turnCard').innerHTML = `<div class="turn-eyebrow">BREAK · 第 ${game.rallyNo} 球</div><h2 class="turn-title" id="turnTitle">${title}</h2><p class="turn-phase">${phase}</p>${middle}<p class="turn-detail" id="turnDetail">${esc(detail)}</p><div class="turn-actions"><button class="turn-next" id="turnNext" type="button">${action}</button><button class="turn-undo" id="turnUndo" type="button" ${status?.enabled ? '' : 'disabled'}>${status?.opponent ? '請求悔棋' : '返回上一步（Undo）'}</button></div>`;
-    $('turnNext').onclick = () => {
-      const done = turnNotice?.resolve;
-      turnNotice = null; renderTransition(); done?.();
-    };
+    $('turnNext').onclick = () => finishTransition(source);
+    scheduleTransition(source);
     $('turnUndo').onclick = () => $('undoBtn').onclick();
     $('turnNext').focus({ preventScroll: true });
   }
@@ -3165,7 +3183,7 @@ else root.BreakUndoTools = api;
       },
       onLog: (s, cls) => logBuf.push([s, cls]),
       onUpdate: () => render(),
-      onNotice(g, data) { return new Promise(resolve => { turnNotice = { data, resolve }; render(); }); },
+      onNotice(g, data) { return new Promise(resolve => { turnNotice = { data, resolve, game: g }; render(); }); },
       onError(err) { pending = null; turnNotice = null; logBuf.push(['發生錯誤：' + err.message, 'lost']); render(); $('runtimeStatus').hidden = false; $('runtimeStatus').textContent = '❌ ' + err.message; console.error(err); }
     });
     $('setup').hidden = true; $('game').hidden = false; $('tbtns').hidden = false;
