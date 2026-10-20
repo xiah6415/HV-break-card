@@ -319,6 +319,20 @@ body.dragging .hand .hc.sel .ci, body.dragging .hand .hc.staged .ci { opacity: .
 body.turn-open { overflow: hidden; }
 body.turn-open .sheet { z-index: 80; }
 @media (max-height: 600px) { .turn-card { gap: 12px; } .turn-ball { padding-block: 12px; } }
+
+/* 分享連結匯入（Claude 2026-10-20） */
+.imp { display: grid; gap: 8px; }
+.imp input { font: inherit; width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--sunk); color: var(--ink); }
+.imp a.opt { text-decoration: none; color: var(--ink); }
+.imp-head { display: flex; gap: 10px; align-items: baseline; justify-content: space-between; }
+.imp-head span { font-size: 12.5px; color: var(--muted); }
+.imp-strip figure { flex-basis: 52px; }
+.imp-strip figure.imp-locked .ci { opacity: .45; filter: grayscale(.8); }
+.imp-strip em { position: absolute; left: 2px; top: 2px; font-style: normal; font-size: 9.5px; background: var(--bad); color: #fff; border-radius: 4px; padding: 0 3px; }
+.imp-good { color: var(--good); font-weight: 700; margin: 4px 0; }
+.imp-bad { color: var(--bad); margin: 4px 0; padding-left: 18px; font-size: 13px; }
+p.imp-bad { padding-left: 0; }
+.imp-json summary { cursor: pointer; color: var(--muted); font-size: 13px; padding: 6px 0; }
 </style>
 </head>
 <body>
@@ -343,6 +357,7 @@ body.turn-open .sheet { z-index: 80; }
     <div class="panel">
       <h2>AI 對手</h2>
       <label class="field" for="aiDeck">牌組<select id="aiDeck"><option value="seijoh">青葉城西（第四彈）</option><option value="hk_axis">烏野 日向影山軸</option><option value="k1014">烏野1014</option><option value="k1014c">1014c（接 6 強化）</option><option value="quick">烏野快攻版</option><option value="k1010">烏野1010</option></select></label>
+      <button class="chip" type="button" id="editAiDeck">匯入 AI 牌組</button>
       <label class="field" for="speed">AI 出牌速度
         <select id="speed"><option value="200">快</option><option value="550" selected>正常</option><option value="1000">慢</option></select>
       </label>
@@ -2291,6 +2306,8 @@ if (typeof module !== 'undefined' && module.exports) module.exports = api; else 
 /* BREAK v9: deck input/validation. UMD, pinned library admission. */
 (function(root) {
 'use strict';
+// lz-string 1.5.0 (MIT, (c) 2013 pieroxy) — 解碼查卡網站分享連結用
+const LZString = (function () { var LZString=function(){var r=String.fromCharCode,o="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",n="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$",e={};function t(r,o){if(!e[r]){e[r]={};for(var n=0;n<r.length;n++)e[r][r.charAt(n)]=n}return e[r][o]}var i={compressToBase64:function(r){if(null==r)return"";var n=i._compress(r,6,function(r){return o.charAt(r)});switch(n.length%4){default:case 0:return n;case 1:return n+"===";case 2:return n+"==";case 3:return n+"="}},decompressFromBase64:function(r){return null==r?"":""==r?null:i._decompress(r.length,32,function(n){return t(o,r.charAt(n))})},compressToUTF16:function(o){return null==o?"":i._compress(o,15,function(o){return r(o+32)})+" "},decompressFromUTF16:function(r){return null==r?"":""==r?null:i._decompress(r.length,16384,function(o){return r.charCodeAt(o)-32})},compressToUint8Array:function(r){for(var o=i.compress(r),n=new Uint8Array(2*o.length),e=0,t=o.length;e<t;e++){var s=o.charCodeAt(e);n[2*e]=s>>>8,n[2*e+1]=s%256}return n},decompressFromUint8Array:function(o){if(null==o)return i.decompress(o);for(var n=new Array(o.length/2),e=0,t=n.length;e<t;e++)n[e]=256*o[2*e]+o[2*e+1];var s=[];return n.forEach(function(o){s.push(r(o))}),i.decompress(s.join(""))},compressToEncodedURIComponent:function(r){return null==r?"":i._compress(r,6,function(r){return n.charAt(r)})},decompressFromEncodedURIComponent:function(r){return null==r?"":""==r?null:(r=r.replace(/ /g,"+"),i._decompress(r.length,32,function(o){return t(n,r.charAt(o))}))},compress:function(o){return i._compress(o,16,function(o){return r(o)})},_compress:function(r,o,n){if(null==r)return"";var e,t,i,s={},u={},a="",p="",c="",l=2,f=3,h=2,d=[],m=0,v=0;for(i=0;i<r.length;i+=1)if(a=r.charAt(i),Object.prototype.hasOwnProperty.call(s,a)||(s[a]=f++,u[a]=!0),p=c+a,Object.prototype.hasOwnProperty.call(s,p))c=p;else{if(Object.prototype.hasOwnProperty.call(u,c)){if(c.charCodeAt(0)<256){for(e=0;e<h;e++)m<<=1,v==o-1?(v=0,d.push(n(m)),m=0):v++;for(t=c.charCodeAt(0),e=0;e<8;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1}else{for(t=1,e=0;e<h;e++)m=m<<1|t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t=0;for(t=c.charCodeAt(0),e=0;e<16;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1}0==--l&&(l=Math.pow(2,h),h++),delete u[c]}else for(t=s[c],e=0;e<h;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1;0==--l&&(l=Math.pow(2,h),h++),s[p]=f++,c=String(a)}if(""!==c){if(Object.prototype.hasOwnProperty.call(u,c)){if(c.charCodeAt(0)<256){for(e=0;e<h;e++)m<<=1,v==o-1?(v=0,d.push(n(m)),m=0):v++;for(t=c.charCodeAt(0),e=0;e<8;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1}else{for(t=1,e=0;e<h;e++)m=m<<1|t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t=0;for(t=c.charCodeAt(0),e=0;e<16;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1}0==--l&&(l=Math.pow(2,h),h++),delete u[c]}else for(t=s[c],e=0;e<h;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1;0==--l&&(l=Math.pow(2,h),h++)}for(t=2,e=0;e<h;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1;for(;;){if(m<<=1,v==o-1){d.push(n(m));break}v++}return d.join("")},decompress:function(r){return null==r?"":""==r?null:i._decompress(r.length,32768,function(o){return r.charCodeAt(o)})},_decompress:function(o,n,e){var t,i,s,u,a,p,c,l=[],f=4,h=4,d=3,m="",v=[],g={val:e(0),position:n,index:1};for(t=0;t<3;t+=1)l[t]=t;for(s=0,a=Math.pow(2,2),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;switch(s){case 0:for(s=0,a=Math.pow(2,8),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;c=r(s);break;case 1:for(s=0,a=Math.pow(2,16),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;c=r(s);break;case 2:return""}for(l[3]=c,i=c,v.push(c);;){if(g.index>o)return"";for(s=0,a=Math.pow(2,d),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;switch(c=s){case 0:for(s=0,a=Math.pow(2,8),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;l[h++]=r(s),c=h-1,f--;break;case 1:for(s=0,a=Math.pow(2,16),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;l[h++]=r(s),c=h-1,f--;break;case 2:return v.join("")}if(0==f&&(f=Math.pow(2,d),d++),l[c])m=l[c];else{if(c!==h)return null;m=i+i.charAt(0)}v.push(m),l[h++]=i+m.charAt(0),i=m,0==--f&&(f=Math.pow(2,d),d++)}}};return i}(); return LZString; })();
 const library = typeof module !== 'undefined' && module.exports ? require('./card-library') : root.BreakCardLibrary;
 function normalCode(s) { return library.code(s) || library.normal(s); }
 function parseDeck(source, defs) {
@@ -2318,8 +2335,61 @@ function parseDeck(source, defs) {
   if (events > 8) throw Error('Event 最多 8 張，目前 ' + events + ' 張');
   return { name: String(input.n || input.name || '自訂牌組').slice(0, 60), cards: {...cards} };
 }
+// ---------- 查卡網站（weilun2022/haikyu-cards）分享連結
+function shareCode(text) {
+  const raw = String(text == null ? '' : text).trim();
+  if (!raw) throw Error('請貼上分享連結');
+  const m = raw.match(/[?&#]deck=([^&#\n]+)/);
+  let code = (m ? m[1] : raw).trim();
+  if (!m && /^https?:\/\//i.test(raw)) throw Error('這個網址沒有 ?deck= 牌組資料');
+  if (/%[0-9A-Fa-f]{2}/.test(code)) { try { code = decodeURIComponent(code); } catch (e) { /* 保留原樣 */ } }
+  code = code.replace(/ /g, '+');
+  if (!/^[A-Za-z0-9+\-$]+$/.test(code)) throw Error('分享碼含有不合法字元，請確認是完整的分享連結');
+  return code;
+}
+function decodeShare(text) {
+  const code = shareCode(text);
+  let json = null;
+  try { json = LZString.decompressFromEncodedURIComponent(code); } catch (e) { json = null; }
+  if (!json) throw Error('分享連結解碼失敗，可能沒有複製完整');
+  let payload;
+  try { payload = JSON.parse(json); } catch (e) { throw Error('分享連結內容不是牌組資料'); }
+  if (!payload || !Array.isArray(payload.c)) throw Error('分享連結內容不是牌組資料');
+  return { n: typeof payload.n === 'string' ? payload.n : '分享牌組', c: payload.c };
+}
+function encodeShare(deck) { return LZString.compressToEncodedURIComponent(JSON.stringify({ n: deck.name, c: Object.entries(deck.cards) })); }
+// 一次列出所有問題（parseDeck 遇到第一個錯誤就停）；不放寬任何開放權限
+function inspectDeck(source, defs) {
+  const input = typeof source === 'string' ? JSON.parse(source) : source;
+  const res = { name: String((input && (input.n || input.name)) || '自訂牌組').slice(0, 60), cards: Object.create(null), total: 0, events: 0, unknown: [], locked: [], invalid: [], problems: [], ok: false };
+  const pairs = Array.isArray(input && input.c) ? input.c : input && input.cards && typeof input.cards === 'object' ? Object.entries(input.cards) : null;
+  if (!pairs) { res.problems.push('找不到牌組清單'); return res; }
+  const locked = Object.create(null);
+  for (const item of pairs) {
+    if (!Array.isArray(item) || item.length !== 2) { res.invalid.push(String(item)); continue; }
+    const [id, count] = item;
+    if (!Number.isSafeInteger(count) || count < 1 || count > 40) { res.invalid.push(String(id)); continue; }
+    const code = normalCode(id), meta = code && library.card(code);
+    res.total += count;
+    if (!meta) { res.unknown.push({ id: String(id), count }); continue; }
+    if (meta.kind === 'E') res.events += count;
+    if (!meta.playable) { const l = locked[meta.code] || (locked[meta.code] = { code: meta.code, name: meta.name, count: 0 }); l.count += count; continue; }
+    if (!Object.prototype.hasOwnProperty.call(defs, meta.code)) { res.unknown.push({ id: String(id), count }); continue; }
+    res.cards[meta.code] = (res.cards[meta.code] || 0) + count;
+  }
+  res.locked = Object.values(locked);
+  if (res.unknown.length) res.problems.push('尚未收錄的卡：' + res.unknown.map(u => `${u.id}×${u.count}`).join('、'));
+  if (res.locked.length) res.problems.push(`尚未開放對戰的技能卡 ${res.locked.reduce((t, l) => t + l.count, 0)} 張：` + res.locked.map(l => `${l.name}（${l.code}）×${l.count}`).join('、'));
+  if (res.invalid.length) res.problems.push('張數或格式無效：' + res.invalid.join('、'));
+  if (res.total !== 40) res.problems.push(`牌組必須 40 張，目前 ${res.total} 張`);
+  if (res.events > 8) res.problems.push(`Event 最多 8 張，目前 ${res.events} 張`);
+  res.ok = !res.problems.length;
+  res.cards = { ...res.cards };
+  return res;
+}
+function parseShare(text, defs) { return parseDeck(decodeShare(text), defs); }
 function exportDeck(deck) { return JSON.stringify({ n: deck.name, c: Object.entries(deck.cards) }, null, 2); }
-const api = { normalCode, parseDeck, exportDeck };
+const api = { normalCode, parseDeck, exportDeck, shareCode, decodeShare, encodeShare, inspectDeck, parseShare, LZString };
 if (typeof module !== 'undefined' && module.exports) module.exports = api;
 else root.BreakDeckTools = api;
 })(typeof window !== 'undefined' ? window : globalThis);
@@ -2497,6 +2567,7 @@ else root.BreakUndoTools = api;
   const AI_DECKS = ['seijoh', 'hk_axis', 'k1014', 'k1014c', 'quick', 'k1010'];
   const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
   try { const saved = store.get('bk_custom_deck'); if (saved) { DECKS.custom = DT.parseDeck(saved, DEF); MY_DECKS.push('custom'); } } catch (e) { console.warn('自訂牌組載入失敗：' + e.message); }
+  try { const saved = store.get('bk_custom_ai_deck'); if (saved) { DECKS.custom_ai = DT.parseDeck(saved, DEF); AI_DECKS.push('custom_ai'); } } catch (e) { console.warn('AI 自訂牌組載入失敗：' + e.message); }
   const STAT = [['srv', '發'], ['blk', '攔'], ['rcv', '接'], ['tos', '舉'], ['atk', '攻']];
   const img = c => `<img class="ci" src="${IMG[c] || ''}" alt="${esc(CL.card(c)?.name || c)}" loading="lazy" draggable="false">`;
   const esc = s => String(s).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
@@ -2509,23 +2580,58 @@ else root.BreakUndoTools = api;
   const refresh = () => { $('myStrip').innerHTML = strip($('myDeck').value); $('aiStrip').innerHTML = strip($('aiDeck').value); };
   $('myDeck').onchange = $('aiDeck').onchange = refresh; refresh();
 
-  // ---------- custom deck importer (offline, existing card catalog only)
-  $('editDeck').onclick = () => {
-    const source = DECKS.custom || DECKS[$('myDeck').value];
-    openSheet(`<h3>自訂牌組（目前收錄 ${Object.keys(DEF).length} 種卡）</h3><p>可貼入牌組 JSON（c: [["P01-002",3], ...]），或直接修改下方內容。必須 40 張、Event ≤8。支援標準卡號及卡圖檔名；尚未開放的技能卡會拒絕匯入。</p><textarea id="customJSON" spellcheck="false" style="width:100%;height:42vh;min-height:170px;background:var(--sunk);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px;font:12px monospace"></textarea><p id="customError" role="alert" style="color:var(--bad)"></p><div class="opts"><button class="opt primary" type="button" id="saveCustom">驗證並儲存</button><button class="opt" type="button" id="copyCustom">複製 JSON</button></div>`);
-    $('customJSON').value = DT.exportDeck(source);
-    $('saveCustom').onclick = () => {
-      try {
-        const deck = DT.parseDeck($('customJSON').value, DEF);
-        DECKS.custom = deck;
-        store.set('bk_custom_deck', DT.exportDeck(deck));
-        store.set('bk_my', 'custom');
-        if (!MY_DECKS.includes('custom')) MY_DECKS.push('custom');
-        fill($('myDeck'), MY_DECKS, 'custom'); refresh(); closeSheet();
-      } catch (e) { $('customError').textContent = e.message; }
-    };
-    $('copyCustom').onclick = () => { const content = $('customJSON').value; if (navigator.clipboard?.writeText) navigator.clipboard.writeText(content).catch(() => { $('customError').textContent = '複製失敗，請手動選取文字'; }); else { $('customJSON').select(); $('customError').textContent = '請手動複製選取的文字'; } };
+  // ---------- custom deck importer：查卡網站分享連結＋JSON（Claude 2026-10-20）
+  const TARGET = {
+    me: { key: 'custom', store: 'bk_custom_deck', sel: 'myDeck', list: MY_DECKS, pick: 'bk_my', label: '我方' },
+    ai: { key: 'custom_ai', store: 'bk_custom_ai_deck', sel: 'aiDeck', list: AI_DECKS, pick: 'bk_ai', label: 'AI' },
   };
+  function saveDeck(target, deck) {
+    const t = TARGET[target];
+    DECKS[t.key] = deck;
+    store.set(t.store, DT.exportDeck(deck)); store.set(t.pick, t.key);
+    if (!t.list.includes(t.key)) t.list.push(t.key);
+    fill($(t.sel), t.list, t.key); refresh();
+  }
+  function sharePreview(target) {
+    const box = $('sharePreview');
+    let info;
+    try { info = DT.inspectDeck(DT.decodeShare($('shareURL').value), DEF); }
+    catch (e) { box.innerHTML = `<p class="imp-bad">${esc(e.message)}</p>`; return null; }
+    const lockedSet = new Set(info.locked.map(l => l.code));
+    const all = [...Object.entries(info.cards), ...info.locked.map(l => [l.code, l.count])].sort((x, y) => { const cx = CL.card(x[0])?.kind === 'C', cy = CL.card(y[0])?.kind === 'C'; return cx === cy ? 0 : cx ? -1 : 1; });
+    box.innerHTML = `<div class="imp-head"><b>${esc(info.name)}</b><span>${info.total} 張・Event ${info.events}</span></div>
+      <div class="deckstrip imp-strip">${all.map(([c, n]) => `<figure class="${lockedSet.has(c) ? 'imp-locked' : ''}"><button class="cbtn" type="button" data-card="${c}">${img(c)}</button><span>×${n}</span>${lockedSet.has(c) ? '<em>未開放</em>' : ''}</figure>`).join('')}</div>
+      ${info.ok ? `<p class="imp-good">可以匯入</p><button class="opt primary" type="button" id="shareSave">匯入為${TARGET[target].label}牌組</button>`
+        : `<ul class="imp-bad">${info.problems.map(x => `<li>${esc(x)}</li>`).join('')}</ul>${info.locked.length ? '<p class="sub">技能尚未自動化的卡目前不能上場；之後「數值模式」上線會改為照數值使用。</p>' : ''}`}`;
+    if (info.ok) $('shareSave').onclick = () => { try { saveDeck(target, DT.parseDeck({ n: info.name, c: Object.entries(info.cards) }, DEF)); closeSheet(); } catch (e) { box.insertAdjacentHTML('beforeend', `<p class="imp-bad">${esc(e.message)}</p>`); } };
+    return info;
+  }
+  function openImporter(target, prefill = '') {
+    const t = TARGET[target], source = DECKS[t.key] || DECKS[$(t.sel).value];
+    openSheet(`<h3>匯入${t.label}牌組</h3>
+      <section class="imp">
+        <label class="field" for="shareURL">貼上查卡網站的分享連結（牌組 → 📲 分享 → 複製連結，或掃 QR 取得的網址）
+          <input id="shareURL" type="url" inputmode="url" autocomplete="off" placeholder="https://weilun2022.github.io/haikyu-cards/?deck=…"></label>
+        <div class="opts"><button class="opt primary" type="button" id="shareGo">讀取</button><a class="opt quiet" href="https://weilun2022.github.io/haikyu-cards/" target="_blank" rel="noopener">開啟查卡網站組牌</a></div>
+        <div id="sharePreview" aria-live="polite"></div>
+      </section>
+      <details class="imp-json"><summary>進階：用 JSON 匯入／編輯（目前收錄 ${Object.keys(DEF).length} 種卡）</summary>
+      <p>c: [["P01-002",3], ...]。必須 40 張、Event ≤8；支援標準卡號及卡圖檔名；尚未開放的技能卡會拒絕匯入。</p><textarea id="customJSON" spellcheck="false" style="width:100%;height:36vh;min-height:150px;background:var(--sunk);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px;font:12px monospace"></textarea><p id="customError" role="alert" style="color:var(--bad)"></p><div class="opts"><button class="opt primary" type="button" id="saveCustom">驗證並儲存</button><button class="opt" type="button" id="copyCustom">複製 JSON</button><button class="opt" type="button" id="copyShare">複製分享碼</button></div></details>`);
+    $('customJSON').value = DT.exportDeck(source);
+    $('shareGo').onclick = () => sharePreview(target);
+    $('shareURL').addEventListener('keydown', e => { if (e.key === 'Enter') sharePreview(target); });
+    $('shareURL').addEventListener('paste', () => setTimeout(() => sharePreview(target), 0));
+    if (prefill) { $('shareURL').value = prefill; sharePreview(target); }
+    $('saveCustom').onclick = () => {
+      try { saveDeck(target, DT.parseDeck($('customJSON').value, DEF)); closeSheet(); }
+      catch (e) { $('customError').textContent = e.message; }
+    };
+    const copy = text => { if (navigator.clipboard?.writeText) navigator.clipboard.writeText(text).catch(() => { $('customError').textContent = '複製失敗，請手動選取文字'; }); else { $('customJSON').select(); $('customError').textContent = '請手動複製選取的文字'; } };
+    $('copyCustom').onclick = () => copy($('customJSON').value);
+    $('copyShare').onclick = () => { try { copy(DT.encodeShare(DT.parseDeck($('customJSON').value, DEF))); } catch (e) { $('customError').textContent = e.message; } };
+  }
+  $('editDeck').onclick = () => openImporter('me');
+  $('editAiDeck').onclick = () => openImporter('ai');
 
   // ---------- sheets
   let sheetOnClose = null;
@@ -3066,6 +3172,7 @@ else root.BreakUndoTools = api;
     session.start();
   }
   $('startBtn').onclick = () => { try { start(); document.getElementById('runtimeStatus').hidden = true; } catch (e) { const box = document.getElementById('runtimeStatus'); box.hidden = false; box.textContent = '❌ 遊戲啟動錯誤：' + (e && e.message || e); console.error(e); } };
+  try { const q = location.search + location.hash; if (/[?&#]deck=/.test(q)) { setTimeout(() => openImporter('me', q), 0); history.replaceState(null, '', location.pathname); } } catch (e) { /* 網址參數不可用時略過 */ }
   document.getElementById('runtimeStatus').hidden = true;
 })();
 </script>

@@ -742,3 +742,18 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 唯讀API確認GitHub master af6d8c6，Pages HTTP200且index SHA256與該提交一致；本機完成實作21d0eec、同步前HEAD59a8fea。全庫／核心等近期本機批次未推送部署。
 - 新增STATUS.md及outputs/BREAK-project-status-sync.md、evidence.json，含全體架構／各數字界線／125候選1938sandbox與正式核准差別／既有測試／未完成多人與分享／14張未動工及精確檔案入口。HANDOFF新增先讀STATUS入口，COVERAGE更新過期47卡／待匯入文字，card-support內5項部分支援原樣保留，其中兩項PR057描述列待按現碼覆核。
 - 逐檔SHA確認執行碼及資料與59a8fea一致；本次只改文件，不重跑未變的引擎測試、不推送部署。交接先由Claude／使用者確認方向後再恢復開發。
+
+
+## Claude：查卡網站分享連結匯入計畫（2026-10-20，修改前，分支 claude/share-import）
+- 分工（Xiah 同意）：Claude 負責 UI／匯入流程／AI 策略，Codex 負責 rules/、engine 結算、library/、測試基底；req.kind 介面由 Codex 定義。Claude 無 GitHub 推送權限，以 git bundle／patch 交回 Codex 合併推送。
+- 本批：deck-tools.js 內嵌 lz-string 1.5.0（MIT）解碼 weilun2022/haikyu-cards 的分享連結 `?deck=`（compressToEncodedURIComponent 的 {n, c:[[image_file|card_no, count]], k?}）；接受整串網址、只有 query、或純代碼，處理 query 中 '+' 變空白。
+- 新增 inspectDeck：一次列出全部問題（未收錄、尚未開放技能卡含名稱×張數、總張數、Event 數），不在第一張錯誤就停；最終仍走既有 parseDeck，不放寬任何開放權限（數值模式由 Codex 另做）。
+- UI：自訂牌組視窗加「貼上分享連結」→ 預覽（牌組名、張數、問題清單）→ 匯入為我方或 AI 牌組；網址帶 ?deck= 開頁時自動帶入。AI 自訂牌組另存 bk_custom_ai_deck。
+- 測試：deck-tools.test.js 增加分享連結往返、卡圖檔名別名、'+'/空白、鎖定卡清單、壞碼；build、fuzz、test 300、瀏覽器匯入流程。
+
+## Claude：查卡網站分享連結匯入結果（2026-10-20，分支 claude/share-import）
+- deck-tools.js 內嵌 lz-string 1.5.0（MIT）；新增 shareCode／decodeShare／encodeShare／inspectDeck／parseShare。接受整串網址、?deck=、純代碼、query 中 '+' 變空白、%編碼；c 可為稀有度卡圖檔名或卡號（沿用 card-library 別名）。開放權限完全沿用既有 requirePlayable／parseDeck，未放寬。
+- UI：自訂牌組視窗改為「匯入我方／AI 牌組」：貼連結（貼上即讀）→ 預覽牌組名、張數、Event、卡圖（未開放卡灰階＋標籤）、所有問題一次列出 → 可匯入才出現按鈕。JSON 編輯移到「進階」摺疊區並加「複製分享碼」。AI 面板新增「匯入 AI 牌組」（DECKS.custom_ai／bk_custom_ai_deck）。網址帶 ?deck= 開頁自動開匯入並清除參數。
+- 測試：deck-tools.test.js 新增分享連結往返（7 種貼法）、舊 card_no 格式、鎖定卡清單、壞碼；新增 share-e2e.js（1280／390／320：鎖定卡阻擋、匯入我方與 AI、重新載入保留、?deck= 自動帶入、用匯入牌組開局、無橫向溢出、無頁面錯誤）全過。library-e2e.js、audit-e2e.js 因 JSON 區改為摺疊，填寫前加一次展開 summary；library-e2e 全過。
+- 注意：audit-e2e.js 在本分支「修改前」就已失敗（第 13 行預期 DEF 47 種，實際 60），屬既有過期斷言，請 Codex 更新。build、fuzz 3000（3.70 rallies）通過；test 300 與全部 *.test.js 結果見下一行。
+- test 300：k1014 vs 新青城 0.343、快攻 0.420、1014c 0.503、k1014 vs 日向影山軸 0.460、1010 vs 1014 0.527、青城鏡像 0.527；全部 *.test.js 通過。Claude 無推送權限：commit 以 git bundle 放在 repo 根目錄 claude-handoff/（未追蹤），請 Codex fetch 後合併推送並刪除該資料夾。

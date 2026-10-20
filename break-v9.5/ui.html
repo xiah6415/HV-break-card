@@ -319,6 +319,20 @@ body.dragging .hand .hc.sel .ci, body.dragging .hand .hc.staged .ci { opacity: .
 body.turn-open { overflow: hidden; }
 body.turn-open .sheet { z-index: 80; }
 @media (max-height: 600px) { .turn-card { gap: 12px; } .turn-ball { padding-block: 12px; } }
+
+/* 分享連結匯入（Claude 2026-10-20） */
+.imp { display: grid; gap: 8px; }
+.imp input { font: inherit; width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--sunk); color: var(--ink); }
+.imp a.opt { text-decoration: none; color: var(--ink); }
+.imp-head { display: flex; gap: 10px; align-items: baseline; justify-content: space-between; }
+.imp-head span { font-size: 12.5px; color: var(--muted); }
+.imp-strip figure { flex-basis: 52px; }
+.imp-strip figure.imp-locked .ci { opacity: .45; filter: grayscale(.8); }
+.imp-strip em { position: absolute; left: 2px; top: 2px; font-style: normal; font-size: 9.5px; background: var(--bad); color: #fff; border-radius: 4px; padding: 0 3px; }
+.imp-good { color: var(--good); font-weight: 700; margin: 4px 0; }
+.imp-bad { color: var(--bad); margin: 4px 0; padding-left: 18px; font-size: 13px; }
+p.imp-bad { padding-left: 0; }
+.imp-json summary { cursor: pointer; color: var(--muted); font-size: 13px; padding: 6px 0; }
 </style>
 </head>
 <body>
@@ -343,6 +357,7 @@ body.turn-open .sheet { z-index: 80; }
     <div class="panel">
       <h2>AI 對手</h2>
       <label class="field" for="aiDeck">牌組<select id="aiDeck"><option value="seijoh">青葉城西（第四彈）</option><option value="hk_axis">烏野 日向影山軸</option><option value="k1014">烏野1014</option><option value="k1014c">1014c（接 6 強化）</option><option value="quick">烏野快攻版</option><option value="k1010">烏野1010</option></select></label>
+      <button class="chip" type="button" id="editAiDeck">匯入 AI 牌組</button>
       <label class="field" for="speed">AI 出牌速度
         <select id="speed"><option value="200">快</option><option value="550" selected>正常</option><option value="1000">慢</option></select>
       </label>
@@ -402,6 +417,7 @@ body.turn-open .sheet { z-index: 80; }
   const AI_DECKS = ['seijoh', 'hk_axis', 'k1014', 'k1014c', 'quick', 'k1010'];
   const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
   try { const saved = store.get('bk_custom_deck'); if (saved) { DECKS.custom = DT.parseDeck(saved, DEF); MY_DECKS.push('custom'); } } catch (e) { console.warn('自訂牌組載入失敗：' + e.message); }
+  try { const saved = store.get('bk_custom_ai_deck'); if (saved) { DECKS.custom_ai = DT.parseDeck(saved, DEF); AI_DECKS.push('custom_ai'); } } catch (e) { console.warn('AI 自訂牌組載入失敗：' + e.message); }
   const STAT = [['srv', '發'], ['blk', '攔'], ['rcv', '接'], ['tos', '舉'], ['atk', '攻']];
   const img = c => `<img class="ci" src="${IMG[c] || ''}" alt="${esc(CL.card(c)?.name || c)}" loading="lazy" draggable="false">`;
   const esc = s => String(s).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
@@ -414,23 +430,58 @@ body.turn-open .sheet { z-index: 80; }
   const refresh = () => { $('myStrip').innerHTML = strip($('myDeck').value); $('aiStrip').innerHTML = strip($('aiDeck').value); };
   $('myDeck').onchange = $('aiDeck').onchange = refresh; refresh();
 
-  // ---------- custom deck importer (offline, existing card catalog only)
-  $('editDeck').onclick = () => {
-    const source = DECKS.custom || DECKS[$('myDeck').value];
-    openSheet(`<h3>自訂牌組（目前收錄 ${Object.keys(DEF).length} 種卡）</h3><p>可貼入牌組 JSON（c: [["P01-002",3], ...]），或直接修改下方內容。必須 40 張、Event ≤8。支援標準卡號及卡圖檔名；尚未開放的技能卡會拒絕匯入。</p><textarea id="customJSON" spellcheck="false" style="width:100%;height:42vh;min-height:170px;background:var(--sunk);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px;font:12px monospace"></textarea><p id="customError" role="alert" style="color:var(--bad)"></p><div class="opts"><button class="opt primary" type="button" id="saveCustom">驗證並儲存</button><button class="opt" type="button" id="copyCustom">複製 JSON</button></div>`);
-    $('customJSON').value = DT.exportDeck(source);
-    $('saveCustom').onclick = () => {
-      try {
-        const deck = DT.parseDeck($('customJSON').value, DEF);
-        DECKS.custom = deck;
-        store.set('bk_custom_deck', DT.exportDeck(deck));
-        store.set('bk_my', 'custom');
-        if (!MY_DECKS.includes('custom')) MY_DECKS.push('custom');
-        fill($('myDeck'), MY_DECKS, 'custom'); refresh(); closeSheet();
-      } catch (e) { $('customError').textContent = e.message; }
-    };
-    $('copyCustom').onclick = () => { const content = $('customJSON').value; if (navigator.clipboard?.writeText) navigator.clipboard.writeText(content).catch(() => { $('customError').textContent = '複製失敗，請手動選取文字'; }); else { $('customJSON').select(); $('customError').textContent = '請手動複製選取的文字'; } };
+  // ---------- custom deck importer：查卡網站分享連結＋JSON（Claude 2026-10-20）
+  const TARGET = {
+    me: { key: 'custom', store: 'bk_custom_deck', sel: 'myDeck', list: MY_DECKS, pick: 'bk_my', label: '我方' },
+    ai: { key: 'custom_ai', store: 'bk_custom_ai_deck', sel: 'aiDeck', list: AI_DECKS, pick: 'bk_ai', label: 'AI' },
   };
+  function saveDeck(target, deck) {
+    const t = TARGET[target];
+    DECKS[t.key] = deck;
+    store.set(t.store, DT.exportDeck(deck)); store.set(t.pick, t.key);
+    if (!t.list.includes(t.key)) t.list.push(t.key);
+    fill($(t.sel), t.list, t.key); refresh();
+  }
+  function sharePreview(target) {
+    const box = $('sharePreview');
+    let info;
+    try { info = DT.inspectDeck(DT.decodeShare($('shareURL').value), DEF); }
+    catch (e) { box.innerHTML = `<p class="imp-bad">${esc(e.message)}</p>`; return null; }
+    const lockedSet = new Set(info.locked.map(l => l.code));
+    const all = [...Object.entries(info.cards), ...info.locked.map(l => [l.code, l.count])].sort((x, y) => { const cx = CL.card(x[0])?.kind === 'C', cy = CL.card(y[0])?.kind === 'C'; return cx === cy ? 0 : cx ? -1 : 1; });
+    box.innerHTML = `<div class="imp-head"><b>${esc(info.name)}</b><span>${info.total} 張・Event ${info.events}</span></div>
+      <div class="deckstrip imp-strip">${all.map(([c, n]) => `<figure class="${lockedSet.has(c) ? 'imp-locked' : ''}"><button class="cbtn" type="button" data-card="${c}">${img(c)}</button><span>×${n}</span>${lockedSet.has(c) ? '<em>未開放</em>' : ''}</figure>`).join('')}</div>
+      ${info.ok ? `<p class="imp-good">可以匯入</p><button class="opt primary" type="button" id="shareSave">匯入為${TARGET[target].label}牌組</button>`
+        : `<ul class="imp-bad">${info.problems.map(x => `<li>${esc(x)}</li>`).join('')}</ul>${info.locked.length ? '<p class="sub">技能尚未自動化的卡目前不能上場；之後「數值模式」上線會改為照數值使用。</p>' : ''}`}`;
+    if (info.ok) $('shareSave').onclick = () => { try { saveDeck(target, DT.parseDeck({ n: info.name, c: Object.entries(info.cards) }, DEF)); closeSheet(); } catch (e) { box.insertAdjacentHTML('beforeend', `<p class="imp-bad">${esc(e.message)}</p>`); } };
+    return info;
+  }
+  function openImporter(target, prefill = '') {
+    const t = TARGET[target], source = DECKS[t.key] || DECKS[$(t.sel).value];
+    openSheet(`<h3>匯入${t.label}牌組</h3>
+      <section class="imp">
+        <label class="field" for="shareURL">貼上查卡網站的分享連結（牌組 → 📲 分享 → 複製連結，或掃 QR 取得的網址）
+          <input id="shareURL" type="url" inputmode="url" autocomplete="off" placeholder="https://weilun2022.github.io/haikyu-cards/?deck=…"></label>
+        <div class="opts"><button class="opt primary" type="button" id="shareGo">讀取</button><a class="opt quiet" href="https://weilun2022.github.io/haikyu-cards/" target="_blank" rel="noopener">開啟查卡網站組牌</a></div>
+        <div id="sharePreview" aria-live="polite"></div>
+      </section>
+      <details class="imp-json"><summary>進階：用 JSON 匯入／編輯（目前收錄 ${Object.keys(DEF).length} 種卡）</summary>
+      <p>c: [["P01-002",3], ...]。必須 40 張、Event ≤8；支援標準卡號及卡圖檔名；尚未開放的技能卡會拒絕匯入。</p><textarea id="customJSON" spellcheck="false" style="width:100%;height:36vh;min-height:150px;background:var(--sunk);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px;font:12px monospace"></textarea><p id="customError" role="alert" style="color:var(--bad)"></p><div class="opts"><button class="opt primary" type="button" id="saveCustom">驗證並儲存</button><button class="opt" type="button" id="copyCustom">複製 JSON</button><button class="opt" type="button" id="copyShare">複製分享碼</button></div></details>`);
+    $('customJSON').value = DT.exportDeck(source);
+    $('shareGo').onclick = () => sharePreview(target);
+    $('shareURL').addEventListener('keydown', e => { if (e.key === 'Enter') sharePreview(target); });
+    $('shareURL').addEventListener('paste', () => setTimeout(() => sharePreview(target), 0));
+    if (prefill) { $('shareURL').value = prefill; sharePreview(target); }
+    $('saveCustom').onclick = () => {
+      try { saveDeck(target, DT.parseDeck($('customJSON').value, DEF)); closeSheet(); }
+      catch (e) { $('customError').textContent = e.message; }
+    };
+    const copy = text => { if (navigator.clipboard?.writeText) navigator.clipboard.writeText(text).catch(() => { $('customError').textContent = '複製失敗，請手動選取文字'; }); else { $('customJSON').select(); $('customError').textContent = '請手動複製選取的文字'; } };
+    $('copyCustom').onclick = () => copy($('customJSON').value);
+    $('copyShare').onclick = () => { try { copy(DT.encodeShare(DT.parseDeck($('customJSON').value, DEF))); } catch (e) { $('customError').textContent = e.message; } };
+  }
+  $('editDeck').onclick = () => openImporter('me');
+  $('editAiDeck').onclick = () => openImporter('ai');
 
   // ---------- sheets
   let sheetOnClose = null;
@@ -971,6 +1022,7 @@ body.turn-open .sheet { z-index: 80; }
     session.start();
   }
   $('startBtn').onclick = () => { try { start(); document.getElementById('runtimeStatus').hidden = true; } catch (e) { const box = document.getElementById('runtimeStatus'); box.hidden = false; box.textContent = '❌ 遊戲啟動錯誤：' + (e && e.message || e); console.error(e); } };
+  try { const q = location.search + location.hash; if (/[?&#]deck=/.test(q)) { setTimeout(() => openImporter('me', q), 0); history.replaceState(null, '', location.pathname); } } catch (e) { /* 網址參數不可用時略過 */ }
   document.getElementById('runtimeStatus').hidden = true;
 })();
 </script>

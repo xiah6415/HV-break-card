@@ -23,7 +23,7 @@ const path = require('node:path');
       assert.match(await page.locator('#sheetBox').textContent(), /每次登場時選/);
       assert.match(await page.locator('#sheetBox').textContent(), /主要技能情境已測試/);
       await page.click('#sheetBox [data-close]');
-      await page.click('#editDeck');
+      await page.click('#editDeck'); await page.click('.imp-json summary');
       await page.fill('#customJSON', JSON.stringify({ n: 'Official bonus code', c: [['HVBP-002', 40]] }));
       await page.click('#saveCustom');
       assert.equal(await page.locator('#myDeck').inputValue(), 'custom');
