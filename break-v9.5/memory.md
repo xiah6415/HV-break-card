@@ -718,3 +718,7 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 新library.test覆核全部165數值／身分、545版本／713別名／541圖與329鎖定、40新卡牌組往返及Game入口，200完整引擎局涵蓋全部新增卡，精確每方40原始卡與80實體守恆。新卡可被共用加值／日向回收，所屬條件正確。library-undo.test完成3個新角色加值與交棒前後完整還原點，紀錄／實體／共用狀態一致，跨回合拒絕／同意與過期回覆不回寫。
 - 全部34單元套件通過；14來源離線重建7封存產物一致。build、fuzz3000（平均3.69rallies）、6組各300 test通過。library-e2e在1280／390／320驗證全庫查圖、鎖定拒絕、40新卡JSON匯入與重載、抽牌／登場Undo；修正匯入後目前牌組選擇保存。既有e2e三尺寸各3局及undo／watch／candidate／skill-targets回歸全部通過，無頁面錯誤／橫向溢出／遮手牌；Chrome手機模擬，非Safari真機。舊所屬測試改用真實新卡，未再修改顯示DEF冒充標籤資料。
 - HANDOFF／ROADMAP／rules README／BATCH及library/README更新；outputs/BREAK-library-update.md、evidence.json、validation.json、phone.png及BREAK-new-basic-deck.json可交接。下一批選125候選的完整群組接正式選擇／目標結果及完整Undo，再逐SHA核准，非直接開放125張。僅本機保存，未推送部署或同步iCloud，公開頁仍舊版。
+
+
+## 全卡庫匯入本機保存（2026-10-20）
+- 實作提交 21d0eec105043dcb8c2e14c2f3a7219e8d6e21ec；541卡查閱／212可組牌／165新增基本角色，34套件與規定模擬、三尺寸新卡及既有操作回歸通過。交付須帶img/，22技能核准維持；詳見library/README及outputs/BREAK-library-update.md。未推送部署或同步iCloud。
