@@ -64,12 +64,15 @@
       "qaIds": [
         "1261"
       ],
-      "status": "partial",
-      "gaps": [
-        "目前會自動使用月島技能並指定中攔；仍需補上可不發動及側攔技能的選擇。"
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "rules/passive.test.js",
+        "rules/passive-undo.test.js",
+        "rules/passive-e2e.js"
       ],
-      "tests": [],
-      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P02-003"
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P02-003",
+      "settlement": "shared-rules-local-migration"
     },
     "D01-005": {
       "name": "西谷 夕",
@@ -92,9 +95,12 @@
       "status": "scenario-tested",
       "gaps": [],
       "tests": [
-        "skill-basics.test.js"
+        "rules/passive.test.js",
+        "rules/passive-undo.test.js",
+        "rules/passive-e2e.js"
       ],
-      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-D01-005"
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-D01-005",
+      "settlement": "shared-rules-local-migration"
     },
     "P01-011": {
       "name": "西谷 夕",
@@ -500,10 +506,13 @@
       "status": "scenario-tested",
       "gaps": [],
       "tests": [
-        "skill-basics.test.js",
+        "rules/passive.test.js",
+        "rules/passive-undo.test.js",
+        "rules/passive-e2e.js",
         "deck-tools.test.js"
       ],
-      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HVBP-002"
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HVBP-002",
+      "settlement": "shared-rules-local-migration"
     },
     "PR-053": {
       "name": "日向 翔陽",
@@ -572,9 +581,12 @@
       "status": "scenario-tested",
       "gaps": [],
       "tests": [
-        "skill-basics.test.js"
+        "rules/passive.test.js",
+        "rules/passive-undo.test.js",
+        "rules/passive-e2e.js"
       ],
-      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P03-046"
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P03-046",
+      "settlement": "shared-rules-local-migration"
     },
     "P03-057": {
       "name": "黒川 広樹",

@@ -1,5 +1,5 @@
 /* Host settlement adapter for hash-pinned finite skills and admitted watches.
-   Character passives still use the legacy controller. */
+   Only pinned self-entry passives enter this queue; other skills stay legacy. */
 (function(root) {
 'use strict';
 const node=typeof module!=='undefined'&&module.exports;
@@ -52,6 +52,7 @@ function transaction(g,p,c,timing,notification=null) {
   const physical=identity.snapshot(g);
   k.state.turn={id:Math.max(1,g.turnNo),player:g.turnP?.idx??p.idx,phase:phase[timing],step:'free'};
   k.state.next=Math.max(k.state.next,saved.next);
+  if(g.ball)k.state.ball={owner:1-k.state.turn.player,kind:g.ball.type,offense:g.ball.off};
   const short={},slots={},basePlayers=g.players.map(q=>copy({hand:q.hand,deck:q.deck,drop:q.drop,ev:q.ev,sets:q.sets,area:q.area,ts:q.ts,effects:q.effects,newCount:q.newCount}));
   for(const q of g.players) {
     for(const [zone,cards] of Object.entries({hand:q.hand,deck:q.deck,drop:q.drop,event:q.ev,sets:q.sets,...q.area,...Object.fromEntries((q.ts.sides||[]).map((x,i)=>['side:'+i,[x]]))})) {
@@ -90,6 +91,7 @@ function transaction(g,p,c,timing,notification=null) {
   const command=notification?{kind:'host_events',...notification}:{kind:'skill',player:p.idx,source,timing};
   const invoke=notification?kernel=>kernel.notifyHostEvents(notification.events):kernel=>kernel.card(source).printed.type==='event'?kernel.playEvent(source):kernel.useSkill(source);
   function choices(req) {
+    if(req.kind==='guts')return [req.options.slice(0,req.count)];
     if(['target','payment_cards','move_cards'].includes(req.kind)) {
       if(req.count!==1)throw new Error('Adapter requires single physical-card choices');
       return req.options.map(id=>[id]);
@@ -153,6 +155,7 @@ function transaction(g,p,c,timing,notification=null) {
     for(const e of state.events.slice(eventCursor))if(e.type==='move') {
       const owner=g.players[state.cards[e.id].owner],code=short[e.id];
       if(e.from.endsWith('.deck')&&e.to.endsWith('.hand'))g.log(owner.idx===g.reveal?`${owner.name}（技能）抽到：${byShort[code].display_name}`:`${owner.name}（技能）抽 1 張`,'draw');
+      else if(notification&&e.to.endsWith('.event'))g.log(`${owner.name} 將 ${byShort[code].display_name} 放到 Event 區（技能放置）`);
       else if(e.to.endsWith('.drop'))g.log(`${owner.name} 棄掉 ${byShort[code].display_name}`);
     }
     for(const e of state.effects.slice(effectCursor)) {
@@ -162,8 +165,17 @@ function transaction(g,p,c,timing,notification=null) {
     }
     eventCursor=state.events.length;effectCursor=state.effects.length;
   }
+  function validGuts(req,answer) { return Array.isArray(answer)&&answer.length===req.count&&new Set(answer).size===req.count&&answer.every(id=>req.options.includes(id)); }
   async function ask(req,state,available) {
     const owner=g.players[req.player];
+    if(req.kind==='guts') {
+      for(;;){const chosen=await g.ask(owner,{kind:'guts',multi:true,need:req.count,area:state.cards[req.source].zone.split('.')[1],timing,prompt:`${byShort[short[req.source]].display_name}：付 ${req.count} Guts（最上面的角色不能付）`,options:req.options.map((id,value)=>({value,card:short[id],label:byShort[short[id]].display_name}))});
+        const answer=Array.isArray(chosen)?chosen.map(i=>Number.isInteger(i)?req.options[i]:null):null;
+        if(validGuts(req,answer))return answer;
+      }
+    }
+    const payment=req.payment?.steps?.[0],isPassive=byShort[short[req.source]]?.profiles[0].activation?.skill_type==='passive';
+    const paymentPrompt=payment?.kind==='pay_guts'?`是否支付 ${payment.count} Guts，發動登場效果？`:payment?.destination==='self.event'?'是否將 1 張事件放到 Event 區，發動登場效果？':isPassive?'是否棄 1 張手牌，發動登場效果？':'是否支付棄牌費用，對同一目標追加效果？';
     const sourceName=req.kind==='trigger_order'?'效果':byShort[short[req.source]]?.display_name||g.src||'效果';
     const opts=available.map(answer=>{
       if(req.kind==='target') {
@@ -174,23 +186,25 @@ function transaction(g,p,c,timing,notification=null) {
         const job=state.queue.find(q=>q.id===answer),name=byShort[short[job.source?.id]]?.display_name||'觸發效果';
         return {label:`先結算 ${name}（${state.queue.indexOf(job)+1}）`,value:answer,answer};
       }
-      return {label:req.kind==='draw_count'?answer?`抽 ${answer} 張`:'不抽牌':answer?'棄 1 張符合條件的手牌，追加效果':'不追加',value:answer,answer};
+      return {label:req.kind==='draw_count'?answer?`抽 ${answer} 張`:'不抽牌':answer?payment?.kind==='pay_guts'?`支付 ${payment.count} Guts`:payment?.destination==='self.event'?'選 1 張事件放到 Event 區':'棄 1 張符合條件的手牌，追加效果':'不追加',value:answer,answer};
     });
     const kind=req.kind==='target'?'target':req.kind==='activate_payment'?'skill':'rulesChoice';
-    const prompt=sourceName+'：'+({target:'選擇場上 1 位角色',draw_count:'選擇抽牌數量',activate_payment:'是否支付棄牌費用，對同一目標追加效果？',payment_cards:'選擇 1 張符合條件的手牌棄掉',move_cards:'非抽牌加入手牌後，請選 1 張手牌棄掉',trigger_order:'選擇同時觸發的結算順序'}[req.kind]);
+    const prompt=sourceName+'：'+({target:'選擇場上 1 位角色',draw_count:'選擇抽牌數量',activate_payment:paymentPrompt,payment_cards:req.destination==='self.event'?'選擇 1 張事件放到 Event 區':'選擇 1 張符合條件的手牌棄掉',move_cards:'非抽牌加入手牌後，請選 1 張手牌棄掉',trigger_order:'選擇同時觸發的結算順序'}[req.kind]);
     let invalid=false;
     for(;;) {
-      const value=await g.ask(owner,{kind,prompt:prompt+(invalid?'（請重新選擇有效選項）':''),timing,options:opts.map(({answer,...o})=>o)});
+      const value=await g.ask(owner,{kind,prompt:prompt+(invalid?'（請重新選擇有效選項）':''),timing,ctx:{card:short[req.source],...(state.cards[req.source]?.zone===req.player+'.receive'&&g.ball?{need:g.ball.off-g.parameter(owner,slots[req.source].key,'rcv')}: {})},options:opts.map(({answer,...o})=>o)});
       const option=opts.find(o=>o.value===value);if(option)return option.answer;invalid=true;
     }
   }
   return {entryPreview:(code,area,param)=>{
     k.restore(base);const id=k.zone(p.idx,'hand').find(id=>short[id]===code);
     if(!id)throw new Error('Preview requires an actual hand card');
+    // Preview the base and generated watches; optional entry costs remain the player's decision.
+    k._enqueuePassive=()=>{};
     k.state.turn.phase=area;k.choose=req=>req.kind==='trigger_order'?req.options[0]:[req.options[0]];
     k.enter(id,area);
     return {value:k.parameter(id,param),protected:k._protected(k.reference(id),param,{controller:p.idx})};
-  },possible:()=>possible([]),run:()=>settle({kernel:k,invoke,ask,publish,options:(req,state,answers)=>choices(req).filter(answer=>possible([...answers,{request:req,answer}]))})};
+  },possible:()=>possible([]),run:()=>settle({kernel:k,invoke,ask,publish,options:(req,state,answers)=>notification?choices(req):choices(req).filter(answer=>possible([...answers,{request:req,answer}])),validate:(req,answer,available)=>req.kind==='guts'?validGuts(req,answer):available.some(value=>JSON.stringify(value)===JSON.stringify(answer))})};
 }
 function canPlay(g,p,c,timing) {
   if(g.sharedRulesPending||!handles(c)||g.turnP!==p||!p.hand.includes(c))return false;
@@ -219,7 +233,8 @@ function entryPreview(g,p,code,area,param) {
 }
 async function charactersEntered(g,p,entries) {
   assertReady(g);
-  if(!stored(g).effects.some(e=>e.kind==='watch'&&e.event==='character_entry'&&e.actor===p.idx&&active(e,g)))return;
+  const passive=entries.some(({key})=>{const code=g.courtTargets(p).find(t=>t.key===key)?.card;return byShort[code]?.profiles[0].activation?.skill_type==='passive';});
+  if(!passive&&!stored(g).effects.some(e=>e.kind==='watch'&&e.event==='character_entry'&&e.actor===p.idx&&active(e,g)))return;
   const revision=identity.ensure(g).revision;
   for(const {key,origin='hand',reason='rule'} of entries) {
     const character=g.roleReference(p,key),receipt=`entry:${g.turnNo}:${p.idx}:${character.id}:${character.incarnation}:${revision}`;

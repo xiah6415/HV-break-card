@@ -144,8 +144,8 @@ class Kernel {
     const answer=this.choose(clone(req));
     this.state.decisions.push({request:req,answer:clone(answer)}); return answer;
   }
-  _selection(ids,n,ctx,kind,player=ctx.controller) {
-    const chosen=this._decide(kind,ctx,ids,{count:n,player});
+  _selection(ids,n,ctx,kind,player=ctx.controller,extra={}) {
+    const chosen=this._decide(kind,ctx,ids,{count:n,player,...extra});
     legal(Array.isArray(chosen) && chosen.length===n && new Set(chosen).size===n && chosen.every(id=>ids.includes(id)),'Invalid physical-card selection');
     return chosen;
   }
@@ -268,7 +268,7 @@ class Kernel {
       n=Math.min(node.count,ids.length);
       if (node.count_mode==='upto') { n=this._decide('move_count',ctx,Array.from({length:n+1},(_,i)=>i)); legal(Number.isInteger(n) && n>=0 && n<=Math.min(node.count,ids.length),'Invalid move count'); }
     }
-    const chosen=node.count_mode==='all' ? ids : n ? this._selection(ids,n,ctx,ctx.inPayment?'payment_cards':'move_cards',recipient) : [];
+    const chosen=node.count_mode==='all' ? ids : n ? this._selection(ids,n,ctx,ctx.inPayment?'payment_cards':'move_cards',recipient,{destination:dest}) : [];
     ctx.bind[node.bind || 'moved']=[...chosen];
     for (const id of chosen) {
       const destination=this._destination(dest,id,ctx);
@@ -402,6 +402,13 @@ class Kernel {
       }
     });
   }
+  _paymentAvailable(payment,ctx) {
+    // Probe only the cost on a private checkpoint; never ask or publish a choice.
+    const saved=clone(this.state),choose=this.choose,probe=clone(ctx);probe.inPayment=true;probe.paid=[];
+    this.choose=req=>req.count!=null?req.options.slice(0,req.count):req.options[0];
+    try {this._run(payment,probe);return true;}catch(e){if(e instanceof Unpayable)return false;throw e;}
+    finally {this.state=saved;this.choose=choose;}
+  }
   _run(node,ctx) {
     switch (node.kind) {
       case 'sequence': { let yes=false;for (const step of node.steps) yes=this._run(step,ctx)||yes;return yes; }
@@ -426,7 +433,8 @@ class Kernel {
         if(node.count_mode==='one_of_exact'){const counts=node.allowed_counts.filter(n=>n<=ids.length);if(!counts.length)throw new Unpayable();n=this._decide('payment_count',ctx,counts);legal(counts.includes(n),'Invalid Guts amount');}
         if(ids.length<n)throw new Unpayable();const paid=this._selection(ids,n,ctx,'guts');for(const id of paid)this._move(id,this.card(id).owner,'drop',ctx);ctx.bind.paid=paid;ctx.paid.push(...paid);return paid.length>0; }
       case 'payment_branch': {
-        const yes=this._decide('activate_payment',ctx,[true,false]);legal(typeof yes==='boolean','Payment decision must be boolean');if(!yes)return false;
+        if(!this._paymentAvailable(node.payment,ctx))return false;
+        const yes=this._decide('activate_payment',ctx,[true,false],{payment:node.payment});legal(typeof yes==='boolean','Payment decision must be boolean');if(!yes)return false;
         const saved=clone(this.state), before=clone(ctx);ctx.inPayment=true;ctx.paid=[];
         try {this._run(node.payment,ctx);} catch(e) {if(!(e instanceof Unpayable))throw e;this.state=saved;Object.assign(ctx,before);return false;}
         ctx.inPayment=false;ctx.bind.paid=[...ctx.paid];return this._run(node.then,ctx)||ctx.paid.length>0;
@@ -462,8 +470,8 @@ class Kernel {
   _enqueuePassive(id,event) {
     const p=this.profile(id),a=p.activation;if(!p.program || a?.skill_type!=='passive' || a.trigger?.event!=='self_entry')return;
     if(!a.trigger.destination_any.some(r=>r==='court'||this.roleMatches(event.role,r)))return;
-    this.preflight(p.program);
-    this.state.queue.push({id:this.id('q'),controller:this.card(id).owner,source:this.reference(id),event,program:p.program,profileId:p.profile_id,generated:false,window:event.window});
+    this._admit(p);
+    this.state.queue.push({id:this.id('q'),controller:this.card(id).owner,source:clone(event.character),event,program:p.program,profileId:p.profile_id,generated:false,window:event.window});
   }
   _drain() {
     if(this.depth || this.draining)return;
@@ -588,7 +596,8 @@ class Kernel {
         if(e.character.incarnation===this.card(e.card).incarnation)legal(this.current(e.character)&&this.role(e.card)===e.role,'Current entry role mismatch');
         legal(['hand','drop','guts'].includes(e.origin)&&['rule','skill'].includes(e.reason),'Unknown entry origin');
         const c=this.card(e.card);c.entryOrigin=e.origin;c.entryReason=e.reason;c.entryTurn=this.state.turn.id;
-        this._emit({type:e.type,player:e.player,card:e.card,character:e.character,role:e.role,origin:e.origin});
+        const event={type:e.type,player:e.player,card:e.card,character:e.character,role:e.role,origin:e.origin,phase:this.state.turn.phase,window:this.state.turn.id+':'+this.state.turn.phase};
+        this._emit(event);this._enqueuePassive(e.card,event);
       }
     }
     this._drain();return {performed:true};

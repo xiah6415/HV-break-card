@@ -31,6 +31,26 @@
       "profile_sha256": "5f3c3ab12d741d5a834c9637416aef825661c1b5c59c410d6961224927d1acc1",
       "scope": "actual character-entry watches / reference-bound receive bonus and decrease protection / next-opponent receive decrease",
       "tests": "rules/entry.test.js; rules/entry-undo.test.js; rules/entry-e2e.js"
+    },
+    "HV-D01-005:a059c31e2e93eb3f": {
+      "profile_sha256": "a9a64025210a25cba6709709316a8829b2fecea3f37fff29c8256f19487f7eff",
+      "scope": "self-entry passive in shared trigger queue / exact source-area Guts or hand payment / finite draw and numeric / receive and center-side block integration",
+      "tests": "rules/passive.test.js; rules/passive-undo.test.js; rules/passive-e2e.js"
+    },
+    "HV-P03-046:e8609ef7f3c1eb0b": {
+      "profile_sha256": "a5746e44c1b10ec19431602763c22601b7526a7f277ae5934b6f34e4718f0429",
+      "scope": "self-entry passive in shared trigger queue / exact source-area Guts or hand payment / finite draw and numeric / receive and center-side block integration",
+      "tests": "rules/passive.test.js; rules/passive-undo.test.js; rules/passive-e2e.js"
+    },
+    "HVBP-002:f764d2827234a77c": {
+      "profile_sha256": "469970afa2ef8d6d4f7c06e28cfee2f30fea3746295c057338821206947aa356",
+      "scope": "self-entry passive in shared trigger queue / exact source-area Guts or hand payment / finite draw and numeric / receive and center-side block integration",
+      "tests": "rules/passive.test.js; rules/passive-undo.test.js; rules/passive-e2e.js"
+    },
+    "HV-P02-003:36a76760c72a2d9f": {
+      "profile_sha256": "ed6e6f401d9f89a7b4578192ba948457255f466983d355b354c096150c7fe3cb",
+      "scope": "self-entry passive in shared trigger queue / exact source-area Guts or hand payment / finite draw and numeric / receive and center-side block integration",
+      "tests": "rules/passive.test.js; rules/passive-undo.test.js; rules/passive-e2e.js"
     }
   }
 }

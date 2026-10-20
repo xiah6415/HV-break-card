@@ -4,6 +4,8 @@ const STOP = Symbol('entry skill resolved');
 function fixture() {
   const g = new E.Game({ seed: 1, decks: ['k1014', 'seijoh'], agents: [{ wantsAck: true, async choose(g, p, r) {
     if (r.kind === 'receiver') return p.hand.find(c => E.st(c, 'rcv') != null);
+    if (r.kind === 'guts') return r.options.slice(0,r.need).map(o=>o.value);
+    if (r.kind === 'rulesChoice') return r.options[0].value;
     if (r.kind === 'target') return 'attack';
     if (r.kind === 'discard') return r.options[0].value;
     if (r.kind === 'event' || r.kind === 'retrieve') return null;

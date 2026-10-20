@@ -1,5 +1,5 @@
 const E = require('./engine.js');
-const Rand = { label: 'R', async choose(g, p, req) { const o = req.options; if (req.multi) return o.filter(() => Math.random() < 0.4).map(x => x.value); return o[Math.floor(Math.random() * o.length)].value; } };
+const Rand = { label: 'R', async choose(g, p, req) { const o = req.options; if(req.kind==='guts'&&req.multi)return o.map(x=>({x,k:Math.random()})).sort((a,b)=>a.k-b.k).slice(0,req.need).map(x=>x.x.value); if (req.multi) return o.filter(() => Math.random() < 0.4).map(x => x.value); return o[Math.floor(Math.random() * o.length)].value; } };
 (async () => {
   const decks = Object.keys(E.DECKS); let n = 0, rallies = 0;
   for (let s = 0; s < 3000; s++) {

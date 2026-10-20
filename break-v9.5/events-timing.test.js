@@ -62,6 +62,7 @@ async function toSetter(g, p) {
           if (req.kind === 'receiver') return receiver;
           if (req.kind === 'name') return '西谷 夕';
           if (req.kind === 'skill') return false;
+          if (req.kind === 'rulesChoice') return req.options[0].value;
           if (req.kind === 'event') return req.timing === timing && req.options.some(o => o.value === 'P03-057') ? 'P03-057' : null;
           if (req.kind === 'setter') throw STOP;
           throw new Error('unexpected request: ' + req.kind);

@@ -17,7 +17,7 @@ function attempt(kernel,baseline,invoke,answers) {
   try { const result=invoke(kernel);return {result,state:kernel.snapshot()}; }
   catch(error) { if(error instanceof ChoiceBoundary)return {boundary:error};throw error; }
 }
-async function settle({kernel,invoke,ask,publish,options,maxChoices=64}) {
+async function settle({kernel,invoke,ask,publish,options,validate,maxChoices=64}) {
   const baseline=kernel.snapshot(),answers=[];
   for(let i=0;i<=maxChoices;i++) {
     let step;
@@ -31,7 +31,8 @@ async function settle({kernel,invoke,ask,publish,options,maxChoices=64}) {
     publish(state,false,{baseline,answers,request});
     // Loss/Undo cancellation escapes here: no late publish or rollback can overwrite the host.
     const answer=await ask(request,state,available);
-    if(!available.some(value=>JSON.stringify(value)===JSON.stringify(answer)))throw new Error('Invalid settlement answer');
+    const valid=validate?validate(request,answer,available):available.some(value=>JSON.stringify(value)===JSON.stringify(answer));
+    if(!valid)throw new Error('Invalid settlement answer');
     answers.push({request,answer});
   }
 }

@@ -448,19 +448,14 @@ class Game {
     if (pick && typeof pick === 'object') {
       cb = this.evalBlock(p, pick.cards);
       if (!cb.ok) cb = combos[0];
-      center = cb.tsu ? 'P02-003' : (pick.center && cb.cards.includes(pick.center) ? pick.center : cb.cards[0]);
-    } else { cb = combos[pick]; center = cb.tsu ? 'P02-003' : cb.cards.slice().sort((a, b) => val(b) - val(a))[0]; }
+      center = pick.center && cb.cards.includes(pick.center) ? pick.center : cb.cards[0];
+    } else { cb = combos[pick]; center = cb.cards.slice().sort((a, b) => val(b) - val(a))[0]; }
     this.place(p, 'block', center); this.src = '月島';
     const sides = cb.cards.filter(c => c !== center); p.ts.sides = [];
     for (const c of sides) this.moveCode(p.hand, p.ts.sides, c);
-    if (cb.tsu) {
-      const e = await this.pickHand(p, '月島：選 1 張 Event 放到 Event 區', x => !isC(x), 'cost');
-      this.moveCode(p.hand, p.ev, e); this.sdraw(p, 1);
-      this.effect(p, 'block').mods.blk = 6;
-    }
     await sharedRules.charactersEntered(this,p,[{key:'block'},...sides.map((c,i)=>({key:'side:'+i}))]);
-    p.ts.blk = cb.total; p.ts.blockers = cb.cards.slice();
-    this.log(`${p.name} 攔網 ${cb.cards.map(short).join('＋')}：攔 ${cb.total} vs ${this.ball.off}`);
+    p.ts.blk = this.courtTargets(p).filter(t=>t.key==='block'||t.key.startsWith('side:')).reduce((n,t)=>n+this.parameter(p,t.key,'blk'),0); p.ts.blockers = cb.cards.slice();
+    this.log(`${p.name} 攔網 ${cb.cards.map(short).join('＋')}：攔 ${p.ts.blk} vs ${this.ball.off}`);
     await this.eventLoop(p, 'blk', {});
     this.cleanupSides(p);
     if (p.ts.blk < this.ball.off) this.lost(p, `攔網 ${p.ts.blk} 小於進攻 ${this.ball.off}`);
@@ -485,7 +480,6 @@ class Game {
     await this.enterCharacter(p, 'receive', c); this.src = nm(c);
     let r = this.parameter(p,'receive','rcv') - (sharedRules.protectedParameter(this,p,'receive','rcv')?0:p.restrict.rcv_minus||0);
     const g = p.guts('receive');
-    if (c === 'D01-005' && g >= 3 && await this.yes(p, 'skill', '西谷：付 3 Guts → 抽 1、接球 +2？', { card: c, need: off - r })) { await this.pay(p, 'receive', 3); this.sdraw(p, 1); r += 2; }
     if (c === 'P03-051' && g >= 2 && await this.yes(p, 'skill', `西谷：付 2 Guts（全是烏野時）→ 接球 +2${ball.type === 'attack' && o.ts.attacker && st(o.ts.attacker, 'atk') === 0 ? '，對手攻擊手原始攻擊 0 → 對手進攻 −3' : ''}？`, { card: c, need: off - r })) {
       const paid = await this.pay(p, 'receive', 2);
       if (paid.every(isK)) {
@@ -500,7 +494,6 @@ class Game {
       if (x) await this.sadd(p, x, p.drop);
     }
     if (c === 'PR-022' && ball.type !== 'block' && off <= 2) { p.ts.apass = 1; this.log('澤村：A 傳球(1)'); if (p.guts('receive') >= 1 && await this.yes(p, 'skill', '澤村：付 1 Guts 抽 1？', { card: c })) { await this.pay(p, 'receive', 1); this.sdraw(p, 1); } }
-    if (c === 'P03-046' && ball.type === 'serve') { if (off <= 2) { this.sdraw(p, 1); this.log('赤木：抽 1'); } if (off >= 6) { r += 2; this.log('赤木：接球 +2'); } }
     if (c === 'P01-039' && off >= 6 && p.hand.some(isA) && await this.yes(p, 'skill', '渡：棄 1 張青城 → 接球 +1？', { card: c, need: off - r })) { await this.discard(p, '選 1 張青城棄掉', isA); r += 1; if (p.allSchool(A)) this.sdraw(p, 1); }
     p.ts.rcv = r; p.ts.receiver = c; p.ts.receiverRef = this.cardReference(p, 'receive');
     this.log(`${p.name} 接球 ${nm(c)}：${r} vs ${off}`);
@@ -558,7 +551,6 @@ class Game {
     const g = p.guts('attack');
     const t = p.ts.setter;
     if (a === 'P01-002' && g >= 3 && await this.yes(p, 'skill', '日向：付 3 Guts → 攻擊 +4，對手下回合不能派原始接球 ≥6？', { card: a })) { await this.pay(p, 'attack', 3); atk += 4; this.scheduleRestriction(o, 'no_rcv6', 1, false, this.cardReference(p, 'attack')); }
-    if (a === 'BP-002' && p.hand.length && await this.yes(p, 'skill', '日向：棄 1 張手牌 → 攻擊 +2？', { card: a })) { await this.discard(p, '選 1 張手牌棄掉（棄日向可當オープン的彈藥）'); atk += 2; }
     if (a === 'P01-003' && !fromDrop && p.hand.length <= 3 && nm(t) === '影山 飛雄') { atk += 2; this.scheduleRestriction(o, 'two_blockers', 1, false, this.cardReference(p, 'attack')); this.log('日向 003：攻擊 +2，對手下回合最多 2 人攔網'); }
     if (a === 'P01-035' && p.hand.some(isA) && await this.yes(p, 'skill', `岩泉：棄 1 張青城 → 攻擊 +2${o.hand.length <= 4 ? '，對手下回合不能用技能加牌' : ''}？`, { card: a })) {
       await this.discard(p, '選 1 張青城棄掉', isA); atk += 2;
@@ -799,7 +791,7 @@ const AI = {
         const key = req.ctx.target, active = { receive: 'rcv', toss: 'tos', attack: 'atk', block: 'blk', serve: 'srv' }[key] || 'blk';
         return (opts.find(o => o.value === active) || opts[0]).value;
       }
-      case 'gutsCourt': return opts.slice(0, req.need).map(o => o.value);
+      case 'guts': case 'gutsCourt': return opts.slice(0, req.need).map(o => o.value);
       case 'event': {
         const cards = opts.filter(x => x.value);
         for (const x of cards) {

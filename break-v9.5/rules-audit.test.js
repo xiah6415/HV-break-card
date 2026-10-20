@@ -75,7 +75,7 @@ async function check(name, run) {
       if (r.kind === 'mulligan') return [];
       if (r.kind === 'defend') return 'block';
       if (r.kind === 'block') return { cards: ['P02-003', 'PR-043'], center: 'P02-003' };
-      if (r.kind === 'cost') return { __loss: true };
+      if (r.kind === 'cost' || r.kind==='rulesChoice' && r.prompt.includes('放到 Event 區')) return { __loss: true };
       return true;
     } }, E.AI], onNotice(notice) {
       if (notice.type !== 'loss') return;

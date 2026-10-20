@@ -721,8 +721,8 @@ body.turn-open .sheet { z-index: 80; }
     }
     if (r.kind === 'block' && blk) {
       const ev = blk.cards.length ? game.evalBlock(me, blk.cards) : null, need = game.ball.off;
-      const chips = blk.cards.map(c => `<span class="bchip${c === blk.center ? ' ctr' : ''}">${c === blk.center ? '中' : '側'}・${esc(E.short(c))} ${st(c, 'blk')}${c !== blk.center && !(ev && ev.tsu) ? `<button type="button" data-ctr="${c}" aria-label="設為中攔">設中攔</button>` : ''}<button type="button" data-rm="${c}" aria-label="移除">✕</button></span>`).join('');
-      const stat = ev ? `攔 ${ev.total}${ev.tsu ? '（含月島 +6）' : ''} vs 進攻 ${need}${ev.ok ? (ev.natsu ? '：還差 1，需打日向夏' : '：攔得住') : '：攔不住'}` : `需要攔 ≥ ${need}`;
+      const chips = blk.cards.map(c => `<span class="bchip${c === blk.center ? ' ctr' : ''}">${c === blk.center ? '中' : '側'}・${esc(E.short(c))} ${st(c, 'blk')}${c !== blk.center ? `<button type="button" data-ctr="${c}" aria-label="設為中攔">設中攔</button>` : ''}<button type="button" data-rm="${c}" aria-label="移除">✕</button></span>`).join('');
+      const stat = ev ? `攔 ${ev.total}${ev.tsu ? '（可選月島 +6）' : ''} vs 進攻 ${need}${ev.ok ? (ev.natsu ? '：還差 1，需打日向夏' : '：攔得住') : '：攔不住'}` : `需要攔 ≥ ${need}`;
       const recs = r.options.slice(0, 3).map(o => `<button class="opt quiet rec" type="button" data-rec="${o.value}">${esc(o.label)}</button>`).join('');
       return [`組攔網：點手牌加入（第 1 張是中攔，最多 ${r.build.max} 人、不能同名）<small class="${ev && ev.ok ? 'good' : 'bad'}">${stat}</small>${fl}${chips ? `<div class="bchips">${chips}</div>` : ''}`,
         `<button class="opt primary" type="button" data-act="blk" ${ev && ev.ok ? '' : 'disabled'}>確認攔網</button>${blk.cards.length ? '<button class="opt quiet" type="button" data-act="blkclear">清空</button>' : ''}${recs ? `<span class="reclab">推薦：</span>${recs}` : ''}`];
@@ -855,7 +855,7 @@ body.turn-open .sheet { z-index: 80; }
   $('dockOpts').addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b || b.disabled) return;
     if (b.dataset.act) return act(b.dataset.act, b);
-    if (b.dataset.rec != null && blk) { const o = pending.req.options.find(x => String(x.value) === b.dataset.rec); blk.cards = o.cards.slice(); blk.center = blk.cards.includes('P02-003') ? 'P02-003' : blk.cards.slice().sort((x, y) => E.val(y) - E.val(x))[0]; return render(); }
+    if (b.dataset.rec != null && blk) { const o = pending.req.options.find(x => String(x.value) === b.dataset.rec); blk.cards = o.cards.slice(); blk.center = blk.cards.slice().sort((x, y) => E.val(y) - E.val(x))[0]; return render(); }
     if (pending && b.dataset.i != null) {
       const o = pending.req.options[+b.dataset.i];
       if (o.card && !['block', 'target', 'rulesChoice'].includes(pending.req.kind) && !Object.hasOwn(pending.req.ctx || {}, 'revealed')) { setDockCollapsed(false); staged = { card: o.card, i: +b.dataset.i }; return render(); }
