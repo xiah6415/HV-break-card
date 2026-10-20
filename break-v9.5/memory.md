@@ -592,3 +592,6 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 全部24組單元套件通過（核心54，既有Undo本次233完整還原）。離線14來源／7檔逐位元組一致，80資料／64契約既有檢查，原全卡資料未改。build成功，fuzz3000每局80實體守恆、平均3.72rallies，6組test各300通過。
 - receive-e2e在1280／390／320完成四種局面、付款／回收Undo、及川改選參數／發球結果、手牌與面板幾何檢查；原restriction／passive／entry／watch／legacy三尺寸及e2e1280／375／320各3局通過，無pageerror或橫向溢出。手機回收截圖已檢視，手牌可見、面板不覆蓋。Chrome模擬，非iPhone Safari真機。
 - HANDOFF／ROADMAP／RULES-AUDIT／card-support／rules README同步。成果outputs/BREAK-receive-update.md、validation.json、evidence.json與mobile.png。下一批接PR-022 A-pass與P01-006手動翻牌／日向後續加值，其他關鍵字／登場取代與多人授權仍待整合，不直接擴大核准。僅本機保存，未推送部署或同步iCloud。
+
+## 接球／舉球登場本機保存（2026-10-20）
+- 實作提交 eb92636e3554743976dbaaa192570c95eef08920；上述53情境／57完整Undo及規定回歸已通過。核准18張，剩餘29卡舊路徑（含18無技能）。未推送部署或同步iCloud；下一批接A-pass與手動翻牌。
