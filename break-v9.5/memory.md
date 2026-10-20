@@ -630,3 +630,6 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 新candidate-e2e兩種局面×1280／390／320實作目標／參數／Event回收Undo、有效名稱、禁加牌但保留加值、對方攔網配額；手機截圖檢視無手牌被遮。原skill-targets／restriction／receive／passive／entry／watch／legacy三尺寸與e2e1280／375／320各3局全通過，無pageerror／橫向溢出。Chrome模擬，非Safari真機。
 - build通過，原卡文資料及作者來源未改；離線14來源／7檔逐位元組一致。fuzz3000每局80實體守恆、平均3.69rallies；6組test各300完成。覆蓋盤點新快照183無技能／22核准／125候選／72host／132core／7覆核，541列與545profiles／來源指紋重驗通過；舊盤點快照保留work/candidate-batch/before-*。
 - HANDOFF／ROADMAP／RULES-AUDIT／card-support／rules README／COVERAGE同步，成果outputs/BREAK-candidate-update.md／validation.json／evidence.json／mobile.png，以及更新後全牌庫盤點／逐卡清單。下一批按125候選分組處理庫外資料／圖片／組牌／runtime匯入與驗證，續補多選／目標介面；A-pass／手動翻牌與複雜登場／角色觸發／多人授權仍未完整接入。僅本機保存，未推送部署或同步iCloud。
+
+## 共用事件候選本機保存（2026-10-20）
+- 實作提交 7d9383a92743e670c54a91210b3381c105422399；上述40情境／24 Undo及27單元／九組畫面、規定模擬已通過。核准22、候選125，P03-090空目標宣告維持partial。僅本機保存，未推送部署或同步iCloud；下一批按庫外125候選與匯入／選擇介面分組處理。
