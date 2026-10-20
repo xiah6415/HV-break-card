@@ -15,10 +15,12 @@ function matchesPrinted(profile,filters={}){
   if(key==='play_icons_any')return v.some(x=>icons.includes(x));
   if(key==='play_icons_exact')return JSON.stringify([...v].sort())===JSON.stringify([...icons].sort());
   if(key==='skillless')return !profile.program===v;
+  if(key==='printed_receive_gte')return Number.isInteger(p.parameters?.receive)&&p.parameters.receive>=v;
+  if(key==='printed_block_gte')return Number.isInteger(p.parameters?.block)&&p.parameters.block>=v;
   fail('Unseeded printed filter '+key);
  });
 }
-function seedConditions(k,{catalog,profile,source,player,phase}){
+function seedConditions(k,{catalog,profile,source,player,phase,expanded=false}){
  const nodes=[];for(const tree of [profile.program,profile.formal_cost])visit(tree,n=>nodes.push(n));
  const ctx=k._context(source,player),notes=[],protectedHand=new Set([source]);
  const ownUniform=nodes.find(n=>n.kind==='uniform_affiliation'&&n.pool?.actor==='self');
@@ -27,8 +29,14 @@ function seedConditions(k,{catalog,profile,source,player,phase}){
  const owner=actor=>['self','controller','owner'].includes(actor)?player:actor==='opponent'?1-player:fail('Unseeded actor '+actor);
  const base=choices.find(d=>d.p.variants[0].printed.type==='character'&&!d.p.program);
  const printed=d=>d.p.variants[0].printed;
+ const targetName=expanded?nodes.find(n=>n.kind==='compare'&&n.field==='target.effective_name'&&n.op==='eq')?.value:null;
+ const targetReceive=expanded?nodes.find(n=>n.kind==='compare'&&n.field==='target.current_receive'&&n.op==='lte')?.value:null;
+ const paidFilter=expanded?nodes.find(n=>n.kind==='all_result_cards_match'&&n.result==='paid')?.filters:null;
+ const distinctPaid=expanded&&nodes.some(n=>n.kind==='compare'&&n.field==='paid.names_are_distinct'&&n.value===true);
+ const deferred=expanded?nodes.filter(n=>n.kind==='watch').map(n=>n.then.node_id+'.'):[];
+ if(expanded&&nodes.some(n=>n.kind==='numeric'&&n.target==='opponent_ball'&&n.parameter==='attack_offense')){k.state.ball.kind='attack';k.state.ball.offense=8;}
  function pick(filters={},options={}){
-  const d=choices.find(d=>matchesPrinted(d.p,filters)&&(!options.parameter||printed(d).type==='character'&&printed(d).parameters[options.parameter]!=='dash')&&(!options.tag||printed(d).affiliation_tags.includes(options.tag))&&!(options.exclude||[]).includes(printed(d).name));
+  const d=choices.find(d=>matchesPrinted(d.p,filters)&&(!options.parameter||printed(d).type==='character'&&printed(d).parameters[options.parameter]!=='dash')&&(!options.tag||printed(d).affiliation_tags.includes(options.tag))&&!(options.exclude||[]).includes(printed(d).name)&&(!options.receiveMax||Number.isInteger(printed(d).parameters?.receive)&&printed(d).parameters.receive<=options.receiveMax)&&(!options.attackValue||Number.isInteger(printed(d).parameters?.attack)&&(options.attackValue.op==='eq'?printed(d).parameters.attack===options.attackValue.value:printed(d).parameters.attack<=options.attackValue.value)));
   return d||fail('No printed fixture match '+JSON.stringify({filters,...options}));
  }
  function add(d,who,zone,bottom=false){
@@ -40,7 +48,7 @@ function seedConditions(k,{catalog,profile,source,player,phase}){
   const role=filters.role;return role==='center_blocker'||role==='side_blocker'||role==='block'?'block':['serve','receive','toss','attack'].includes(role)?role:['serve','block','receive','toss','attack'].includes(parameter)?parameter:'attack';
  }
  function pool(sel){return k.pool(sel,ctx).filter(id=>!(sourceLeaves&&id===source&&sel.zone==='hand'));}
- function ensure(sel,n=1,{distinct=false,parameter,exclude=[]}={}){
+ function ensure(sel,n=1,{distinct=false,parameter,exclude=[],receiveMax}={}){
   const who=owner(sel.actor),zone=sel.zone,filters=sel.filters||{};
   let ids=pool(sel),names=new Set(ids.map(id=>k.effectiveName(id)));
   for(let attempts=0;(distinct?names.size:ids.length)<n;attempts++){
@@ -48,7 +56,7 @@ function seedConditions(k,{catalog,profile,source,player,phase}){
    let dest=zone,bottom=false,role=null;
    if(zone==='court'||zone==='block'){
     role=zone==='block'?'block':roleFor(filters,parameter);dest=role;
-    if(k.top(who,dest)){
+    if(k.top(who,dest)&&!(expanded&&filters.role&&filters.role!=='character')){
      dest=['serve','block','receive','toss','attack'].find(z=>!k.top(who,z));
      if(!dest)fail('No free court fixture slot');
      role=dest;
@@ -57,8 +65,9 @@ function seedConditions(k,{catalog,profile,source,player,phase}){
     dest=zone==='court.guts'?'receive':zone.split('.')[0];
     if(!k.top(who,dest))add(pick({type:'character'},{parameter:dest,tag:who===player?tag:null}),who,dest);
     bottom=true;
-   }else if(!['hand','drop','event','deck','sets'].includes(zone))fail('Unseeded zone '+zone);
-   const d=pick(filters,{parameter:role,tag:who===player&&role?tag:null,exclude:[...exclude,...(distinct?[...names]:[])]});
+   }else if(expanded&&['serve','receive','toss','attack'].includes(zone))role=zone;
+   else if(!['hand','drop','event','deck','sets'].includes(zone))fail('Unseeded zone '+zone);
+   const d=pick(filters,{parameter:role,tag:who===player&&role?tag:null,exclude:[...exclude,...(distinct?[...names]:[])],receiveMax});
    const id=add(d,who,dest,bottom);
    if(dest==='hand')protectedHand.add(id);
    ids=pool(sel);names=new Set(ids.map(id=>k.effectiveName(id)));
@@ -81,13 +90,17 @@ function seedConditions(k,{catalog,profile,source,player,phase}){
    const who=owner(m[1]),area=m[2];add(pick({names:[n.value]},{parameter:area,tag:who===player?tag:null}),who,area);
   }
   if(n.field==='source.entry_reason'&&n.op==='eq')entryReason=n.value;
+  if(expanded&&n.field==='opponent.attack.printed_attack')add(pick({type:'character'},{parameter:'attack',attackValue:n}),1-player,'attack');
+  if(expanded&&n.field==='opponent_ball.kind'&&n.op==='eq')k.state.ball.kind=n.value;
+  if(expanded&&n.field==='opponent_ball.offense')k.state.ball.offense=desired(n.op,n.value);
  }
  for(const n of nodes){
   if(n.kind==='pay_guts'){
    if(n.areas!=='source_area')fail('Unseeded Guts areas');
-   const area=phase;for(let i=0;i<n.count;i++)add(pick({type:'character'},{parameter:area,tag}),player,area);
+   const area=phase,used=[];for(let i=0;i<n.count;i++){const d=pick({...{type:'character'},...(paidFilter||{})},{parameter:area,tag,exclude:distinctPaid?used:[]});used.push(printed(d).name);add(d,player,area);}
   }
-  if(n.kind==='selector'&&!n.zone.startsWith('$'))ensure(n,1);
+  if(expanded&&n.kind==='numeric'&&n.target?.kind==='selector')ensure({...n.target,filters:{...n.target.filters,...(targetName?{names:[targetName]}:{})}},1,{receiveMax:targetReceive===null?undefined:Math.max(1,targetReceive-2)});
+  if(n.kind==='selector'&&!n.zone.startsWith('$')&&!deferred.some(prefix=>n.node_id?.startsWith(prefix)))ensure(n,1);
  }
  // Seed positive boundaries, including the Event just placed before its effect.
  for(const n of nodes.filter(n=>n.kind==='count_compare')){
@@ -108,6 +121,12 @@ function seedConditions(k,{catalog,profile,source,player,phase}){
   let m=n.field.match(/^(self|opponent)\.(hand|sets|set)\.count$/);
   if(m){const who=owner(m[1]),zone=m[2]==='hand'?'hand':'sets';setZoneCount(who,zone,desired(n.op,n.value)+(zone==='hand'&&who===player&&sourceLeaves?1:0));}
   if(n.field==='both.set.count_sum'){setZoneCount(player,'sets',0);setZoneCount(1-player,'sets',desired(n.op,n.value));}
+ }
+ if(expanded&&nodes.some(n=>n.kind==='compare'&&n.field==='target.entry_reason'&&n.value==='skill')){
+  const target=k.court(player)[0];if(!target)fail('No fixture target for entry history');
+  const c=k.card(target),area=c.zone.split('.')[1],oldPhase=k.state.turn.phase;
+  moveToDeck(target);k.zone(player,'deck').splice(k.zone(player,'deck').indexOf(target),1);c.zone=player+'.hand';k.zone(player,'hand').push(target);
+  k.state.turn.phase=area;k.enter(target,area,{reason:'skill'});k.state.turn.phase=oldPhase;
  }
  k.assertState();notes.push({kind:'structured_conditions',own_uniform_tag:tag||null,entry_reason:entryReason});
  return {entryReason,notes};

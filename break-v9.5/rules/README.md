@@ -1,5 +1,7 @@
 # BREAK 共用結算核心（實驗中）
 
+共用分支現以`--branches`追加原49張缺口及真正後續監聽，共1,938局面；另66項結果及公開／私有選牌權判例檢查。core公開區域選牌歸controller、手牌維持owner；不擴大22核准。詳見[BATCH.md](BATCH.md)。
+
 候選條件局面已補原29張未觸發技能，125候選可用`node rules/batch-smoke.js --conditions`重現1,764局面；另102項精確效果／反例見`batch-conditions.test.js`。不擴大live核准；接續界線見[BATCH.md](BATCH.md)。
 
 全庫開發索引與125候選的共用局面批次執行見[BATCH.md](BATCH.md)，結果不等於正式技能核准。

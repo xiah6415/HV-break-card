@@ -636,6 +636,9 @@ class Kernel {
   }
   _moveSelected(node,ctx) {
     const ids=this.pool(node.pool,ctx), recipient=this.owner(node.pool.actor,ctx);
+    // Public-zone targets belong to the effect controller (QA1192/1317/1420).
+    // A player discarding from their own private hand retains that choice.
+    const chooser=node.pool.zone==='hand'?recipient:ctx.controller;
     const dest=node.destination;
     if(dest.endsWith('.guts') && !dest.includes('chosen_court_area')) {
       const parts=dest.split('.'),player=parts[0]==='owner'?recipient:this.owner(parts[0],ctx);
@@ -647,14 +650,14 @@ class Kernel {
     else if (node.count_mode==='one_of_exact') {
       const allowed=node.allowed_counts.filter(n=>n<=ids.length);
       if (!allowed.length) throw new Unpayable();
-      n=this._decide('payment_count',ctx,allowed); legal(allowed.includes(n),'Invalid payment count');
+      n=this._decide('payment_count',ctx,allowed,{player:chooser}); legal(allowed.includes(n),'Invalid payment count');
     } else {
       need(['exact','upto'].includes(node.count_mode),'Unsupported move quantity');
       if (ctx.inPayment && ids.length<node.count) throw new Unpayable();
       n=Math.min(node.count,ids.length);
-      if (node.count_mode==='upto') { n=this._decide('move_count',ctx,Array.from({length:n+1},(_,i)=>i)); legal(Number.isInteger(n) && n>=0 && n<=Math.min(node.count,ids.length),'Invalid move count'); }
+      if (node.count_mode==='upto') { n=this._decide('move_count',ctx,Array.from({length:n+1},(_,i)=>i),{player:chooser}); legal(Number.isInteger(n) && n>=0 && n<=Math.min(node.count,ids.length),'Invalid move count'); }
     }
-    const chosen=node.count_mode==='all' ? ids : n ? this._selection(ids,n,ctx,ctx.inPayment?'payment_cards':'move_cards',recipient,{destination:dest}) : [];
+    const chosen=node.count_mode==='all' ? ids : n ? this._selection(ids,n,ctx,ctx.inPayment?'payment_cards':'move_cards',chooser,{destination:dest}) : [];
     ctx.bind[node.bind || 'moved']=[...chosen];
     for (const id of chosen) {
       const destination=this._destination(dest,id,ctx);
