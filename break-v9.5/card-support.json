@@ -171,9 +171,13 @@
       "status": "scenario-tested",
       "gaps": [],
       "tests": [
-        "rules-audit.test.js"
+        "rules-audit.test.js",
+        "rules/receive.test.js",
+        "rules/receive-undo.test.js",
+        "rules/receive-e2e.js"
       ],
-      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P02-001"
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P02-001",
+      "settlement": "shared-rules-local-migration"
     },
     "P03-051": {
       "name": "西谷 夕",
@@ -196,12 +200,15 @@
         "1802",
         "1803"
       ],
-      "status": "partial",
-      "gaps": [
-        "接球加成已實作；對手進攻減值目前有歸零下限，需依總規核對負值處理。"
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "rules/receive.test.js",
+        "rules/receive-undo.test.js",
+        "rules/receive-e2e.js"
       ],
-      "tests": [],
-      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P03-051"
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P03-051",
+      "settlement": "shared-rules-local-migration"
     },
     "PR-022": {
       "name": "澤村 大地",
@@ -870,12 +877,15 @@
       "qaIds": [
         "1155"
       ],
-      "status": "partial",
-      "gaps": [
-        "目前只加發球／舉球階段數值，尚未提供任一參數的選擇。"
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "rules/receive.test.js",
+        "rules/receive-undo.test.js",
+        "rules/receive-e2e.js"
       ],
-      "tests": [],
-      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P01-033"
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P01-033",
+      "settlement": "shared-rules-local-migration"
     },
     "D04-003": {
       "name": "及川 徹",
@@ -946,9 +956,13 @@
       "status": "scenario-tested",
       "gaps": [],
       "tests": [
-        "skill-basics.test.js"
+        "skill-basics.test.js",
+        "rules/receive.test.js",
+        "rules/receive-undo.test.js",
+        "rules/receive-e2e.js"
       ],
-      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P01-039"
+      "referenceEndpoint": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/itemsearch.php?p=1&word=HV-P01-039",
+      "settlement": "shared-rules-local-migration"
     },
     "D04-010": {
       "name": "国見 英",

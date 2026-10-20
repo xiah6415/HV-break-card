@@ -27,6 +27,8 @@ async function check(name, run) {
   await check('P02-001 pays three Guts and gains six even if optional recovery is declined', async () => {
     const { g, p } = fixture(async (g, p, r) => {
       if (r.kind === 'setter') throw STOP;
+      if (r.kind === 'guts') return r.options.slice(0,r.need).map(o=>o.value);
+      if (r.kind === 'rulesChoice') return 0;
       if (r.kind === 'retrieve' || r.kind === 'event') return null;
       return r.kind === 'receiver' ? 'P02-001' : true;
     });

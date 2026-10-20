@@ -391,11 +391,8 @@ class Game {
     if (!cs.length) this.lost(p, '沒有能發球的角色');
     const c = await this.ask(p, { kind: 'serve', prompt: '選擇發球角色', options: cs.map(x => ({ label: `${nm(x)}　發 ${st(x, 'srv')}`, card: x, value: x })) });
     await this.enterCharacter(p, 'serve', c); this.src = nm(c);
-    let off = st(c, 'srv');
-    if (c === 'P01-033' && p.hand.some(isA) && await this.yes(p, 'skill', `及川：棄 1 張青城 → 發球 +1${o.hand.length >= 4 ? '，對手棄 1' : ''}？`, { card: c })) {
-      await this.discard(p, '選 1 張青城棄掉', isA); off += 1;
-      if (o.hand.length >= 4) await this.discard(o, '及川 033：你要棄 1 張手牌');
-    }
+    let off = this.parameter(p,'serve','srv');
+
     await this.eventLoop(p, 'srv', { serveChar: c });
     await this.confirmTurnEnd(p, { type: 'serve', off });
     this.finishTurn(p);
@@ -480,24 +477,9 @@ class Game {
     const c = await this.ask(p, { kind: 'receiver', prompt: `來球：${ball.type === 'serve' ? '發球' : ball.type === 'block' ? '攔網回球' : '攻擊'} ${off}。選擇接球角色`, ball, options: cs.map(x => ({ label: `${nm(x)}　接 ${this.rcvPreview(p, x)}`, card: x, value: x })) });
     await this.enterCharacter(p, 'receive', c); this.src = nm(c);
     let r = this.parameter(p,'receive','rcv') - (sharedRules.protectedParameter(this,p,'receive','rcv')?0:p.restrict.rcv_minus||0);
-    const g = p.guts('receive');
-    if (c === 'P03-051' && g >= 2 && await this.yes(p, 'skill', `西谷：付 2 Guts（全是烏野時）→ 接球 +2${ball.type === 'attack' && o.ts.attacker && st(o.ts.attacker, 'atk') === 0 ? '，對手攻擊手原始攻擊 0 → 對手進攻 −3' : ''}？`, { card: c, need: off - r })) {
-      const paid = await this.pay(p, 'receive', 2);
-      if (paid.every(isK)) {
-        r += 2;
-        if (ball.type === 'attack' && o.ts.attacker && st(o.ts.attacker, 'atk') === 0) { ball.off = Math.max(0, ball.off - 3); this.log(`西谷：對手進攻 −3 → ${ball.off}`); }
-      } else this.log('付的 Guts 不全是烏野，沒有效果', 'warn');
-    }
-    if (c === 'P02-001' && p.sets.length + o.sets.length <= 1 && g >= 3 && await this.yes(p, 'skill', '日向：付 3 Guts → 接球 +6、棄牌區烏野角色回手？', { card: c, need: off - r })) {
-      await this.pay(p, 'receive', 3); r += 6;
-      const cand = [...new Set(p.drop.filter(x => isC(x) && isK(x)))];
-      const x = await this.optionalRetrieve(p, '最多選 1 張烏野角色回手', cand);
-      if (x) await this.sadd(p, x, p.drop);
-    }
     if (c === 'PR-022' && ball.type !== 'block' && off <= 2) { p.ts.apass = 1; this.log('澤村：A 傳球(1)'); if (p.guts('receive') >= 1 && await this.yes(p, 'skill', '澤村：付 1 Guts 抽 1？', { card: c })) { await this.pay(p, 'receive', 1); this.sdraw(p, 1); } }
-    if (c === 'P01-039' && off >= 6 && p.hand.some(isA) && await this.yes(p, 'skill', '渡：棄 1 張青城 → 接球 +1？', { card: c, need: off - r })) { await this.discard(p, '選 1 張青城棄掉', isA); r += 1; if (p.allSchool(A)) this.sdraw(p, 1); }
     p.ts.rcv = r; p.ts.receiver = c; p.ts.receiverRef = this.cardReference(p, 'receive');
-    this.log(`${p.name} 接球 ${nm(c)}：${r} vs ${off}`);
+    this.log(`${p.name} 接球 ${nm(c)}：${r} vs ${ball.off}`);
     await this.eventLoop(p, 'rcv', {});
     r = p.ts.rcv;
     if (r < ball.off) this.lost(p, `接球 ${r} 小於來球 ${ball.off}`);
@@ -513,10 +495,7 @@ class Game {
       await this.pay(p, 'toss', 2); p.ts.hin = 2;
       await this.revealTop(p, '影山', top => isHin(top) && top !== 'PR-057' || top === 'P01-078');
     }
-    if (t === 'P01-033' && p.hand.some(isA) && await this.yes(p, 'skill', `及川：棄 1 張青城 → 舉球 +1${o.hand.length >= 4 ? '，對手棄 1' : ''}？`, { card: t })) {
-      await this.discard(p, '選 1 張青城棄掉', isA); toss += 1;
-      if (o.hand.length >= 4) await this.discard(o, '及川 033：你要棄 1 張手牌');
-    }
+
     p.ts.toss = toss; p.ts.setter = t; p.ts.setterRef = this.cardReference(p, 'toss');
     this.log(`${p.name} 舉球 ${nm(t)}：${toss}`);
     await this.eventLoop(p, 'tos', {});

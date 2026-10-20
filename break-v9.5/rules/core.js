@@ -293,6 +293,7 @@ class Kernel {
   _fact(field,ctx) {
     if (field==='phase') return this.state.turn.phase;
     if (field==='current_turn_id') return this.state.turn.id;
+    if (field==='both.set.count_sum') return this.zone(0,'sets').length+this.zone(1,'sets').length;
     if (field.startsWith('opponent_ball.')) { need(this.state.ball && this.state.ball.owner!==ctx.controller,'Incoming ball missing');return this.state.ball[field.split('.')[1]]; }
     let m=field.match(/^(self|opponent)\.(hand|sets|set)\.count$/);
     if (m) return this.zone(m[1]==='self'?ctx.controller:1-ctx.controller,m[2]==='set'?'sets':m[2]).length;
@@ -398,7 +399,7 @@ class Kernel {
       if(n.kind==='invalidate_skill')need(!n.selector.keyword_families && !n.selector.union_with?.keyword_families,'Keyword invalidation not implemented');
       if (n.kind==='keyword') need(n.keyword==='one_touch','Keyword not implemented: '+n.keyword);
       if (n.kind==='compare') {
-        need(/^(phase|current_turn_id|opponent_ball\.(kind|offense)|(self|opponent)\.(hand|sets|set)\.count|(self|opponent)\.(serve|receive|toss|attack)\.(effective_name|printed_attack)|(paid|milled|retrieved|drawn)\.(count|event_count|names_are_distinct)|optional\.performed|(source|target)\.(effective_name|role|entry_origin|entry_reason|entry_turn|current_(serve|receive|block|toss|attack)))$/.test(n.field),'Fact is not implemented: '+n.field);
+        need(/^(phase|current_turn_id|both\.set\.count_sum|opponent_ball\.(kind|offense)|(self|opponent)\.(hand|sets|set)\.count|(self|opponent)\.(serve|receive|toss|attack)\.(effective_name|printed_attack)|(paid|milled|retrieved|drawn)\.(count|event_count|names_are_distinct)|optional\.performed|(source|target)\.(effective_name|role|entry_origin|entry_reason|entry_turn|current_(serve|receive|block|toss|attack)))$/.test(n.field),'Fact is not implemented: '+n.field);
       }
     });
   }

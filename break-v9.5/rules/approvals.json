@@ -71,6 +71,26 @@
       "profile_sha256": "40a2ab2cfca757f6c4cdff7217df07be8509fa2ce56744ea603fa52160cecb7d",
       "scope": "self-entry attack / exact cost and effective-name, hand, set and entry-origin conditions / persistent next-opponent action bans with host permission enforcement",
       "tests": "rules/restriction.test.js; rules/restriction-undo.test.js; rules/restriction-e2e.js"
+    },
+    "HV-P01-033:a4a4329efea6ea7c": {
+      "profile_sha256": "ec727ff45f925ec7c168fb52a1895b7e71376a994d3477680762ce1b79b05036",
+      "scope": "self-entry receive / serve / toss: exact payment, paid-card and set-count conditions, optional physical recovery, arbitrary parameter and incoming attack total projection",
+      "tests": "rules/receive.test.js; rules/receive-undo.test.js; rules/receive-e2e.js"
+    },
+    "HV-P01-039:abdfca8487be7638": {
+      "profile_sha256": "9195113be07c27cfae5bee5a489f4144710ea00eab857743c7be3dfd46601a80",
+      "scope": "self-entry receive / serve / toss: exact payment, paid-card and set-count conditions, optional physical recovery, arbitrary parameter and incoming attack total projection",
+      "tests": "rules/receive.test.js; rules/receive-undo.test.js; rules/receive-e2e.js"
+    },
+    "HV-P02-001:665a40fac9bf5cff": {
+      "profile_sha256": "3ef304024d371282def76b3df0039a70f1787b2338da0f2073960a798527b0dc",
+      "scope": "self-entry receive / serve / toss: exact payment, paid-card and set-count conditions, optional physical recovery, arbitrary parameter and incoming attack total projection",
+      "tests": "rules/receive.test.js; rules/receive-undo.test.js; rules/receive-e2e.js"
+    },
+    "HV-P03-051:5c3ece8a20fa0fde": {
+      "profile_sha256": "56e641263972d3f620a58dfa46b3732848e4df4e2a1a22d4602a1be4af693ef4",
+      "scope": "self-entry receive / serve / toss: exact payment, paid-card and set-count conditions, optional physical recovery, arbitrary parameter and incoming attack total projection",
+      "tests": "rules/receive.test.js; rules/receive-undo.test.js; rules/receive-e2e.js"
     }
   }
 }

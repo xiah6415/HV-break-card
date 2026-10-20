@@ -109,7 +109,7 @@ function transaction(g,p,c,timing,notification=null) {
       if(req.count!==1)throw new Error('Adapter requires single physical-card choices');
       return req.options.map(id=>[id]);
     }
-    if(['draw_count','activate_payment','optional','trigger_order'].includes(req.kind))return [...req.options].reverse();
+    if(['draw_count','move_count','parameter','activate_payment','optional','trigger_order'].includes(req.kind))return [...req.options].reverse();
     throw new Error('Decision is outside migration scope: '+req.kind);
   }
   // A legal event needs at least one resolving effect. Explore the same rules,
@@ -125,7 +125,7 @@ function transaction(g,p,c,timing,notification=null) {
   }
   const savedIds=new Set(saved.effects.map(e=>e.id));
   const durable=state=>state.effects.filter((e,i)=>persistent(e)&&(savedIds.has(e.id)||i>=base.effects.length));
-  let eventCursor=0,effectCursor=base.effects.length,announced=false;
+  let eventCursor=0,effectCursor=base.effects.length,announced=false,ballOff=base.ball?.offense;
   function publish(state,complete,journal) {
     for(const e of durable(state))admitEffect(e);
     const next=copy(physical);
@@ -136,6 +136,7 @@ function transaction(g,p,c,timing,notification=null) {
     }
     next.revision=physical.revision+state.events.filter(e=>e.type==='move').length;
     identity.restore(g,next);
+    if(state.ball)g.ball.off=state.ball.offense;
     // Projection always starts from the same host checkpoint, never from an earlier preview.
     for(const q of g.players) {
       const b=basePlayers[q.idx],codes=z=>state.zones[q.idx+'.'+z].map(id=>short[id]);
@@ -171,6 +172,7 @@ function transaction(g,p,c,timing,notification=null) {
       const owner=g.players[state.cards[e.id].owner],code=short[e.id];
       if(e.from.endsWith('.deck')&&e.to.endsWith('.hand'))g.log(owner.idx===g.reveal?`${owner.name}（技能）抽到：${byShort[code].display_name}`:`${owner.name}（技能）抽 1 張`,'draw');
       else if(notification&&e.to.endsWith('.event'))g.log(`${owner.name} 將 ${byShort[code].display_name} 放到 Event 區（技能放置）`);
+      else if(e.to.endsWith('.hand'))g.log(`${owner.name} 將 ${byShort[code].display_name} 加入手牌`);
       else if(e.to.endsWith('.drop'))g.log(`${owner.name} 棄掉 ${byShort[code].display_name}`);
     }
     for(const e of state.effects.slice(effectCursor)) {
@@ -179,6 +181,7 @@ function transaction(g,p,c,timing,notification=null) {
       else if(e.kind==='protect')g.log('登場效果：這位角色本回合的數值不會被降低。');
       else if(e.kind==='watch')g.log(e.event==='hand_added'?`效果：${g.players[e.actor].name}的下個回合，非抽牌加入手牌後需棄 1 張。`:e.duration.kind==='this_turn'?'效果：本回合符合條件的角色登場時，接球 +2，數值不會被降低。':`效果：${g.players[e.actor].name}下個回合的接球角色登場時，接球 −1。`);
     }
+    if(state.ball&&state.ball.offense!==ballOff){g.log(`來球進攻 ${state.ball.offense-ballOff<0?'−':'+'}${Math.abs(state.ball.offense-ballOff)} → ${state.ball.offense}`);ballOff=state.ball.offense;}
     eventCursor=state.events.length;effectCursor=state.effects.length;
   }
   function validGuts(req,answer) { return Array.isArray(answer)&&answer.length===req.count&&new Set(answer).size===req.count&&answer.every(id=>req.options.includes(id)); }
@@ -198,17 +201,19 @@ function transaction(g,p,c,timing,notification=null) {
         const id=answer[0],slot=slots[id];return {label:`${labels[slot.key]||'側攔'}區 · ${g.cardName(owner,slot.key)} · ${short[id]}`,card:short[id],value:slot.key,answer};
       }
       if(['payment_cards','move_cards'].includes(req.kind)) {const id=answer[0];return {label:`${byShort[short[id]].display_name} · ${short[id]}`,card:short[id],value:id,answer};}
+      if(req.kind==='parameter')return {label:labels[answer],value:Object.keys(params).find(key=>params[key]===answer),answer};
+      if(req.kind==='move_count')return {label:answer?`選擇 ${answer} 張加入手牌`:'不加入手牌',value:answer,answer};
       if(req.kind==='trigger_order') {
         const job=state.queue.find(q=>q.id===answer),name=byShort[short[job.source?.id]]?.display_name||'觸發效果';
         return {label:`先結算 ${name}（${state.queue.indexOf(job)+1}）`,value:answer,answer};
       }
       return {label:req.kind==='optional'?answer?'執行登場效果':'不執行':req.kind==='draw_count'?answer?`抽 ${answer} 張`:'不抽牌':answer?payment?.kind==='pay_guts'?`支付 ${payment.count} Guts`:payment?.destination==='self.event'?'選 1 張事件放到 Event 區':'棄 1 張符合條件的手牌，追加效果':'不追加',value:answer,answer};
     });
-    const kind=req.kind==='target'?'target':['activate_payment','optional'].includes(req.kind)?'skill':'rulesChoice';
-    const prompt=sourceName+'：'+({target:'選擇場上 1 位角色',draw_count:'選擇抽牌數量',activate_payment:paymentPrompt,optional:'是否執行這個登場效果？',payment_cards:req.destination==='self.event'?'選擇 1 張事件放到 Event 區':'選擇 1 張符合條件的手牌棄掉',move_cards:'非抽牌加入手牌後，請選 1 張手牌棄掉',trigger_order:'選擇同時觸發的結算順序'}[req.kind]);
+    const kind=req.kind==='parameter'?'parameter':req.kind==='target'?'target':['activate_payment','optional'].includes(req.kind)?'skill':'rulesChoice';
+    const prompt=sourceName+'：'+({target:'選擇場上 1 位角色',draw_count:'選擇抽牌數量',activate_payment:paymentPrompt,optional:'是否執行這個登場效果？',payment_cards:req.destination==='self.event'?'選擇 1 張事件放到 Event 區':'選擇 1 張符合條件的手牌棄掉',parameter:'選擇這位角色要增加的參數',move_count:'最多選 1 張符合條件的牌加入手牌',move_cards:req.destination?.endsWith('.hand')?'從棄牌區選擇 1 張加入手牌':isPassive?'請選 1 張手牌棄掉':'非抽牌加入手牌後，請選 1 張手牌棄掉',trigger_order:'選擇同時觸發的結算順序'}[req.kind]);
     let invalid=false;
     for(;;) {
-      const value=await g.ask(owner,{kind,prompt:prompt+(invalid?'（請重新選擇有效選項）':''),timing,ctx:{card:short[req.source],...(state.cards[req.source]?.zone===req.player+'.receive'&&g.ball?{need:g.ball.off-g.parameter(owner,slots[req.source].key,'rcv')}: {})},options:opts.map(({answer,...o})=>o)});
+      const value=await g.ask(owner,{kind,prompt:prompt+(invalid?'（請重新選擇有效選項）':''),timing,ctx:{card:short[req.source],...(req.kind==='parameter'?{target:slots[req.source]?.key}:{}),...(state.cards[req.source]?.zone===req.player+'.receive'&&g.ball?{need:g.ball.off-g.parameter(owner,slots[req.source].key,'rcv')}: {})},options:opts.map(({answer,...o})=>o)});
       const option=opts.find(o=>o.value===value);if(option)return option.answer;invalid=true;
     }
   }
