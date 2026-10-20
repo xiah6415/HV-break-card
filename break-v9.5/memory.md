@@ -610,3 +610,6 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 下一步以機制分組批次驗證129候選，先用47卡內P01-074／D01-012／P03-090／P03-096建立接入樣本，再擴到125張；配合全庫資料匯入與共用選擇／目標介面，續補改名登場／角色監聽／關鍵字及牌庫操作。PR-022 A-pass與P01-006翻牌保留為各類第一個樣本，玩家手動翻開／看結果／置底提示與Undo要求維持。
 - coverage.test驗證分類／profile守恆、核准完整性、無副作用、確定性、formal_cost、核心可辨識但跨區Guts橋接未支援、PR-081付款與blockout多重阻塞、版本差異與待裁定保護。報告541列／545profiles及來源指紋另比對通過；既有核心54情境、離線14來源／7檔、build、fuzz3000每局80實體守恆（平均3.70）、6組test各300通過。engine／UI／index／core／legacy／runtime／approvals／cards全無差異，無UI更動不重跑e2e。
 - HANDOFF／ROADMAP／rules README同步。成果outputs/BREAK-library-coverage.md、逐卡BREAK-library-card-status.md、完整分類／理由／指紋JSON與coverage-validation.json。這是靜態遷移盤點，不是全卡玩法核准；執行核准仍18，遊戲實作仍eb92636。僅本機保存，不推送部署或同步iCloud。
+
+## 全牌庫覆蓋盤點本機保存（2026-10-20）
+- 盤點工具／分類／文件實作提交 d784ba109c29f83e31567c0af4d482dbed2a91bd；上述盤點與例行驗證通過，18核准及遊戲實作eb92636不變。未推送部署；下一批按候選機制分組接入，勿把129候選當已可玩。
