@@ -1011,3 +1011,9 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - build、fuzz3000、test6×300通過；正式engine/UI/index/core/bridge/authority/runtime與e1335b0一致。獨立pilot-runtime可重建，正式入口未換，新核准0。
 - 驗收截止06:58:46UTC：執行33m58s、等候3h0m46s另列、總3h34m44s；對事前12人時倍率0.0472。保守後續A+E5–9h、B1–2h、C v1完成/隨A驗收預留0.5–1h、全庫12–24h含前述；疑義7卡與外部等候另計，不用8h/天換算。
 - A未全切，E7張未遷、B認證未建；93候選直接在新核心驗證，D延後。完整報告見rules/STATE-PILOT及outputs/BREAK-state-pilot-*；接著提交推送公開試點並核對正式頁與原產物相同。
+
+
+## 單一核心試點公開驗收（2026-10-21）
+- 發布提交7795e2ef832a5c6e4f4396be11ff2ae606643ad6已推送且Pages built／無錯誤。獨立試點 https://xiah6415.github.io/HV-break-card/break-v9.5/pilot-match.html?v=7795e2e HTTP200，pilot頁/runtime/C驗證器/C renderer四檔SHA均與本機一致。
+- 公開1280／390／320均用C的AI回答完成66步完整局，無溢出／頁面錯誤。正式index仍為3467569bytes、SHA256 e35e7912a2b18b727ece9eeffc2feb7332dd68d837f20e795f656f15d4103713，與e1335b0及之前已驗收遊戲完全相同；正式入口未切。
+- 驗收與交付文件同步，未新增任何技能核准；數值541／嚴格244，共用54＋固定舊7（既有限制）不變。實作驗收33m58s倍率0.0472；最後報告/推送/公開驗證耗時另存outputs timing/evidence，不算成Claude等待時間。

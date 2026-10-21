@@ -66,3 +66,9 @@ Claude分享連結已合併，claude-handoff/已刪除並保留外層bundle備�
 - 實作提交557bc681d54fbc5311fa7fc84fd4c2fc324d200d已推送master且Pages built／無錯誤。公開網址https://xiah6415.github.io/HV-break-card/break-v9.5/?v=557bc68，HTTP200、index 3467569bytes、SHA256 e35e7912a2b18b727ece9eeffc2feb7332dd68d837f20e795f656f15d4103713與已測本機逐位元組一致。7對應卡圖公開HTTP200、SHA與本機一致。
 - 公開Chrome1280／390／320核對數值541／嚴格244，共用54／舊7／無技能183／未自動化297，7張皆shared；卡庫與runtime一致、偽造playable不能授權。雙方分享匯入／重載保存、圖片／開局與無錯誤／溢出通過；另公開3尺寸×雙模式×雙方12組匯入視窗量測／按鈕操作通過，保留Claude5842c77的358px／288px修正。Chrome模擬，非Safari真機。
 - memory與交接以純文件提交推送，不改已測index；最後Pages核對保存在outputs/BREAK-hand-entry-evidence.json。下一批仍依機制家族四校優先；P04 SAMPLE圖待新來源核對，未換圖，多人／多人Undo與AI難度延後。
+
+
+## 單一核心試點公開驗收（2026-10-21）
+- 發布提交7795e2ef832a5c6e4f4396be11ff2ae606643ad6已推送且Pages built／無錯誤。獨立試點 https://xiah6415.github.io/HV-break-card/break-v9.5/pilot-match.html?v=7795e2e HTTP200，pilot頁/runtime/C驗證器/C renderer四檔SHA均與本機一致。
+- 公開1280／390／320均用C的AI回答完成66步完整局，無溢出／頁面錯誤。正式index仍為3467569bytes、SHA256 e35e7912a2b18b727ece9eeffc2feb7332dd68d837f20e795f656f15d4103713，與e1335b0及之前已驗收遊戲完全相同；正式入口未切。
+- 驗收與交付文件同步，未新增任何技能核准；數值541／嚴格244，共用54＋固定舊7（既有限制）不變。實作驗收33m58s倍率0.0472；最後報告/推送/公開驗證耗時另存outputs timing/evidence，不算成Claude等待時間。

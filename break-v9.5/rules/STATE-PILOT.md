@@ -55,3 +55,8 @@
 A尚未全切，E7張未遷、B認證尚未實作。正式數值541／嚴格244，共用54＋舊7（既有限制）不變，本輪新核准0。
 
 重建：node rules/build-pilot.js 產生獨立pilot-runtime.js；正式build.py不引用。測試：node rules/match.test.js、node rules/match-pilot.test.js、node rules/match-choice-e2e.js。公開試點/正式頁核對完成後另附URL。
+
+
+## 公開試點
+
+[獨立試點頁](https://xiah6415.github.io/HV-break-card/break-v9.5/pilot-match.html?v=7795e2e)已部署；三尺寸公開AI整局通過。正式對練台的遊戲檔案未變。最後交付計時與提交核對保存在外層timing/evidence。
