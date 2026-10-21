@@ -10,6 +10,7 @@ assert.deepEqual(plan.path.filter(r=>r.type==='node'&&[7,10,13,20].includes(r.no
 assert(plan.path.some(r=>r.type==='entry'&&r.kind==='permanent_entry_name'&&!r.completed));
 assert(plan.path.some(r=>r.type==='entry'&&r.kind==='passive:character_entry'&&!r.completed));
 assert.deepEqual([plan.next.kind,plan.next.entryReady],['retrieve',88]);
+const north=catalog.cards.find(c=>c.card_no==='HV-P04-070');assert.deepEqual(north.profiles[0].flags,[]);assert.deepEqual(I.dependencies(north).filter(k=>!M.completed.some(m=>m.id===k)),['protect_numeric_decrease']);assert(!M.eligible(north),'User ruling resolves data, not an unfinished module');
 const nested=structuredClone(catalog),p=nested.cards.find(c=>c.card_no==='HV-P01-089').profiles[0];p.program={kind:'sequence',steps:[p.program]};assert(M.testModules(nested).cards['P01-089']);
 for(const mutate of [p=>p.program.steps.push({kind:'invented'}),p=>p.flags=['TARGET_MEMBERSHIP_UNRESOLVED'],p=>p.activation.skill_type='permanent_entry_name']){const c=structuredClone(catalog);mutate(c.cards.find(c=>c.card_no==='HV-P01-089').profiles[0]);assert(!M.eligible(c.cards.find(c=>c.card_no==='HV-P01-089')));}
 const bad=structuredClone(catalog);bad.cards.find(c=>c.card_no==='HV-P01-089').profiles[0].program.shared_rule_ids=['unimplemented-rule'];assert.throws(()=>M.testModules(bad),/Unknown shared rule/);

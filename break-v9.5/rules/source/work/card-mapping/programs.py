@@ -239,7 +239,7 @@ P('P04-065',IF(RN('toss','木葉 秋紀'),PAY(DISC(tags=['梟谷'],years=[3]),NU
 P('P04-066',PAY([DISC(tags=['梟谷'],years=[3]),G(2)],NUM('receive',1),RET(SEL('drop',tags=['梟谷'],years=[3]))))
 P('P04-067',PAY([DISC(tags=['梟谷'],years=[3]),G(1)],DRAW(2),NUM('serve',3)))
 P('P04-068',IF(ALL(UNIFORM('稲荷崎'),C('source.covered_character.effective_name','eq','宮 侑')),DRAW(),WATCH_NUM('toss','toss',-1,filters=dict(entry_origins=['hand'],positions=['S']))))
-P('P04-070',IF(EV(3,tags=['稲荷崎']),PAY(DISC(tags=['稲荷崎']),NUM('receive',2),PROTECT(SEL(role='character',tags=['稲荷崎']),scope=ALL_TARGETS('unresolved')))))
+P('P04-070',IF(EV(3,tags=['稲荷崎']),PAY(DISC(tags=['稲荷崎']),NUM('receive',2),PROTECT(SEL(role='character',tags=['稲荷崎']),scope=ALL_TARGETS('continuous_matching')))))
 P('P04-072',NUM('receive',2,SEL(role='character',tags=['疑似ユース'])),dict(kind='move',pool=SEL('drop',tags=['疑似ユース'],type='character',exclude_names=['日向 翔陽']),destination='owner.deck_bottom',count=1,count_mode='upto'))
 P('P04-073',IF(EV(4),PAY(G(1),NUM('block',2),DISC(3,'court.guts','opponent','upto',names=['国見 英']))))
 P('P04-074',PAY(PLACE(type='character',positions=['ボール拾い']),DRAW(),NUM('chosen',2)))

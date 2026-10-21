@@ -23,7 +23,7 @@
     "derived_tag_correction_cards": 8,
     "normalized_equivalent_base_variant_cards": 5,
     "proposed_shared_extensions": 1,
-    "unresolved_target_membership_profiles": 1,
+    "unresolved_target_membership_profiles": 0,
     "program_node_counts": {
       "sequence": 1054,
       "payment_branch": 192,
@@ -67358,7 +67358,7 @@
                             "target_scope": {
                               "mode": "all",
                               "binding": "all_matches",
-                              "membership": "unresolved"
+                              "membership": "continuous_matching"
                             },
                             "node_id": "program.steps[0].then.steps[0].then.steps[1]",
                             "shared_rule_ids": [
@@ -67491,9 +67491,7 @@
               ]
             }
           ],
-          "flags": [
-            "TARGET_MEMBERSHIP_UNRESOLVED"
-          ],
+          "flags": [],
           "practice_override": null
         }
       ],

@@ -13,7 +13,8 @@
 | 已完成節點模組清單 | 11：sequence、deck_selection、numeric、selector、conditional、payment_branch、pay_guts、compare、draw、move、count_compare |
 | 已測參數形態／涵蓋技能卡／資料組 | 398／351／355 |
 | numeric／selector／conditional／payment_branch／pay_guts／compare／draw 形態 | 77／152／1／1／16／97／5 |
-| move 形態／審查必測項／已修正疑義卡 | 20／14／6（P04-070待A/B；未支援入口維持鎖定） |
+| move 形態／審查必測項／已修正疑義卡 | 20／14／7（疑義均已裁定；未完成模組／入口維持鎖定） |
+| P04-070 範圍裁定／開放狀態 | 本回合持續匹配，含正常及事件效果登場；待protect_numeric_decrease模組 |
 | count_compare 形態／依賴技能卡 | 13／45 |
 | 已支援觸發入口 | 3：event、active、passive:self_entry |
 | 本組測卡／每卡局面／本次新開 | 62／3＋門檻補測／11 |

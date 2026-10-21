@@ -68,8 +68,15 @@ check('依存參照固定同一實體', target_ids(SINGLE('$target'),['a','b'],r
 expect_error('固定參照不能換另一個對象', lambda: target_ids(SINGLE('$target'),['a','b'],['a'],reference_id='b'), ChoiceError)
 protection = find('P04-070', 'protect_numeric_decrease')
 check('P04-070明示全體而非玩家選一人', protection['target_scope']['mode'] == 'all' and protection['target_scope']['binding'] == 'all_matches')
-expect_error('生效成員界線未定時停止執行判定', lambda: target_ids(protection['target_scope'],['a','b']), UnresolvedMembership)
-expect_error('未定成員界線不得核准runtime', lambda: validate_profile(changed(profile('P04-070'),runtime_approved=True)), ContractError)
+check('P04-070使用者選A：持續匹配、期限本回合且不限制登場來源',
+      protection['target_scope']['membership']=='continuous_matching' and protection['duration']=='this_turn'
+      and protection['target']['actor']=='self' and protection['target']['zone']=='court'
+      and protection['target']['filters']==dict(role='character',tags=['稲荷崎']))
+expect_error('任何未定範圍仍停止判定',lambda:target_ids(ALL_TARGETS('unresolved'),['a','b']),UnresolvedMembership)
+bad_protection=copy.deepcopy(profile('P04-070'))
+next(n for _,n in walk(bad_protection['program']) if n.get('kind')=='protect_numeric_decrease')['target_scope']['membership']='unresolved'
+bad_protection['flags']=['TARGET_MEMBERSHIP_UNRESOLVED'];bad_protection['runtime_approved']=True
+expect_error('任何未定範圍仍不得核准runtime',lambda:validate_profile(bad_protection),ContractError)
 expect_error('保護的選取池必須由作者明示對象範圍', lambda: PROTECT(SEL()), ValueError)
 
 # Mutation regressions: these must fail, rather than getting ignored by a future reader.
@@ -140,6 +147,6 @@ result = dict(status='CONTRACT_AND_SCOPED_REFERENCE_CHECKS_NOT_GAME_SIMULATION',
               mapping_sha256=hashlib.sha256((OUT/'BREAK-card-rule-mapping.json').read_bytes()).hexdigest(),
               limitations=['Candidate ID pools are prefiltered; this suite does not implement every card filter',
                            'No state movement, trigger queue, expiry, undo or multiplayer integration',
-                           'P04-070 membership remains unresolved and cannot be runtime approved'])
+                           'P04-070 continuous matching is user-defined; this contract does not prove runtime protection'])
 (OUT/'BREAK-card-contract-validation.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
 print(json.dumps(dict(passed=len(checks),failed=0,**counts)))

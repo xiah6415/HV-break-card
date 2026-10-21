@@ -3,14 +3,14 @@
   "status": "FROZEN_FIRST_PASS_NOT_LIVE_APPROVED",
   "source_hashes": {
     "source/work/card-mapping/baseline-before-contract-v2/mapping.json": "625991b47becb63a78f33658c075fb0918bddd049c083e401d4149e7481dd637",
-    "source/work/card-mapping/build.py": "7db68f15d55b3c5e16ca64ab9330de6883a97b50e303af980cb57bf99d66eeac",
+    "source/work/card-mapping/build.py": "c1bb182beb6d1fe80d39a0e8b9d10152a22a3a13496441df240f4f78bc8cd231",
     "source/work/card-mapping/contract_reference.py": "e8029108492bccbf35e5cbc5eec7d3bd747988cbf494cc73b1ebd83443f5d2c1",
-    "source/work/card-mapping/contract_tests.py": "7d4fddf2326438770633a80c43bbff4dfef86334a311bc6963ababba439e0deb",
+    "source/work/card-mapping/contract_tests.py": "82220bd3a341015e7f6e288dc997db07d0f6b09fcd7bcbcf81e276f806f8e3cf",
     "source/work/card-mapping/model.py": "fc991906a215f94a6defa551828d4445ca52eb94dd457cced7bfade7ba5e690a",
     "source/work/card-mapping/official-PR-013-P.webp": "fac06d591baaac8a6e92f2c23310b7a62e9bf14443642d5cc1b6a080703688dd",
-    "source/work/card-mapping/programs.py": "bbfcbdbf64a140b6b9b0412f7cb53ddf33cc933fb5fe0bf4debd97750d4189a8",
+    "source/work/card-mapping/programs.py": "f65aa108a2c1a682241bb486bee96f573f14921620a67e33e8b2bdb83a90be12",
     "source/work/card-mapping/schema.py": "7f4664b920ea0a3d0d0f9b48696f4ea2fdb96397a477b897fd29f1f55ec2e538",
-    "source/work/card-mapping/verify.py": "8b8f4d569c39548d4dc52ddff9703bc426d4f4385e6279e6a5257dba25bb752c",
+    "source/work/card-mapping/verify.py": "dc43cb9339554c5e8bde4de5f90c0827150fab9c00331430f86b7d700f2c98eb",
     "source/work/card-rulings/official-rulings.json": "8d43522be39b7be7fd96c2700fcabfcfc6a00732135ce876861ef5b51c15f0be",
     "source/work/card-taxonomy/database.json": "aed3c68a7562c3e05c51cb76755cea248028ef33f06fe099d2307720803d195f",
     "source/work/shared-rules/build.py": "7022794d87f7cf591cc5708b990666c6fec25b522ff5eea63496adc4caead5bd",
@@ -18,11 +18,11 @@
     "source/work/shared-rules/verify.py": "91711a5abafa9ed9cc6afea6471cfdd9588ac54aed871cb6074f1bc86c96ee18"
   },
   "output_hashes": {
-    "cards.json": "0840cdd31df080482ee3125e6a6ac48e20662039e069137098879ea2bebba770",
+    "cards.json": "de64c2ff1f507c8afb91bd3f2de14c10479231602bdd993d8d196503b53057e0",
     "shared-rules.json": "a9d9dccbca222324b21cece63aa2639f2c1ea976ae182ea67c610a865ba2317a",
     "schema.json": "cbef466690bd97fc62b015a0c092bf0b78d36d307c4cb6a0a0fb3b4b00083406",
-    "mapping-validation.json": "86b6ca768eefadc35df72156ac1563fe74d190e226be6efc40382352dfcaa886",
-    "contract-validation.json": "5fb56f5064ccefb21f74c2593fb598265e8fc9ea11222bc58a8a72ba955eceb6",
+    "mapping-validation.json": "cadc8203129df10aaa9a2065b3c99deb1805b295c829949bf5866bc9c3356685",
+    "contract-validation.json": "1eb371dc7ed177588f8bca4942d84bf60225cfb46b9af14718c5ef53ae1db4d6",
     "permission-reference.json": "3f14024023906cc6404b4553ee21784bff099214a9856ef690ff6e16252b91ed"
   }
 }

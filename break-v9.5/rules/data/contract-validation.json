@@ -1,6 +1,6 @@
 {
   "status": "CONTRACT_AND_SCOPED_REFERENCE_CHECKS_NOT_GAME_SIMULATION",
-  "passed": 64,
+  "passed": 65,
   "failed": 0,
   "structure_counts": {
     "profiles": 545,
@@ -121,11 +121,15 @@
       "passed": true
     },
     {
-      "title": "生效成員界線未定時停止執行判定",
+      "title": "P04-070使用者選A：持續匹配、期限本回合且不限制登場來源",
       "passed": true
     },
     {
-      "title": "未定成員界線不得核准runtime",
+      "title": "任何未定範圍仍停止判定",
+      "passed": true
+    },
+    {
+      "title": "任何未定範圍仍不得核准runtime",
       "passed": true
     },
     {
@@ -265,10 +269,10 @@
       "passed": true
     }
   ],
-  "mapping_sha256": "0840cdd31df080482ee3125e6a6ac48e20662039e069137098879ea2bebba770",
+  "mapping_sha256": "de64c2ff1f507c8afb91bd3f2de14c10479231602bdd993d8d196503b53057e0",
   "limitations": [
     "Candidate ID pools are prefiltered; this suite does not implement every card filter",
     "No state movement, trigger queue, expiry, undo or multiplayer integration",
-    "P04-070 membership remains unresolved and cannot be runtime approved"
+    "P04-070 continuous matching is user-defined; this contract does not prove runtime protection"
   ]
 }

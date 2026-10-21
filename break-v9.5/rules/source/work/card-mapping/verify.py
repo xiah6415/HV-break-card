@@ -41,7 +41,7 @@ check('545個資料組通過嚴格技能欄位與組合檢查',structure['profil
 payment=nodes('PR-081','move')[0]
 check('PR-081可選1／2張數量位於支付動作，未混入篩選',payment.get('allowed_counts')==[1,2] and payment['count_mode']=='one_of_exact' and 'allowed_counts' not in payment['pool']['filters'],'1957')
 protection=nodes('P04-070','protect_numeric_decrease')[0]
-check('P04-070全體保護範圍明示且成員界線未定時不能放行',protection['target_scope']=={'mode':'all','binding':'all_matches','membership':'unresolved'} and 'TARGET_MEMBERSHIP_UNRESOLVED' in prof('P04-070')['flags'] and not prof('P04-070')['runtime_approved'])
+check('P04-070依使用者裁定持續保護本回合所有我方稲荷崎角色',protection['target_scope']=={'mode':'all','binding':'all_matches','membership':'continuous_matching'} and protection['duration']=='this_turn' and protection['target']['filters']=={'role':'character','tags':['稲荷崎']} and 'TARGET_MEMBERSHIP_UNRESOLVED' not in prof('P04-070')['flags'] and not prof('P04-070')['runtime_approved'])
 check('全部直接作用目標明示單體／多人／全體',all(n.get('target_scope',{}).get('mode') in ['single','multiple','all'] for p in profiles for n in walk(p['program']) if n.get('kind') in ['numeric','protect_numeric_decrease','parameter_absent','rename_before_entry']))
 check('被動觸發的精確名稱與卡片識別統一',all(name==key(name) for p in profiles for n in walk(p['activation']) for k in ['names','exclude_names','covered_names'] for name in n.get(k,[])))
 check('P01-003符合條件的完整後段可選執行或略過',len(nodes('P01-003','optional'))==1 and [n['kind'] for n in nodes('P01-003','optional')[0]['then']['steps']]==['numeric','ban_action'],'1120')
@@ -195,7 +195,7 @@ for c in checks:md.append(f"| {c['title']} | {c['qa_id'] or '資料／來源／�
 md+=['\n## 仍未完成的驗證\n',
      '- 全部技能在完整引擎局面中的執行、公開資訊、玩家選擇及Undo還原。',
      '- P03-047只限制本技能加值的共用上限機制；四個印刷差異與事件完全無變化的宣告界線。',
-     '- P04-070全體保護的固定當下／持續匹配成員界線；未定時拒絕runtime核准。',
+     '- P04-070依使用者裁定持續匹配，包含本回合之後正常／效果登場；核心保護模組完成前仍未開放。',
      '- 詳見[資料規格補正與反例驗證](BREAK-card-contract-update.md)，獨立契約情境不等於完整引擎測試。',
      '- 本批僅整理資料與參考檢查，沒有遊戲建置、部署或Safari真機測試。',
      '\n[全卡映射索引](BREAK-card-rule-mapping.md) · [結構資料](BREAK-card-rule-mapping.json) · [異常清單](BREAK-card-mapping-exceptions.md)']

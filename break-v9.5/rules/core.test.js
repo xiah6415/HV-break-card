@@ -41,7 +41,7 @@ test('Unapproved card skill cannot execute live; placement rolls back',()=>{
 test('Unknown mechanism fails before drawing or mutating state',()=>{
  const g=game();add(g,'P03-048',0,'deck');unchangedAfter(g,()=>raw(g,seq(draw(),{kind:'invented_operation'})),NeedsReview);
 });
-test('Unresolved all-target membership cannot execute',()=>{
+test('Unimplemented continuous protection cannot execute',()=>{
  const g=game('receive');const id=add(g,'P04-070');unchangedAfter(g,()=>g.enter(id,'receive'),NeedsReview);
 });
 test('An unresolved printed version cannot execute',()=>{
