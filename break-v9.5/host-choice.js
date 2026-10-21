@@ -16,6 +16,7 @@ function checkRequest(req) {
   if (req.protocol !== PROTOCOL) return fail('不支援的協定：' + req.protocol);
   const input = req.input;
   if (!input || !INPUT_TYPES.includes(input.type)) return fail('未知的 input.type：' + (input && input.type));
+  if (['slots','groups','constraints'].some(k => Object.prototype.hasOwnProperty.call(input,k) || Object.prototype.hasOwnProperty.call(req,k))) return fail('此限制屬於尚未支援的 v2 契約');
   if (!Array.isArray(req.options)) return fail('options 必須是陣列');
   const ids = new Set();
   for (const o of req.options) {

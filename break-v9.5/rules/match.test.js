@@ -26,7 +26,7 @@ const payment=baseline.checkpoints.find(cp=>cp.snapshot.match.pending.kind==='pa
 }
 {
  const m=create(),s=m.snapshot();
- for(const mutate of [s=>{s.match.id='other';},s=>{s.match.rng.word^=1;},s=>{s.match.hostVersion='v2';},s=>{delete s.cards.c1;},s=>{s.match.decisionIndex++;},s=>{s.zones['0.deck'].push(s.zones['0.deck'][0]);}]){const bad=copy(s);mutate(bad);assert.throws(()=>m.restore(bad));assert.deepEqual(m.snapshot(),s);}
+ for(const mutate of [s=>{s.match.id='other';},s=>{s.match.rng.word^=1;},s=>{s.match.coreVersion='other-core';},s=>{s.match.hostVersion='v2';},s=>{delete s.cards.c1;},s=>{s.match.decisionIndex++;},s=>{s.zones['0.deck'].push(s.zones['0.deck'][0]);}]){const bad=copy(s);mutate(bad);assert.throws(()=>m.restore(bad));assert.deepEqual(m.snapshot(),s);}
  const reordered=copy(s);reordered.cards=Object.fromEntries(Object.entries(reordered.cards).reverse());assert.doesNotThrow(()=>m.restore(reordered));
 }
 for(const cp of baseline.checkpoints.filter(cp=>['payment_cards','turnEnd'].includes(cp.snapshot.match.pending.kind))){

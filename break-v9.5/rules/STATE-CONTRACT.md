@@ -24,7 +24,7 @@
   decisions: [], events: [], publicLog: [],
   match: {
     contractVersion: 'break.state.v1', hostVersion: 'break.host.v1',
-    id, mode, rulesVersion, catalogFingerprint, phase,
+    id, mode, coreVersion, rulesVersion, catalogFingerprint, phase,
     seed, rng: { algorithm: 'mulberry32-v1', word, calls },
     pc, rally, server, firstServer, dice, diceWinner, firstServiceChoice,
     loser, lossReason, winner, outgoing, roleTotals,
@@ -90,6 +90,7 @@
 
 使用與現有engine相同 mulberry32：word 初值 `seed >>> 0`，每次抽樣先加 `0x6D2B79F5` 再做既有整數混合，calls加1。以Fisher-Yates從陣列尾至1洗牌；先0號再1號牌組，之後才擲骰。
 checkpoint 必須包含 word/calls，不只seed。預覽與AI預演只用隔離快照，不能前進正式rng。還原後下一抽樣、下一張牌及決策必須一致。
+試點coreVersion為break.match.pilot.1；行為不相容變更需提升版本，restore核對coreVersion、契約與資料指紋。後續B另把實際核心與認證形態指紋加入核准manifest，試點未實作自動核准。
 保存版本/核心/資料指紋不相容時拒絕續局；試點先保留舊版重播器，正式切換需另做舊紀錄政策。
 
 ## 試點驗收與未完成範圍

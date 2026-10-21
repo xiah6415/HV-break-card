@@ -8,6 +8,8 @@ const copy=x=>JSON.parse(JSON.stringify(x));
 const identity=cards=>JSON.stringify(Object.values(cards||{}).map(c=>[c.id,c.owner,c.cardNo,c.profileId]).sort((a,b)=>a[0].localeCompare(b[0])));
 const full=c=>library.card(c).number;
 const short=c=>c.replace(/^HV-?/,'');
+const prompts={firstService:'擲骰勝者：選擇先發或先接',roll:'確認首球發球方，開始調度',mulligan:'選擇要放回重抽的手牌',serve:'選擇發球角色',defend:'選擇接球或攔網',block:'選擇攔網角色與中攔',ack:'抽牌階段：確認抽1張',receiver:'選擇接球角色',setter:'選擇舉球角色',attacker:'選擇攻擊角色',event:'選擇要使用的卡片，或繼續',turnEnd:'確認結束回合；交棒前仍可喊Loss',lossConfirm:'本球無法繼續，請確認喊Loss',target:'選擇效果對象',activate_payment:'是否支付費用發動效果？',payment_cards:'選擇用來支付費用的牌',move_cards:'選擇要移動的牌',guts:'選擇要支付的Guts',parameter:'選擇要調整的數值'};
+const CORE_VERSION='break.match.pilot.1';
 const signature=r=>JSON.stringify({actor:r.actor,origin:r.origin,kind:r.kind,input:r.input,options:r.options,context:r.context,source:r.source,canLoss:r.canLoss,canManual:r.canManual});
 class Boundary extends Error {constructor(request,state){super('Decision boundary');this.request=request;this.state=state;}}
 class Match {
@@ -18,6 +20,7 @@ class Match {
   this._kernel=new Kernel({catalog:runtime.catalog,ruleIds:runtime.ruleIds,fingerprint:runtime.fingerprint,mode:'live',practiceDrawBeforeReceive:true});
   this.epoch=1;
   this._kernel.state.match={contractVersion:'break.state.v1',hostVersion:'break.host.v1',id,mode,rulesVersion:runtime.fingerprint,catalogFingerprint:runtime.fingerprint,phase:'setup',seed:seed>>>0,rng:{algorithm:'mulberry32-v1',word:seed>>>0,calls:0},pc:'firstService',rally:0,turnNo:0,server:null,firstServer:null,dice:null,diceWinner:null,firstServiceChoice:null,loser:null,lossReason:null,winner:null,outgoing:null,roleTotals:[{},{}],pending:null,decisionIndex:0,history:[],notices:[],continuation:null,wantsAck:[...wantsAck],setupIndex:0};
+  this._m.coreVersion=CORE_VERSION;
   // Same shuffle/dice consumption as old Game; IDs assigned after initial shuffle.
   for(let p=0;p<2;p++){const cards=decks[p].map(c=>library.requirePlayable(c,mode));this._shuffleArray(cards);for(const c of cards)this._kernel.addCard(full(c),p,'deck');}
   this._identity=identity(this._kernel.state.cards);
@@ -32,9 +35,9 @@ class Match {
  _code(id){return short(this._kernel.card(id).cardNo);}
  _cards(p,role){const k=this._kernel;return this._zone(p,'hand').filter(id=>k.card(id).printed.type==='character'&&k.card(id).printed.parameters[role]!=='dash'&&this._canEnter(p,id,role));}
  _canEnter(p,id,role){const k=this._kernel,c=k.card(id),other=role==='toss'?k.top(p,'receive'):role==='attack'?k.top(p,'toss'):null;return (!other||k.effectiveName(other)!==k.effectiveName(id))&&k.permission({action:'enter_character',player:p,origin:'rule',role:role==='block'?'center_blocker':role,entryOrigin:'hand',entryCount:1,name:k.effectiveName(id),printed:c.printed}).allowed;}
- _options(values){return values.map((value,i)=>{const c=typeof value==='string'?this._kernel.state.cards[value]:null;return {id:c?value:'option-'+i,value,label:c?c.printed.display_name||c.printed.name:String(value),...(c?{card:{id:value,incarnation:c.incarnation,cardNo:c.cardNo}}:{})};});}
+ _options(values){return values.map((value,i)=>{const c=typeof value==='string'?this._kernel.state.cards[value]:null,labels={serve:'發球',receive:'接球',block:'攔網',toss:'舉球',attack:'攻擊',true:'確認／發動',false:'不發動',null:'不使用，繼續'};return {id:c?value:'option-'+i,value,label:c?c.printed.display_name||c.printed.name:labels[String(value)]||String(value),...(c?{card:{id:value,incarnation:c.incarnation,cardNo:c.cardNo,name:c.printed.display_name||c.printed.name,effectiveName:this._kernel.effectiveName(value),zone:c.zone}}:{})};});}
  _ask(kind,actor,input,values,context={},origin='game',source=null){
-  const r={protocol:'break.host.v1',matchId:this._m.id,requestId:this._m.id+':'+this.epoch+':'+this._m.decisionIndex,epoch:this.epoch,revision:this._kernel.state.revision,decisionIndex:this._m.decisionIndex,actor,origin,kind,prompt:kind,input,options:this._options(values),context,source,timing:this._kernel.state.turn.phase,canLoss:this._m.phase==='rally'&&this._kernel.state.stage==='rally'&&actor===this._kernel.state.turn.player&&!['roll','mulligan','lossConfirm'].includes(kind),canManual:false};
+  const r={protocol:'break.host.v1',matchId:this._m.id,requestId:this._m.id+':'+this.epoch+':'+this._m.decisionIndex,epoch:this.epoch,revision:this._kernel.state.revision,decisionIndex:this._m.decisionIndex,actor,origin,kind,prompt:prompts[kind]||'請選擇合法選項',input,options:this._options(values),context,source,timing:this._kernel.state.turn.phase,canLoss:this._m.phase==='rally'&&this._kernel.state.stage==='rally'&&actor===this._kernel.state.turn.player&&!['roll','mulligan','lossConfirm'].includes(kind),canManual:false};
   const sig=signature(r);
   if(this._cursor<this._answers.length){const a=this._answers[this._cursor++];if(a.signature!==sig)throw Error('Replay decision diverged: '+kind);return copy(a.value);}
   // A suspended choice is a transaction boundary, not a public mid-operation
@@ -147,7 +150,7 @@ class Match {
  snapshot(){return this._kernel.snapshot();}
  restore(snapshot){
   const m=snapshot?.match;
-  if(m?.id!==this._m.id||m?.contractVersion!=='break.state.v1'||m.hostVersion!=='break.host.v1'||m.mode!==this._m.mode||m.seed!==this._m.seed||m.catalogFingerprint!==runtime.fingerprint||m.rulesVersion!==runtime.fingerprint)throw Error('Snapshot match/contract mismatch');
+  if(m?.id!==this._m.id||m?.contractVersion!=='break.state.v1'||m.hostVersion!=='break.host.v1'||m.coreVersion!==CORE_VERSION||m.mode!==this._m.mode||m.seed!==this._m.seed||m.catalogFingerprint!==runtime.fingerprint||m.rulesVersion!==runtime.fingerprint)throw Error('Snapshot match/contract mismatch');
   if(identity(snapshot.cards)!==this._identity)throw Error('Snapshot physical identity mismatch');
   if(!m.rng||m.rng.algorithm!=='mulberry32-v1'||!Number.isSafeInteger(m.rng.calls)||m.rng.calls<0||m.rng.word!==((m.seed>>>0)+Math.imul(m.rng.calls,0x6D2B79F5)>>>0)||m.decisionIndex!==m.history?.length||!['setup','rally','loss','interval','finished'].includes(m.phase)||m.pending&&!host.validateRequest(m.pending))throw Error('Invalid match checkpoint');
   this._kernel.restore(snapshot);this.epoch++;if(this._m.pending){this._m.pending.epoch=this.epoch;this._m.pending.requestId=this._m.id+':'+this.epoch+':'+this._m.decisionIndex;}return this;

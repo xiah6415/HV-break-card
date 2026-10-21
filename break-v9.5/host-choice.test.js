@@ -93,3 +93,7 @@ for (const r of fixtures) {
   const b = H.aiValue(byKind('block')); assert.equal(new Set(b.cards).size, b.cards.length); assert.ok(b.cards.includes(b.center));
 }
 console.log('host-choice: all tests passed (' + fixtures.length + ' fixtures)');
+
+// v1 must reject v2 restrictions rather than silently ignore them.
+for (const key of ['slots','groups','constraints']) { const r=JSON.parse(JSON.stringify(fixtures[1]));r.input[key]=[];assert.equal(H.checkRequest(r).ok,false);assert.equal(require('./rules/host-contract').validateRequest(r),false); }
+{ const r=JSON.parse(JSON.stringify(byKind('block')));r.options[0].card.effectiveName='同一有效名';r.options[1].card.effectiveName='同一有效名';assert.equal(H.checkValue(r,{cards:[r.options[0].value,r.options[1].value],center:r.options[0].value}).ok,false); }

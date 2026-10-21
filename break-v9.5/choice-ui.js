@@ -77,7 +77,7 @@ function render(rootEl, request, opts = {}) {
   }
   function ctx() {
     const c = request.context || {}, out = [];
-    if (c.ball) out.push(`來球：${esc({ serve: '發球', attack: '攻擊', block: '攔網回球' }[c.ball.type] || c.ball.type)} ${esc(c.ball.off)}`);
+    if (c.ball) { const kind=c.ball.kind || c.ball.type, value=c.ball.offense ?? c.ball.off; out.push(`來球：${esc({ serve: '發球', attack: '攻擊', block: '攔網回球' }[kind] || kind)} ${esc(value)}`); }
     if (c.revealed) out.push(`<span class="hc-rev">${cardImg(c.revealed)}</span><span>翻開：${esc(c.revealed.name || c.revealed.cardNo)}</span>`);
     if (c.dice) out.push(`擲骰 ${esc(c.dice[0])} : ${esc(c.dice[1])}`);
     return out.length ? `<div class="hc-ctx">${out.join('')}</div>` : '';

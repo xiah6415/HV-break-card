@@ -14,6 +14,8 @@
 
 ## 契約缺口（請 Codex 決定是否升版）
 
+Codex整合決議（2026-10-21）：1–3留v2，不在本次試點擴功能；v1明確拒絕slots/groups/constraints，避免UI或AI忽略限制。第4點以相容新增effectiveName處理，不升protocol。新核心同時提供name/zone，ball採kind/offense/owner，renderer兼容原fixture的type/off。正式遊戲入口不切換；C先接pilot-match.html獨立頁。
+
 1. **多槽選擇**：PR-029「日向最多 1＋影山最多 1」各槽條件不同，現有 cards 只有單一候選池與 min/max。建議 `input.type:'slots'`，`slots:[{id,label,min,max,optionIds}]`，value 為 `{[slotId]: id[]}`。
 2. **每區各付指定張數**（host.guts_each／core.guts_each）：需要分組上限。建議 cards 加 `groups:[{id,label,optionIds,min,max}]`，validator 逐組檢查。
 3. **選牌限制描述**（core.selection_constraints：不同名、同區、同所屬）：建議 `input.constraints:[{kind:'distinct_effective_name'|'same_zone'|...}]`，讓 UI 先擋、AI 先避開；核心仍做最終驗證。

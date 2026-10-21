@@ -3,6 +3,8 @@
 日期：2026-10-21。協定 `break.host.v1`。此契約先提交；新核心試點在另一提交。搭配STATE-CONTRACT。
 Claude 的C範圍：依下列schema產生選牌/數量/模式UI與合法AI基礎決策；D腳本預演評分延後。不得更改規則、移動實體卡或新增93張核准。
 
+2026-10-21整合決議：維持v1；`option.card.effectiveName`、name、zone為相容新增的可見資料。核心產生block選項時必須給effectiveName，元件不以label裁定同名。`context.ball`的標準形狀為`{kind,offense,owner}`，元件可相容舊fixture的type/off。多槽slots、cards.groups、cards.constraints改列v2提案，本輪不實作；v1遇到這些尚未支援的限制欄位必須拒絕，不可忽略後核准答案。
+
 ## Canonical request / answer
 
 ```js

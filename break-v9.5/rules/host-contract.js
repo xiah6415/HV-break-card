@@ -8,6 +8,7 @@ function validateRequest(r){
  if(!r||r.protocol!=='break.host.v1'||typeof r.matchId!=='string'||typeof r.requestId!=='string'||!integer(r.epoch,1)||!integer(r.revision)||!integer(r.decisionIndex)||![0,1].includes(r.actor)||!['game','kernel'].includes(r.origin)||!kinds.has(r.kind)||typeof r.prompt!=='string'||typeof r.canLoss!=='boolean'||typeof r.canManual!=='boolean'||!Array.isArray(r.options))return false;
  if(!r.options.every(o=>o&&typeof o.id==='string'&&Object.hasOwn(o,'value')&&typeof o.label==='string')||new Set(r.options.map(o=>o.id)).size!==r.options.length)return false;
  if(!r.input||!['ack','single','cards','number','block'].includes(r.input.type))return false;
+ if(['slots','groups','constraints'].some(k=>Object.hasOwn(r.input,k)||Object.hasOwn(r,k)))return false;
  if(['cards','block'].includes(r.input.type)&&(!integer(r.input.min)||!integer(r.input.max)||r.input.min>r.input.max||r.input.max>r.options.length))return false;
  if(r.input.type==='number'&&!r.options.every(o=>integer(o.value)))return false;
  if(r.source!=null&&(typeof r.source.id!=='string'||!integer(r.source.incarnation)||typeof r.source.cardNo!=='string'))return false;

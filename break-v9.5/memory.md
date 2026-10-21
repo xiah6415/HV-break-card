@@ -1002,3 +1002,12 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - choice-ui.js：依 input 通用渲染（卡圖以實體 ID 為 key，同卡號多張分開；有序多選顯示順位；攔網中攔指定；數量/模式/參數/布林），手機 390/320 不溢出；choice-demo.html 以契約列出的範例卡做 fixture。
 - 測試：host-choice.test.js（每種 input 合法/非法/邊界、AI 回答必過 validator、未知 schema 報錯）、choice-e2e.js（三尺寸實操）。回報契約缺口：多槽、每區各付、選牌限制描述。
 - 結果：新增 host-choice.js／choice-ui.js／choice-fixtures.js（18 個契約範例 fixture）／choice-demo.html／CHOICE.md；host-choice.test.js 通過；choice-e2e.js 1280／390／320 實點全部 fixture（含攔網同名錯誤、中攔切換、有序順位、Loss 二次確認、卡圖載入、無溢出）通過。build 後 index.html 不變；fuzz 3000（3.70）通過；未改 engine／規則故未重跑 test300。契約缺口（多槽、每區各付、選牌限制、effectiveName）列於 CHOICE.md 待 Codex 決定升版。
+
+
+## A+B試點完成與C整合結果（2026-10-21）
+- 契約先推送488c609；試點b971ae5、C8275b35保留歷史合併fb71e53；memory雙方追加衝突均保留。使用者自行啟動Claude，未代發訊息或修改Claude分支。
+- 新核心持續唯一Kernel狀態與RNG，無舊Game或匯入/投影；9完整對局/1044邊界一致，主案例五球145步，8卡號/4已核准技能。7等待點重演、非法回答/錯快照反例、私手裁切、付款中/交棒前Loss通過。
+- C接pilot-match.html：三尺寸各145 UI作答＋66 AI作答完整局＋Loss；18fixture×3尺寸通過。HOST維持v1，effectiveName/ball相容補充，slots/groups/constraints留v2且v1拒絕。
+- build、fuzz3000、test6×300通過；正式engine/UI/index/core/bridge/authority/runtime與e1335b0一致。獨立pilot-runtime可重建，正式入口未換，新核准0。
+- 驗收截止06:58:46UTC：執行33m58s、等候3h0m46s另列、總3h34m44s；對事前12人時倍率0.0472。保守後續A+E5–9h、B1–2h、C v1完成/隨A驗收預留0.5–1h、全庫12–24h含前述；疑義7卡與外部等候另計，不用8h/天換算。
+- A未全切，E7張未遷、B認證未建；93候選直接在新核心驗證，D延後。完整報告見rules/STATE-PILOT及outputs/BREAK-state-pilot-*；接著提交推送公開試點並核對正式頁與原產物相同。

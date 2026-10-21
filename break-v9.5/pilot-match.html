@@ -1,0 +1,29 @@
+<!doctype html><html lang="zh-Hant"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BREAK 新核心試點</title><style>
+*{box-sizing:border-box}body{margin:0;background:#eef4f2;color:#122326;font-family:system-ui}main{max-width:900px;margin:auto;padding:14px;display:grid;gap:12px;min-width:0}h1{font-size:21px;margin:0}p{margin:4px 0;overflow-wrap:anywhere}section{background:white;border-radius:12px;padding:12px;min-width:0}button{font:inherit;padding:9px;border-radius:9px;border:1px solid #baccca;cursor:pointer}nav{display:flex;gap:8px;flex-wrap:wrap}.courts{display:grid;grid-template-columns:1fr 1fr;gap:8px}.court{font-size:13px;min-width:0;overflow-wrap:anywhere}#error{color:#a52424}#history{font-size:12px}#choice{min-width:0}@media(max-width:420px){main{padding:9px}.courts{grid-template-columns:1fr}}
+</style><main><h1>BREAK 新核心試點</h1><p>開發驗收頁：限定試點牌組，與正式對練台分開。雙方可在同一畫面作答。</p>
+<nav><button id="restart">重新開始</button><button id="ai">AI 作答一次</button><button id="auto">AI 跑完整局</button></nav>
+<section><strong id="status"></strong><p id="history"></p><div class="courts" id="courts"></div></section>
+<section id="choice"></section><p id="error" role="alert"></p></main>
+<script src="pilot-runtime.js"></script><script src="host-choice.js"></script><script src="choice-ui.js"></script><script>
+'use strict';
+const {Match}=BreakMatchPilot,H=BreakHostChoice,U=BreakChoiceUI,$=id=>document.getElementById(id);
+const deck=[...['D01-009','D02-005','D04-006','D03-007'].flatMap(c=>Array(8).fill(c)),...Array(4).fill('D01-007'),...Array(4).fill('D01-011')];
+let match,widget,running=false,steps=0,losses=0,gameNo=0;
+const request=()=>match.view(0).request||match.view(1).request;
+const image=no=>'img/'+no.replace(/^HV-?/,'')+'.webp';
+function render(){
+ const r=request(),v=match.view(r?.actor??0);widget?.destroy();widget=null;
+ $('status').textContent=v.match.phase==='finished'?`對局結束：玩家 ${v.match.winner+1} 獲勝`:`第 ${v.match.rally} 球 · 發球：${v.match.server==null?'準備中':'玩家 '+(v.match.server+1)} · ${r?'玩家 '+(r.actor+1)+' 操作':''}`;
+ $('history').textContent=`已提交 ${steps} 個選擇 · Loss 命令 ${losses} 次`;
+ $('courts').replaceChildren(...v.players.map((p,i)=>{const div=document.createElement('div');div.className='court';div.textContent=`玩家 ${i+1}｜手牌 ${Array.isArray(p.hand)?p.hand.length:p.hand.count}｜牌庫 ${p.deck.count}｜剩餘局點 ${p.sets.count}｜`+p.court.map(c=>`${c.role}：${c.name}`).join('／');return div;}));
+ if(r)widget=U.render($('choice'),r,{imgSrc:image,onAnswer:answer=>submit({kind:'answer',answer}),onLoss:()=>submit({kind:'loss',matchId:r.matchId,requestId:r.requestId,epoch:r.epoch,actor:r.actor})});
+ else $('choice').textContent='完整對局已完成';
+ $('ai').disabled=!r;$('auto').disabled=!r||running;
+}
+function submit(command){try{match.command(command);steps++;if(command.kind==='loss')losses++;$('error').textContent='';render();}catch(e){$('error').textContent=e.message;throw e;}}
+function ai(){const r=request();if(r)submit({kind:'answer',answer:H.aiAnswer(r)});}
+function restart(){running=false;steps=0;losses=0;match=new Match({id:'browser-pilot-'+(++gameNo),seed:7,decks:[deck,deck]});render();}
+$('restart').onclick=restart;$('ai').onclick=ai;$('auto').onclick=async()=>{running=true;try{for(let i=0;request()&&i<2000&&running;i++){ai();await new Promise(r=>setTimeout(r,0));}}finally{running=false;render();}};
+window.pilot={get match(){return match;},request,ai,submit,restart,get steps(){return steps;},get losses(){return losses;}};restart();
+</script></html>
