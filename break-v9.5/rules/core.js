@@ -409,6 +409,8 @@ class Kernel {
       if (node.op==='odd') return (Math.abs(a)%2===1)===b;
     }
     if (node.kind==='count_compare') {
+      need(['eq','gte','lte'].includes(node.op)&&Number.isInteger(node.value)&&node.value>=0,'Unsupported count comparison');
+      need(node.distinct_by==null||node.distinct_by==='effective_name_in_current_zone','Unsupported count identity');
       const ids=this.pool(node.pool,ctx), n=node.distinct_by ? new Set(ids.map(id=>this.effectiveName(id))).size : ids.length;
       return node.op==='eq'?n===node.value:node.op==='gte'?n>=node.value:n<=node.value;
     }

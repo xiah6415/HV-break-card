@@ -4,6 +4,7 @@ const assert=require('node:assert/strict');
 const I=require('./node-inventory'),T=require('./node-module-tests'),F=require('./frequent-node-tests'),C=require('./card-scenarios');
 const completed=[{id:'sequence',test:T.testSequence},{id:'deck_selection',test:T.testDeckSelection},...['numeric','selector','conditional','payment_branch','pay_guts','compare','draw'].map((id,i)=>({id,test:[F.testNumeric,F.testSelector,F.testConditional,F.testPaymentBranch,F.testPayGuts,F.testCompare,F.testDraw][i]}))];
 completed.push({id:'move',test:require('./move-node-tests').testMove});
+completed.push({id:'count_compare',test:require('./count-node-tests').testCountCompare});
 function testCard(catalog,card){
  if(I.dependencies(card).some(k=>!['sequence','deck_selection'].includes(k)))return C.testCard(catalog,card);
  const p=card.profiles[0],deckNodes=I.nodes(p).filter(n=>n.kind==='deck_selection');

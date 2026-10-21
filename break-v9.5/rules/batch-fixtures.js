@@ -102,6 +102,7 @@ function seedConditions(k,{catalog,profile,source,player,phase,expanded=false}){
   }
   if(expanded&&n.kind==='numeric'&&n.target?.kind==='selector')ensure({...n.target,filters:{...n.target.filters,...(targetName?{names:[targetName]}:{})}},1,{receiveMax:targetReceive===null?undefined:Math.max(1,targetReceive-2)});
   if(n.kind==='selector'&&!n.zone.startsWith('$')&&!deferred.some(prefix=>n.node_id?.startsWith(prefix)))ensure(n,1);
+  if(expanded&&n.kind==='move'&&Number.isInteger(n.count)&&n.count>1&&!deferred.some(prefix=>n.node_id?.startsWith(prefix)))ensure(n.pool,n.count);
  }
  // Seed positive boundaries, including the Event just placed before its effect.
  for(const n of nodes.filter(n=>n.kind==='count_compare')){
