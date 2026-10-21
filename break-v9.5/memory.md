@@ -996,3 +996,9 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - HOST/STATE已先提交推送488c609；使用者確認自行在Claude端啟動C，之後提供origin/claude/generic-choice的8275b35。先讀CHOICE四點及分支差異，審查後保留來源提交合併，接到隔離試點，不切正式遊戲。
 - 多槽、每區數量與複合選牌約束留下一版協定；本輪v1只新增相容effectiveName欄位，明示尚未支援的限制必須拒絕，不能默默忽略。接線測試需真正以C的UI與AI產生answer/loss命令，不只重跑fixture。
 - 時計記錄：前段03:24:02至03:44:41 UTC約20分39秒；新訊息/Claude交接於06:45:27 UTC恢復。中間約3小時等待另列，總牆鐘也如實回報；後段只接線、驗收與交接，總專注執行維持約一工作階段，不擴93卡或D。
+## Claude：C 通用選擇元件計畫（2026-10-21，修改前，分支 claude/generic-choice）
+- 依 rules/HOST-CONTRACT.md（break.host.v1）。不改 rules 核心、engine、ui.html、核准；試點未接 UI 前先以獨立模組＋示範頁交付，日後由 Codex 接入新核心入口。
+- host-choice.js（UMD 純函式）：envelope 驗證（matchId/requestId/epoch/actor/protocol）、依 input.type（ack/single/cards/number/block）驗證 value（JSON 型態、option 成員、唯一、min/max、ordered、block 中攔/人數/有效名不重複）；selection model（toggle、ordered 排序、canSubmit、錯誤訊息）；未知 input 拒絕；AI 基礎合法決策（只用 request 可見資訊）。
+- choice-ui.js：依 input 通用渲染（卡圖以實體 ID 為 key，同卡號多張分開；有序多選顯示順位；攔網中攔指定；數量/模式/參數/布林），手機 390/320 不溢出；choice-demo.html 以契約列出的範例卡做 fixture。
+- 測試：host-choice.test.js（每種 input 合法/非法/邊界、AI 回答必過 validator、未知 schema 報錯）、choice-e2e.js（三尺寸實操）。回報契約缺口：多槽、每區各付、選牌限制描述。
+- 結果：新增 host-choice.js／choice-ui.js／choice-fixtures.js（18 個契約範例 fixture）／choice-demo.html／CHOICE.md；host-choice.test.js 通過；choice-e2e.js 1280／390／320 實點全部 fixture（含攔網同名錯誤、中攔切換、有序順位、Loss 二次確認、卡圖載入、無溢出）通過。build 後 index.html 不變；fuzz 3000（3.70）通過；未改 engine／規則故未重跑 test300。契約缺口（多槽、每區各付、選牌限制、effectiveName）列於 CHOICE.md 待 Codex 決定升版。
