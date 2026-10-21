@@ -20,7 +20,8 @@ const site='https://weilun2022.github.io/haikyu-cards/?deck=';
   assert.equal(await page.locator('#shareSave').count(),0);
   // 正常：匯入我方
   await page.fill('#shareURL',site+okCode.replace(/\+/g,' '));await page.click('#shareGo');
-  assert.match(await page.textContent('#sharePreview'),/可以匯入/);await page.click('#shareSave');
+  assert.match(await page.textContent('#sharePreview'),/可以匯入/);
+  assert.ok(await page.evaluate(()=>{const b=document.getElementById('sheetBox');return b.scrollWidth<=b.clientWidth+1;}),'匯入視窗橫向溢出');await page.click('#shareSave');
   assert.equal(await page.inputValue('#myDeck'),'custom');assert.match(await page.locator('#myDeck option:checked').textContent(),/分享烏野/);
   // 匯入 AI
   await page.click('#editAiDeck');await page.fill('#shareURL',okCode);await page.click('#shareGo');await page.click('#shareSave');
