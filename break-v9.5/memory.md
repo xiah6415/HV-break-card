@@ -1072,3 +1072,8 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 ## 雲端 GitHub CLI 授權與發布（2026-10-21）
 - 計畫：使用者同意在雲端CLI接入GitHub，啟動裝置授權登入；成功後確認遠端master、寫入與Pages狀態，非強制推送既有retrieve成果並核對公開部署；不記錄憑證或驗證碼。
 - 結果：使用者指示繼續後，裝置登入程序回報GitHub API網路連線遭執行環境政策封鎖；CLI確認未保存任何GitHub登入。尚未推送或部署，不能宣稱使用者授權已完成或repo拒絕寫入；需先恢復此雲端環境對GitHub API／Git傳輸的網路存取，再重新裝置登入、同步master與發布。
+
+## retrieve 附件匯入與回歸（2026-10-21）
+- 遠端 master 實測仍為 c998f29（嚴格308／共用118），不含附件的 cdd7e00、5c7dbf6、87e98f9 三筆成果；工作樹乾淨。完整 patch 靜態檢查可套用，唯一衝突是本輪先寫入的 memory 計畫與附件同在檔尾，已保留兩者，未覆蓋其他修改。
+- 匯入後：retrieve 7形態／40依賴卡的分組約束、嚴格332／共用142＋舊7／未自動化209及 STATUS 已同步。P04-070 仍待 protect_numeric_decrease、未開放；正式 Game 入口仍橋接核心，未切換。
+- 驗證：`python3 build.py`、`node fuzz.js`、`node test.js 300`、retrieve 節點測試（含同區／不同名／共同所屬、不足、手牌限制、Undo）及 core 54項均通過。下一步以非強制推送 master，並以實際 GitHub Pages 結果更新本段。
