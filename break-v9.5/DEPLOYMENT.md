@@ -1,5 +1,7 @@
 # GitHub Pages部署交接
 
+> 本批7張手牌付款角色已部署 557bc68，https://xiah6415.github.io/HV-break-card/break-v9.5/?v=557bc68；公開index與7圖核對一致，Claude匯入修正仍通過12組公開驗證。數值541／嚴格244、共用54＋舊7。
+
 > Claude分享匯入溢出修正5842c77已合併並部署 33f711f；公開index一致，手機匯入視窗12組驗證通過。技能數不變，下一批續第6步。
 
 > 最新11張Guts登場批次已部署 0c08ff5；數值541／嚴格237，共用47＋舊7（既有限制），未自動化304。公開index與11圖核對一致，下方舊版為歷史。
@@ -59,3 +61,8 @@ Claude分享連結已合併，claude-handoff/已刪除並保留外層bundle備�
 - 合併提交33f711f782df8e61c358ea3ced70b3c0725fba28已推送master且Pages built／無錯誤，5842c77為祖先。公開網址https://xiah6415.github.io/HV-break-card/break-v9.5/?v=33f711f，HTTP200、index 3442714bytes、SHA256 a50f8027adb166adaa935f32a2885b3e9ecb3a03233a863d9634ac06d434b896與已測本機完全一致。
 - 公開3尺寸×雙模式×雙方12組匯入操作及視窗量測全通過，390px為358／358、320px為288／288，按鈕可見、可保存、無頁面錯誤與橫向溢出。Chrome手機模擬，非Safari真機。
 - 數值541／嚴格237，共用47＋舊7（既有限制）不變。先保存公開結果並純文件提交推送；下一批第6步另寫計畫後再動工，P04 SAMPLE圖保留待新來源核對。
+
+## 第6步7張手牌付款登場角色公開部署（2026-10-21）
+- 實作提交557bc681d54fbc5311fa7fc84fd4c2fc324d200d已推送master且Pages built／無錯誤。公開網址https://xiah6415.github.io/HV-break-card/break-v9.5/?v=557bc68，HTTP200、index 3467569bytes、SHA256 e35e7912a2b18b727ece9eeffc2feb7332dd68d837f20e795f656f15d4103713與已測本機逐位元組一致。7對應卡圖公開HTTP200、SHA與本機一致。
+- 公開Chrome1280／390／320核對數值541／嚴格244，共用54／舊7／無技能183／未自動化297，7張皆shared；卡庫與runtime一致、偽造playable不能授權。雙方分享匯入／重載保存、圖片／開局與無錯誤／溢出通過；另公開3尺寸×雙模式×雙方12組匯入視窗量測／按鈕操作通過，保留Claude5842c77的358px／288px修正。Chrome模擬，非Safari真機。
+- memory與交接以純文件提交推送，不改已測index；最後Pages核對保存在outputs/BREAK-hand-entry-evidence.json。下一批仍依機制家族四校優先；P04 SAMPLE圖待新來源核對，未換圖，多人／多人Undo與AI難度延後。

@@ -957,3 +957,9 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 正式live-grants 195語意情境、120完整Undo還原點、168真實對局全部通過，涵蓋11位置×雙方、同碼不同實體、所屬／類型真假、拒絕／不足／非法回覆、空牌庫／禁加牌、Loss、通知去重、重登場、實際接舉攻與中／側攔成功／拒絕失敗、合法性限制與QA1426。7張均有AI實際登場及付款，兩模式維持80實體與雙方40張精確所有權。
 - build、47單元套件、fuzz3000、6組各300對戰與15瀏覽器套件全通過。新增33實際手機／桌機付款／參數／無推薦攔網／側攔／Undo操作；Claude share-e2e與既有Guts／14事件／完整對局／數值／分享／開局回歸亦通過。Chrome手機模擬，非Safari真機。一次隔離頁面載入逾時，將測試的頁面載入等待調為30秒後完成；未改遊戲載入方式。
 - 正式候選100→93／88家族，原125／1938歷史回歸保留。Claude CSS合併仍為祖先，minmax修正保留；P04 SAMPLE圖素材待辦保留未換圖。交接見HAND-ENTRY／STATUS／REVIEW-PLAN及outputs/BREAK-hand-entry-evidence.json與validation.json。接著本批獨立提交推送部署，核對公開SHA／7對應卡圖及匯入視窗；下一批按機制家族、家族內四校優先，多人／多人Undo／AI難度延後。
+
+
+## 第6步7張手牌付款登場角色公開部署（2026-10-21）
+- 實作提交557bc681d54fbc5311fa7fc84fd4c2fc324d200d已推送master且Pages built／無錯誤。公開網址https://xiah6415.github.io/HV-break-card/break-v9.5/?v=557bc68，HTTP200、index 3467569bytes、SHA256 e35e7912a2b18b727ece9eeffc2feb7332dd68d837f20e795f656f15d4103713與已測本機逐位元組一致。7對應卡圖公開HTTP200、SHA與本機一致。
+- 公開Chrome1280／390／320核對數值541／嚴格244，共用54／舊7／無技能183／未自動化297，7張皆shared；卡庫與runtime一致、偽造playable不能授權。雙方分享匯入／重載保存、圖片／開局與無錯誤／溢出通過；另公開3尺寸×雙模式×雙方12組匯入視窗量測／按鈕操作通過，保留Claude5842c77的358px／288px修正。Chrome模擬，非Safari真機。
+- memory與交接以純文件提交推送，不改已測index；最後Pages核對保存在outputs/BREAK-hand-entry-evidence.json。下一批仍依機制家族四校優先；P04 SAMPLE圖待新來源核對，未換圖，多人／多人Undo與AI難度延後。

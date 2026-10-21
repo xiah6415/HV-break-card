@@ -1,5 +1,7 @@
 # BREAK 對練台目前狀態（2026-10-21）
 
+> 本批7張手牌付款角色已部署 557bc68，https://xiah6415.github.io/HV-break-card/break-v9.5/?v=557bc68；公開index與7圖核對一致，Claude匯入修正仍通過12組公開驗證。數值541／嚴格244、共用54＋舊7。
+
 > Claude分享匯入溢出修正5842c77已合併並部署 33f711f；公開index一致，手機匯入視窗12組驗證通過。技能數不變，下一批續第6步。
 
 > 本批11張Guts登場角色公開版本：0c08ff5，https://xiah6415.github.io/HV-break-card/break-v9.5/?v=0c08ff5；Pages built，公開index SHA及11圖已核對一致。
