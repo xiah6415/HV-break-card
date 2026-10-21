@@ -286,6 +286,7 @@ class Game {
   canEnter(p, area, c, options={}) { return !(area==='receive'&&p.restrict.no_rcv6&&st(c,'rcv')>=6) && sharedRules.entryAllowed(this,p,c,area,options) && st(c, { serve: 'srv', block: 'blk', receive: 'rcv', toss: 'tos', attack: 'atk' }[area]) != null && this.legalEntryNames(p, area, c).length > 0; }
   async enterCharacter(p, area, c, fromDrop = false) {
     sharedRules.assertReady(this);
+    const old=p.top(area),coveredCharacter=old?{effective_name:this.cardName(p,area).normalize('NFKC').replace(/\s/g,''),tags:library.card(old).schoolTags,positions:library.card(old).positionTags}:null;
     const names = this.legalEntryNames(p, area, c);
     if (!this.canEnter(p, area, c,{origin:fromDrop?'skill':'rule',entryOrigin:fromDrop?'drop':'hand'})) throw new Error('不能以相同名稱登場，或受到登場限制');
     let name = nm(c);
@@ -296,7 +297,7 @@ class Game {
     if (legacySkill(c) && c === 'PR-057') { this.effect(p, area).name = name; this.log(`着地上手組。：本回合在${AREA_ZH[area]}區作為「${name}」`); }
     const activeRole={receive:'receiver',toss:'setter',attack:'attacker'}[area];
     if(activeRole){p.ts[activeRole]=null;delete p.ts[activeRole+'Ref'];}
-    await sharedRules.charactersEntered(this,p,[{key:area,origin:fromDrop?'drop':'hand',reason:fromDrop?'skill':'rule'}]);
+    await sharedRules.charactersEntered(this,p,[{key:area,origin:fromDrop?'drop':'hand',reason:fromDrop?'skill':'rule',coveredCharacter}]);
   }
   async chooseTarget(p, targets, prompt, timing) {
     if (!targets.length) { this.log('沒有符合條件的場上角色，略過這部分效果', 'warn'); return null; }

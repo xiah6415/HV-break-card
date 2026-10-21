@@ -14,17 +14,29 @@ function parameters(n){
  for(const k of ['steps','then','else','payment','condition','conditions','options','slots'])if(Object.hasOwn(result,k)&&(['sequence','conditional','payment_branch','optional','choose_modes','all','any','formal_declaration_cost','retrieve_slots'].includes(n.kind)))result[k]='$nodes';
  return clean(result);
 }
-function forms(catalog){const result={};for(const c of scope(catalog))for(const p of c.profiles)for(const n of nodes(p)){const bucket=result[n.kind]??=new Map(),key=JSON.stringify(parameters(n));if(!bucket.has(key))bucket.set(key,{node:n,cards:new Set()});bucket.get(key).cards.add(short(c.card_no));}return result;}
-function entrySupported(c){const p=c.profiles[0],a=p.activation;return c.profiles.length===1&&!c.skill_text_variant_conflict&&!p.flags?.length&&!!a&&(a.skill_type==='event'&&JSON.stringify(a.source_zones)==='["hand"]'||a.skill_type==='active'&&JSON.stringify(a.source_zones)==='["hand"]'||a.skill_type==='passive'&&a.trigger?.event==='self_entry');}
+function forms(catalog){const result={};for(const c of catalog.cards.filter(c=>c.profiles[0].program&&!legacy[short(c.card_no)]))for(const p of c.profiles)for(const n of nodes(p)){const bucket=result[n.kind]??=new Map(),key=JSON.stringify(parameters(n));if(!bucket.has(key))bucket.set(key,{node:n,cards:new Set()});bucket.get(key).cards.add(short(c.card_no));}return result;}
+function entrySupported(c){const a=c.profiles[0].activation;return reviewClear(c)&&!!a&&LIVE_ENTRIES.includes(entryKey(c))&&(!['event','active'].includes(a.skill_type)||JSON.stringify(a.source_zones)==='["hand"]');}
 function dependencies(c){return [...new Set(c.profiles.flatMap(p=>nodes(p).map(n=>n.kind)))].sort();}
+const PRIORITY=['numeric','selector','conditional','payment_branch','pay_guts','compare','draw'];
+const LIVE_ENTRIES=['event','active','passive:self_entry'];
+const entryKey=c=>c.profiles[0].activation.skill_type==='passive'?'passive:'+c.profiles[0].activation.trigger?.event:c.profiles[0].activation.skill_type;
+const reviewClear=c=>c.profiles.length===1&&!c.skill_text_variant_conflict&&!c.profiles[0].flags?.length;
 function inventory(catalog,completed,released=[]){
- const fs=forms(catalog),done=new Set(completed),open=new Set(released),cards=scope(catalog).map(c=>({code:short(c.card_no),dependencies:dependencies(c),entry:entrySupported(c),released:open.has(short(c.card_no))}));
- const rows=Object.entries(fs).map(([kind,shapes])=>{
-  const dependents=cards.filter(c=>c.dependencies.includes(kind)),eligible=cards.filter(c=>!c.released&&c.entry&&c.dependencies.every(k=>done.has(k)||k===kind));
-  return {kind,completed:done.has(kind),parameterForms:shapes.size,dependentCards:dependents.length,additionalCards:done.has(kind)?0:eligible.length,cards:done.has(kind)?[]:eligible.map(c=>c.code)};
- });
- const ranking=rows.filter(r=>!r.completed).sort((a,b)=>b.additionalCards-a.additionalCards||b.dependentCards-a.dependentCards||a.kind.localeCompare(b.kind));
- return {scope:cards.length,kinds:rows.length,completed:[...completed],rows,ranking,cards};
+ const fs=forms(catalog),done=new Set(completed),open=new Set(released),source=scope(catalog);
+ const cards=source.map(c=>({code:short(c.card_no),dependencies:dependencies(c),entry:entryKey(c),reviewClear:reviewClear(c),released:open.has(short(c.card_no))}));
+ const rows=Object.entries(fs).map(([kind,shapes])=>({kind,completed:done.has(kind),parameterForms:shapes.size,dependentCards:cards.filter(c=>c.dependencies.includes(kind)).length}));
+ const rest=rows.filter(r=>!['sequence','deck_selection',...PRIORITY].includes(r.kind)).map(r=>({type:'node',kind:r.kind,frequency:r.dependentCards}));
+ for(const kind of [...new Set(cards.map(c=>c.entry))].filter(k=>!LIVE_ENTRIES.includes(k)))rest.push({type:'entry',kind,frequency:cards.filter(c=>c.entry===kind).length});
+ rest.sort((a,b)=>b.frequency-a.frequency||(a.type==='entry')-(b.type==='entry')||a.kind.localeCompare(b.kind));
+ const route=[...PRIORITY.map(kind=>({type:'node',kind,frequency:rows.find(r=>r.kind===kind).dependentCards})),...rest];
+ const nodeSet=new Set(['sequence','deck_selection']),entrySet=new Set(LIVE_ENTRIES),path=[];let nodeStep=0;
+ for(const step of route){
+  (step.type==='node'?nodeSet:entrySet).add(step.kind);if(step.type==='node')nodeStep++;
+  const matches=cards.filter(c=>c.dependencies.every(k=>nodeSet.has(k)));
+  const available=matches.filter(c=>c.reviewClear&&entrySet.has(c.entry));
+  path.push({...step,nodeStep,completed:step.type==='node'?done.has(step.kind):LIVE_ENTRIES.includes(step.kind),nodesReady:matches.length,entryReady:available.length,currentEntryReady:matches.filter(c=>c.reviewClear&&LIVE_ENTRIES.includes(c.entry)).length});
+ }
+ return {scope:cards.length,kinds:rows.length,completed:[...completed],completedEntries:LIVE_ENTRIES,rows,path,next:path.find(s=>!s.completed),cards};
 }
-module.exports={short,walk,nodes,scope,forms,parameters,clean,entrySupported,dependencies,inventory};
-if(require.main===module){const r=inventory(require('./data/cards.json'),require('./modules').completed.map(m=>m.id),Object.keys(require('./runtime-data.json').authority.cards).filter(c=>require('./runtime-data.json').authority.cards[c].kind==='shared'));console.log(JSON.stringify({scope:r.scope,kinds:r.kinds,completed:r.completed,ranking:r.ranking},null,2));}
+module.exports={short,walk,nodes,scope,forms,parameters,clean,entrySupported,dependencies,inventory,entryKey,PRIORITY,LIVE_ENTRIES};
+if(require.main===module){const r=inventory(require('./data/cards.json'),require('./modules').completed.map(m=>m.id),Object.keys(require('./runtime-data.json').authority.cards).filter(c=>require('./runtime-data.json').authority.cards[c].kind==='shared'));console.log(JSON.stringify({scope:r.scope,kinds:r.kinds,completed:r.completed,path:r.path,next:r.next},null,2));}

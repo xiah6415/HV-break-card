@@ -67,7 +67,7 @@ def library_data():
     for code, asset in assets['images'].items():
         assert sha(ROOT / asset['file']) == asset['sha256'], 'Art changed: ' + code
     return dict(schemaVersion=2, authority=authority, counts=dict(cards=len(cards), profiles=sum(len(c['profiles']) for c in catalog['cards']), playable=sum(c['playable'] for c in cards.values()), basic=183, locked=sum(not c['playable'] for c in cards.values())),
-                sources={p: sha(ROOT / p) for p in ['rules/data/cards.json', 'rules/source/work/card-taxonomy/database.json', 'card-support.json', 'library/assets.json', 'rules/approvals.json', 'rules/legacy-skills.json', 'rules/authority.py', 'rules/modules.js', 'rules/node-inventory.js', 'rules/node-module-tests.js', 'rules/core.js', 'rules/data/shared-rules.json']}, cards=cards, aliases=aliases)
+                sources={p: sha(ROOT / p) for p in ['rules/data/cards.json', 'rules/source/work/card-taxonomy/database.json', 'card-support.json', 'library/assets.json', 'rules/approvals.json', 'rules/legacy-skills.json', 'rules/authority.py', 'rules/modules.js', 'rules/node-inventory.js', 'rules/node-module-tests.js', 'rules/frequent-node-tests.js', 'rules/card-scenarios.js', 'rules/batch-smoke.js', 'rules/batch-fixtures.js', 'rules/batch-branches.js', 'rules/batch-index.js', 'rules/coverage.js', 'rules/core.js', 'rules/data/shared-rules.json']}, cards=cards, aliases=aliases)
 
 def write_library():
     data = library_data()

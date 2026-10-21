@@ -131,6 +131,7 @@ class Kernel {
     const player=this.owner(selector.actor,ctx), z=selector.zone;
     let ids;
     if (z==='court') ids=this.court(player);
+    else if(z==='event_or_drop')ids=[...this.zone(player,'event'),...this.zone(player,'drop')];
     else if (z==='block') ids=['block','side:0','side:1'].map(z=>this.top(player,z)).filter(Boolean);
     else if (z==='court.guts') ids=COURT.flatMap(z=>this.zone(player,z).slice(0,-1));
     else if (z.endsWith('.guts')) ids=this.zone(player,z.split('.')[0]).slice(0,-1);
@@ -348,6 +349,20 @@ class Kernel {
     return true; // Viewing and arranging cards is an effect even without a match.
   }
   _fact(field,ctx) {
+    if(field==='random.result')return ctx.bind.random?.result??ctx.event.random?.result??null;
+    if(field==='revealed.affiliation_intersects_self_court'){
+      const tags=new Set(this.court(ctx.controller).flatMap(id=>this.card(id).printed.affiliation_tags));
+      return (ctx.bind.revealed||[]).some(id=>this.card(id).printed.affiliation_tags.some(t=>tags.has(t)));
+    }
+    if(field==='opponent.block_defense')return ['block','side:0','side:1'].reduce((n,z)=>{const id=this.top(1-ctx.controller,z);return n+(id?this.parameter(id,'block'):0);},0);
+    if(field==='self.attack.guts.count')return Math.max(0,this.zone(ctx.controller,'attack').length-1);
+    if(field==='self.court.distinct_affiliation_assignment_count'){
+      const assigned=new Map();
+      const assign=(id,seen)=>this.card(id).printed.affiliation_tags.some(tag=>{if(seen.has(tag))return false;seen.add(tag);if(!assigned.has(tag)||assign(assigned.get(tag),seen)){assigned.set(tag,id);return true;}return false;});
+      return this.court(ctx.controller).filter(id=>assign(id,new Set())).length;
+    }
+    if(field.startsWith('source.covered_character.'))return this.card(ctx.source.id).coveredCharacter?.[field.split('.').at(-1)]??null;
+    if(field==='source.entry_skill_name')return this.card(ctx.source.id).entrySkillName??null;
     if (field==='phase') return this.state.turn.phase;
     if (field==='current_turn_id') return this.state.turn.id;
     if (field==='both.set.count_sum') return this.zone(0,'sets').length+this.zone(1,'sets').length;
@@ -356,7 +371,7 @@ class Kernel {
     if (m) return this.zone(m[1]==='self'?ctx.controller:1-ctx.controller,m[2]==='set'?'sets':m[2]).length;
     m=field.match(/^(self|opponent)\.(serve|receive|toss|attack)\.(effective_name|printed_attack)$/);
     if (m) { const id=this.top(m[1]==='self'?ctx.controller:1-ctx.controller,m[2]); return !id ? null : m[3]==='effective_name'?this.effectiveName(id):this.card(id).printed.parameters.attack; }
-    m=field.match(/^(paid|milled|retrieved|drawn)\.(count|event_count|names_are_distinct)$/);
+    m=field.match(/^(paid|milled|retrieved|drawn|revealed|moved)\.(count|event_count|names_are_distinct)$/);
     if (m) { const ids=ctx.bind[m[1]] || []; return m[2]==='count'?ids.length:m[2]==='event_count'?ids.filter(id=>this.card(id).printed.type==='event').length:new Set(ids.map(id=>this.effectiveName(id))).size===ids.length; }
     if (field==='optional.performed') return ctx.bind.optional?.performed ?? false;
     m=field.match(/^(source|target)\.(effective_name|role|entry_origin|entry_reason|entry_turn|current_(?:serve|receive|block|toss|attack))$/);
@@ -436,7 +451,14 @@ class Kernel {
           if (node.operation==='add' && value<0 && protectedValue) continue;
           need(!(node.operation==='set' && value<old && protectedValue),'Set-to-lower with protection needs review');
           if (node.operation==='add' && value===0 || node.operation==='set' && value===old) continue;
-          this.effect('numeric',{target,parameter:param,operation:node.operation,value},ctx,node.duration);
+          let applied=value;
+          if(node.increase_guard){
+            need(node.increase_guard.kind==='source_skill_maximum'&&node.operation==='add'&&value>=0,'Unsupported numeric guard');
+            const own=this.state.effects.filter(e=>e.kind==='numeric'&&this.active(e)&&same(e.source,ctx.source)&&same(e.target,target)&&e.parameter===param).reduce((n,e)=>n+e.value,0);
+            applied=Math.min(value,Math.max(0,node.increase_guard.max_result-this.card(target.id).printed.parameters[param]-own));
+            if(!applied)continue;
+          }
+          this.effect('numeric',{target,parameter:param,operation:node.operation,value:applied},ctx,node.duration);
           performed=true;
         }
       }
@@ -447,16 +469,14 @@ class Kernel {
   preflight(program) {
     walk(program,n=>{
       if (n.shared_rule_ids) for (const r of n.shared_rule_ids) need(this.ruleIds.has(r),'Unknown shared rule '+r);
-      if (n.kind && !['selector','compare','all','any','equal_fields','count_compare','uniform_affiliation','all_result_cards_match','printed_parameter','sum_result_parameter','result_count'].includes(n.kind)) need(KINDS.has(n.kind),'Unsupported mechanism '+n.kind);
+      if (n.kind && !['selector','compare','all','any','equal_fields','count_compare','uniform_affiliation','all_result_cards_match','printed_parameter','sum_result_parameter','result_count','source_skill_maximum'].includes(n.kind)) need(KINDS.has(n.kind),'Unsupported mechanism '+n.kind);
       if (n.filters) for (const k of Object.keys(n.filters)) need(FILTERS.has(k),'Unsupported filter '+k);
       if (n.target_scope) need(n.target_scope.membership==='snapshot_on_resolution','Target membership is not supported');
-      if (n.increase_guard) throw new NeedsReview('Numeric source contribution cap not implemented');
-      if(n.kind==='pay_guts')need(n.count_mode!=='exact_each','Per-area payment not implemented');
       if(n.destination)need((!n.destination.includes('choose_deck') || n.destination==='choose_deck_top_or_bottom') && !n.destination.endsWith('.deck_top'),'Destination mechanism not implemented');
       if(n.kind==='invalidate_skill')need(!n.selector.keyword_families && !n.selector.union_with?.keyword_families,'Keyword invalidation not implemented');
       if (n.kind==='keyword') need(n.keyword==='one_touch','Keyword not implemented: '+n.keyword);
       if (n.kind==='compare') {
-        need(/^(phase|current_turn_id|both\.set\.count_sum|opponent_ball\.(kind|offense)|(self|opponent)\.(hand|sets|set)\.count|(self|opponent)\.(serve|receive|toss|attack)\.(effective_name|printed_attack)|(paid|milled|retrieved|drawn)\.(count|event_count|names_are_distinct)|optional\.performed|(source|target)\.(effective_name|role|entry_origin|entry_reason|entry_turn|current_(serve|receive|block|toss|attack)))$/.test(n.field),'Fact is not implemented: '+n.field);
+        need(new Set(['random.result','revealed.affiliation_intersects_self_court','opponent.block_defense','self.attack.guts.count','self.court.distinct_affiliation_assignment_count','source.covered_character.tags','source.covered_character.positions','source.covered_character.effective_name','source.entry_skill_name','revealed.count','moved.count']).has(n.field)||/^(phase|current_turn_id|both\.set\.count_sum|opponent_ball\.(kind|offense)|(self|opponent)\.(hand|sets|set)\.count|(self|opponent)\.(serve|receive|toss|attack)\.(effective_name|printed_attack)|(paid|milled|retrieved|drawn)\.(count|event_count|names_are_distinct)|optional\.performed|(source|target)\.(effective_name|role|entry_origin|entry_reason|entry_turn|current_(serve|receive|block|toss|attack)))$/.test(n.field),'Fact is not implemented: '+n.field);
       }
     });
   }
@@ -487,7 +507,13 @@ class Kernel {
         if (ctx.inPayment && node.count_mode==='exact' && ids.length<n) throw new Unpayable();
         n=Math.min(n,ids.length);if(node.count_mode==='upto'){const max=n;n=this._decide('mill_count',ctx,Array.from({length:n+1},(_,i)=>i));legal(Number.isInteger(n)&&n>=0&&n<=max,'Invalid mill count');}
         const moved=[];for(let i=0;i<n;i++){const id=this.top(player,'deck');this._move(id,player,'drop',ctx);moved.push(id);}ctx.bind.milled=moved;if(ctx.inPayment)ctx.paid.push(...moved);return moved.length>0; }
-      case 'pay_guts': { need(node.count_mode!=='exact_each','Per-area payment not implemented');const areas=node.areas==='court'?COURT:node.areas==='source_area'?[this.card(ctx.source.id).zone.split('.')[1].startsWith('side:')?'block':this.card(ctx.source.id).zone.split('.')[1]]:node.areas;
+      case 'pay_guts': { const areas=node.areas==='court'?COURT:node.areas==='source_area'?[this.card(ctx.source.id).zone.split('.')[1].startsWith('side:')?'block':this.card(ctx.source.id).zone.split('.')[1]]:node.areas;
+        if(node.count_mode==='exact_each'){
+          if(areas.some(a=>this.zone(ctx.controller,a).length-1<node.count_each))throw new Unpayable();
+          const paid=[];for(const area of areas){const ids=this.zone(ctx.controller,area).slice(0,-1);paid.push(...this._selection(ids,node.count_each,ctx,'guts',ctx.controller,{area}));}
+          for(const id of paid)this._move(id,this.card(id).owner,'drop',ctx);
+          ctx.bind[node.bind]=paid;ctx.paid.push(...paid);return paid.length>0;
+        }
         const ids=areas.flatMap(a=>this.zone(ctx.controller,a).slice(0,-1));let n=node.count;
         if(node.count_mode==='one_of_exact'){const counts=node.allowed_counts.filter(n=>n<=ids.length);if(!counts.length)throw new Unpayable();n=this._decide('payment_count',ctx,counts);legal(counts.includes(n),'Invalid Guts amount');}
         if(ids.length<n)throw new Unpayable();const paid=this._selection(ids,n,ctx,'guts');for(const id of paid)this._move(id,this.card(id).owner,'drop',ctx);ctx.bind.paid=paid;ctx.paid.push(...paid);return paid.length>0; }
@@ -598,6 +624,8 @@ class Kernel {
     need(p.activation?.skill_type!=='permanent_entry_name','Entry-name replacement not implemented');
     if(p.activation?.skill_type==='passive')this._admit(p);
     const sourceZone=c.zone.split('.')[1], entryOrigin=COURT.includes(sourceZone)&&this.role(id)==='guts'?'guts':sourceZone;
+    const covered=this.top(player,dest);c.coveredCharacter=covered?{effective_name:this.effectiveName(covered),tags:clone(this.card(covered).printed.affiliation_tags),positions:clone(this.card(covered).printed.position_tags)}:null;
+    c.entrySkillName=origin==='skill'&&ctx.source?this.effectiveName(ctx.source.id):null;
     this._move(id,player,dest,ctx,'explicit_entry');
     c.entryOrigin=entryOrigin;c.entryReason=origin==='skill'?'skill':'rule';c.entryTurn=this.state.turn.id;
     const event={type:'character_entry',player,card:id,character:this.reference(id),role:this.role(id),origin:entryOrigin,phase:this.state.turn.phase,window:this.state.turn.id+':'+this.state.turn.phase};
@@ -658,6 +686,7 @@ class Kernel {
         if(e.character.incarnation===this.card(e.card).incarnation)legal(this.current(e.character)&&this.role(e.card)===e.role,'Current entry role mismatch');
         legal(['hand','drop','guts'].includes(e.origin)&&['rule','skill'].includes(e.reason),'Unknown entry origin');
         const c=this.card(e.card);c.entryOrigin=e.origin;c.entryReason=e.reason;c.entryTurn=this.state.turn.id;
+        c.coveredCharacter=clone(e.coveredCharacter??null);c.entrySkillName=e.entrySkillName??null;
         const event={type:e.type,player:e.player,card:e.card,character:e.character,role:e.role,origin:e.origin,phase:this.state.turn.phase,window:this.state.turn.id+':'+this.state.turn.phase};
         this._emit(event);this._enqueuePassive(e.card,event);
       }

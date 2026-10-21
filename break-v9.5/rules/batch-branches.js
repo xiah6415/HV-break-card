@@ -62,6 +62,7 @@ function expandFixture(k,{catalog,profile,source,player,phase,focus}){
   if(m){const who=owner(m[1]),zone=m[2]==='hand'?'hand':'sets',leave=who===player&&zone==='hand'&&profile.activation.skill_type!=='active'?1:0,wanted=(n.op==='gte'?n.value-1:n.value+1)+leave;
    while(k.zone(who,zone).length>wanted){const id=k.zone(who,zone).find(id=>id!==source);if(!id)gap('Protected branch source');moveToDeck(id);}while(k.zone(who,zone).length<wanted)add(base,who,zone);return;
   }
+  if(n.field==='source.covered_character.effective_name'){replaceTop(player,phase,pick({type:'character'},phase,d=>printed(d).name!==n.value));return;}
   if(n.field==='both.set.count_sum'){while(k.zone(0,'sets').length+k.zone(1,'sets').length<=n.value)add(base,player,'sets');return;}
   if(n.field==='opponent.attack.printed_attack'){replaceTop(1-player,'attack',pick({type:'character'},'attack',d=>printed(d).parameters.attack>n.value));return;}
   if(n.field==='opponent_ball.kind'){k.state.ball.kind=n.value==='serve'?'attack':'serve';return;}

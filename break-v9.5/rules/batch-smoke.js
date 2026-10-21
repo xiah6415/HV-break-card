@@ -11,8 +11,8 @@ const copy=x=>JSON.parse(JSON.stringify(x)),hash=x=>crypto.createHash('sha256').
 const neutral=catalog.cards.filter(c=>c.profiles.length===1&&!c.profiles[0].program&&c.profiles[0].variants[0].printed.type==='character');
 const eventCards=catalog.cards.filter(c=>c.profiles[0].variants[0].printed.type==='event');
 const scenarios=[{key:'rich_first',rich:true,max:true},{key:'rich_last',rich:true,max:true,last:true},{key:'decline',rich:true,max:false},{key:'empty',rich:false,max:true},{key:'no_add',rich:true,max:true,noAdd:true}];
-function fixture(card,p,phase,scenario,player){
- const k=new Kernel({catalog,ruleIds:rules.rules.map(r=>r.id),fingerprint,mode:'sandbox',choose:req=>{
+function fixture(card,p,phase,scenario,player,definitions=catalog){
+ const k=new Kernel({catalog:definitions,ruleIds:rules.rules.map(r=>r.id),fingerprint,mode:'sandbox',choose:req=>{
   if(req.kind==='activate_payment'||req.kind==='optional')return scenario.max;
   if(req.count!=null)return (scenario.last?[...req.options].reverse():req.options).slice(0,req.count);
   return scenario.max?req.options.at(-1):req.options[0];
@@ -21,8 +21,8 @@ function fixture(card,p,phase,scenario,player){
  k.state.ball={owner:1-player,kind:scenario.rich?'attack':'serve',offense:scenario.rich?8:2};
  if(scenario.conditioned){
   const id=k.addCard(card.card_no,player,'hand',card.profiles.indexOf(p));
-  const seeded=seedConditions(k,{catalog,profile:p,source:id,player,phase,expanded:scenario.expanded});
-  if(scenario.expanded)Object.assign(seeded,expandFixture(k,{catalog,profile:p,source:id,player,phase,focus:scenario.focus}));
+  const seeded=seedConditions(k,{catalog:definitions,profile:p,source:id,player,phase,expanded:scenario.expanded});
+  if(scenario.expanded)Object.assign(seeded,expandFixture(k,{catalog:definitions,profile:p,source:id,player,phase,focus:scenario.focus}));
   if(scenario.noAdd)k.resolveProgram({kind:'ban_action',actor:'self',action:'add_hand',scope:{origins:['skill']},duration:'this_turn'},player);
   return {k,id,...seeded};
  }

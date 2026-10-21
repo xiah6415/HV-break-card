@@ -44,20 +44,15 @@ function buildCoverage(){
    if(n.kind==='equal_fields'||n.kind==='compare'&&n.op==='lt_field')for(const field of n.fields||[n.value])try{kernel.preflight({kind:'compare',field,op:'eq',value:0});}catch(e){core('numeric','fact:'+field,at,e.message);}
    if(n.kind==='selector'){
     if(!['self','opponent','owner','controller'].includes(n.actor))core('other','actor:'+n.actor,at,'此actor尚無核心owner解析');
-    if(n.zone==='event_or_drop'||n.zone==='entering_card')core('movement','selector_zone:'+n.zone,at,'此selector區域尚無核心pool解析');
+    if(n.zone==='entering_card')core('movement','selector_zone:'+n.zone,at,'此selector區域尚無核心pool解析');
    }
    if(typeof n.duration==='string'&&!['this_turn','current_turn_cleanup_or_role_exit','this_turn_or_role_exit','this_draw_phase','next_opponent_turn'].includes(n.duration))core('persistent','duration:'+n.duration,at,'核心沒有此期限的生命週期');
    if(n.kind==='numeric'){
     if(!['current_turn_cleanup_or_role_exit','this_turn_or_role_exit','this_turn'].includes(n.duration))host('numeric','numeric_duration:'+n.duration,at,'此數值期限未接入host清理／啟用流程');
-    if(n.operation!=='add')host('numeric','numeric_operation:'+n.operation,at,'目前host數值投影累加delta，不能直接投影固定值');
     if(n.target?.actor==='opponent'&&n.target_scope?.binding==='choose')host('selection','opponent_target_viewpoint',at,'目前場上目標介面需補對手角色名稱與視角資訊');
     if(n.target_scope?.mode==='multiple')host('selection','multiple_numeric_targets',at,'目前玩家目標選擇橋接僅支援單一實體');
     if(typeof n.target==='string'&&!['source','$target','$event.character','opponent_ball'].includes(n.target))host('numeric','numeric_target:'+n.target,at,'此綁定或球域尚未由host完整投影驗證');
     if(['offense','attack_offense','defense'].includes(n.parameter)&&n.target!=='opponent_ball')host('numeric','numeric_domain:'+n.parameter,at,'未接入此數值領域的host投影');
-   }
-   if(n.kind==='pay_guts'){
-    if(n.areas!=='source_area')host('selection','guts_areas:'+JSON.stringify(n.areas),at,'共用橋接尚未支援此跨區Guts選擇');
-    if(n.count_mode!=='exact')host('selection','guts_count:'+n.count_mode,at,'共用橋接尚未支援此Guts數量選單');
    }
    if(['move','retrieve'].includes(n.kind)){
     if(n.count>1||!['exact','upto'].includes(n.count_mode))host('selection','move_quantity:'+n.count_mode+':'+(n.count>1?'many':'other'),at,'共用橋接僅支援單一實體選擇與0／1回收');

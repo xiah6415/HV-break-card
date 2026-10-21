@@ -80,6 +80,7 @@ function transaction(g,p,c,timing,notification=null) {
         const id=physical.zones[q.idx+'.'+hostZone][zone.startsWith('side:')?+zone.slice(5):index];
         const card=k.state.cards[temporary];delete k.state.cards[temporary];
         card.id=id;card.incarnation=physical.cards[id].incarnation;k.state.cards[id]=card;
+        for(const key of ['entryOrigin','entryReason','entryTurn','entrySkillName','coveredCharacter'])if(physical.cards[id][key]!==undefined)card[key]=copy(physical.cards[id][key]);
         k.zone(q.idx,zone)[index]=id;short[id]=code;
       }
     }
@@ -115,7 +116,7 @@ function transaction(g,p,c,timing,notification=null) {
       if(req.count!==1)throw new Error('Adapter requires single physical-card choices');
       return req.options.map(id=>[id]);
     }
-    if(['draw_count','move_count','parameter','activate_payment','optional','trigger_order'].includes(req.kind))return [...req.options].reverse();
+    if(['draw_count','move_count','payment_count','parameter','activate_payment','optional','trigger_order'].includes(req.kind))return [...req.options].reverse();
     throw new Error('Decision is outside migration scope: '+req.kind);
   }
   // A legal event needs at least one resolving effect. Explore the same rules,
@@ -138,7 +139,7 @@ function transaction(g,p,c,timing,notification=null) {
     for(const key of Object.keys(next.zones)) {
       const [player,zone]=key.split('.');
       next.zones[key]=zone==='sides'?[...state.zones[player+'.side:0'],...state.zones[player+'.side:1']]:[...state.zones[player+'.'+(zone==='ev'?'event':zone)]];
-      for(const id of next.zones[key]){next.cards[id].zone=key;next.cards[id].incarnation=state.cards[id].incarnation;}
+      for(const id of next.zones[key]){next.cards[id].zone=key;next.cards[id].incarnation=state.cards[id].incarnation;for(const field of ['entryOrigin','entryReason','entryTurn','entrySkillName','coveredCharacter'])if(state.cards[id][field]!==undefined)next.cards[id][field]=copy(state.cards[id][field]);}
     }
     next.revision=physical.revision+state.events.filter(e=>e.type==='move').length;
     identity.restore(g,next);
@@ -151,7 +152,8 @@ function transaction(g,p,c,timing,notification=null) {
       for(const id of Object.keys(slots)) {
         const slot=slots[id];if(slot.player!==q.idx)continue;
         for(const [old,param] of Object.entries(params)) {
-          const delta=state.effects.slice(base.effects.length).filter(e=>e.kind==='numeric'&&e.target.id===id&&e.parameter===param).reduce((n,e)=>n+e.value,0);
+          const value=s=>s.effects.filter(e=>e.kind==='numeric'&&e.target.id===id&&e.target.incarnation===s.cards[id].incarnation&&e.parameter===param&&(e.duration.kind==='next_opponent_turn'?e.duration.activeTurn===s.turn.id:e.duration.turn===s.turn.id)).reduce((n,e)=>e.operation==='set'?e.value:n+e.value,s.cards[id].printed.parameters[param]);
+          const delta=value(state)-value(base);
           if(!delta)continue;
           if(q.effects[slot.key]?.card!==short[id] || q.effects[slot.key].ref && (q.effects[slot.key].ref.id!==id||q.effects[slot.key].ref.incarnation!==state.cards[id].incarnation))q.effects[slot.key]={card:short[id],ref:{id,incarnation:state.cards[id].incarnation},mods:{}};
           const fx=q.effects[slot.key];fx.mods ||= {};fx.mods[old]=(fx.mods[old]||0)+delta;
@@ -205,7 +207,7 @@ function transaction(g,p,c,timing,notification=null) {
       for(;;){const answer=await g.ask(owner,{kind:'rulesChoice',prompt,timing,options});if(options.some(o=>o.value===answer))return req.kind==='reveal'?true:[];}
     }
     if(req.kind==='guts') {
-      for(;;){const chosen=await g.ask(owner,{kind:'guts',multi:true,need:req.count,area:state.cards[req.source].zone.split('.')[1],timing,prompt:`${byShort[short[req.source]].display_name}：付 ${req.count} Guts（最上面的角色不能付）`,options:req.options.map((id,value)=>({value,card:short[id],label:byShort[short[id]].display_name}))});
+      for(;;){const chosen=await g.ask(owner,{kind:'guts',multi:true,need:req.count,area:req.area||state.cards[req.source].zone.split('.')[1],timing,prompt:`${byShort[short[req.source]].display_name}：付 ${req.count} Guts（最上面的角色不能付）`,options:req.options.map((id,value)=>({value,card:short[id],label:byShort[short[id]].display_name}))});
         const answer=Array.isArray(chosen)?chosen.map(i=>Number.isInteger(i)?req.options[i]:null):null;
         if(validGuts(req,answer))return answer;
       }
@@ -221,6 +223,7 @@ function transaction(g,p,c,timing,notification=null) {
       if(req.kind==='mode')return {label:answer==='deck_top'?'其餘放回牌庫頂':'其餘放到牌庫底',value:answer,answer};
       if(req.kind==='parameter')return {label:labels[answer],value:Object.keys(params).find(key=>params[key]===answer),answer};
       if(req.kind==='move_count')return {label:answer?`選擇 ${answer} 張加入手牌`:'不加入手牌',value:answer,answer};
+      if(req.kind==='payment_count')return {label:`支付 ${answer} Guts`,value:answer,answer};
       if(req.kind==='trigger_order') {
         const job=state.queue.find(q=>q.id===answer),name=byShort[short[job.source?.id]]?.display_name||'觸發效果';
         return {label:`先結算 ${name}（${state.queue.indexOf(job)+1}）`,value:answer,answer};
@@ -230,7 +233,7 @@ function transaction(g,p,c,timing,notification=null) {
     const kind=req.kind==='parameter'?'parameter':req.kind==='target'?'target':['activate_payment','optional'].includes(req.kind)?'skill':'rulesChoice';
     const fromZones=[...new Set(req.options.filter(id=>typeof id==='string'&&state.cards[id]).map(id=>state.cards[id].zone.split('.')[1]))];
     const fromLabel=fromZones.length===1?({event:'Event 區',drop:'棄牌區',hand:'手牌',deck:'牌庫'}[fromZones[0]]||'來源區'):'來源區';
-    const prompt=sourceName+'：'+({target:'選擇場上 1 位角色',draw_count:'選擇抽牌數量',activate_payment:paymentPrompt,optional:'是否執行這個登場效果？',payment_cards:req.destination==='self.event'?'選擇 1 張事件放到 Event 區':'選擇 1 張符合條件的手牌棄掉',parameter:`選擇這位角色要增加的參數${req.target?`（${g.cardName(g.players[slots[req.target.id].player],slots[req.target.id].key)}・${labels[slots[req.target.id]?.key]||'側攔'}區）`:''}`,move_count:'選擇加入手牌的數量',mode:'其餘的牌放到哪裡？',move_cards:req.ordering?'安排其餘牌的順序（先選的會先抽到）':req.destination?.endsWith('.hand')?`從${fromLabel}選擇 1 張加入手牌`:isPassive?'請選 1 張手牌棄掉':'非抽牌加入手牌後，請選 1 張手牌棄掉',trigger_order:'選擇同時觸發的結算順序'}[req.kind]);
+    const prompt=sourceName+'：'+({target:'選擇場上 1 位角色',draw_count:'選擇抽牌數量',payment_count:'選擇支付Guts數量',activate_payment:paymentPrompt,optional:'是否執行這個登場效果？',payment_cards:req.destination==='self.event'?'選擇 1 張事件放到 Event 區':'選擇 1 張符合條件的手牌棄掉',parameter:`選擇這位角色要增加的參數${req.target?`（${g.cardName(g.players[slots[req.target.id].player],slots[req.target.id].key)}・${labels[slots[req.target.id]?.key]||'側攔'}區）`:''}`,move_count:'選擇加入手牌的數量',mode:'其餘的牌放到哪裡？',move_cards:req.ordering?'安排其餘牌的順序（先選的會先抽到）':req.destination?.endsWith('.hand')?`從${fromLabel}選擇 1 張加入手牌`:isPassive?'請選 1 張手牌棄掉':'非抽牌加入手牌後，請選 1 張手牌棄掉',trigger_order:'選擇同時觸發的結算順序'}[req.kind]);
     let invalid=false;
     for(;;) {
       const value=await g.ask(owner,{kind,prompt:prompt+(invalid?'（請重新選擇有效選項）':''),timing,ctx:{card:short[req.source],...(req.kind==='parameter'?{target:slots[req.target?.id||req.source]?.key}:{}),...(state.cards[req.source]?.zone===req.player+'.receive'&&g.ball?{need:g.ball.off-g.parameter(owner,slots[req.source].key,'rcv')}: {})},options:opts.map(({answer,...o})=>o)});
@@ -280,11 +283,11 @@ async function charactersEntered(g,p,entries) {
   if(!passive&&!stored(g).effects.some(e=>e.kind==='watch'&&e.event==='character_entry'&&e.actor===p.idx&&active(e,g)))return;
   // Payments and draws change move revision; a repeated entry is still the same role instance.
   identity.ensure(g);
-  for(const {key,origin='hand',reason='rule'} of entries) {
+  for(const {key,origin='hand',reason='rule',coveredCharacter=null,entrySkillName=null} of entries) {
     const character=g.roleReference(p,key),receipt=`entry:${g.turnNo}:${p.idx}:${character.id}:${character.incarnation}:${key}`;
     if(stored(g).receipts.includes(receipt)||g.sharedRulesEvents?.some(e=>e.receipt===receipt))continue;
     const role=key==='block'?'center_blocker':key.startsWith('side:')?'side_blocker':key;
-    (g.sharedRulesEvents ||= []).push({type:'character_entry',player:p.idx,card:character.id,character,role,origin,reason,receipt});
+    (g.sharedRulesEvents ||= []).push({type:'character_entry',player:p.idx,card:character.id,character,role,origin,reason,receipt,coveredCharacter,entrySkillName});
   }
   if(!g.sharedRulesDepth)return flushHandEvents(g);
 }

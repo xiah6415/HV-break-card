@@ -96,8 +96,9 @@ function seedConditions(k,{catalog,profile,source,player,phase,expanded=false}){
  }
  for(const n of nodes){
   if(n.kind==='pay_guts'){
-   if(n.areas!=='source_area')fail('Unseeded Guts areas');
-   const area=phase,used=[];for(let i=0;i<n.count;i++){const d=pick({...{type:'character'},...(paidFilter||{})},{parameter:area,tag,exclude:distinctPaid?used:[]});used.push(printed(d).name);add(d,player,area);}
+   const areas=n.areas==='source_area'?[phase]:n.areas==='court'?['serve','block','receive','toss','attack']:n.areas;
+   const count=n.count_each||n.count||Math.max(...n.allowed_counts);
+   for(const area of areas){const used=[];for(let i=0;i<count;i++){const d=pick({...{type:'character'},...(paidFilter||{})},{parameter:area,tag,exclude:distinctPaid?used:[]});used.push(printed(d).name);add(d,player,area);}}
   }
   if(expanded&&n.kind==='numeric'&&n.target?.kind==='selector')ensure({...n.target,filters:{...n.target.filters,...(targetName?{names:[targetName]}:{})}},1,{receiveMax:targetReceive===null?undefined:Math.max(1,targetReceive-2)});
   if(n.kind==='selector'&&!n.zone.startsWith('$')&&!deferred.some(prefix=>n.node_id?.startsWith(prefix)))ensure(n,1);
@@ -111,6 +112,8 @@ function seedConditions(k,{catalog,profile,source,player,phase,expanded=false}){
    let ids=pool(sel);while((n.distinct_by?new Set(ids.map(id=>k.effectiveName(id))).size:ids.length)>wanted){moveToDeck(ids.at(-1));ids=pool(sel);}
   }
  }
+ if(expanded&&targetName)for(const n of nodes.filter(n=>n.kind==='numeric'&&n.target?.kind==='selector'))ensure({...n.target,filters:{...n.target.filters,names:[targetName]}},1);
+ if(expanded){const covered=nodes.find(n=>n.kind==='compare'&&n.field==='source.covered_character.effective_name');if(covered)add(pick({names:[covered.value]},{parameter:phase}),player,phase);}
  if(ownUniform&&!k.court(player).length)add(pick({type:'character'},{parameter:'attack',tag}),player,'attack');
  // Keep source and required cost cards; adjust hand counts at the declaration checkpoint.
  for(const who of [0,1])for(const zone of ['hand','deck']){
