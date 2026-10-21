@@ -979,3 +979,8 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 依全部已列相依估算，選牌／付款工作包可新增27靜態候選、改名25、非自身登場被動＋事實查詢23、牌庫＋mill橋接26；卡數有重疊，不可相加，也不是直接核准。建議先從93挑30–50張，以獨立卡文預期＋生成邊界測試批驗；每個新原語或新形態才完整深測，再回歸全部依賴卡。
 - build、盤點／coverage／batch-index檢查、fuzz3000、6組各300對戰全部通過；遊戲engine／UI／index、原卡文、核心／橋接、核准與runtime指紋全部不變。數值541／嚴格244，共用54＋舊7（既有限制）、未自動化297不變。
 - 交付outputs/BREAK-primitive-audit.md／json、BREAK-primitive-cards.md及BREAK-primitive-validation.json。先提交／推送／核對Pages保持同一遊戲產物；使用者先看盤點後再決定批次順序，不自動開工先前兩張回收卡或30–50張。多人／多人Undo／AI難度仍延後。
+
+
+## 效果腳本／原語盤點交接公開核對（2026-10-21）
+- 盤點提交cb3ff8cfd494b0f16eae3d9d72ca9e1c0240c1a8已推送master，Pages built／無錯誤；HTTP200，公開index SHA256 e35e7912a2b18b727ece9eeffc2feb7332dd68d837f20e795f656f15d4103713與先前7張手牌付款已測版完全一致，未新增技能或改規則／UI。網址https://xiah6415.github.io/HV-break-card/break-v9.5/?v=cb3ff8c。
+- 盤點、36項缺口及297逐卡腳本已交付；後續先由使用者看表決定批次方向。數值541／嚴格244，共用54＋舊7不變；本輪僅工具／文件，交接結果提交後再確認最終Pages。
