@@ -991,3 +991,9 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 契約涵蓋唯一狀態、命令、事件、可序列化亂數，以及所有Game／Kernel request的欄位、合法answer、驗證、Undo／重演、範例卡。契約先獨立提交推送，供Claude在claude/generic-choice分支實作C；不建立或覆蓋Claude分支，不代做D。
 - 隔離新核心試點，使用真實40張牌組、固定seed與決策，完整準備→回合→Loss→補牌換發球→勝負。逐邊界比較區域／實體、數值、發球、亂數及決策；明確拒絕未遷移能力，不把嚴格技能靜默數值化。
 - 動工後維持唯一狀態；測試雙引擎只作離線比較。驗證snapshot／失效回答／副作用隔離，按AGENTS建置、fuzz3000及test300，保持公開已測產物不變。完成後提交推送、更新memory、公開核對，回報實際耗時與倍率及A+E／B／C／全庫重估。
+
+## Claude：C 通用選擇元件計畫（2026-10-21，修改前，分支 claude/generic-choice）
+- 依 rules/HOST-CONTRACT.md（break.host.v1）。不改 rules 核心、engine、ui.html、核准；試點未接 UI 前先以獨立模組＋示範頁交付，日後由 Codex 接入新核心入口。
+- host-choice.js（UMD 純函式）：envelope 驗證（matchId/requestId/epoch/actor/protocol）、依 input.type（ack/single/cards/number/block）驗證 value（JSON 型態、option 成員、唯一、min/max、ordered、block 中攔/人數/有效名不重複）；selection model（toggle、ordered 排序、canSubmit、錯誤訊息）；未知 input 拒絕；AI 基礎合法決策（只用 request 可見資訊）。
+- choice-ui.js：依 input 通用渲染（卡圖以實體 ID 為 key，同卡號多張分開；有序多選顯示順位；攔網中攔指定；數量/模式/參數/布林），手機 390/320 不溢出；choice-demo.html 以契約列出的範例卡做 fixture。
+- 測試：host-choice.test.js（每種 input 合法/非法/邊界、AI 回答必過 validator、未知 schema 報錯）、choice-e2e.js（三尺寸實操）。回報契約缺口：多槽、每區各付、選牌限制描述。
