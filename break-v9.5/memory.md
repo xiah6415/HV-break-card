@@ -933,3 +933,9 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - build、44單元套件、fuzz3000、6組各300對戰與5瀏覽器套件（share／library／numeric／e2e／flow）全部通過。engine／核心／橋接／核准／卡庫／runtime／素材指紋逐位元組不變；數值541／嚴格237、共用47＋舊7（既有限制）、未自動化304不變。
 - 使用者轉述Claude第1–5步實戰驗收通過已記錄；P04部分官方SAMPLE圖提醒加入library/README素材待辦，本批未更換圖，來源有正式更新再核對卡號／版本／指紋替換。
 - 本批先合併提交推送／Pages部署並核對公開SHA與手機視窗，再繼續第6步下一家族另寫計畫。證據見outputs/BREAK-import-overflow-evidence.json／validation.json。
+
+
+## Claude手機匯入溢出合併公開部署（2026-10-21）
+- 合併提交33f711f782df8e61c358ea3ced70b3c0725fba28已推送master且Pages built／無錯誤，5842c77為祖先。公開網址https://xiah6415.github.io/HV-break-card/break-v9.5/?v=33f711f，HTTP200、index 3442714bytes、SHA256 a50f8027adb166adaa935f32a2885b3e9ecb3a03233a863d9634ac06d434b896與已測本機完全一致。
+- 公開3尺寸×雙模式×雙方12組匯入操作及視窗量測全通過，390px為358／358、320px為288／288，按鈕可見、可保存、無頁面錯誤與橫向溢出。Chrome手機模擬，非Safari真機。
+- 數值541／嚴格237，共用47＋舊7（既有限制）不變。先保存公開結果並純文件提交推送；下一批第6步另寫計畫後再動工，P04 SAMPLE圖保留待新來源核對。

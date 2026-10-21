@@ -1,5 +1,7 @@
 # GitHub Pages部署交接
 
+> Claude分享匯入溢出修正5842c77已合併並部署 33f711f；公開index一致，手機匯入視窗12組驗證通過。技能數不變，下一批續第6步。
+
 > 最新11張Guts登場批次已部署 0c08ff5；數值541／嚴格237，共用47＋舊7（既有限制），未自動化304。公開index與11圖核對一致，下方舊版為歷史。
 
 > 最新14事件批次已部署 cc81bd2。數值541／嚴格226，共用36＋舊7（既有限制）、未自動化315；公開index與14張卡圖均核對一致。下方較早版本為歷史。
@@ -52,3 +54,8 @@ Claude分享連結已合併，claude-handoff/已刪除並保留外層bundle備�
 - 實作提交0c08ff5f7d5ea9adecac6309afcb8c09971a3b6d已推送master且Pages built／無錯誤。公開網址https://xiah6415.github.io/HV-break-card/break-v9.5/?v=0c08ff5，HTTP200、index 3442606bytes、SHA256 287a572fd40574f5a15db7590602997310b163f1c3e55435b40e8a9cc2a2006a與已測本機逐位元組一致。新增11角色卡圖均公開HTTP200，SHA與本機一致。
 - 公開頁Chrome1280／390／320核對數值541／嚴格237、共用47／舊7／無技能183／未自動化304，新增11角色皆shared且可由橋接處理；卡庫／runtime權限一致，改playable不能授權。雙方分享匯入／重載保存、未自動化標記、圖片與開始對戰、無橫向溢出／頁面錯誤全通過。Chrome模擬，非Safari真機。
 - memory與交接結果以純文件提交推送，不改已測index；最後提交／Pages核對存外層outputs/BREAK-guts-entry-evidence.json。下一批依機制家族，家族內優先烏野／青城／音駒／稲荷崎，多人及AI難度延後。
+
+## Claude手機匯入溢出合併公開部署（2026-10-21）
+- 合併提交33f711f782df8e61c358ea3ced70b3c0725fba28已推送master且Pages built／無錯誤，5842c77為祖先。公開網址https://xiah6415.github.io/HV-break-card/break-v9.5/?v=33f711f，HTTP200、index 3442714bytes、SHA256 a50f8027adb166adaa935f32a2885b3e9ecb3a03233a863d9634ac06d434b896與已測本機完全一致。
+- 公開3尺寸×雙模式×雙方12組匯入操作及視窗量測全通過，390px為358／358、320px為288／288，按鈕可見、可保存、無頁面錯誤與橫向溢出。Chrome手機模擬，非Safari真機。
+- 數值541／嚴格237，共用47＋舊7（既有限制）不變。先保存公開結果並純文件提交推送；下一批第6步另寫計畫後再動工，P04 SAMPLE圖保留待新來源核對。

@@ -1,5 +1,7 @@
 # BREAK 後續工作順序
 
+> Claude分享匯入溢出修正5842c77已合併並部署 33f711f；公開index一致，手機匯入視窗12組驗證通過。技能數不變，下一批續第6步。
+
 > 本批11張Guts登場角色公開版本：0c08ff5，https://xiah6415.github.io/HV-break-card/break-v9.5/?v=0c08ff5；Pages built，公開index SHA及11圖已核對一致。
 
 > 2026-10-21：本批11張Guts登場角色已寫入正式完整SHA核准；數值541／嚴格237，共用47＋舊7（既有限制），未自動化304。剩餘候選100／92家族。最新測試與部署見GUTS-ENTRY.md、STATUS.md及memory末段；下方舊批次為歷史。
