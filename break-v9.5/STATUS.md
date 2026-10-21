@@ -1,5 +1,7 @@
 # BREAK 對練台目前狀態（2026-10-21）
 
+> 本批11張Guts登場角色公開版本：0c08ff5，https://xiah6415.github.io/HV-break-card/break-v9.5/?v=0c08ff5；Pages built，公開index SHA及11圖已核對一致。
+
 > 本批14事件公開版本：cc81bd2，https://xiah6415.github.io/HV-break-card/break-v9.5/?v=cc81bd2；Pages built，index SHA及14事件圖片已核對一致。
 
 14張有限事件與本批11張Guts登場角色已完成正式核准，見GUTS-ENTRY.md。此頁取代先前「14張待恢復」的現況描述；歷史批次保存在memory.md與各專題文件。最新公開版本以DEPLOYMENT.md及memory末段為準。

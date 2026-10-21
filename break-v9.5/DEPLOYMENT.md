@@ -1,5 +1,7 @@
 # GitHub Pages部署交接
 
+> 最新11張Guts登場批次已部署 0c08ff5；數值541／嚴格237，共用47＋舊7（既有限制），未自動化304。公開index與11圖核對一致，下方舊版為歷史。
+
 > 最新14事件批次已部署 cc81bd2。數值541／嚴格226，共用36＋舊7（既有限制）、未自動化315；公開index與14張卡圖均核對一致。下方較早版本為歷史。
 
 > 2026-10-21權限改造已完成回歸並部署57602b1，公開三尺寸已驗證；最新index SHA256 `37ae5c8c1aa4f510908af48d4ffa21eef6493b665a9175c6e6f847728e4dc77c`。下方舊發布描述為歷史，結果見文末與最新memory。
@@ -45,3 +47,8 @@ Claude分享連結已合併，claude-handoff/已刪除並保留外層bundle備�
 - 實作提交cc81bd249eae54e652e5d65ffa70ecc5499cb84b已推送master且Pages built／無錯誤。公開網址https://xiah6415.github.io/HV-break-card/break-v9.5/?v=cc81bd2，HTTP200、index 3408160bytes、SHA256 41ba6d3d46c943f313628a63a4a5037e93f3f00f820007bf384247d4ff9d4b30與已測本機逐位元組一致。新增14事件卡圖公開HTTP200且各自SHA與本機一致。
 - 公開頁Chrome1280／390／320確認數值541／嚴格226、共用36／舊7／無技能183／未自動化315、14事件皆shared且可由橋接處理；卡庫與runtime權限一致、偽造playable不能取得權限。雙方分享匯入／保存、未自動化標記、圖片、開始對戰及無溢出／頁面錯誤通過。Chrome手機模擬，非Safari真機。
 - 本批完成：14事件正式自動化，共用36＋7舊流程（既有限制）。最後交接紀錄以純文件提交推送，不改已測index；最後提交／Pages核對保存外層outputs/BREAK-finite-events-evidence.json。下一步依機制家族擴充，家族內優先四校，多人及AI難度延後。
+
+## 第6步11張Guts登場角色公開部署結果（2026-10-21）
+- 實作提交0c08ff5f7d5ea9adecac6309afcb8c09971a3b6d已推送master且Pages built／無錯誤。公開網址https://xiah6415.github.io/HV-break-card/break-v9.5/?v=0c08ff5，HTTP200、index 3442606bytes、SHA256 287a572fd40574f5a15db7590602997310b163f1c3e55435b40e8a9cc2a2006a與已測本機逐位元組一致。新增11角色卡圖均公開HTTP200，SHA與本機一致。
+- 公開頁Chrome1280／390／320核對數值541／嚴格237、共用47／舊7／無技能183／未自動化304，新增11角色皆shared且可由橋接處理；卡庫／runtime權限一致，改playable不能授權。雙方分享匯入／重載保存、未自動化標記、圖片與開始對戰、無橫向溢出／頁面錯誤全通過。Chrome模擬，非Safari真機。
+- memory與交接結果以純文件提交推送，不改已測index；最後提交／Pages核對存外層outputs/BREAK-guts-entry-evidence.json。下一批依機制家族，家族內優先烏野／青城／音駒／稲荷崎，多人及AI難度延後。

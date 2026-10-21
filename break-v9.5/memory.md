@@ -910,3 +910,9 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 正式live-grants下213語意情境、110完整Undo還原點、264真實對戰全通過；11張皆有真正登場與支付紀錄，兩模式與80實體／雙方40張精確所有權守恆。Undo含付款／多實體選擇／跨回合拒絕同意／舊回覆，抽牌不誤觸非抽牌加入監聽。
 - build、44單元套件、fuzz3000與6組各300對戰、13瀏覽器套件全通過，含新增33桌機／手機付款操作及原14事件69操作；既有登場／被動、完整對局、Undo、數值、分享／查卡、限制與先發先接回歸通過。舊passive-e2e未指定模式而停在數值手動窗口，現明確測strict；遊戲預設numeric不變。Chrome手機模擬，非Safari真機。
 - 正式候選111→100／92家族；原125／1938局面歷史回歸集合保留，未把整個候選池直接開放。交接見GUTS-ENTRY／STATUS／AUTHORITY／REVIEW-PLAN及outputs/BREAK-guts-entry-evidence.json與validation.json。本批接著提交推送部署並核對公開SHA／11卡圖／公開操作；下一批仍依機制家族、家族內四校優先，多人及AI難度延後。
+
+
+## 第6步11張Guts登場角色公開部署結果（2026-10-21）
+- 實作提交0c08ff5f7d5ea9adecac6309afcb8c09971a3b6d已推送master且Pages built／無錯誤。公開網址https://xiah6415.github.io/HV-break-card/break-v9.5/?v=0c08ff5，HTTP200、index 3442606bytes、SHA256 287a572fd40574f5a15db7590602997310b163f1c3e55435b40e8a9cc2a2006a與已測本機逐位元組一致。新增11角色卡圖均公開HTTP200，SHA與本機一致。
+- 公開頁Chrome1280／390／320核對數值541／嚴格237、共用47／舊7／無技能183／未自動化304，新增11角色皆shared且可由橋接處理；卡庫／runtime權限一致，改playable不能授權。雙方分享匯入／重載保存、未自動化標記、圖片與開始對戰、無橫向溢出／頁面錯誤全通過。Chrome模擬，非Safari真機。
+- memory與交接結果以純文件提交推送，不改已測index；最後提交／Pages核對存外層outputs/BREAK-guts-entry-evidence.json。下一批依機制家族，家族內優先烏野／青城／音駒／稲荷崎，多人及AI難度延後。

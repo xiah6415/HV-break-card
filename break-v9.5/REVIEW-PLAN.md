@@ -1,5 +1,7 @@
 # Claude審查結論與後續有效順序
 
+> 本批11張Guts登場角色公開版本：0c08ff5，https://xiah6415.github.io/HV-break-card/break-v9.5/?v=0c08ff5；Pages built，公開index SHA及11圖已核對一致。
+
 > 本批14事件公開版本：cc81bd2，https://xiah6415.github.io/HV-break-card/break-v9.5/?v=cc81bd2；Pages built，index SHA及14事件圖片已核對一致。
 
 日期：2026-10-20。來源：使用者直接轉述Claude審查結論，並指示「先同步 別做」。原指示已完成文件同步；使用者後續「繼續」已授權依序執行。第1步已完成推送與部署（見DEPLOYMENT.md），第3步分享匯入已由Claude分支ac6d6bc審查合併完成；第2步數值模式與手動面板也已完成回歸並部署3fc2023；第4步先發／先接選擇也已完成回歸，已部署d7723d9並公開核對，見DEPLOYMENT.md；第5步權限來源改造已完成回歸並部署57602b1；14有限事件已完成核准與回歸，第6步本批11張Guts登場角色也已完整SHA核准；詳見GUTS-ENTRY.md與memory最新結果。
