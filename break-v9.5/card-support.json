@@ -2026,6 +2026,208 @@
         "rules/guts-entry-e2e.js"
       ],
       "settlement": "shared-rules-full-sha-approved"
+    },
+    "D01-007": {
+      "name": "縁下 力",
+      "number": "HV-D01-007",
+      "rarity": "D",
+      "kind": "C",
+      "stats": [
+        2,
+        1,
+        2,
+        0,
+        3
+      ],
+      "affiliation": "烏野·2年",
+      "position": "WS",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-D01-007&voba=D",
+      "profileSha256": "e17ab59e36cc266104a1fbc0432151425ffb51d1f495684272ee6bf874e361cc",
+      "qaIds": [],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "rules/hand-entry.test.js",
+        "rules/hand-entry-undo.test.js",
+        "rules/hand-entry-games.test.js",
+        "rules/hand-entry-e2e.js"
+      ],
+      "settlement": "shared-rules-full-sha-approved"
+    },
+    "D02-003": {
+      "name": "夜久 衛輔",
+      "number": "HV-D02-003",
+      "rarity": "D",
+      "kind": "C",
+      "stats": [
+        null,
+        null,
+        5,
+        0,
+        0
+      ],
+      "affiliation": "音駒·3年",
+      "position": "Li",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-D02-003&voba=D",
+      "profileSha256": "8a58352d837bb97eff7dc62ecc6ae68701d7ad039b148271a6a2e31807b39732",
+      "qaIds": [],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "rules/hand-entry.test.js",
+        "rules/hand-entry-undo.test.js",
+        "rules/hand-entry-games.test.js",
+        "rules/hand-entry-e2e.js"
+      ],
+      "settlement": "shared-rules-full-sha-approved"
+    },
+    "PR-003": {
+      "name": "日向 翔陽",
+      "number": "HV-PR-003",
+      "rarity": "P",
+      "kind": "C",
+      "stats": [
+        1,
+        1,
+        1,
+        0,
+        2
+      ],
+      "affiliation": "烏野·1年",
+      "position": "MB",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-PR-003&voba=P",
+      "profileSha256": "2440f34d04e960518653e4b6c127944455ff78a866709aa3653155288bec0b58",
+      "qaIds": [],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "rules/hand-entry.test.js",
+        "rules/hand-entry-undo.test.js",
+        "rules/hand-entry-games.test.js",
+        "rules/hand-entry-e2e.js"
+      ],
+      "settlement": "shared-rules-full-sha-approved"
+    },
+    "BP-001": {
+      "name": "日向 翔陽",
+      "number": "HVBP-001",
+      "rarity": "P",
+      "kind": "C",
+      "stats": [
+        1,
+        1,
+        1,
+        0,
+        2
+      ],
+      "affiliation": "烏野·1年",
+      "position": "MB",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HVBP-001&voba=P",
+      "profileSha256": "8dccaf79d40942937da3af177464d8af8054fe4f3c666a6ba6abc29b5612e536",
+      "qaIds": [],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "rules/hand-entry.test.js",
+        "rules/hand-entry-undo.test.js",
+        "rules/hand-entry-games.test.js",
+        "rules/hand-entry-e2e.js"
+      ],
+      "settlement": "shared-rules-full-sha-approved"
+    },
+    "P04-023": {
+      "name": "松川 一静",
+      "number": "HV-P04-023",
+      "rarity": "S",
+      "kind": "C",
+      "stats": [
+        0,
+        2,
+        0,
+        0,
+        3
+      ],
+      "affiliation": "青葉城西·3年",
+      "position": "MB",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P04-023&voba=S",
+      "profileSha256": "90d1a060cbf05c863c1dacf15b4343b980586aef35535f47b05db325f8667206",
+      "qaIds": [
+        "1880"
+      ],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "rules/hand-entry.test.js",
+        "rules/hand-entry-undo.test.js",
+        "rules/hand-entry-games.test.js",
+        "rules/hand-entry-e2e.js"
+      ],
+      "settlement": "shared-rules-full-sha-approved"
+    },
+    "PR-044": {
+      "name": "犬岡 走",
+      "number": "HV-PR-044",
+      "rarity": "P",
+      "kind": "C",
+      "stats": [
+        1,
+        1,
+        4,
+        0,
+        2
+      ],
+      "affiliation": "音駒·1年",
+      "position": "WS",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-PR-044&voba=P",
+      "profileSha256": "406e0b1e28f112055d94a6dd5643b3f192b9d2ae7527f3ab2fd88a4067645e22",
+      "qaIds": [
+        "1424",
+        "1425",
+        "1426"
+      ],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "rules/hand-entry.test.js",
+        "rules/hand-entry-undo.test.js",
+        "rules/hand-entry-games.test.js",
+        "rules/hand-entry-e2e.js"
+      ],
+      "settlement": "shared-rules-full-sha-approved"
+    },
+    "P03-045": {
+      "name": "尾白 アラン",
+      "number": "HV-P03-045",
+      "rarity": "S",
+      "kind": "C",
+      "stats": [
+        2,
+        0,
+        4,
+        0,
+        2
+      ],
+      "affiliation": "稲荷崎·3年",
+      "position": "WS",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P03-045&voba=S",
+      "profileSha256": "b5cf7033d5e4b888a57b39280ad27a70e5b7b4cd3168f99c226451d831974fe6",
+      "qaIds": [],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "rules/hand-entry.test.js",
+        "rules/hand-entry-undo.test.js",
+        "rules/hand-entry-games.test.js",
+        "rules/hand-entry-e2e.js"
+      ],
+      "settlement": "shared-rules-full-sha-approved"
     }
   }
 }

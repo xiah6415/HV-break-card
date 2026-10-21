@@ -236,6 +236,41 @@
       "profile_sha256": "e08bb3efea4ac39d725f6872d14c70d238852fd0e2502288cdab2842f5b518e1",
       "scope": "self-entry passive / exact own-source-area Guts payment / optional decline / finite draw and source-bound numeric / draw shortfall and ban / deduplicated host entry receipt",
       "tests": "rules/guts-entry.test.js; rules/guts-entry-undo.test.js; rules/guts-entry-games.test.js; rules/guts-entry-e2e.js"
+    },
+    "HV-D01-007:48b12fa2c9d90497": {
+      "profile_sha256": "e17ab59e36cc266104a1fbc0432151425ffb51d1f495684272ee6bf874e361cc",
+      "scope": "self-entry / exact own-hand physical payment to drop or Event placement without play / affiliation and type filters / finite draw and source fixed or chosen numeric / center and side block / complete replay",
+      "tests": "rules/hand-entry.test.js; rules/hand-entry-undo.test.js; rules/hand-entry-games.test.js; rules/hand-entry-e2e.js"
+    },
+    "HV-D02-003:1b9538349919dcea": {
+      "profile_sha256": "8a58352d837bb97eff7dc62ecc6ae68701d7ad039b148271a6a2e31807b39732",
+      "scope": "self-entry / exact own-hand physical payment to drop or Event placement without play / affiliation and type filters / finite draw and source fixed or chosen numeric / center and side block / complete replay",
+      "tests": "rules/hand-entry.test.js; rules/hand-entry-undo.test.js; rules/hand-entry-games.test.js; rules/hand-entry-e2e.js"
+    },
+    "HV-PR-003:72b17b0e28b340b4": {
+      "profile_sha256": "2440f34d04e960518653e4b6c127944455ff78a866709aa3653155288bec0b58",
+      "scope": "self-entry / exact own-hand physical payment to drop or Event placement without play / affiliation and type filters / finite draw and source fixed or chosen numeric / center and side block / complete replay",
+      "tests": "rules/hand-entry.test.js; rules/hand-entry-undo.test.js; rules/hand-entry-games.test.js; rules/hand-entry-e2e.js"
+    },
+    "HVBP-001:f764d2827234a77c": {
+      "profile_sha256": "8dccaf79d40942937da3af177464d8af8054fe4f3c666a6ba6abc29b5612e536",
+      "scope": "self-entry / exact own-hand physical payment to drop or Event placement without play / affiliation and type filters / finite draw and source fixed or chosen numeric / center and side block / complete replay",
+      "tests": "rules/hand-entry.test.js; rules/hand-entry-undo.test.js; rules/hand-entry-games.test.js; rules/hand-entry-e2e.js"
+    },
+    "HV-P04-023:57f1808e8044f287": {
+      "profile_sha256": "90d1a060cbf05c863c1dacf15b4343b980586aef35535f47b05db325f8667206",
+      "scope": "self-entry / exact own-hand physical payment to drop or Event placement without play / affiliation and type filters / finite draw and source fixed or chosen numeric / center and side block / complete replay",
+      "tests": "rules/hand-entry.test.js; rules/hand-entry-undo.test.js; rules/hand-entry-games.test.js; rules/hand-entry-e2e.js"
+    },
+    "HV-PR-044:3266e553384e9eb8": {
+      "profile_sha256": "406e0b1e28f112055d94a6dd5643b3f192b9d2ae7527f3ab2fd88a4067645e22",
+      "scope": "self-entry / exact own-hand physical payment to drop or Event placement without play / affiliation and type filters / finite draw and source fixed or chosen numeric / center and side block / complete replay",
+      "tests": "rules/hand-entry.test.js; rules/hand-entry-undo.test.js; rules/hand-entry-games.test.js; rules/hand-entry-e2e.js"
+    },
+    "HV-P03-045:f548ed8ad3d18aa0": {
+      "profile_sha256": "b5cf7033d5e4b888a57b39280ad27a70e5b7b4cd3168f99c226451d831974fe6",
+      "scope": "self-entry / exact own-hand physical payment to drop or Event placement without play / affiliation and type filters / finite draw and source fixed or chosen numeric / center and side block / complete replay",
+      "tests": "rules/hand-entry.test.js; rules/hand-entry-undo.test.js; rules/hand-entry-games.test.js; rules/hand-entry-e2e.js"
     }
   }
 }

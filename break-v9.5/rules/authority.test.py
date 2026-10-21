@@ -14,7 +14,7 @@ catalog=json.loads((A.ROOT/'rules/data/cards.json').read_text())
 approvals=json.loads((A.ROOT/'rules/approvals.json').read_text())
 legacy=json.loads((A.ROOT/'rules/legacy-skills.json').read_text())
 base=A.build_authority(catalog,approvals,legacy)
-assert base['counts']==dict(basic=183,shared=47,legacy=7,unapproved=304)
+assert base['counts']==dict(basic=183,shared=54,legacy=7,unapproved=297)
 checks=1
 
 def reject(c=catalog,a=approvals,l=legacy):
@@ -38,7 +38,7 @@ c=copy.deepcopy(catalog);c['cards'][1]['profiles'][0]['profile_id']=c['cards'][0
 # A lost translation cannot turn a skill into a no-skill card.
 c=copy.deepcopy(catalog);p=next(x for x in c['cards'] if x['card_no']=='HV-P04-093')['profiles'][0];p.update(program=None,activation=None,formal_cost=None,limit=None);assert A.build_authority(c,approvals,legacy)['cards']['P04-093']['kind']=='unapproved';checks+=1
 # Revoking a full-SHA approval removes the exact card even if support calls it playable.
-a=copy.deepcopy(approvals);del a['profiles'][pid];changed=A.build_authority(catalog,a,legacy);assert changed['counts']['shared']==46 and changed['counts']['unapproved']==305;checks+=1
+a=copy.deepcopy(approvals);del a['profiles'][pid];changed=A.build_authority(catalog,a,legacy);assert changed['counts']['shared']==53 and changed['counts']['unapproved']==298;checks+=1
 # Full library/runtime builds with forged explanation entries, then a revoked approval.
 original_a,original_l=A.ROOT,L.ROOT
 with tempfile.TemporaryDirectory(prefix='break-authority-') as d:
@@ -51,11 +51,11 @@ with tempfile.TemporaryDirectory(prefix='break-authority-') as d:
     original_path=R.Path
     try:
         A.ROOT=L.ROOT=root
-        lib=L.write_library();assert lib['counts']['playable']==237 and not lib['cards']['P04-093']['playable'] and lib['cards']['P04-093']['status']=='locked';assert lib['cards']['P03-004']['playable'] and lib['cards']['PR-022']['playable'];checks+=1
+        lib=L.write_library();assert lib['counts']['playable']==244 and not lib['cards']['P04-093']['playable'] and lib['cards']['P04-093']['status']=='locked';assert lib['cards']['P03-004']['playable'] and lib['cards']['PR-022']['playable'];checks+=1
         # runtime_data uses its module path; redirect only its Path constructor for this isolated fixture.
         R.Path=lambda value:root/'rules/build_runtime.py'
-        rt=R.runtime_data();assert rt['authority']==lib['authority'] and len(rt['approved'])==47;checks+=1
-        (root/'rules/approvals.json').write_text(json.dumps(a));lib=L.write_library();rt=R.runtime_data();assert lib['counts']['playable']==236 and len(rt['approved'])==46;assert all(p['program'] is None for x in rt['catalog']['cards'] for p in x['profiles'] if p['profile_id']==pid);checks+=1
+        rt=R.runtime_data();assert rt['authority']==lib['authority'] and len(rt['approved'])==54;checks+=1
+        (root/'rules/approvals.json').write_text(json.dumps(a));lib=L.write_library();rt=R.runtime_data();assert lib['counts']['playable']==243 and len(rt['approved'])==53;assert all(p['program'] is None for x in rt['catalog']['cards'] for p in x['profiles'] if p['profile_id']==pid);checks+=1
         # Missing one metadata rebuild is rejected before emitting a mismatched runtime.
         (root/'rules/approvals.json').write_text(json.dumps(approvals))
         try:R.runtime_data()

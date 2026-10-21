@@ -1,0 +1,13 @@
+'use strict';
+const {profile,reviewedEngine}=require('./admission-fixtures');
+const definitions={'D01-007':{areas:['receive'],pay:'D01-009',dest:'drop',param:'rcv',bonus:3,draw:0},'D02-003':{areas:['receive'],pay:'D01-009',dest:'drop',param:'rcv',bonus:2,draw:0},'PR-003':{areas:['attack'],pay:'D01-009',dest:'drop',param:'atk',bonus:2,draw:0},'BP-001':{areas:['attack'],pay:'D01-009',dest:'drop',param:'atk',bonus:2,draw:0},'P04-023':{areas:['block'],pay:'P01-087',dest:'ev',param:'blk',bonus:3,draw:1},'PR-044':{areas:['block','receive'],pay:'P02-100',dest:'ev',chosen:true,bonus:3,draw:1},'P03-045':{areas:['receive','attack'],pay:'P02-022',dest:'drop',chosen:true,bonus:2,draw:0}};
+const codes=Object.keys(definitions),{E,bridge,scope}=reviewedEngine(codes),copy=x=>JSON.parse(JSON.stringify(x));
+const roles=code=>definitions[code].areas.flatMap(a=>a==='block'?['block','side:0']:[a]);
+function fixture(code,area=definitions[code].areas[0],player=0,{game,mode='numeric',setup=()=>{},answer,param,pay=definitions[code].pay}={}){
+ const d=definitions[code],parameter=param||d.param||({block:'blk','side:0':'blk',receive:'rcv',attack:'atk'}[area]),requests=[],logs=[];
+ const choose=async(g,p,r)=>{requests.push({actor:p.idx,...copy(r)});if(answer)return answer(g,p,r);if(r.kind==='skill')return true;if(r.kind==='parameter')return parameter;if(r.kind==='rulesChoice')return (r.options.filter(o=>o.card===pay).at(-1)||r.options[0]).value;if(r.kind==='event')return null;return r.options[0].value;};
+ const g=game||new E.Game({mode,seed:7,decks:['k1014','seijoh'],agents:[{wantsAck:true,choose},{wantsAck:true,choose}],onLog:t=>logs.push(t)});for(const q of g.players){for(const z of ['hand','deck','drop','ev','sets'])q[z]=[];for(const a in q.area)q.area[a]=[];}
+ const p=g.players[player],o=p.opp;g.beginTurn(p);g.ball={type:'attack',off:0};p.hand=[code,pay,pay,'P04-026',code];p.deck=Array(4).fill('D01-009');p.area[area.startsWith('side:')?'block':area]=['D01-009'];o.area.receive=['P04-026'];setup({g,p,o,requests,logs});return{g,p,o,d,code,area,param:parameter,pay,requests,logs};
+}
+async function enter(f,fromDrop=false){const{g,p,code,area}=f;if(area.startsWith('side:')){p.ts.sides ||= [];g.moveCode(fromDrop?p.drop:p.hand,p.ts.sides,code);p.ts.blockers=[p.top('block'),code];p.ts.blk=E.st(p.top('block'),'blk')+E.st(code,'blk');await bridge.charactersEntered(g,p,[{key:area,origin:fromDrop?'drop':'hand',reason:fromDrop?'skill':'rule'}]);}else if(area==='attack')await g.enterAttack(p,code,fromDrop);else{if(area==='block'){p.ts.blockers=[code];p.ts.blk=E.st(code,'blk');}await g.enterCharacter(p,area,code,fromDrop);}}
+module.exports={codes,definitions,roles,E,bridge,scope,fixture,enter,profile};

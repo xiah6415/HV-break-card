@@ -457,7 +457,7 @@ class Game {
     await this.notice({ type: 'turn', player: p.idx, from: p.opp.idx, ball: { ...ball }, toss: ball.type === 'attack' ? p.opp.ts.toss : null, attack: ball.type === 'attack' ? p.opp.ts.atk : null });
     if (ball.type === 'attack') {
       const combos = this.blockCombos(p, ball.off);
-      if (combos.length) {
+      if (combos.length || p.agent.wantsAck && this.blockCands(p).length && this.blockMax(p) > 0) {
         const ch = await this.ask(p, { kind: 'defend', prompt: `來球：攻擊 ${ball.off}。要攔網還是接球？`, ball, combos, options: [{ label: '接球（抽 1 張）', value: 'receive' }, { label: '攔網（不抽牌）', value: 'block' }] });
         if (ch === 'block') return await this.blockTurn(p, combos);
       }
@@ -495,9 +495,9 @@ class Game {
     let cb, center;
     if (pick && typeof pick === 'object') {
       cb = this.evalBlock(p, pick.cards);
-      if (!cb.ok) cb = combos[0];
+      if (!cb.legal) throw Error('請選擇合法的攔網角色組合');
       center = pick.center && cb.cards.includes(pick.center) ? pick.center : cb.cards[0];
-    } else { cb = combos[pick]; center = cb.cards.slice().sort((a, b) => val(b) - val(a))[0]; }
+    } else { cb = combos[pick]; if (!cb) throw Error('請選擇合法的攔網角色組合'); center = cb.cards.slice().sort((a, b) => val(b) - val(a))[0]; }
     this.place(p, 'block', center); this.src = '月島';
     const sides = cb.cards.filter(c => c !== center); p.ts.sides = [];
     for (const c of sides) this.moveCode(p.hand, p.ts.sides, c);
@@ -753,6 +753,7 @@ const AI = {
       }
       case 'serve': return byVal(opts, x => st(x.value, 'srv') * 2 - val(x.value) * (isA(x.value) ? 0.3 : 1) + (x.value === 'P01-033' ? 2 : 0)).value;
       case 'defend': {
+        if (!req.combos.length) return 'receive';
         const cheap = req.combos[0] && req.combos[0].cards.length === 1;
         if (cheap) return 'block';
         const anyRcv = p.handC().some(c => g.canEnter(p,'receive',c) && rcvPotential(g, p, c).v + rcvPotential(g, p, c).boost >= g.ball.off);
