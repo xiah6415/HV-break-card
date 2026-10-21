@@ -7,6 +7,7 @@ completed.push({id:'move',test:require('./move-node-tests').testMove});
 completed.push({id:'count_compare',test:require('./count-node-tests').testCountCompare});
 completed.push({id:'retrieve',test:require('./retrieve-node-tests').testRetrieve});
 completed.push({id:'watch',test:require('./watch-node-tests').testWatch});
+completed.push({id:'uniform_affiliation',test:require('./uniform-node-tests').testUniformAffiliation});
 function testCard(catalog,card){
  if(I.dependencies(card).some(k=>!['sequence','deck_selection'].includes(k)))return C.testCard(catalog,card);
  const p=card.profiles[0],deckNodes=I.nodes(p).filter(n=>n.kind==='deck_selection');

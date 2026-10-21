@@ -19,7 +19,11 @@ let cases=0;
    const g=new E.Game({mode:'strict',seed:7,decks:['k1014','seijoh'],agents:[agent,agent]});
    for(const q of g.players){for(const [host,z]of Object.entries({hand:'hand',deck:'deck',drop:'drop',ev:'event',sets:'sets'}))q[host]=before.zones[q.idx+'.'+z].map(id=>I.short(before.cards[id].cardNo));for(const z of roles)q.area[z]=before.zones[q.idx+'.'+z].map(id=>I.short(before.cards[id].cardNo));}
    g.cardState=null;g.beginTurn(g.players[0]);g.ball={type:before.ball.kind,off:before.ball.offense};g.rulePhase=phases[phase];
-   if(p.activation.skill_type==='passive'){k.enter(id,phase,{reason:entryReason});await g.enterCharacter(g.players[0],phase,code);}
+   if(p.activation.skill_type==='passive'){
+    const name=I.nodes(p).find(n=>n.kind==='compare'&&n.field==='source.entry_skill_name')?.value;
+    if(name){const event=catalog.cards.find(c=>c.profiles[0].variants[0].printed.name===name),eventId=k.addCard(event.card_no,0,'event');k._atomic(()=>{k._enter(id,0,phase,k._context(eventId,0),'skill');k._drain();});g.players[0].ev.push(I.short(event.card_no));g.place(g.players[0],phase,code);await B.charactersEntered(g,g.players[0],[{key:phase,origin:'hand',reason:'skill',entrySkillName:name}]);}
+    else{k.enter(id,phase,{reason:entryReason});await g.enterCharacter(g.players[0],phase,code);}
+   }
    else{p.activation.skill_type==='event'?k.playEvent(id):k.useSkill(id);await g.resolve(g.players[0],code,g.rulePhase);}
    k._atomic(()=>k._move(id,0,'drop',k._context(id,0)));const owner=g.players[0];g.moveCode(p.activation.skill_type==='event'?owner.ev:owner.area[phase],owner.drop,code);
    if(w.duration==='next_opponent_turn'){k.endTurn();k.beginTurn(1);g.finishTurn(owner);g.beginTurn(g.players[1]);}
@@ -40,7 +44,7 @@ let cases=0;
    g.sharedRulesState=JSON.parse(JSON.stringify(g.sharedRulesState));B.assertReady(g);cases++;
   }
  }
- assert.equal(cases,28);
+ assert.equal(cases,36);
  const g=new E.Game({seed:7,decks:['k1014','seijoh'],agents:[E.AI,E.AI]}),p=g.players[0];g.beginTurn(p);
  const state=g.cardSnapshot(),id=state.zones['0.deck'].at(-1);g.moveCard(p.deck,p.ev,p.deck.length-1);
  const base={kind:'watch',actor:0,source:{id,incarnation:0},duration:{kind:'this_turn',turn:g.turnNo}};

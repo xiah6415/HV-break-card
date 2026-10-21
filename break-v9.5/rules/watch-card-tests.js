@@ -31,7 +31,9 @@ function testWatchCard(catalog,card){
   assert.equal(fired.length,expired?0:1,card.card_no+' '+w.event+' expiry='+expired);
   if(!expired){
    const nums=I.nodes({program:w.then}).filter(n=>n.kind==='numeric');
-   for(const n of nums){const param=n.parameter==='chosen'?after.effects.findLast(e=>e.kind==='numeric'&&e.target.id===target).parameter:n.parameter;assert.equal(k.parameter(target,param),n.operation==='set'?n.value:k.card(target).printed.parameters[param]+n.value,card.card_no+' exact generated numeric');}
+   const expected=new Map();
+   for(const n of nums){const param=n.parameter==='chosen'?after.effects.findLast(e=>e.kind==='numeric'&&e.target.id===target).parameter:n.parameter;expected.set(param,n.operation==='set'?n.value:(expected.get(param)??k.card(target).printed.parameters[param])+n.value);}
+   for(const [param,value]of expected)assert.equal(k.parameter(target,param),value,card.card_no+' exact generated numeric');
    if(w.event==='hand_added')assert.equal(k.zone(0,'hand').length,before.zones['0.hand'].length+1);
    if(w.event==='loss')assert.equal(k.zone(0,'hand').length,before.zones['0.hand'].length-1);
    if(w.remaining_uses===1)assert.equal(k.state.effects.find(e=>e.id===effect.id).remaining,0);
