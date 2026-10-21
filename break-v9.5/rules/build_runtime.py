@@ -1,4 +1,4 @@
-"""Small, hash-pinned migration overlay; the frozen first-pass catalog stays intact."""
+"""Build playable scripts from the baseline and passing completed modules."""
 import copy
 import hashlib
 import json
@@ -6,7 +6,7 @@ from pathlib import Path
 if __package__ in (None, ''):
     import sys
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from rules.authority import build_authority
+from rules.authority import build_authority, short
 
 
 def runtime_data():
@@ -22,10 +22,7 @@ def runtime_data():
     for original in catalog['cards']:
         card = copy.deepcopy(original)
         profile = card['profiles'][0]
-        approval = approvals['profiles'].get(profile['profile_id'])
-        if approval:
-            digest = hashlib.sha256(json.dumps(profile, ensure_ascii=False, sort_keys=True).encode()).hexdigest()
-            assert digest == approval['profile_sha256'], 'Approved profile changed: ' + card['card_no']
+        if authority['cards'][short(card['card_no'])]['kind'] == 'shared':
             profile['runtime_approved'] = True
         else:
             # Printed identity is available; no other first-pass skill is executable.
@@ -34,7 +31,8 @@ def runtime_data():
                        'printed_has_skill': bool(profile.get('program'))}
             card['profiles'] = [profile]
         cards.append(card)
-    result = {'catalog': {'cards': cards}, 'authority': authority, 'approved': list(approvals['profiles']),
+    result = {'catalog': {'cards': cards}, 'authority': authority,
+              'approved': [p['profileId'] for p in authority['cards'].values() if p['kind'] == 'shared'],
               'ruleIds': [r['id'] for r in json.loads((root / 'data/shared-rules.json').read_text())['rules']]}
     result['fingerprint'] = hashlib.sha256(json.dumps(result, sort_keys=True).encode()).hexdigest()
     return result
