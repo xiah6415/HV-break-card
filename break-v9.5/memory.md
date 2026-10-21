@@ -1077,3 +1077,4 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 遠端 master 實測仍為 c998f29（嚴格308／共用118），不含附件的 cdd7e00、5c7dbf6、87e98f9 三筆成果；工作樹乾淨。完整 patch 靜態檢查可套用，唯一衝突是本輪先寫入的 memory 計畫與附件同在檔尾，已保留兩者，未覆蓋其他修改。
 - 匯入後：retrieve 7形態／40依賴卡的分組約束、嚴格332／共用142＋舊7／未自動化209及 STATUS 已同步。P04-070 仍待 protect_numeric_decrease、未開放；正式 Game 入口仍橋接核心，未切換。
 - 驗證：`python3 build.py`、`node fuzz.js`、`node test.js 300`、retrieve 節點測試（含同區／不同名／共同所屬、不足、手牌限制、Undo）及 core 54項均通過。下一步以非強制推送 master，並以實際 GitHub Pages 結果更新本段。
+- 部署：普通推送後 origin/master 為 34a197f；GitHub Pages 工作流程 39628141707 已對該 SHA 成功完成。公開 STATUS HTTP200 實測數值541／嚴格332／共用142＋舊7、retrieve 7形態／40依賴卡／同區不同名共同所屬，P04-070 仍待 protect_numeric_decrease 且未開放；正式入口仍橋接核心。https://xiah6415.github.io/HV-break-card/break-v9.5/?v=34a197f-release 。
