@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>通用選擇元件</title>
+<style>
+/* C 通用選擇元件示範頁（開發用，不是遊戲入口）：逐一顯示 HOST-CONTRACT fixture，可手動作答或讓 AI 代答 */
+:root { --bg:#e7eeed; --surface:#fff; --sunk:#d9e4e3; --ink:#122326; --muted:#566b6e; --line:#c3d3d2; --court:#d96a1f; --teal:#0e7175; --bad:#b83229; --good:#1d7a43; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#0c1719; --surface:#142427; --sunk:#0f1e21; --ink:#e3eded; --muted:#89a1a2; --line:#24393c; --court:#ee8641; --teal:#37a8ac; --bad:#ef6a5f; --good:#4cc27c; color-scheme: dark; } }
+:root[data-theme="dark"] { --bg:#0c1719; --surface:#142427; --sunk:#0f1e21; --ink:#e3eded; --muted:#89a1a2; --line:#24393c; --court:#ee8641; --teal:#37a8ac; --bad:#ef6a5f; --good:#4cc27c; color-scheme: dark; }
+* { box-sizing: border-box; }
+html, body { background: var(--bg); color: var(--ink); margin: 0; overflow-x: clip; font: 14px/1.45 "Noto Sans TC", "PingFang TC", system-ui, sans-serif; }
+main { max-width: 640px; margin: 0 auto; padding: 14px max(16px, env(safe-area-inset-left)) 40px; display: grid; gap: 12px; }
+h1 { font-size: 20px; margin: 4px 0; }
+.bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+select, button.t { font: inherit; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); max-width: 100%; }
+#stage { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; min-width: 0; }
+#out { font: 12px/1.5 ui-monospace, monospace; background: var(--sunk); border-radius: 10px; padding: 10px; white-space: pre-wrap; overflow-wrap: anywhere; min-height: 3em; }
+</style>
+</head>
+<body>
+<main>
+  <h1>通用選擇元件（break.host.v1）</h1>
+  <div class="bar">
+    <select id="pick" aria-label="選擇 fixture"></select>
+    <button class="t" type="button" id="prev">上一個</button><button class="t" type="button" id="next">下一個</button><button class="t" type="button" id="ai">AI 代答</button>
+  </div>
+  <section id="stage" aria-live="polite"></section>
+  <pre id="out" aria-label="回答"></pre>
+</main>
+<script src="host-choice.js"></script>
+<script src="choice-fixtures.js"></script>
+<script src="choice-ui.js"></script>
+<script>
+(() => {
+  const F = BreakChoiceFixtures.fixtures, H = BreakHostChoice, $ = id => document.getElementById(id);
+  const imgSrc = cardNo => 'img/' + String(cardNo).replace(/^HV-?/, '').replace(/^BP/, 'BP') + '.webp';
+  let view = null, i = 0;
+  $('pick').innerHTML = F.map((r, k) => `<option value="${k}">${k + 1}. ${r.kind}（${r.input.type}）</option>`).join('');
+  function show(k) {
+    i = (k + F.length) % F.length; $('pick').value = String(i); view && view.destroy();
+    const r = F[i];
+    view = BreakChoiceUI.render($('stage'), r, {
+      imgSrc,
+      onAnswer: a => { $('out').textContent = '回答：' + JSON.stringify(a) + '\n驗證：' + (H.validate(r, a).ok ? '通過' : '失敗'); },
+      onLoss: () => { $('out').textContent = '命令：loss（' + r.requestId + '）'; },
+      onCard: c => { $('out').textContent = '查看卡片：' + c.cardNo; }
+    });
+    $('out').textContent = '';
+  }
+  $('pick').onchange = () => show(+$('pick').value);
+  $('prev').onclick = () => show(i - 1); $('next').onclick = () => show(i + 1);
+  $('ai').onclick = () => { const a = H.aiAnswer(F[i]); $('out').textContent = 'AI：' + JSON.stringify(a) + '\n驗證：' + (H.validate(F[i], a).ok ? '通過' : '失敗'); };
+  show(0);
+})();
+</script>
+</body>
+</html>
