@@ -11,8 +11,8 @@ catalog=json.loads((A.ROOT/'rules/data/cards.json').read_text())
 approvals=json.loads((A.ROOT/'rules/approvals.json').read_text())
 legacy=json.loads((A.ROOT/'rules/legacy-skills.json').read_text())
 base=A.build_authority(catalog,approvals,legacy)
-assert base['counts']==dict(basic=183,shared=56,legacy=7,unapproved=295)
-assert base['modules']==[dict(id='retrieve.school-character',cards=2,cases=6)]
+assert base['counts']==dict(basic=183,shared=60,legacy=7,unapproved=291)
+assert [(m['id'],m['parameterForms']) for m in base['modules']]==[('sequence',1),('deck_selection',15)]
 # Old per-card SHA/evidence fields no longer decide whether a card can run.
 a=copy.deepcopy(approvals);l=copy.deepcopy(legacy)
 for r in a['profiles'].values():r.pop('profile_sha256',None)
@@ -20,7 +20,7 @@ for r in l['cards'].values():r['profile_sha256']='unused'
 assert A.build_authority(catalog,a,l)['cards']==base['cards']
 # Removing a historical baseline still revokes that grant; support text grants nothing.
 pid=next(iter(a['profiles']));del a['profiles'][pid]
-assert A.build_authority(catalog,a,l)['counts']['shared']==55
+assert A.build_authority(catalog,a,l)['counts']['shared']==59
 # No accidentally expanded legacy whitelist or cross-controller duplicate grants.
 for change in ['missing','extra','duplicate']:
  a=copy.deepcopy(approvals);l=copy.deepcopy(legacy)
@@ -31,19 +31,19 @@ for change in ['missing','extra','duplicate']:
  except AssertionError:pass
  else:raise AssertionError(change+' accepted')
 # Every module-dependent card is released automatically, no per-card manifest edit.
-c=copy.deepcopy(catalog);p=next(c for c in c['cards'] if c['card_no']=='HV-P01-086')['profiles'][0]
-p['program']['steps'][0]['count']=2
-assert A.build_authority(c,approvals,legacy)['cards']['P01-086']['kind']=='unapproved'
-c=copy.deepcopy(catalog);p=next(c for c in c['cards'] if c['card_no']=='HV-P01-086')['profiles'][0]
+c=copy.deepcopy(catalog);p=next(c for c in c['cards'] if c['card_no']=='HV-P01-089')['profiles'][0]
+p['program']['steps'].append(dict(kind='unimplemented-node'))
+assert A.build_authority(c,approvals,legacy)['cards']['P01-089']['kind']=='unapproved'
+c=copy.deepcopy(catalog);p=next(c for c in c['cards'] if c['card_no']=='HV-P01-089')['profiles'][0]
 p['program']['shared_rule_ids']=['unimplemented-rule']
 try:A.build_authority(c,approvals,legacy)
 except AssertionError as e:assert 'Module card tests failed' in str(e)
 else:raise AssertionError('Failing card test was released')
 lib=L.library_data();rt=R.runtime_data()
-assert lib['counts']['playable']==246 and lib['authority']==rt['authority']==base
-assert len(rt['approved'])==56
-for code in ['P01-086','P03-089']:
+assert lib['counts']['playable']==250 and lib['authority']==rt['authority']==base
+assert len(rt['approved'])==60
+for code in ['P01-089','P03-078','P03-079','P04-085']:
  assert lib['cards'][code]['playable']
  p=next(c for c in rt['catalog']['cards'] if c['card_no']=='HV-'+code)['profiles'][0]
  assert p['program'] and p['runtime_approved']
-print('authority: baseline without SHA + module tests / 246 strict / 56 shared passed')
+print('authority: baseline without SHA + module tests / 250 strict / 60 shared passed')

@@ -7,7 +7,7 @@ const COURT = ['serve','block','receive','toss','attack','side:0','side:1'];
 const PARAMS = ['serve','block','receive','toss','attack'];
 const KINDS = new Set(['sequence','conditional','numeric','draw','draw_to_hand_size','move','move_self',
   'pay_guts','payment_branch','retrieve','enter','enter_self','watch','ban_action','invalidate_skill',
-  'protect_numeric_decrease','phase_jump','optional','choose_modes','mill','keyword']);
+  'protect_numeric_decrease','phase_jump','optional','choose_modes','mill','keyword','deck_selection']);
 const FILTERS = new Set(['names','exclude_names','tags','tags_any','positions','positions_any','years','years_any',
   'role','role_any','type','skillless','play_icons_any','play_icons_exact','entry_origins','phase',
   'printed_attack','printed_attack_eq','printed_block_gte','printed_receive_gte','current_receive_gte',
@@ -293,6 +293,60 @@ class Kernel {
     if (ids.length) this.state.publicLog.push({type:'draw',player,count:ids.length});
     return ids;
   }
+  _deckSelection(node,ctx) {
+    const player=this.owner(node.actor,ctx),deck=this.zone(player,'deck');
+    need(['look','reveal'].includes(node.visibility)&&Number.isInteger(node.top_count),'Unsupported deck view');
+    const shown=deck.slice(-node.top_count).reverse();
+    ctx.bind[node.bind]=[...shown];ctx.bind[node.selection.bind]=[];
+    if(!shown.length)return false;
+    // The first request contains no hidden cards: the player initiates the flip.
+    legal(this._decide('reveal',ctx,[true],{player,visibility:node.visibility,top_count:shown.length})===true,'Confirm deck view');
+    const viewed=this._decide('revealResult',ctx,shown,{player,count:0,visibility:node.visibility,eligible_count:shown.filter(id=>this.matches(id,node.selection.filters,ctx)).length});
+    legal(Array.isArray(viewed)&&viewed.length===0,'Confirm revealed cards');
+    const log={type:'deck_view',player,count:shown.length,visibility:node.visibility};
+    if(node.visibility==='reveal')log.cards=shown.map(id=>({id,cardNo:this.card(id).cardNo}));
+    this.state.publicLog.push(log);
+    const retrieved=[],remaining=[...shown];
+    const select=selection=>{
+      const options=remaining.filter(id=>this.matches(id,selection.filters,ctx));
+      let n=selection.count_mode==='all'?options.length:Math.min(selection.count,options.length);
+      need(['all','exact','upto'].includes(selection.count_mode),'Unsupported deck selection count');
+      if(!this._handAllowed(player,ctx))n=0;
+      else if(selection.count_mode==='upto'){
+        const max=n;n=this._decide('move_count',ctx,Array.from({length:max+1},(_,i)=>i),{player});
+        legal(Number.isInteger(n)&&n>=0&&n<=max,'Invalid deck selection count');
+      }
+      const chosen=[];
+      for(let i=0;i<n;i++){
+        const id=this._selection(options.filter(id=>!chosen.includes(id)),1,ctx,'move_cards',player,{destination:node.actor+'.hand'})[0];
+        chosen.push(id);
+      }
+      for(const id of chosen){
+        remaining.splice(remaining.indexOf(id),1);this._move(id,player,'hand',ctx,'deck_selection');
+        retrieved.push(id);this._emit({type:'hand_added',player,card:id,operation:'add_hand'});
+        if(selection.reveal_selected!==false)this.state.publicLog.push({type:'deck_selected',player,card:id,cardNo:this.card(id).cardNo});
+      }
+      return chosen;
+    };
+    const primary=select(node.selection);
+    if(node.secondary_selection&&(!node.secondary_selection.when_primary_added||primary.length))select(node.secondary_selection);
+    ctx.bind[node.selection.bind]=retrieved;
+    let destination=node.remainder.destination;
+    if(destination==='choose_deck_top_or_bottom'&&remaining.length){
+      destination=this._decide('mode',ctx,['deck_top','deck_bottom'],{player});
+      legal(['deck_top','deck_bottom'].includes(destination),'Invalid remainder destination');
+    }
+    need(['deck_top','deck_bottom','choose_deck_top_or_bottom'].includes(destination)&&node.remainder.order==='chooser','Unsupported remainder placement');
+    const ordered=[];
+    while(ordered.length<remaining.length){
+      const options=remaining.filter(id=>!ordered.includes(id));
+      ordered.push(this._selection(options,1,ctx,'move_cards',player,{destination:node.actor+'.'+destination,ordering:true})[0]);
+    }
+    for(const id of remaining)deck.splice(deck.indexOf(id),1);
+    if(destination==='deck_top')deck.push(...ordered.reverse());else deck.unshift(...ordered.reverse());
+    this.state.publicLog.push({type:'deck_remainder',player,count:remaining.length,destination,result:retrieved.length?'added':'no_matching_card_added'});
+    return true; // Viewing and arranging cards is an effect even without a match.
+  }
   _fact(field,ctx) {
     if (field==='phase') return this.state.turn.phase;
     if (field==='current_turn_id') return this.state.turn.id;
@@ -398,7 +452,7 @@ class Kernel {
       if (n.target_scope) need(n.target_scope.membership==='snapshot_on_resolution','Target membership is not supported');
       if (n.increase_guard) throw new NeedsReview('Numeric source contribution cap not implemented');
       if(n.kind==='pay_guts')need(n.count_mode!=='exact_each','Per-area payment not implemented');
-      if(n.destination)need(!n.destination.includes('choose_deck') && !n.destination.endsWith('.deck_top'),'Destination mechanism not implemented');
+      if(n.destination)need((!n.destination.includes('choose_deck') || n.destination==='choose_deck_top_or_bottom') && !n.destination.endsWith('.deck_top'),'Destination mechanism not implemented');
       if(n.kind==='invalidate_skill')need(!n.selector.keyword_families && !n.selector.union_with?.keyword_families,'Keyword invalidation not implemented');
       if (n.kind==='keyword') need(n.keyword==='one_touch','Keyword not implemented: '+n.keyword);
       if (n.kind==='compare') {
@@ -417,6 +471,7 @@ class Kernel {
     switch (node.kind) {
       case 'sequence': { let yes=false;for (const step of node.steps) yes=this._run(step,ctx)||yes;return yes; }
       case 'conditional': return this._predicate(node.condition,ctx) ? this._run(node.then,ctx):false;
+      case 'deck_selection': return this._deckSelection(node,ctx);
       case 'numeric': return this._numeric(node,ctx);
       case 'draw': { const player=this.owner(node.actor,ctx);let n=node.count;
         if(!this._handAllowed(player,ctx)){ctx.bind.drawn=[];return false;}

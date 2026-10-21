@@ -1,0 +1,30 @@
+/* Node dependencies and parameter forms. Planning counts never grant execution. */
+'use strict';
+const baseline=require('./approvals.json').profiles,legacy=require('./legacy-skills.json').cards;
+const META=new Set(['node_id','shared_rule_ids','category_tags','classification_role','polarity']);
+const short=n=>n.startsWith('HV-')?n.slice(3):n.startsWith('HVBP-')?n.slice(2):n;
+function walk(x,fn){if(Array.isArray(x))x.forEach(v=>walk(v,fn));else if(x&&typeof x==='object'){if(x.kind)fn(x);for(const[k,v]of Object.entries(x))if(!META.has(k))walk(v,fn);}}
+function nodes(p){const result=[];walk(p.program,n=>result.push(n));walk(p.formal_cost,n=>result.push(n));return result;}
+function scope(catalog){return catalog.cards.filter(c=>c.profiles[0].program&&!baseline[c.profiles[0].profile_id]&&!legacy[short(c.card_no)]);}
+function clean(x){if(Array.isArray(x))return x.map(clean);if(x&&typeof x==='object')return Object.fromEntries(Object.keys(x).filter(k=>!META.has(k)).sort().map(k=>[k,clean(x[k])]));return x;}
+function parameters(n){
+ const child=x=>Array.isArray(x)?x.map(child):x&&typeof x==='object'?(x.kind?'$node':Object.fromEntries(Object.entries(x).map(([k,v])=>[k,child(v)]))):x;
+ const result=Object.fromEntries(Object.entries(n).filter(([k])=>!META.has(k)&&k!=='kind').map(([k,v])=>[k,child(v)]));
+ // Child programs are dependencies, not parameter variants of their container.
+ for(const k of ['steps','then','else','payment','condition','conditions','options','slots'])if(Object.hasOwn(result,k)&&(['sequence','conditional','payment_branch','optional','choose_modes','all','any','formal_declaration_cost','retrieve_slots'].includes(n.kind)))result[k]='$nodes';
+ return clean(result);
+}
+function forms(catalog){const result={};for(const c of scope(catalog))for(const p of c.profiles)for(const n of nodes(p)){const bucket=result[n.kind]??=new Map(),key=JSON.stringify(parameters(n));if(!bucket.has(key))bucket.set(key,{node:n,cards:new Set()});bucket.get(key).cards.add(short(c.card_no));}return result;}
+function entrySupported(c){const p=c.profiles[0],a=p.activation;return c.profiles.length===1&&!c.skill_text_variant_conflict&&!p.flags?.length&&!!a&&(a.skill_type==='event'&&JSON.stringify(a.source_zones)==='["hand"]'||a.skill_type==='active'&&JSON.stringify(a.source_zones)==='["hand"]'||a.skill_type==='passive'&&a.trigger?.event==='self_entry');}
+function dependencies(c){return [...new Set(c.profiles.flatMap(p=>nodes(p).map(n=>n.kind)))].sort();}
+function inventory(catalog,completed,released=[]){
+ const fs=forms(catalog),done=new Set(completed),open=new Set(released),cards=scope(catalog).map(c=>({code:short(c.card_no),dependencies:dependencies(c),entry:entrySupported(c),released:open.has(short(c.card_no))}));
+ const rows=Object.entries(fs).map(([kind,shapes])=>{
+  const dependents=cards.filter(c=>c.dependencies.includes(kind)),eligible=cards.filter(c=>!c.released&&c.entry&&c.dependencies.every(k=>done.has(k)||k===kind));
+  return {kind,completed:done.has(kind),parameterForms:shapes.size,dependentCards:dependents.length,additionalCards:done.has(kind)?0:eligible.length,cards:done.has(kind)?[]:eligible.map(c=>c.code)};
+ });
+ const ranking=rows.filter(r=>!r.completed).sort((a,b)=>b.additionalCards-a.additionalCards||b.dependentCards-a.dependentCards||a.kind.localeCompare(b.kind));
+ return {scope:cards.length,kinds:rows.length,completed:[...completed],rows,ranking,cards};
+}
+module.exports={short,walk,nodes,scope,forms,parameters,clean,entrySupported,dependencies,inventory};
+if(require.main===module){const r=inventory(require('./data/cards.json'),require('./modules').completed.map(m=>m.id),Object.keys(require('./runtime-data.json').authority.cards).filter(c=>require('./runtime-data.json').authority.cards[c].kind==='shared'));console.log(JSON.stringify({scope:r.scope,kinds:r.kinds,completed:r.completed,ranking:r.ranking},null,2));}

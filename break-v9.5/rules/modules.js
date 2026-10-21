@@ -1,84 +1,46 @@
-/* Completed effect modules: discover dependent scripts, test them, release together. */
+/* Release by recursively completed node kinds + supported entry + card scenarios. */
 'use strict';
 const assert=require('node:assert/strict');
-const {Kernel}=require('./core');
-const rules=require('./data/shared-rules.json').rules.map(r=>r.id);
-const short=n=>n.startsWith('HV-')?n.slice(3):n.startsWith('HVBP-')?n.slice(2):n;
-
-// This module composes the existing timing, selector, physical-card movement and
-// hand-permission implementations. No card numbers or school names in dispatch.
-const schoolRetrieve={
- id:'retrieve.school-character',
- accepts(card,p){
-  const a=p.activation,n=p.program?.steps?.[0],f=n?.pool?.filters;
-  return card.profiles.length===1&&!card.skill_text_variant_conflict&&!p.flags?.length&&
-   !p.formal_cost&&!p.limit&&a?.skill_type==='event'&&
-   JSON.stringify(a.source_zones)==='["hand"]'&&
-   JSON.stringify(a.activation_phases)==='["draw","receive"]'&&
-   p.program.kind==='sequence'&&p.program.steps.length===1&&n.kind==='retrieve'&&
-   n.pool.kind==='selector'&&n.pool.actor==='self'&&n.pool.zone==='drop'&&
-   f?.type==='character'&&Array.isArray(f.tags)&&f.tags.length===1&&
-   Object.keys(f).every(k=>['type','tags'].includes(k))&&
-   n.destination==='self.hand'&&n.count===1&&n.count_mode==='exact'&&!n.group_constraints;
- },
- test(catalog,card,p){
-  const tag=p.program.steps[0].pool.filters.tags[0];
-  const find=predicate=>{const c=catalog.cards.find(c=>predicate(c.profiles[0].variants[0].printed));assert(c,'Missing module test card');return c.card_no;};
-  const eligible=find(v=>v.type==='character'&&v.affiliation_tags.includes(tag));
-  const other=find(v=>v.type==='character'&&!v.affiliation_tags.includes(tag));
-  function setup(phase='draw'){
-   const k=new Kernel({catalog,ruleIds:rules,fingerprint:'module-tests',mode:'sandbox',choose:r=>{
-    assert.equal(r.kind,'move_cards');return r.options.slice(0,r.count);
-   }});
-   k.state.turn.phase=phase;
-   const source=k.addCard(card.card_no,0,'hand');
-   const wrong=k.addCard(other,0,'drop'),wrongType=k.addCard(card.card_no,0,'drop');
-   const opponent=k.addCard(eligible,1,'drop');
-   return {k,source,wrong,wrongType,opponent};
-  }
-  // 1. Printed-school character only; both printed windows, exact physical copy,
-  // local Undo restores everything and redoing produces the same result.
-  for(const phase of p.activation.activation_phases){
-   const {k,source,wrong,wrongType,opponent}=setup(phase);
-   const target=k.addCard(eligible,0,'drop'),extra=k.addCard(eligible,0,'drop');
-   const before=k.snapshot();assert.equal(k.playEvent(source).performed,true);
-   assert.deepEqual(k.zone(0,'hand'),[target]);
-   assert.deepEqual(k.zone(0,'drop'),[wrong,wrongType,extra]);
-   assert.deepEqual(k.zone(1,'drop'),[opponent]);assert.deepEqual(k.zone(0,'event'),[source]);
-   const after=k.snapshot();k.restore(before);assert.deepEqual(k.snapshot(),before);
-   k.playEvent(source);assert.deepEqual(k.snapshot(),after);
-  }
-  // 2. No matching character: reject the no-change Event atomically.
-  {
-   const {k,source}=setup();const before=k.snapshot();
-   assert.throws(()=>k.playEvent(source),/OPEN-EVENT-NO-CHANGE/);
-   assert.deepEqual(k.snapshot(),before);
-  }
-  // 3. A hand-addition restriction wins over retrieval, without moving anything.
-  {
-   const {k,source}=setup('receive');k.addCard(eligible,0,'drop');
-   k.resolveProgram({kind:'ban_action',action:'add_hand',actor:'self',scope:{},duration:'this_turn'},0);
-   const before=k.snapshot();assert.throws(()=>k.playEvent(source),/OPEN-EVENT-NO-CHANGE/);
-   assert.deepEqual(k.snapshot(),before);
+const I=require('./node-inventory'),T=require('./node-module-tests');
+const completed=[{id:'sequence',test:T.testSequence},{id:'deck_selection',test:T.testDeckSelection}];
+function testCard(catalog,card){
+ const p=card.profiles[0],deckNodes=I.nodes(p).filter(n=>n.kind==='deck_selection');
+ assert(deckNodes.length,'No scenario builder for card nodes');
+ // These are scenario fixtures, not an admission pattern: admission checks every
+ // recursive kind above. Future node modules extend fixture seeding as needed.
+ for(const variant of ['positive','negative','empty']){
+  const n=deckNodes[0],{k,ctx,player,shown}=T.deckFixture(catalog,n,variant);
+  const source=k.addCard(card.card_no,0,'hand');
+  k.state.turn.phase=p.activation.activation_phases[0];
+  const before=k.snapshot();
+  if(variant==='empty'){
+   assert.throws(()=>k.playEvent(source),/OPEN-EVENT-NO-CHANGE/);assert.deepEqual(k.snapshot(),before);
+  }else{
+   const expected=variant==='positive'?shown.filter(id=>T.printedMatch(k.card(id).printed,n.selection.filters)).slice(0,n.selection.count_mode==='all'?shown.length:n.selection.count):[];
+   if(n.secondary_selection&&expected.length){const secondary=shown.find(id=>!expected.includes(id)&&T.printedMatch(k.card(id).printed,n.secondary_selection.filters));if(secondary)expected.push(secondary);}
+   assert(k.playEvent(source).played);
+   assert.deepEqual(k.zone(player,'hand').filter(id=>id!==ctx.source.id),expected);
+   assert(k.zone(0,'event').includes(source));
+   const end=k.snapshot();k.restore(before);k.playEvent(source);assert.deepEqual(k.snapshot(),end);
   }
  }
-};
-const completed=[schoolRetrieve];
+}
+function eligible(card,done=completed.map(m=>m.id)){
+ const available=new Set(done);
+ return I.entrySupported(card)&&I.dependencies(card).every(kind=>available.has(kind));
+}
 function testModules(catalog){
- const cards={},modules=[];
+ const fs=I.forms(catalog),cards={},modules=[];
  for(const module of completed){
-  const dependents=catalog.cards.filter(c=>module.accepts(c,c.profiles[0]));
-  for(const card of dependents){
-   const p=card.profiles[0];module.test(catalog,card,p);
-   assert(!cards[short(card.card_no)],'Duplicate module release');
-   cards[short(card.card_no)]={profileId:p.profile_id,module:module.id};
-  }
-  modules.push({id:module.id,cards:dependents.length,cases:dependents.length*3});
+  const tested=module.test(catalog);assert.equal(tested,fs[module.id].size,'Every parameter form must be tested: '+module.id);
+  modules.push({id:module.id,parameterForms:tested,dependentCards:new Set([...fs[module.id].values()].flatMap(v=>[...v.cards])).size});
+ }
+ for(const card of I.scope(catalog)){
+  if(!eligible(card))continue;
+  testCard(catalog,card);
+  cards[I.short(card.card_no)]={profileId:card.profiles[0].profile_id,modules:I.dependencies(card)};
  }
  return {cards,modules};
 }
-module.exports={completed,testModules};
-if(require.main===module){
- const fs=require('node:fs');const input=fs.readFileSync(0,'utf8');
- process.stdout.write(JSON.stringify(testModules(input?JSON.parse(input):require('./data/cards.json')))+'\n');
-}
+module.exports={completed,eligible,testModules,testCard};
+if(require.main===module){const fs=require('node:fs'),input=fs.readFileSync(0,'utf8');process.stdout.write(JSON.stringify(testModules(input?JSON.parse(input):require('./data/cards.json')))+'\n');}

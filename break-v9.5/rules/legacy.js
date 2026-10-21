@@ -108,6 +108,8 @@ function transaction(g,p,c,timing,notification=null) {
   const command=notification?{kind:'host_events',...notification}:{kind:'skill',player:p.idx,source,timing};
   const invoke=notification?kernel=>kernel.notifyHostEvents(notification.events):kernel=>kernel.card(source).printed.type==='event'?kernel.playEvent(source):kernel.useSkill(source);
   function choices(req) {
+    if(req.kind==='revealResult')return [[]];
+    if(req.kind==='reveal'||req.kind==='mode')return [...req.options];
     if(req.kind==='guts')return [req.options.slice(0,req.count)];
     if(['target','payment_cards','move_cards'].includes(req.kind)) {
       if(req.count!==1)throw new Error('Adapter requires single physical-card choices');
@@ -129,7 +131,7 @@ function transaction(g,p,c,timing,notification=null) {
   }
   const savedIds=new Set(saved.effects.map(e=>e.id));
   const durable=state=>state.effects.filter((e,i)=>persistent(e)&&(savedIds.has(e.id)||i>=base.effects.length));
-  let eventCursor=0,effectCursor=base.effects.length,announced=false,ballOff=base.ball?.offense;
+  let eventCursor=0,effectCursor=base.effects.length,publicLogCursor=base.publicLog.length,announced=false,ballOff=base.ball?.offense;
   function publish(state,complete,journal) {
     for(const e of durable(state))admitEffect(e);
     const next=copy(physical);
@@ -175,7 +177,8 @@ function transaction(g,p,c,timing,notification=null) {
     if(!announced&&!notification){g.log(`${p.name} 使用 ${g.src}`);announced=true;}
     for(const e of state.events.slice(eventCursor))if(e.type==='move') {
       const owner=g.players[state.cards[e.id].owner],code=short[e.id];
-      if(e.from.endsWith('.deck')&&e.to.endsWith('.hand'))g.log(owner.idx===g.reveal?`${owner.name}（技能）抽到：${byShort[code].display_name}`:`${owner.name}（技能）抽 1 張`,'draw');
+      if(e.reason==='deck_selection'&&e.to.endsWith('.hand'))g.log(`${owner.name} 公開 ${byShort[code].display_name} 並加入手牌`);
+      else if(e.from.endsWith('.deck')&&e.to.endsWith('.hand'))g.log(owner.idx===g.reveal?`${owner.name}（技能）抽到：${byShort[code].display_name}`:`${owner.name}（技能）抽 1 張`,'draw');
       else if(notification&&e.to.endsWith('.event'))g.log(`${owner.name} 將 ${byShort[code].display_name} 放到 Event 區（技能放置）`);
       else if(e.to.endsWith('.hand'))g.log(`${owner.name} 將 ${byShort[code].display_name} 加入手牌`);
       else if(e.to.endsWith('.drop'))g.log(`${owner.name} 棄掉 ${byShort[code].display_name}`);
@@ -187,11 +190,20 @@ function transaction(g,p,c,timing,notification=null) {
       else if(e.kind==='watch')g.log(e.event==='hand_added'?`效果：${g.players[e.actor].name}的下個回合，非抽牌加入手牌後需棄 1 張。`:e.duration.kind==='this_turn'?'效果：本回合符合條件的角色登場時，接球 +2，數值不會被降低。':`效果：${g.players[e.actor].name}下個回合的接球角色登場時，接球 −1。`);
     }
     if(state.ball&&state.ball.offense!==ballOff){g.log(`來球進攻 ${state.ball.offense-ballOff<0?'−':'+'}${Math.abs(state.ball.offense-ballOff)} → ${state.ball.offense}`);ballOff=state.ball.offense;}
-    eventCursor=state.events.length;effectCursor=state.effects.length;
+    for(const entry of state.publicLog.slice(publicLogCursor)){
+      if(entry.type==='deck_view'&&entry.visibility==='reveal')g.log(`翻開：${entry.cards.map(c=>byShort[short[c.id]].display_name).join('、')}`);
+      if(entry.type==='deck_remainder')g.log(`${entry.result==='no_matching_card_added'?'本次沒有加入手牌；':''}其餘 ${entry.count} 張已放回牌庫${entry.destination==='deck_top'?'頂':'底'}。`);
+    }
+    eventCursor=state.events.length;effectCursor=state.effects.length;publicLogCursor=state.publicLog.length;
   }
   function validGuts(req,answer) { return Array.isArray(answer)&&answer.length===req.count&&new Set(answer).size===req.count&&answer.every(id=>req.options.includes(id)); }
   async function ask(req,state,available) {
     const owner=g.players[req.player];
+    if(req.kind==='reveal'||req.kind==='revealResult'){
+      const options=req.kind==='reveal'?[{value:true,label:`查看牌庫頂 ${req.top_count} 張`}]:req.options.map(id=>({value:id,card:short[id],label:byShort[short[id]].display_name+' · 確認後繼續'}));
+      const prompt=req.kind==='reveal'?`請點擊查看牌庫頂 ${req.top_count} 張`:`${req.visibility==='look'?'查看':'翻開'}的卡片${req.eligible_count?'：確認後選擇要加入手牌的牌':'：沒有符合條件的牌，確認後安排回牌庫'}（點任一卡片繼續）`;
+      for(;;){const answer=await g.ask(owner,{kind:'rulesChoice',prompt,timing,options});if(options.some(o=>o.value===answer))return req.kind==='reveal'?true:[];}
+    }
     if(req.kind==='guts') {
       for(;;){const chosen=await g.ask(owner,{kind:'guts',multi:true,need:req.count,area:state.cards[req.source].zone.split('.')[1],timing,prompt:`${byShort[short[req.source]].display_name}：付 ${req.count} Guts（最上面的角色不能付）`,options:req.options.map((id,value)=>({value,card:short[id],label:byShort[short[id]].display_name}))});
         const answer=Array.isArray(chosen)?chosen.map(i=>Number.isInteger(i)?req.options[i]:null):null;
@@ -205,7 +217,8 @@ function transaction(g,p,c,timing,notification=null) {
       if(req.kind==='target') {
         const id=answer[0],slot=slots[id];return {label:`${labels[slot.key]||'側攔'}區 · ${g.cardName(g.players[slot.player],slot.key)} · ${short[id]}`,card:short[id],value:slot.key,answer};
       }
-      if(['payment_cards','move_cards'].includes(req.kind)) {const id=answer[0];return {label:`${byShort[short[id]].display_name} · ${short[id]}`,card:short[id],value:id,answer};}
+      if(['payment_cards','move_cards'].includes(req.kind)) {const id=answer[0];return {label:`${req.ordering?'依序安排：':''}${byShort[short[id]].display_name} · ${short[id]}`,card:short[id],value:id,answer};}
+      if(req.kind==='mode')return {label:answer==='deck_top'?'其餘放回牌庫頂':'其餘放到牌庫底',value:answer,answer};
       if(req.kind==='parameter')return {label:labels[answer],value:Object.keys(params).find(key=>params[key]===answer),answer};
       if(req.kind==='move_count')return {label:answer?`選擇 ${answer} 張加入手牌`:'不加入手牌',value:answer,answer};
       if(req.kind==='trigger_order') {
@@ -217,7 +230,7 @@ function transaction(g,p,c,timing,notification=null) {
     const kind=req.kind==='parameter'?'parameter':req.kind==='target'?'target':['activate_payment','optional'].includes(req.kind)?'skill':'rulesChoice';
     const fromZones=[...new Set(req.options.filter(id=>typeof id==='string'&&state.cards[id]).map(id=>state.cards[id].zone.split('.')[1]))];
     const fromLabel=fromZones.length===1?({event:'Event 區',drop:'棄牌區',hand:'手牌',deck:'牌庫'}[fromZones[0]]||'來源區'):'來源區';
-    const prompt=sourceName+'：'+({target:'選擇場上 1 位角色',draw_count:'選擇抽牌數量',activate_payment:paymentPrompt,optional:'是否執行這個登場效果？',payment_cards:req.destination==='self.event'?'選擇 1 張事件放到 Event 區':'選擇 1 張符合條件的手牌棄掉',parameter:`選擇這位角色要增加的參數${req.target?`（${g.cardName(g.players[slots[req.target.id].player],slots[req.target.id].key)}・${labels[slots[req.target.id]?.key]||'側攔'}區）`:''}`,move_count:'最多選 1 張符合條件的牌加入手牌',move_cards:req.destination?.endsWith('.hand')?`從${fromLabel}選擇 1 張加入手牌`:isPassive?'請選 1 張手牌棄掉':'非抽牌加入手牌後，請選 1 張手牌棄掉',trigger_order:'選擇同時觸發的結算順序'}[req.kind]);
+    const prompt=sourceName+'：'+({target:'選擇場上 1 位角色',draw_count:'選擇抽牌數量',activate_payment:paymentPrompt,optional:'是否執行這個登場效果？',payment_cards:req.destination==='self.event'?'選擇 1 張事件放到 Event 區':'選擇 1 張符合條件的手牌棄掉',parameter:`選擇這位角色要增加的參數${req.target?`（${g.cardName(g.players[slots[req.target.id].player],slots[req.target.id].key)}・${labels[slots[req.target.id]?.key]||'側攔'}區）`:''}`,move_count:'選擇加入手牌的數量',mode:'其餘的牌放到哪裡？',move_cards:req.ordering?'安排其餘牌的順序（先選的會先抽到）':req.destination?.endsWith('.hand')?`從${fromLabel}選擇 1 張加入手牌`:isPassive?'請選 1 張手牌棄掉':'非抽牌加入手牌後，請選 1 張手牌棄掉',trigger_order:'選擇同時觸發的結算順序'}[req.kind]);
     let invalid=false;
     for(;;) {
       const value=await g.ask(owner,{kind,prompt:prompt+(invalid?'（請重新選擇有效選項）':''),timing,ctx:{card:short[req.source],...(req.kind==='parameter'?{target:slots[req.target?.id||req.source]?.key}:{}),...(state.cards[req.source]?.zone===req.player+'.receive'&&g.ball?{need:g.ball.off-g.parameter(owner,slots[req.source].key,'rcv')}: {})},options:opts.map(({answer,...o})=>o)});

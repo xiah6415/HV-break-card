@@ -6,6 +6,8 @@ import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+# Already public before the node-level policy; do not revoke these during migration.
+PREVIOUS_MODULE_CARDS = frozenset(['P01-086', 'P03-089'])
 LEGACY_CODES = frozenset(['PR-022', 'PR-057', 'P01-006', 'P01-078', 'P03-086', 'PR-029', 'P03-087'])
 
 def short(number):
@@ -37,6 +39,9 @@ def build_authority(catalog=None, approvals=None, legacy=None):
             assert code not in grants, 'Conflicting shared/legacy approval: ' + code
             # Historical grants remain a baseline, not per-card SHA certificates.
             grants[code] = dict(kind=source, profileId=pid)
+    for code in PREVIOUS_MODULE_CARDS:
+        p = by_code[code]['profiles'][0]
+        grants[code] = dict(kind='shared', profileId=p['profile_id'], baseline=True)
     # Every build runs the small card scenarios; no saved evidence/approval JSON.
     process = subprocess.run([shutil.which('node') or '/usr/local/bin/node', str(ROOT / 'rules/modules.js')],
                              input=json.dumps(catalog), text=True, capture_output=True)
@@ -53,4 +58,4 @@ def build_authority(catalog=None, approvals=None, legacy=None):
         cards[code] = grants.get(code, dict(kind='basic' if basic else 'unapproved', profileId=p['profile_id']))
     counts = {kind: sum(p['kind'] == kind for p in cards.values()) for kind in ['basic', 'shared', 'legacy', 'unapproved']}
     return dict(version=2, cards=cards, counts=counts, modules=release['modules'],
-                sources={name: hashlib.sha256((ROOT / name).read_bytes()).hexdigest() for name in ['rules/data/cards.json', 'rules/approvals.json', 'rules/legacy-skills.json', 'rules/authority.py', 'rules/modules.js', 'rules/core.js', 'rules/data/shared-rules.json']})
+                sources={name: hashlib.sha256((ROOT / name).read_bytes()).hexdigest() for name in ['rules/data/cards.json', 'rules/approvals.json', 'rules/legacy-skills.json', 'rules/authority.py', 'rules/modules.js', 'rules/node-inventory.js', 'rules/node-module-tests.js', 'rules/core.js', 'rules/data/shared-rules.json']})
