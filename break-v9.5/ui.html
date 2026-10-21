@@ -326,7 +326,8 @@ body.turn-open .sheet { z-index: 80; }
 @media (max-height: 600px) { .turn-card { gap: 12px; } .turn-ball { padding-block: 12px; } }
 
 /* 分享連結匯入（Claude 2026-10-20） */
-.imp { display: grid; gap: 8px; }
+.imp { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; min-width: 0; }
+.sheet .box { grid-template-columns: minmax(0, 1fr); }
 .imp input { font: inherit; width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--sunk); color: var(--ink); }
 .imp a.opt { text-decoration: none; color: var(--ink); }
 .imp-head { display: flex; gap: 10px; align-items: baseline; justify-content: space-between; }

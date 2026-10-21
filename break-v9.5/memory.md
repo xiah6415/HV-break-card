@@ -916,3 +916,8 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 實作提交0c08ff5f7d5ea9adecac6309afcb8c09971a3b6d已推送master且Pages built／無錯誤。公開網址https://xiah6415.github.io/HV-break-card/break-v9.5/?v=0c08ff5，HTTP200、index 3442606bytes、SHA256 287a572fd40574f5a15db7590602997310b163f1c3e55435b40e8a9cc2a2006a與已測本機逐位元組一致。新增11角色卡圖均公開HTTP200，SHA與本機一致。
 - 公開頁Chrome1280／390／320核對數值541／嚴格237、共用47／舊7／無技能183／未自動化304，新增11角色皆shared且可由橋接處理；卡庫／runtime權限一致，改playable不能授權。雙方分享匯入／重載保存、未自動化標記、圖片與開始對戰、無橫向溢出／頁面錯誤全通過。Chrome模擬，非Safari真機。
 - memory與交接結果以純文件提交推送，不改已測index；最後提交／Pages核對存外層outputs/BREAK-guts-entry-evidence.json。下一批依機制家族，家族內優先烏野／青城／音駒／稲荷崎，多人及AI難度延後。
+
+
+## Claude：匯入視窗手機橫向溢出修正（2026-10-21，分支 claude/import-overflow）
+- 計畫：檢視 0c08ff5 部署版時發現，分享連結預覽的卡圖列（flex 橫向捲動）讓匯入視窗的 grid 欄被撐到 1148px（390 寬手機），標題、輸入框與預覽右側被裁掉。只改 CSS：.imp 與 .sheet .box 改單欄 minmax(0,1fr)。
+- 結果：390 寬匯入視窗 scrollWidth 1148→358；share-e2e 新增「匯入視窗不得橫向溢出」斷言，三尺寸通過；library-e2e 三尺寸通過。只改 CSS，未動引擎／規則，未重跑 fuzz/test300。
