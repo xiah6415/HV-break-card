@@ -10,7 +10,15 @@ const catalog=require('./data/cards.json'),released=testModules(catalog).cards,r
   const g=new E.Game({mode:'strict',seed:7,decks:['k1014','seijoh'],agents:[agent,agent]});
   for(const q of g.players){for(const [host,z]of Object.entries({hand:'hand',deck:'deck',drop:'drop',ev:'event',sets:'sets'}))q[host]=before.zones[q.idx+'.'+z].map(id=>I.short(before.cards[id].cardNo));for(const z of roles)q.area[z]=before.zones[q.idx+'.'+z].map(id=>I.short(before.cards[id].cardNo));}
   g.cardState=null;g.beginTurn(g.players[0]);g.ball={type:before.ball.kind,off:before.ball.offense};g.rulePhase={serve:'srv',block:'blk',draw:'drw',receive:'rcv',toss:'tos',attack:'atk'}[phase];
-  if(p.activation.skill_type==='passive'){k.enter(id,phase,{reason:entryReason});await g.enterCharacter(g.players[0],phase,code);}
+  if(p.activation.skill_type==='passive'){
+   const name=I.nodes(p).find(n=>n.kind==='compare'&&n.field==='source.entry_skill_name')?.value;
+   if(name){
+    const event=catalog.cards.find(c=>c.profiles[0].variants[0].printed.name===name),eventId=k.addCard(event.card_no,0,'event');
+    k._atomic(()=>{k._enter(id,0,phase,k._context(eventId,0),'skill');k._drain();});
+    g.players[0].ev.push(I.short(event.card_no));g.place(g.players[0],phase,code);
+    await require('./legacy').charactersEntered(g,g.players[0],[{key:phase,origin:'hand',reason:'skill',entrySkillName:name}]);
+   }else{k.enter(id,phase,{reason:entryReason});await g.enterCharacter(g.players[0],phase,code);}
+  }
   else {p.activation.skill_type==='event'?k.playEvent(id):k.useSkill(id);await g.resolve(g.players[0],code,g.rulePhase);}
   for(const {node,ids}of multiple){const count=Math.min(node.count,ids.length);assert.equal(ids.filter(x=>k.card(x).zone.endsWith('.drop')).length,count,code+' must move the full selected quantity');assert.equal(picked.length,count,code+' host must collect every card choice');assert.equal(new Set(picked).size,count,code+' cannot select the same physical card twice');}
   for(const q of g.players){

@@ -53,7 +53,7 @@ function seedConditions(k,{catalog,profile,source,player,phase,expanded=false}){
   let ids=pool(sel),names=new Set(ids.map(id=>k.effectiveName(id)));
   for(let attempts=0;(distinct?names.size:ids.length)<n;attempts++){
    if(attempts>15)fail('Fixture pool capacity '+zone);
-   let dest=zone,bottom=false,role=null;
+   let dest=zone==='event_or_drop'?'drop':zone,bottom=false,role=null;
    if(zone==='court'||zone==='block'){
     role=zone==='block'?'block':roleFor(filters,parameter);dest=role;
     if(k.top(who,dest)&&!(expanded&&filters.role&&filters.role!=='character')){
@@ -66,7 +66,7 @@ function seedConditions(k,{catalog,profile,source,player,phase,expanded=false}){
     if(!k.top(who,dest))add(pick({type:'character'},{parameter:dest,tag:who===player?tag:null}),who,dest);
     bottom=true;
    }else if(expanded&&['serve','receive','toss','attack'].includes(zone))role=zone;
-   else if(!['hand','drop','event','deck','sets'].includes(zone))fail('Unseeded zone '+zone);
+   else if(!['hand','drop','event','event_or_drop','deck','sets'].includes(zone))fail('Unseeded zone '+zone);
    const d=pick(filters,{parameter:role,tag:who===player&&role?tag:null,exclude:[...exclude,...(distinct?[...names]:[])],receiveMax});
    const id=add(d,who,dest,bottom);
    if(dest==='hand')protectedHand.add(id);
@@ -98,11 +98,11 @@ function seedConditions(k,{catalog,profile,source,player,phase,expanded=false}){
   if(n.kind==='pay_guts'){
    const areas=n.areas==='source_area'?[phase]:n.areas==='court'?['serve','block','receive','toss','attack']:n.areas;
    const count=n.count_each||n.count||Math.max(...n.allowed_counts);
-   for(const area of areas){const used=[];for(let i=0;i<count;i++){const d=pick({...{type:'character'},...(paidFilter||{})},{parameter:area,tag,exclude:distinctPaid?used:[]});used.push(printed(d).name);add(d,player,area);}}
+   for(const area of areas){if(!k.top(player,area))add(pick({type:'character'},{parameter:area,tag}),player,area);const used=[];for(let i=0;i<count;i++){const d=pick({...{type:'character'},...(paidFilter||{})},{parameter:area,tag,exclude:distinctPaid?used:[]});used.push(printed(d).name);add(d,player,area);}}
   }
   if(expanded&&n.kind==='numeric'&&n.target?.kind==='selector')ensure({...n.target,filters:{...n.target.filters,...(targetName?{names:[targetName]}:{})}},1,{receiveMax:targetReceive===null?undefined:Math.max(1,targetReceive-2)});
   if(n.kind==='selector'&&!n.zone.startsWith('$')&&!deferred.some(prefix=>n.node_id?.startsWith(prefix)))ensure(n,1);
-  if(expanded&&n.kind==='move'&&Number.isInteger(n.count)&&n.count>1&&!deferred.some(prefix=>n.node_id?.startsWith(prefix)))ensure(n.pool,n.count);
+  if(expanded&&['move','retrieve'].includes(n.kind)&&Number.isInteger(n.count)&&n.count>1&&!deferred.some(prefix=>n.node_id?.startsWith(prefix)))ensure(n.pool,n.count,{distinct:!!n.group_constraints?.distinct_names});
  }
  // Seed positive boundaries, including the Event just placed before its effect.
  for(const n of nodes.filter(n=>n.kind==='count_compare')){

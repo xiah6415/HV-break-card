@@ -254,6 +254,19 @@ class Kernel {
     need(['hand','deck','drop','event'].includes(zone),'Unsupported move destination');
     return {player,zone};
   }
+  _retrieveCompatible(ids,constraints) {
+    for(const [key,value] of Object.entries(constraints))
+      need(['single_area','distinct_names','shared_affiliation'].includes(key)&&value===true,'Unsupported retrieve constraint '+key);
+    if(constraints.single_area && new Set(ids.map(id=>this.card(id).zone)).size>1)return false;
+    if(constraints.distinct_names && new Set(ids.map(id=>this.effectiveName(id))).size!==ids.length)return false;
+    if(constraints.shared_affiliation && ids.length && !this.card(ids[0]).printed.affiliation_tags.some(tag=>ids.every(id=>this.card(id).printed.affiliation_tags.includes(tag))))return false;
+    return true;
+  }
+  _retrieveCompletions(ids,n,constraints,prefix=[]) {
+    if(!this._retrieveCompatible(prefix,constraints))return false;
+    if(prefix.length===n)return true;
+    return ids.some((id,i)=>this._retrieveCompletions(ids.slice(i+1),n,constraints,[...prefix,id]));
+  }
   _moveSelected(node,ctx) {
     const ids=this.pool(node.pool,ctx), recipient=this.owner(node.pool.actor,ctx);
     // Public-zone targets belong to the effect controller (QA1192/1317/1420).
@@ -266,6 +279,13 @@ class Kernel {
       if(!this.top(player,parts[1])){ctx.bind[node.bind || 'moved']=[];return false;}
     }
     if (dest.endsWith('.hand') && !this._handAllowed(dest.startsWith('owner.')?recipient:this.owner(dest.split('.')[0],ctx),ctx)) { if(ctx.inPayment)throw new Unpayable();ctx.bind[node.bind || 'moved']=[]; return false; }
+    const constraints=node.group_constraints;
+    if(constraints)this._retrieveCompatible([],constraints);
+    let maximum=ids.length;
+    if(constraints){
+      maximum=Math.min(node.count,ids.length);
+      while(maximum && !this._retrieveCompletions(ids,maximum,constraints))maximum--;
+    }
     let n;
     if (node.count_mode==='all') n=ids.length;
     else if (node.count_mode==='one_of_exact') {
@@ -274,11 +294,19 @@ class Kernel {
       n=this._decide('payment_count',ctx,allowed,{player:chooser}); legal(allowed.includes(n),'Invalid payment count');
     } else {
       need(['exact','upto'].includes(node.count_mode),'Unsupported move quantity');
-      if (ctx.inPayment && ids.length<node.count) throw new Unpayable();
-      n=Math.min(node.count,ids.length);
-      if (node.count_mode==='upto') { n=this._decide('move_count',ctx,Array.from({length:n+1},(_,i)=>i),{player:chooser}); legal(Number.isInteger(n) && n>=0 && n<=Math.min(node.count,ids.length),'Invalid move count'); }
+      if (ctx.inPayment && maximum<node.count) throw new Unpayable();
+      n=Math.min(node.count,maximum);
+      if (node.count_mode==='upto') { n=this._decide('move_count',ctx,Array.from({length:n+1},(_,i)=>i),{player:chooser}); legal(Number.isInteger(n) && n>=0 && n<=Math.min(node.count,maximum),'Invalid move count'); }
     }
-    const chosen=node.count_mode==='all' ? ids : n ? this._selection(ids,n,ctx,ctx.inPayment?'payment_cards':'move_cards',chooser,{destination:dest}) : [];
+    let chosen=[];
+    if(constraints){
+      // Reuse existing single-card requests. Only offer choices which can still
+      // complete the whole legal group; no card moves until all are selected.
+      while(chosen.length<n){
+        const options=ids.filter(id=>!chosen.includes(id)&&this._retrieveCompletions(ids.filter(x=>!chosen.includes(x)&&x!==id),n,constraints,[...chosen,id]));
+        chosen.push(this._selection(options,1,ctx,'move_cards',chooser,{destination:dest})[0]);
+      }
+    }else chosen=node.count_mode==='all' ? ids : n ? this._selection(ids,n,ctx,ctx.inPayment?'payment_cards':'move_cards',chooser,{destination:dest}) : [];
     ctx.bind[node.bind || 'moved']=[...chosen];
     for (const id of chosen) {
       const destination=this._destination(dest,id,ctx);
@@ -478,6 +506,7 @@ class Kernel {
     walk(program,n=>{
       if (n.shared_rule_ids) for (const r of n.shared_rule_ids) need(this.ruleIds.has(r),'Unknown shared rule '+r);
       if (n.kind && !['selector','compare','all','any','equal_fields','count_compare','uniform_affiliation','all_result_cards_match','printed_parameter','sum_result_parameter','result_count','source_skill_maximum'].includes(n.kind)) need(KINDS.has(n.kind),'Unsupported mechanism '+n.kind);
+      if(n.group_constraints)this._retrieveCompatible([],n.group_constraints);
       if (n.filters) for (const k of Object.keys(n.filters)) need(FILTERS.has(k),'Unsupported filter '+k);
       if (n.target_scope) need(n.target_scope.membership==='snapshot_on_resolution','Target membership is not supported');
       if(n.destination)need((!n.destination.includes('choose_deck') || ['choose_deck_top_or_bottom','self.choose_deck_top_or_bottom'].includes(n.destination)) && !n.destination.endsWith('.deck_top'),'Destination mechanism not implemented');

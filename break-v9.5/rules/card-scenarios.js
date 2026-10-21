@@ -6,7 +6,7 @@ function testCard(catalog,card){
  const phase=p.activation.skill_type==='passive'?p.activation.trigger.destination_any[0]:p.activation.activation_phases[0];
  const variants=[{key:'positive',max:true},{key:condition?'condition_false':'decline',max:!!condition,...(condition?{focus:{node_id:condition.node_id,value:false}}:{})},{key:cost?'cost_short':'no_add',max:true}];
  for(const s of variants){
-  const scenario={...s,rich:true,conditioned:true,expanded:true};
+  const scenario={...s,...(condition?.field==='source.entry_skill_name'?{focus:undefined}:{}),rich:true,conditioned:true,expanded:true};
   const {k,id,entryReason='rule'}=fixture(card,p,phase,scenario,0,catalog);
   if(s.key==='cost_short')for(const area of ['serve','block','receive','toss','attack','side:0','side:1']){
    const ids=k.zone(0,area);for(const paid of ids.slice(0,p.activation.skill_type==='passive'&&area===phase?ids.length:-1)){ids.splice(ids.indexOf(paid),1);k.card(paid).zone='0.drop';k.zone(0,'drop').push(paid);}
@@ -14,9 +14,16 @@ function testCard(catalog,card){
   if(s.key==='cost_short')for(const n of all.filter(n=>n.kind==='move'&&n.classification_role==='payment'))for(const paid of k.pool(n.pool,k._context(id,0)).filter(x=>x!==id)){const c=k.card(paid),zone=k.state.zones[c.zone];zone.splice(zone.indexOf(paid),1);c.zone=c.owner+'.deck';k.zone(c.owner,'deck').push(paid);}
   if(s.key==='cost_short'&&all.some(n=>n.kind==='move'&&n.classification_role==='payment'&&n.pool.zone==='hand'))k.resolveProgram({kind:'ban_action',action:'add_hand',actor:'self',scope:{},duration:'this_turn'},0);
   if(s.key==='no_add')k.resolveProgram({kind:'ban_action',action:'add_hand',actor:'self',scope:{},duration:'this_turn'},0);
+  // Account for an earlier draw at the actual condition checkpoint.
+  if(condition?.field==='self.hand.count'&&condition.op==='lte'&&s.key==='positive'){
+   const earlier=all.filter(n=>n.kind==='draw'&&n.node_id<condition.node_id).reduce((v,n)=>v+n.count,0);
+   while(k.zone(0,'hand').length>condition.value+1-earlier){const old=k.zone(0,'hand').find(x=>x!==id);k._move(old,0,'deck',k._context(id,0));}
+  }
+  const entryName=all.find(n=>n.kind==='compare'&&n.field==='source.entry_skill_name');
+  const entrySource=entryName?k.addCard(catalog.cards.find(c=>c.profiles[0].variants[0].printed.name===entryName.value).card_no,0,'event'):null;
   const before=k.snapshot(),predicates=[],oldPredicate=k._predicate;
   k._predicate=function(n,c){const value=oldPredicate.call(this,n,c);if(n===condition)predicates.push(value);return value;};
-  function invoke(){return p.activation.skill_type==='event'?k.playEvent(id):p.activation.skill_type==='active'?k.useSkill(id):k.enter(id,phase,{reason:entryReason});}
+  function invoke(){return p.activation.skill_type==='event'?k.playEvent(id):p.activation.skill_type==='active'?k.useSkill(id):entrySource&&s.key!=='condition_false'?k._atomic(()=>{const ref=k._enter(id,0,phase,k._context(entrySource,0),'skill');k._drain();return ref;}):k.enter(id,phase,{reason:entryReason});}
   let rejected=false;
   try{invoke();}catch(e){if(e.message!=='OPEN-EVENT-NO-CHANGE')throw e;rejected=true;assert.deepEqual(k.snapshot(),before);}
   const after=k.snapshot();
