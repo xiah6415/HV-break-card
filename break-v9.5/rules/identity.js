@@ -54,7 +54,7 @@ function move(g,from,to,index,at) {
   b.splice(position,0,code);state.zones[dst].splice(position,0,id);state.cards[id].zone=dst;
   const after=visible(state);
   for(const changed of new Set([...before,...after]))if(before.has(changed)!==after.has(changed))state.cards[changed].incarnation++;
-  state.revision++;validate(g,state);return {id,code};
+  state.revision++;validate(g,state);return {id,code,from:src,to:dst,revision:state.revision};
 }
 function shuffle(g,array,random) {
   const state=ensure(g),key=keyOf(g,array),ids=state.zones[key];

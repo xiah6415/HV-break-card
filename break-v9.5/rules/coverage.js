@@ -60,7 +60,7 @@ function buildCoverage(){
    }
    if(n.kind==='move_self'&&!/^(self|opponent|owner)\.(hand|drop|event|deck|deck_bottom|choose_deck_top_or_bottom|(attack|toss|chosen_court_area)\.guts)$/.test(n.destination))host('movement','self_destination:'+n.destination,at,'自身移牌到此區域需新增host投影');
    if(n.kind==='watch'){
-    const family=n.event==='hand_added'&&n.duration==='next_opponent_turn'||n.event==='character_entry'&&['this_turn','next_opponent_turn'].includes(n.duration);
+    const family=['hand_added','character_entry','loss','block_success','source_moved'].includes(n.event)&&['this_turn','next_opponent_turn'].includes(n.duration);
     if(!family)host('triggers','watch:'+n.event+':'+n.duration,at,'尚未接入host通知／持久化的watch族');
    }
    if(n.kind==='ban_action'){

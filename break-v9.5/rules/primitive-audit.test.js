@@ -9,9 +9,9 @@ const before=hashes(),a=buildAudit(),nos=a.cards.map(c=>c.card_no),card=no=>a.ca
 // Independent scope by source authority, including the non-HV- spelling of BP.
 const short=no=>no.startsWith('HVBP-')?no.slice(2):no.startsWith('HV-')?no.slice(3):no;
 const expected=catalog.cards.filter(c=>authority.cards[short(c.card_no)].kind==='unapproved');
-assert.deepEqual(nos,expected.map(c=>c.card_no));assert.equal(a.totals.cards,209);assert.equal(a.totals.profiles,213);
-assert.equal(a.totals.scripted_cards,209);assert.equal(new Set(nos).size,209);
-assert.deepEqual([a.totals.batch_candidate,a.totals.host_gap,a.totals.core_gap,a.totals.review],[57,50,98,4]);
+assert.deepEqual(nos,expected.map(c=>c.card_no));assert.equal(a.totals.cards,196);assert.equal(a.totals.profiles,200);
+assert.equal(a.totals.scripted_cards,196);assert.equal(new Set(nos).size,196);
+assert.deepEqual([a.totals.batch_candidate,a.totals.host_gap,a.totals.core_gap,a.totals.review],[48,46,98,4]);
 assert.equal(a.totals.interpreter_action_kinds,22);assert.equal(a.totals.primitive_families,16);
 assert.equal(authority.cards['BP-009'].kind,'shared');assert(!card('HV-PR-022'));assert(!card('HV-P01-006'));assert(!card('HV-P01-015'));
 const {profileHash}=require('./batch-index');
@@ -40,10 +40,10 @@ assert.equal(extraChecks({program:node})[0].key,'group_constraints');
 // Inverse lists and unlock counts recomputed from full cards, not sums of overlaps.
 for(const g of a.gaps){const affected=a.cards.filter(c=>c.gap_ids.includes(g.id));assert.deepEqual(g.card_nos,affected.map(c=>c.card_no));assert.equal(g.affected_cards,affected.length);assert.deepEqual(g.sole_gap_card_nos,affected.filter(c=>c.gap_ids.length===1).map(c=>c.card_no));}
 for(const p of a.package_impact){const touched=a.cards.filter(c=>c.gap_ids.some(g=>p.fixes.includes(g)));assert.equal(p.affected_cards,touched.length);assert.deepEqual(p.card_nos,touched.filter(c=>c.gap_ids.every(g=>p.fixes.includes(g))).map(c=>c.card_no));}
-const packets=a.candidate_packets.flatMap(p=>p.cards);assert.equal(packets.length,57);assert.equal(new Set(packets).size,57);
+const packets=a.candidate_packets.flatMap(p=>p.cards);assert.equal(packets.length,48);assert.equal(new Set(packets).size,48);
 for(const p of a.candidate_packets)for(const no of p.cards)assert.deepEqual(card(no).primitives,p.primitives);
 assert.throws(()=>gapFor({layer:'core',key:'preflight:Unsupported mechanism future_opcode'}),/Unmapped/);
 assert.equal(a.policy.admissions_changed,0);assert.equal(a.policy.game_changed,false);
-assert(markdown(a).includes('57張'));assert(cardMarkdown(a).includes('P04-070'));
+assert(markdown(a).includes('48張'));assert(cardMarkdown(a).includes('P04-070'));
 assert.deepEqual(buildAudit(),a);assert.deepEqual(hashes(),before);
-console.log('primitive-audit: 209-card authority scope, 213 exact source scripts, 16 families, 22 interpreter actions, completed constraint regression, overlap/unlock counts, variants and non-mutation passed');
+console.log('primitive-audit: 196-card authority scope, 200 exact source scripts, 16 families, 22 interpreter actions, completed constraint regression, overlap/unlock counts, variants and non-mutation passed');

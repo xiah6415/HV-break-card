@@ -1,0 +1,52 @@
+'use strict';
+const assert=require('node:assert/strict'),E=require('../engine'),B=require('./legacy'),I=require('./node-inventory'),{fixture}=require('./batch-smoke'),{matchesPrinted}=require('./batch-fixtures'),M=require('./modules');
+const catalog=require('./data/cards.json'),codes=Object.keys(M.testModules(catalog).cards),roles=['serve','block','receive','toss','attack'],params={serve:'srv',block:'blk',receive:'rcv',toss:'tos',attack:'atk'},phases={serve:'srv',block:'blk',draw:'drw',receive:'rcv',toss:'tos',attack:'atk'};
+let cases=0;
+(async()=>{
+ for(const code of codes){
+  const card=catalog.cards.find(c=>I.short(c.card_no)===code),p=card.profiles[0],watches=I.nodes(p).filter(n=>n.kind==='watch');
+  for(const w of watches)for(const expired of [false,true]){
+   const phase=p.activation.skill_type==='passive'?p.activation.trigger.destination_any[0]:p.activation.activation_phases[0],{k,id,entryReason='rule'}=fixture(card,p,phase,{rich:true,conditioned:true,expanded:true,max:true,key:'positive'},0,catalog);
+   const player=w.actor==='opponent'?1:0;let area,def,target,second;
+   if(w.event==='character_entry'){
+    const f=w.filters;area=f.role==='side_blocker'?'side:0':['block','center_blocker'].includes(f.role)?'block':f.role&&f.role!=='character'?f.role:'attack';
+    const other=area==='attack'?k.top(player,'toss'):area==='toss'?k.top(player,'receive'):null,blockers=area==='block'||area.startsWith('side')?['block','side:0','side:1'].map(z=>k.top(player,z)).filter(Boolean):[];
+    def=catalog.cards.find(c=>{const pr=c.profiles[0],printed=pr.variants[0].printed;return !pr.program&&matchesPrinted(pr,{type:'character',...Object.fromEntries(Object.entries(f).filter(([key])=>!['role','entry_origins'].includes(key)))})&&printed.parameters[area.startsWith('side')?'block':area]!=='dash'&&(!other||k.effectiveName(other)!==printed.name)&&!blockers.some(x=>k.effectiveName(x)===printed.name)&&(!area.startsWith('side')||k.top(player,'block')||c.card_no!=='HV-D01-009');});
+    assert(def,code);target=k.addCard(def.card_no,player,'hand');if(w.remaining_uses===1)second=k.addCard(def.card_no,player,'hand');if(area.startsWith('side')&&!k.top(player,'block'))k.addCard('HV-D01-009',player,'block');
+   }else if(w.event==='hand_added'){def=catalog.cards.find(c=>c.card_no==='HV-D01-009');target=k.addCard(def.card_no,player,'drop');}
+   else {assert.equal(w.event,'loss');const move=I.nodes({program:w.then}).find(n=>n.kind==='move');def=catalog.cards.find(c=>!c.profiles[0].program&&matchesPrinted(c.profiles[0],move.pool.filters));target=k.addCard(def.card_no,0,'hand');}
+   const before=k.snapshot(),agent={wantsAck:true,async choose(g,p,r){if(r.kind==='skill')return true;if(r.kind==='guts'||r.kind==='gutsCourt')return r.options.slice(0,r.need).map(o=>o.value);return r.options.find(o=>o.label?.includes('其餘放到牌庫底'))?.value??r.options[0].value;}};
+   const g=new E.Game({mode:'strict',seed:7,decks:['k1014','seijoh'],agents:[agent,agent]});
+   for(const q of g.players){for(const [host,z]of Object.entries({hand:'hand',deck:'deck',drop:'drop',ev:'event',sets:'sets'}))q[host]=before.zones[q.idx+'.'+z].map(id=>I.short(before.cards[id].cardNo));for(const z of roles)q.area[z]=before.zones[q.idx+'.'+z].map(id=>I.short(before.cards[id].cardNo));}
+   g.cardState=null;g.beginTurn(g.players[0]);g.ball={type:before.ball.kind,off:before.ball.offense};g.rulePhase=phases[phase];
+   if(p.activation.skill_type==='passive'){k.enter(id,phase,{reason:entryReason});await g.enterCharacter(g.players[0],phase,code);}
+   else{p.activation.skill_type==='event'?k.playEvent(id):k.useSkill(id);await g.resolve(g.players[0],code,g.rulePhase);}
+   k._atomic(()=>k._move(id,0,'drop',k._context(id,0)));const owner=g.players[0];g.moveCode(p.activation.skill_type==='event'?owner.ev:owner.area[phase],owner.drop,code);
+   if(w.duration==='next_opponent_turn'){k.endTurn();k.beginTurn(1);g.finishTurn(owner);g.beginTurn(g.players[1]);}
+   if(expired)for(let i=0;i<2;i++){const old=g.turnP;k.endTurn();k.beginTurn(1-k.state.turn.player);g.finishTurn(old);g.beginTurn(g.players[k.state.turn.player]);}
+   const q=g.players[player],followCode=I.short(def.card_no);
+   if(w.event==='character_entry'){
+    k.advancePhase(area.startsWith('side')?'block':area);g.rulePhase=phases[k.state.turn.phase];
+    k.enter(target,area.startsWith('side')?'block':area,{side:area.startsWith('side')});
+    if(area.startsWith('side')){g.moveCode(q.hand,q.ts.sides ||= [],followCode);await B.charactersEntered(g,q,[{key:'side:0',origin:'hand',reason:'rule'}]);}else await g.enterCharacter(q,area,followCode);
+   if(second&&!expired){k.enter(second,'block',{side:true});g.moveCode(q.hand,q.ts.sides,followCode);await B.charactersEntered(g,q,[{key:'side:0',origin:'hand',reason:'rule'}]);assert.equal(q.ts.sides.length,1,'One-use watch must keep the second side blocker');}
+   }else if(w.event==='hand_added'){k.resolveProgram({kind:'move_self',destination:'owner.hand'},player,target);await g.sadd(q,followCode,q.drop);}
+   else{k.loss(player);await B.judgment(g,q,'loss');}
+   for(const q of g.players){
+    for(const [host,z]of Object.entries({hand:'hand',deck:'deck',drop:'drop',ev:'event',sets:'sets'}))assert.deepEqual(q[host],k.zone(q.idx,z).map(id=>I.short(k.card(id).cardNo)),code+' '+w.event+' expiry='+expired+' '+host);
+    for(const z of [...roles,'side:0','side:1']){const top=k.top(q.idx,z);const cards=z.startsWith('side')?[q.ts.sides?.[+z.split(':')[1]]].filter(Boolean):q.area[z];assert.equal(cards.at(-1),top?I.short(k.card(top).cardNo):undefined,code+' '+z);if(!top)continue;for(const [param,old]of Object.entries(params))assert.equal(g.parameter(q,z,old),k.parameter(top,param)==='dash'?null:k.parameter(top,param),code+' '+z+'.'+param);}
+   }
+   // Exported host journals survive JSON round-tripping, including a consumed one-use watch.
+   g.sharedRulesState=JSON.parse(JSON.stringify(g.sharedRulesState));B.assertReady(g);cases++;
+  }
+ }
+ assert.equal(cases,28);
+ const g=new E.Game({seed:7,decks:['k1014','seijoh'],agents:[E.AI,E.AI]}),p=g.players[0];g.beginTurn(p);
+ const state=g.cardSnapshot(),id=state.zones['0.deck'].at(-1);g.moveCard(p.deck,p.ev,p.deck.length-1);
+ const base={kind:'watch',actor:0,source:{id,incarnation:0},duration:{kind:'this_turn',turn:g.turnNo}};
+ g.sharedRulesState={version:1,fingerprint:require('./runtime-data.json').fingerprint,effects:[{...base,event:'source_moved'}],next:1,receipts:[]};
+ g.moveCard(p.ev,p.drop,p.ev.length-1);assert.equal(g.sharedRulesEvents.length,1);assert.equal(g.sharedRulesEvents[0].from_zone,'event');assert.equal(g.sharedRulesEvents[0].to_zone,'drop');
+ g.sharedRulesEvents=[];g.sharedRulesState.effects=[{...base,event:'hand_added',filters:{}}];g.draw(p);assert.equal(g.sharedRulesEvents.length,1);assert.equal(g.sharedRulesEvents[0].operation,'draw');
+ g.sharedRulesEvents=[];g.sharedRulesState.effects=[{...base,event:'hand_added',filters:{exclude_operations:['draw']}}];g.draw(p);assert.equal(g.sharedRulesEvents.length,0);
+ console.log('watch live: '+cases+' generated-event/expiry cases; all zones and parameters match core');
+})().catch(e=>{console.error(e);process.exitCode=1;});

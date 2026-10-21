@@ -116,7 +116,7 @@ class Match {
    case 'defend': {if(k.state.ball.kind==='attack'&&this._cards(p,'block').length&&this._blockMax(p)){const c=this._ask('defend',p,{type:'single'},['receive','block'],{ball:copy(k.state.ball)});this._next(c==='block'?'block':'drawAck');}else this._next('drawAck');break;}
    case 'block': {this._setPhase('block');const ids=this._cards(p,'block'),a=this._ask('block',p,{type:'block',min:1,max:Math.min(ids.length,this._blockMax(p))},ids,{block:{maxCount:this._blockMax(p),distinctEffectiveNames:true,centerRequired:true},ball:copy(k.state.ball)});this._enterBlock(a);this._next('blockEvent');break;}
    case 'blockEvent': this._event('blockJudge');break;
-   case 'blockJudge': {const n=['block','side:0','side:1'].reduce((n,z)=>n+(k.top(p,z)?k.parameter(k.top(p,z),'block'):0),0);this._m.roleTotals[p].block=n;this._cleanupSides(p);if(n<k.state.ball.offense)this._lose('攔網 '+n+' 小於進攻 '+k.state.ball.offense);else{this._m.outgoingType='block';this._next('turnEnd');}break;}
+   case 'blockJudge': {const n=['block','side:0','side:1'].reduce((n,z)=>n+(k.top(p,z)?k.parameter(k.top(p,z),'block'):0),0);this._m.roleTotals[p].block=n;this._cleanupSides(p);if(n<k.state.ball.offense)this._lose('攔網 '+n+' 小於進攻 '+k.state.ball.offense);else{k._atomic(()=>{k._emit({type:'block_success',player:p,defense:n});k._drain();});this._m.outgoingType='block';this._next('turnEnd');}break;}
    case 'drawAck': if(this._m.wantsAck[p])this._ask('ack',p,{type:'ack'},[true],{ball:copy(k.state.ball)});this._next('drawRule');break;
    case 'drawRule': k.drawRule(p,1);this._next('drawEvent');break;
    case 'drawEvent': this._event('receive');break;

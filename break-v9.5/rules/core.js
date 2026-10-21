@@ -11,7 +11,7 @@ const KINDS = new Set(['sequence','conditional','numeric','draw','draw_to_hand_s
 const FILTERS = new Set(['names','exclude_names','tags','tags_any','positions','positions_any','years','years_any',
   'role','role_any','type','skillless','play_icons_any','play_icons_exact','entry_origins','phase',
   'printed_attack','printed_attack_eq','printed_block_gte','printed_receive_gte','current_receive_gte',
-  'current_block_eq','exclude_operations','from_zone','to_zone','position_has_any_other_than']);
+  'current_block_eq','exclude_operations','from_zone','to_zone','position_has_any_other_than','entry_keyword_family']);
 class NeedsReview extends Error { constructor(message) { super(message); this.code='REQUIRES_REVIEW'; } }
 class IllegalAction extends Error { constructor(message) { super(message); this.code='ILLEGAL_ACTION'; } }
 class Unpayable extends Error {}
@@ -115,6 +115,7 @@ class Kernel {
       else if (key==='play_icons_any') ok=v.some(x=>(this.profile(id).printed_play_icons ?? this.profile(id).activation?.activation_phases ?? []).includes(x));
       else if (key==='play_icons_exact') ok=same([...v].sort(),[...(this.profile(id).printed_play_icons ?? this.profile(id).activation?.activation_phases ?? [])].sort());
       else if (key==='entry_origins') ok=v.includes(event.origin ?? c.entryOrigin);
+      else if (key==='entry_keyword_family') ok=event.entry_keyword_family===v;
       else if (key==='phase') ok=this.state.turn.phase===v;
       else if (key==='exclude_operations') ok=!v.includes(event.operation);
       else if (key==='from_zone' || key==='to_zone') ok=event[key]===v;
@@ -582,12 +583,13 @@ class Kernel {
   }
   _registerWatch(node,ctx) {
     this.preflight(node.then);legal(['character_entry','hand_added','source_moved','loss','turn_end','block_success'].includes(node.event),'Unknown trigger event');
-    return this.effect('watch',{event:node.event,actor:this.owner(node.actor,ctx),filters:node.filters || {},then:node.then,remaining:node.remaining_uses ?? null},ctx,node.duration);
+    return this.effect('watch',{event:node.event,actor:this.owner(node.actor,ctx),filters:node.filters || {},then:node.then,remaining_uses:node.remaining_uses??null,remaining:node.remaining_uses ?? null},ctx,node.duration);
   }
   _emit(event) {
     event={phase:this.state.turn.phase,window:this.state.turn.id+':'+this.state.turn.phase,...clone(event)};
     this.state.events.push(clone(event));
     for (const e of this.state.effects) if(e.kind==='watch' && this.active(e) && e.actor===event.player && e.event===event.type && e.remaining!==0) {
+      if(e.event==='source_moved'&&event.card!==e.source?.id)continue;
       const id=event.card || event.character?.id;
       if(Object.keys(e.filters).length && (!id || !this.matches(id,e.filters,{controller:e.controller},event)))continue;
       if(e.remaining!==null)e.remaining--;
@@ -719,17 +721,27 @@ class Kernel {
     legal(this.state.stage==='rally'&&this.state.turn.step==='free'&&!this.state.queue.length,'Host notification requires an idle checkpoint');
     legal(Array.isArray(events)&&events.length>0,'Actual host events required');
     for(const e of events) {
+      if(e.type==='loss'||e.type==='block_success'){
+        legal(e.player===this.state.turn.player,'Judgment event player mismatch');
+        if(e.type==='block_success')legal(this.state.turn.phase==='block'&&this.state.ball?.kind==='attack'&&Number.isInteger(e.defense)&&e.defense>=this.state.ball.offense,'Block success requires successful defense');
+        this._emit(e);continue;
+      }
       legal(this.card(e.card).owner===e.player,'Host event owner mismatch');
       if(e.type==='hand_added') {
         legal(['draw','add_hand'].includes(e.operation),'Unknown hand operation');
         this._emit({type:e.type,player:e.player,card:e.card,operation:e.operation});
+      } else if(e.type==='source_moved'){
+        // Like hand-add receipts, earlier source moves can be followed by another
+        // move within the same host skill before this queue is drained.
+        const zones=['hand','deck','drop','event','sets','sides',...COURT];
+        legal(zones.includes(e.from_zone)&&zones.includes(e.to_zone)&&e.from_zone!==e.to_zone,'Invalid source move zones');this._emit(e);
       } else {
         legal(e.type==='character_entry'&&e.card===e.character?.id&&this.card(e.card).printed.type==='character'&&Number.isInteger(e.character.incarnation)&&e.character.incarnation>=0&&e.character.incarnation<=this.card(e.card).incarnation&&['serve','receive','toss','attack','center_blocker','side_blocker'].includes(e.role),'Entry event identity mismatch');
         if(e.character.incarnation===this.card(e.card).incarnation)legal(this.current(e.character)&&this.role(e.card)===e.role,'Current entry role mismatch');
         legal(['hand','drop','guts'].includes(e.origin)&&['rule','skill'].includes(e.reason),'Unknown entry origin');
         const c=this.card(e.card);c.entryOrigin=e.origin;c.entryReason=e.reason;c.entryTurn=this.state.turn.id;
         c.coveredCharacter=clone(e.coveredCharacter??null);c.entrySkillName=e.entrySkillName??null;
-        const event={type:e.type,player:e.player,card:e.card,character:e.character,role:e.role,origin:e.origin,phase:this.state.turn.phase,window:this.state.turn.id+':'+this.state.turn.phase};
+        const event={type:e.type,player:e.player,card:e.card,character:e.character,role:e.role,origin:e.origin,entry_keyword_family:e.entry_keyword_family??null,phase:this.state.turn.phase,window:this.state.turn.id+':'+this.state.turn.phase};
         this._emit(event);this._enqueuePassive(e.card,event);
       }
     }

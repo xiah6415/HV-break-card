@@ -6,6 +6,7 @@ const completed=[{id:'sequence',test:T.testSequence},{id:'deck_selection',test:T
 completed.push({id:'move',test:require('./move-node-tests').testMove});
 completed.push({id:'count_compare',test:require('./count-node-tests').testCountCompare});
 completed.push({id:'retrieve',test:require('./retrieve-node-tests').testRetrieve});
+completed.push({id:'watch',test:require('./watch-node-tests').testWatch});
 function testCard(catalog,card){
  if(I.dependencies(card).some(k=>!['sequence','deck_selection'].includes(k)))return C.testCard(catalog,card);
  const p=card.profiles[0],deckNodes=I.nodes(p).filter(n=>n.kind==='deck_selection');
@@ -42,6 +43,7 @@ function testModules(catalog){
  for(const card of I.scope(catalog)){
   if(!eligible(card))continue;
   testCard(catalog,card);
+  if(I.dependencies(card).includes('watch'))require('./watch-card-tests').testWatchCard(catalog,card);
   cards[I.short(card.card_no)]={profileId:card.profiles[0].profile_id,modules:I.dependencies(card)};
  }
  require('./script-review-tests').testReview(catalog);

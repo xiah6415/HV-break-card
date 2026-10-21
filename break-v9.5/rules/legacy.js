@@ -29,7 +29,7 @@ function banSignature(e) {return JSON.stringify([e.action,typeof e.duration==='s
 function persistent(e) { return ['watch','protect','ban'].includes(e.kind); }
 function admitEffect(e) {
   if(e.kind==='ban'&&e.duration.kind==='next_opponent_turn'&&banSignatures.has(banSignature(e)))return;
-  const admittedFamily=e.event==='hand_added'&&e.duration.kind==='next_opponent_turn'||e.event==='character_entry'&&['this_turn','next_opponent_turn'].includes(e.duration.kind);
+  const admittedFamily=['hand_added','character_entry','loss','block_success','source_moved'].includes(e.event)&&['this_turn','next_opponent_turn'].includes(e.duration.kind);
   if(e.kind==='watch'&&admittedFamily&&watchSignatures.has(signature(e)))return;
   if(e.kind==='protect'&&e.parameter==='all'&&e.duration.kind==='this_turn'&&e.ballOwner===null&&e.targets.length===1&&e.targets.every(r=>typeof r.id==='string'&&Number.isInteger(r.incarnation)))return;
   throw new Error('Unintegrated persistent watcher mechanism');
@@ -151,8 +151,16 @@ function transaction(g,p,c,timing,notification=null) {
       const b=basePlayers[q.idx],codes=z=>state.zones[q.idx+'.'+z].map(id=>short[id]);
       for(const [host,z] of Object.entries({hand:'hand',deck:'deck',drop:'drop',ev:'event',sets:'sets'}))q[host]=codes(z);
       q.effects=copy(b.effects);q.ts=copy(b.ts);q.newCount=copy(b.newCount);
+      // Side blockers are physical zones too. Restoring the old turn snapshot
+      // must not resurrect a side blocker removed by a generated effect.
+      const sideIds=[...state.zones[q.idx+'.side:0'],...state.zones[q.idx+'.side:1']];
+      q.ts.sides=sideIds.map(id=>short[id]);
+      for(const key of Object.keys(q.effects))if(key.startsWith('side:'))delete q.effects[key];
+      sideIds.forEach((id,i)=>{const old=slots[id]?.key;if(old&&b.effects[old])q.effects['side:'+i]=copy(b.effects[old]);});
       for(const id of Object.keys(slots)) {
-        const slot=slots[id];if(slot.player!==q.idx)continue;
+        const original=slots[id];if(original.player!==q.idx)continue;
+        if(original.key.startsWith('side:')&&!sideIds.includes(id))continue;
+        const slot=original.key.startsWith('side:')?{...original,key:'side:'+sideIds.indexOf(id)}:original;
         for(const [old,param] of Object.entries(params)) {
           const value=s=>s.effects.filter(e=>e.kind==='numeric'&&e.target.id===id&&e.target.incarnation===s.cards[id].incarnation&&e.parameter===param&&(e.duration.kind==='next_opponent_turn'?e.duration.activeTurn===s.turn.id:e.duration.turn===s.turn.id)).reduce((n,e)=>e.operation==='set'?e.value:n+e.value,s.cards[id].printed.parameters[param]);
           const delta=value(state)-value(base);
@@ -191,7 +199,7 @@ function transaction(g,p,c,timing,notification=null) {
       if(e.kind==='numeric') {const slot=slots[e.target.id];g.log(`${g.cardName(g.players[slot.player],slot.key)}（${labels[slot.key]||'側攔'}區）：${labels[e.parameter]} ${e.value<0?'−':'+'}${Math.abs(e.value)}`);}
       else if(e.kind==='ban')g.log(`效果：${g.players[e.actor].name}下個回合，${e.action==='add_hand'?'不能用技能加入手牌':e.scope.printed_receive_gte!=null?`原始接球 ${e.scope.printed_receive_gte} 以上角色不能登場接球`:`最多 ${e.scope.max_count} 人攔網`}。`);
       else if(e.kind==='protect')g.log('登場效果：這位角色本回合的數值不會被降低。');
-      else if(e.kind==='watch')g.log(e.event==='hand_added'?`效果：${g.players[e.actor].name}的下個回合，非抽牌加入手牌後需棄 1 張。`:e.duration.kind==='this_turn'?'效果：本回合符合條件的角色登場時，接球 +2，數值不會被降低。':`效果：${g.players[e.actor].name}下個回合的接球角色登場時，接球 −1。`);
+      else if(e.kind==='watch')g.log(`效果：${g.players[e.actor].name}${e.duration.kind==='next_opponent_turn'?'的下個回合':'本回合'}，${({hand_added:'加牌',character_entry:'符合條件的角色登場',loss:'喊 Loss',block_success:'攔網成功',source_moved:'來源卡移動'})[e.event]}時結算後續效果。`);
     }
     if(state.ball&&state.ball.offense!==ballOff){g.log(`來球進攻 ${state.ball.offense-ballOff<0?'−':'+'}${Math.abs(state.ball.offense-ballOff)} → ${state.ball.offense}`);ballOff=state.ball.offense;}
     for(const entry of state.publicLog.slice(publicLogCursor)){
@@ -275,12 +283,27 @@ function canPlay(g,p,c,timing) {
 async function resolve(g,p,c,timing) { return transaction(g,p,c,timing).run(); }
 async function handAdded(g,p,id,revision) {
   assertReady(g);
-  if(!stored(g).effects.some(e=>e.kind==='watch'&&e.event==='hand_added'&&e.actor===p.idx&&e.duration.activeTurn===g.turnNo))return;
+  if(!stored(g).effects.some(e=>e.kind==='watch'&&e.event==='hand_added'&&e.actor===p.idx&&active(e,g)))return;
   const receipt=`hand:${g.turnNo}:${p.idx}:${id}:${revision}`;
   if(stored(g).receipts.includes(receipt)||g.sharedRulesEvents?.some(e=>e.receipt===receipt))return;
   if(revision!==identity.ensure(g).revision)throw new Error('Stale hand-add notification');
   (g.sharedRulesEvents ||= []).push({type:'hand_added',player:p.idx,card:id,operation:'add_hand',receipt});
   if(!g.sharedRulesDepth)return flushHandEvents(g);
+}
+function queueHost(g,event){
+  if(!stored(g).effects.some(e=>e.kind==='watch'&&active(e,g)&&e.actor===event.player&&e.event===event.type&&(event.type!=='source_moved'||e.source?.id===event.card)))return;
+  if(stored(g).receipts.includes(event.receipt)||g.sharedRulesEvents?.some(e=>e.receipt===event.receipt))return;
+  (g.sharedRulesEvents ||= []).push(event);
+}
+function sourceMoved(g,id,from,to,revision){const [player,raw]=to.split('.'),zone=raw==='ev'?'event':raw,old=from.split('.')[1]==='ev'?'event':from.split('.')[1];if(old===zone)return;queueHost(g,{type:'source_moved',player:+player,card:id,from_zone:old,to_zone:zone,receipt:`move:${g.turnNo}:${id}:${revision}`});}
+function drawn(g,p,id,revision){
+  if(!stored(g).effects.some(e=>e.kind==='watch'&&e.event==='hand_added'&&e.actor===p.idx&&active(e,g)&&!(e.filters.exclude_operations||[]).includes('draw')))return;
+  queueHost(g,{type:'hand_added',player:p.idx,card:id,operation:'draw',receipt:`draw:${g.turnNo}:${id}:${revision}`});
+}
+async function judgment(g,p,type,extra={}){
+  if(type==='loss'){g.sharedRulesPending=null;g.sharedRulesEvents=[];}
+  queueHost(g,{type,player:p.idx,...extra,receipt:`${type}:${g.rallyNo}:${g.turnNo}:${p.idx}`});
+  await flushHandEvents(g);
 }
 function active(e,g) { return e.duration.kind==='next_opponent_turn'?e.duration.activeTurn===g.turnNo:e.duration.turn===g.turnNo; }
 function protectedParameter(g,p,key,param) {
@@ -298,11 +321,11 @@ async function charactersEntered(g,p,entries) {
   if(!passive&&!stored(g).effects.some(e=>e.kind==='watch'&&e.event==='character_entry'&&e.actor===p.idx&&active(e,g)))return;
   // Payments and draws change move revision; a repeated entry is still the same role instance.
   identity.ensure(g);
-  for(const {key,origin='hand',reason='rule',coveredCharacter=null,entrySkillName=null} of entries) {
+  for(const {key,origin='hand',reason='rule',coveredCharacter=null,entrySkillName=null,entry_keyword_family=null} of entries) {
     const character=g.roleReference(p,key),receipt=`entry:${g.turnNo}:${p.idx}:${character.id}:${character.incarnation}:${key}`;
     if(stored(g).receipts.includes(receipt)||g.sharedRulesEvents?.some(e=>e.receipt===receipt))continue;
     const role=key==='block'?'center_blocker':key.startsWith('side:')?'side_blocker':key;
-    (g.sharedRulesEvents ||= []).push({type:'character_entry',player:p.idx,card:character.id,character,role,origin,reason,receipt,coveredCharacter,entrySkillName});
+    (g.sharedRulesEvents ||= []).push({type:'character_entry',player:p.idx,card:character.id,character,role,origin,reason,receipt,coveredCharacter,entrySkillName,entry_keyword_family});
   }
   if(!g.sharedRulesDepth)return flushHandEvents(g);
 }
@@ -315,6 +338,6 @@ async function legacyEffect(g,run) {
   try {const result=await run();complete=true;return result;}
   finally {g.sharedRulesDepth--;if(complete&&!g.sharedRulesDepth)await flushHandEvents(g);}
 }
-const api={permission,entryAllowed,blockEntered,charactersEntered,entryPreview,protectedParameter,handles,canPlay,resolve,assertReady,handAdded,legacyEffect,beginTurn,finishTurn,loss,approvals:[...approved]};
+const api={sourceMoved,drawn,judgment,flushHostEvents:flushHandEvents,permission,entryAllowed,blockEntered,charactersEntered,entryPreview,protectedParameter,handles,canPlay,resolve,assertReady,handAdded,legacyEffect,beginTurn,finishTurn,loss,approvals:[...approved]};
 if(node)module.exports=api;else root.BreakRulesLegacy=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

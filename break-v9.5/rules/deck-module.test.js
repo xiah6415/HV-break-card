@@ -5,6 +5,7 @@ const catalog=require('./data/cards.json'),codes=Object.keys(require('./modules'
 (async()=>{
  for(const code of codes){
   const card=catalog.cards.find(c=>I.short(c.card_no)===code),n=I.nodes(card.profiles[0]).find(n=>n.kind==='deck_selection');
+  if(I.dependencies(card).some(kind=>!['sequence','deck_selection'].includes(kind)))continue;
   const {k,ctx,shown}=T.deckFixture(catalog,n),seen=[];
   const agent={wantsAck:true,async choose(g,p,r){seen.push(r);return r.options.find(o=>o.value===1)?.value??r.options[0].value;}};
   const g=new E.Game({seed:7,decks:['k1014','seijoh'],agents:[agent,E.AI]});

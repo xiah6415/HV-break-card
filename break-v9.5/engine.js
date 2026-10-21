@@ -146,7 +146,7 @@ class Game {
     this.ball = null; this.rallyNo = 0; this.turnNo = 0; this.server = null; this.winner = null; this.stats = {};
   }
   shuffle(a) { if (this.cardState) return cardIdentity.shuffle(this, a, () => this.rand()); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(this.rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } }
-  moveCard(from, to, index, at) { return cardIdentity.move(this, from, to, index, at).code; }
+  moveCard(from, to, index, at) { const r=cardIdentity.move(this,from,to,index,at);sharedRules.sourceMoved(this,r.id,r.from,r.to,r.revision);return r.code; }
   moveCode(from, to, code, at) { const index = from.indexOf(code); if (index < 0) throw new Error('來源區沒有指定卡片'); return this.moveCard(from, to, index, at); }
   cardSnapshot() { return cardIdentity.snapshot(this); }
   cardReference(p, zone, index) { const state = cardIdentity.ensure(this),ids = state.zones[p.idx + '.' + zone],id = ids[index ?? ids.length - 1]; return id ? {id,incarnation:state.cards[id].incarnation} : null; }
@@ -156,14 +156,14 @@ class Game {
   scheduleRestriction(p, key, value, stack, source) { return turnEffects.schedule(this, p.idx, key, value, {stack,source}); }
   log(s, cls) { this.logFn(s, cls); }
   tag(k) { this.stats[k] = (this.stats[k] || 0) + 1; }
-  async ask(p, req) { this.update(); req.canLoss = this.turnP === p && !['mulligan', 'roll', 'lossConfirm'].includes(req.kind); const r = await p.agent.choose(this, p, req); if (r && r.__loss && req.canLoss) this.lost(p, '主動 Loss（放棄這球）'); return r; }
+  async ask(p, req) { if(!this.sharedRulesPending&&!this.sharedRulesDepth&&this.sharedRulesEvents?.length)await sharedRules.flushHostEvents(this);this.update(); req.canLoss = this.turnP === p && !['mulligan', 'roll', 'lossConfirm'].includes(req.kind); const r = await p.agent.choose(this, p, req); if (r && r.__loss && req.canLoss) this.lost(p, '主動 Loss（放棄這球）'); return r; }
   async notice(data) { this.update(); await this.onNotice({ rally: this.rallyNo, ...data }); }
   async yes(p, kind, prompt, ctx) { const r = await this.ask(p, { kind, prompt, ctx, options: [{ label: '發動', value: true }, { label: '不發動', value: false }] }); return r; }
 
   // ---------- card movement
   draw(p, n = 1, why = '') {
     const got = [];
-    for (let i = 0; i < n; i++) { if (!p.deck.length) { this.log(`${p.name} 牌庫空，無法抽牌`, 'warn'); break; } const c = this.moveCard(p.deck, p.hand, p.deck.length - 1); got.push(c); p.newCount[c] = (p.newCount[c] || 0) + 1; }
+    for (let i = 0; i < n; i++) { if (!p.deck.length) { this.log(`${p.name} 牌庫空，無法抽牌`, 'warn'); break; } const c = this.moveCard(p.deck, p.hand, p.deck.length - 1); got.push(c); sharedRules.drawn(this,p,this.cardReference(p,'hand').id,this.cardState.revision);p.newCount[c] = (p.newCount[c] || 0) + 1; }
     if (got.length) {
       const tag = why ? `（${why}）` : '';
       if (p.idx === this.reveal) this.log(`${p.name}${tag}抽到：${got.map(nm).join('、')}`, 'draw');
@@ -370,6 +370,7 @@ class Game {
         }
         this.log(`${loser.name} ロスト：${lossReason}`, 'lost');
       }
+      await sharedRules.judgment(this,loser,'loss');
       await this.notice({ type: 'loss', player: loser.idx, reason: lossReason, winner: loser.opp.idx, final: !loser.sets.length });
       this.turnP = null;
       turnEffects.loss(this);
@@ -508,6 +509,7 @@ class Game {
     await this.eventLoop(p, 'blk', {});
     this.cleanupSides(p);
     if (p.ts.blk < this.ball.off) this.lost(p, `攔網 ${p.ts.blk} 小於進攻 ${this.ball.off}`);
+    await sharedRules.judgment(this,p,'block_success',{defense:p.ts.blk});
     this.log(`攔網成功（${p.ts.blk} ≥ ${this.ball.off}），回球 0；側攔進棄牌區`);
     await this.confirmTurnEnd(p, { type: 'block', off: 0 });
     this.finishTurn(p);
