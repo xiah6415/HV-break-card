@@ -1,5 +1,8 @@
 # BREAK 對練台 — 交接文件（Claude → Codex，2026-10-19）
 
+> 2026-10-21：本批11張Guts登場角色已寫入正式完整SHA核准；數值541／嚴格237，共用47＋舊7（既有限制），未自動化304。剩餘候選100／92家族。最新測試與部署見GUTS-ENTRY.md、STATUS.md及memory末段；下方舊批次為歷史。
+
+
 > 本批14事件公開版本：cc81bd2，https://xiah6415.github.io/HV-break-card/break-v9.5/?v=cc81bd2；Pages built，index SHA及14事件圖片已核對一致。
 
 > 2026-10-21：14張有限事件已完成正式SHA核准，數值541／嚴格226，共用36＋舊流程7（保留既有限制）、未自動化315。剩餘候選111／96家族。以下舊批次與數字為歷史；最新範圍見 FINITE-EVENTS.md、STATUS.md、memory.md 與 DEPLOYMENT.md。

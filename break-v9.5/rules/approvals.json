@@ -181,6 +181,61 @@
       "profile_sha256": "67ab54285dc5820aa1bfd44312fc1105d81b857ca2b9c8227ce98a2f8da60221",
       "scope": "finite event: printed phase / draw / chosen own-character numeric / affiliation and actual Event-card count / same-name turn lock; no persistent effect",
       "tests": "rules/finite-events.test.js; rules/finite-undo.test.js; rules/finite-games.test.js; rules/finite-e2e.js"
+    },
+    "HV-D01-001:d0a13877329cae1e": {
+      "profile_sha256": "fb1489609e83447e2e65646df3d7a4930257d8bdd55c806bcafbab5c6665c255",
+      "scope": "self-entry passive / exact own-source-area Guts payment / optional decline / finite draw and source-bound numeric / draw shortfall and ban / deduplicated host entry receipt",
+      "tests": "rules/guts-entry.test.js; rules/guts-entry-undo.test.js; rules/guts-entry-games.test.js; rules/guts-entry-e2e.js"
+    },
+    "HV-D01-002:8ff17bd090d55625": {
+      "profile_sha256": "750edd8d943dafa92ed5115513aee00352b33ee21c37388783f8b04d19a4da58",
+      "scope": "self-entry passive / exact own-source-area Guts payment / optional decline / finite draw and source-bound numeric / draw shortfall and ban / deduplicated host entry receipt",
+      "tests": "rules/guts-entry.test.js; rules/guts-entry-undo.test.js; rules/guts-entry-games.test.js; rules/guts-entry-e2e.js"
+    },
+    "HV-D03-008:b05cba367ffa86f0": {
+      "profile_sha256": "a6d78c04ed0e07c0e5f7d0091c13b56c504deb2fd9473b856029621f204aa027",
+      "scope": "self-entry passive / exact own-source-area Guts payment / optional decline / finite draw and source-bound numeric / draw shortfall and ban / deduplicated host entry receipt",
+      "tests": "rules/guts-entry.test.js; rules/guts-entry-undo.test.js; rules/guts-entry-games.test.js; rules/guts-entry-e2e.js"
+    },
+    "HV-D03-011:de7c4b0a63c4a3f4": {
+      "profile_sha256": "9eca453c3455faaa54ce1559d9fda97a049f90a09ad2f3422374296c778ac6c4",
+      "scope": "self-entry passive / exact own-source-area Guts payment / optional decline / finite draw and source-bound numeric / draw shortfall and ban / deduplicated host entry receipt",
+      "tests": "rules/guts-entry.test.js; rules/guts-entry-undo.test.js; rules/guts-entry-games.test.js; rules/guts-entry-e2e.js"
+    },
+    "HV-D04-008:17aaacd3aaa3be97": {
+      "profile_sha256": "0569fb06d09c53b525350edb158dbca41287acdc853a763a333c0be2d3f84597",
+      "scope": "self-entry passive / exact own-source-area Guts payment / optional decline / finite draw and source-bound numeric / draw shortfall and ban / deduplicated host entry receipt",
+      "tests": "rules/guts-entry.test.js; rules/guts-entry-undo.test.js; rules/guts-entry-games.test.js; rules/guts-entry-e2e.js"
+    },
+    "HV-P03-035:a059c31e2e93eb3f": {
+      "profile_sha256": "666930e879deae28b85deaec0568f79be7878e74b5bf59dc197f0937775ddd04",
+      "scope": "self-entry passive / exact own-source-area Guts payment / optional decline / finite draw and source-bound numeric / draw shortfall and ban / deduplicated host entry receipt",
+      "tests": "rules/guts-entry.test.js; rules/guts-entry-undo.test.js; rules/guts-entry-games.test.js; rules/guts-entry-e2e.js"
+    },
+    "HV-PR-004:6e605751736bd379": {
+      "profile_sha256": "2adb78bd194d50e042e4d53a42fd497e8ab6264179e1b410ccf54419183a2998",
+      "scope": "self-entry passive / exact own-source-area Guts payment / optional decline / finite draw and source-bound numeric / draw shortfall and ban / deduplicated host entry receipt",
+      "tests": "rules/guts-entry.test.js; rules/guts-entry-undo.test.js; rules/guts-entry-games.test.js; rules/guts-entry-e2e.js"
+    },
+    "HVBP-003:6e605751736bd379": {
+      "profile_sha256": "134781409740bccf2987c8ebba8b3264250bb0c3fde7bf7ee4ad21b92562f1d5",
+      "scope": "self-entry passive / exact own-source-area Guts payment / optional decline / finite draw and source-bound numeric / draw shortfall and ban / deduplicated host entry receipt",
+      "tests": "rules/guts-entry.test.js; rules/guts-entry-undo.test.js; rules/guts-entry-games.test.js; rules/guts-entry-e2e.js"
+    },
+    "HVBP-004:6e605751736bd379": {
+      "profile_sha256": "5ba2e184151e06b0fb602d5c7f566af6eb62b52aca6ec0674fc64661a3dfe922",
+      "scope": "self-entry passive / exact own-source-area Guts payment / optional decline / finite draw and source-bound numeric / draw shortfall and ban / deduplicated host entry receipt",
+      "tests": "rules/guts-entry.test.js; rules/guts-entry-undo.test.js; rules/guts-entry-games.test.js; rules/guts-entry-e2e.js"
+    },
+    "HV-P01-015:3095a1eab06b4e20": {
+      "profile_sha256": "b991f895e7aabcc39d241cb5abcce3f6984ce5229b273c665f6db55d93466c08",
+      "scope": "self-entry passive / exact own-source-area Guts payment / optional decline / finite draw and source-bound numeric / draw shortfall and ban / deduplicated host entry receipt",
+      "tests": "rules/guts-entry.test.js; rules/guts-entry-undo.test.js; rules/guts-entry-games.test.js; rules/guts-entry-e2e.js"
+    },
+    "HV-D02-009:1d52acb87874f4d5": {
+      "profile_sha256": "e08bb3efea4ac39d725f6872d14c70d238852fd0e2502288cdab2842f5b518e1",
+      "scope": "self-entry passive / exact own-source-area Guts payment / optional decline / finite draw and source-bound numeric / draw shortfall and ban / deduplicated host entry receipt",
+      "tests": "rules/guts-entry.test.js; rules/guts-entry-undo.test.js; rules/guts-entry-games.test.js; rules/guts-entry-e2e.js"
     }
   }
 }

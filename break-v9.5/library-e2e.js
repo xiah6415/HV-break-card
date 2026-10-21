@@ -17,8 +17,8 @@ async function advance(page){
   page.on('pageerror',e=>errors.push(e.message));page.on('dialog',async d=>{dialogs.push(d.message());await d.dismiss();});
   await page.goto(pathToFileURL(path.resolve('index.html')).href,{waitUntil:'domcontentloaded'});await page.evaluate(()=>localStorage.clear());await page.reload({waitUntil:'domcontentloaded'});await page.selectOption('#gameMode','strict');await page.selectOption('#turnPromptStyle','manual');
   assert.equal(await page.evaluate(()=>Object.keys(BreakEngine.DEF).length),541);
-  await page.click('#supportBtn');assert.match(await page.textContent('#sheetBox'),/541 張卡片可查閱，226 張可對戰/);
-  await page.selectOption('#libraryStatus','locked');assert.match(await page.textContent('#libraryCount'),/315 張/);
+  await page.click('#supportBtn');assert.match(await page.textContent('#sheetBox'),/541 張卡片可查閱，237 張可對戰/);
+  await page.selectOption('#libraryStatus','locked');assert.match(await page.textContent('#libraryCount'),/304 張/);
   await page.fill('#libraryQuery','P04-097');await page.click('[data-support-card="P04-097"]');
   assert.match(await page.textContent('#sheetBox'),/技能未自動化/);await page.waitForFunction(()=>document.querySelector('.detail img').naturalWidth>0);
   assert.equal(await page.locator('.detail h3').textContent(),await page.evaluate(()=>BreakCardLibrary.card('P04-097').name));assert.equal(await page.locator('.detail img').getAttribute('alt'),await page.locator('.detail h3').textContent());

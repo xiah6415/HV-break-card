@@ -1716,6 +1716,316 @@
         "rules/finite-e2e.js"
       ],
       "settlement": "shared-rules-full-sha-approved"
+    },
+    "D01-001": {
+      "name": "日向 翔陽",
+      "number": "HV-D01-001",
+      "rarity": "D",
+      "kind": "C",
+      "stats": [
+        2,
+        2,
+        2,
+        0,
+        2
+      ],
+      "affiliation": "烏野·1年",
+      "position": "MB",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-D01-001&voba=D",
+      "profileSha256": "fb1489609e83447e2e65646df3d7a4930257d8bdd55c806bcafbab5c6665c255",
+      "qaIds": [],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "rules/guts-entry.test.js",
+        "rules/guts-entry-undo.test.js",
+        "rules/guts-entry-games.test.js",
+        "rules/guts-entry-e2e.js"
+      ],
+      "settlement": "shared-rules-full-sha-approved"
+    },
+    "D01-002": {
+      "name": "影山 飛雄",
+      "number": "HV-D01-002",
+      "rarity": "D",
+      "kind": "C",
+      "stats": [
+        1,
+        1,
+        2,
+        1,
+        1
+      ],
+      "affiliation": "烏野·1年",
+      "position": "S",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-D01-002&voba=D",
+      "profileSha256": "750edd8d943dafa92ed5115513aee00352b33ee21c37388783f8b04d19a4da58",
+      "qaIds": [],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "rules/guts-entry.test.js",
+        "rules/guts-entry-undo.test.js",
+        "rules/guts-entry-games.test.js",
+        "rules/guts-entry-e2e.js"
+      ],
+      "settlement": "shared-rules-full-sha-approved"
+    },
+    "D03-008": {
+      "name": "尾白 アラン",
+      "number": "HV-D03-008",
+      "rarity": "D",
+      "kind": "C",
+      "stats": [
+        4,
+        0,
+        1,
+        0,
+        3
+      ],
+      "affiliation": "稲荷崎",
+      "position": "WS",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-D03-008&voba=D",
+      "profileSha256": "a6d78c04ed0e07c0e5f7d0091c13b56c504deb2fd9473b856029621f204aa027",
+      "qaIds": [],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "rules/guts-entry.test.js",
+        "rules/guts-entry-undo.test.js",
+        "rules/guts-entry-games.test.js",
+        "rules/guts-entry-e2e.js"
+      ],
+      "settlement": "shared-rules-full-sha-approved"
+    },
+    "D03-011": {
+      "name": "赤木 路成",
+      "number": "HV-D03-011",
+      "rarity": "D",
+      "kind": "C",
+      "stats": [
+        null,
+        null,
+        5,
+        0,
+        0
+      ],
+      "affiliation": "稲荷崎",
+      "position": "Li",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-D03-011&voba=D",
+      "profileSha256": "9eca453c3455faaa54ce1559d9fda97a049f90a09ad2f3422374296c778ac6c4",
+      "qaIds": [],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "rules/guts-entry.test.js",
+        "rules/guts-entry-undo.test.js",
+        "rules/guts-entry-games.test.js",
+        "rules/guts-entry-e2e.js"
+      ],
+      "settlement": "shared-rules-full-sha-approved"
+    },
+    "D04-008": {
+      "name": "渡 親治",
+      "number": "HV-D04-008",
+      "rarity": "D",
+      "kind": "C",
+      "stats": [
+        null,
+        null,
+        5,
+        1,
+        0
+      ],
+      "affiliation": "青葉城西･2年",
+      "position": "Li",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-D04-008&voba=D",
+      "profileSha256": "0569fb06d09c53b525350edb158dbca41287acdc853a763a333c0be2d3f84597",
+      "qaIds": [],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "rules/guts-entry.test.js",
+        "rules/guts-entry-undo.test.js",
+        "rules/guts-entry-games.test.js",
+        "rules/guts-entry-e2e.js"
+      ],
+      "settlement": "shared-rules-full-sha-approved"
+    },
+    "P03-035": {
+      "name": "夜久 衛輔",
+      "number": "HV-P03-035",
+      "rarity": "R",
+      "kind": "C",
+      "stats": [
+        null,
+        null,
+        5,
+        0,
+        0
+      ],
+      "affiliation": "音駒·3年",
+      "position": "Li",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P03-035&voba=R",
+      "profileSha256": "666930e879deae28b85deaec0568f79be7878e74b5bf59dc197f0937775ddd04",
+      "qaIds": [],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "rules/guts-entry.test.js",
+        "rules/guts-entry-undo.test.js",
+        "rules/guts-entry-games.test.js",
+        "rules/guts-entry-e2e.js"
+      ],
+      "settlement": "shared-rules-full-sha-approved"
+    },
+    "PR-004": {
+      "name": "影山 飛雄",
+      "number": "HV-PR-004",
+      "rarity": "P",
+      "kind": "C",
+      "stats": [
+        3,
+        1,
+        1,
+        1,
+        2
+      ],
+      "affiliation": "烏野·1年",
+      "position": "S",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-PR-004&voba=P",
+      "profileSha256": "2adb78bd194d50e042e4d53a42fd497e8ab6264179e1b410ccf54419183a2998",
+      "qaIds": [],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "rules/guts-entry.test.js",
+        "rules/guts-entry-undo.test.js",
+        "rules/guts-entry-games.test.js",
+        "rules/guts-entry-e2e.js"
+      ],
+      "settlement": "shared-rules-full-sha-approved"
+    },
+    "BP-003": {
+      "name": "影山 飛雄",
+      "number": "HVBP-003",
+      "rarity": "P",
+      "kind": "C",
+      "stats": [
+        3,
+        1,
+        1,
+        1,
+        2
+      ],
+      "affiliation": "烏野·1年",
+      "position": "S",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HVBP-003&voba=P",
+      "profileSha256": "134781409740bccf2987c8ebba8b3264250bb0c3fde7bf7ee4ad21b92562f1d5",
+      "qaIds": [],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "rules/guts-entry.test.js",
+        "rules/guts-entry-undo.test.js",
+        "rules/guts-entry-games.test.js",
+        "rules/guts-entry-e2e.js"
+      ],
+      "settlement": "shared-rules-full-sha-approved"
+    },
+    "BP-004": {
+      "name": "影山 飛雄",
+      "number": "HVBP-004",
+      "rarity": "P",
+      "kind": "C",
+      "stats": [
+        3,
+        1,
+        1,
+        1,
+        2
+      ],
+      "affiliation": "烏野·1年",
+      "position": "S",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HVBP-004&voba=P",
+      "profileSha256": "5ba2e184151e06b0fb602d5c7f566af6eb62b52aca6ec0674fc64661a3dfe922",
+      "qaIds": [],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "rules/guts-entry.test.js",
+        "rules/guts-entry-undo.test.js",
+        "rules/guts-entry-games.test.js",
+        "rules/guts-entry-e2e.js"
+      ],
+      "settlement": "shared-rules-full-sha-approved"
+    },
+    "P01-015": {
+      "name": "菅原 孝支",
+      "number": "HV-P01-015",
+      "rarity": "N",
+      "kind": "C",
+      "stats": [
+        1,
+        0,
+        2,
+        1,
+        2
+      ],
+      "affiliation": "烏野·3年",
+      "position": "S",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-P01-015&voba=N",
+      "profileSha256": "b991f895e7aabcc39d241cb5abcce3f6984ce5229b273c665f6db55d93466c08",
+      "qaIds": [
+        "1131"
+      ],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "rules/guts-entry.test.js",
+        "rules/guts-entry-undo.test.js",
+        "rules/guts-entry-games.test.js",
+        "rules/guts-entry-e2e.js"
+      ],
+      "settlement": "shared-rules-full-sha-approved"
+    },
+    "D02-009": {
+      "name": "芝山 優生",
+      "number": "HV-D02-009",
+      "rarity": "D",
+      "kind": "C",
+      "stats": [
+        null,
+        null,
+        5,
+        0,
+        0
+      ],
+      "affiliation": "音駒·1年",
+      "position": "Li",
+      "hasSkill": true,
+      "source": "https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card.html?no=HV-D02-009&voba=D",
+      "profileSha256": "e08bb3efea4ac39d725f6872d14c70d238852fd0e2502288cdab2842f5b518e1",
+      "qaIds": [],
+      "status": "scenario-tested",
+      "gaps": [],
+      "tests": [
+        "rules/guts-entry.test.js",
+        "rules/guts-entry-undo.test.js",
+        "rules/guts-entry-games.test.js",
+        "rules/guts-entry-e2e.js"
+      ],
+      "settlement": "shared-rules-full-sha-approved"
     }
   }
 }

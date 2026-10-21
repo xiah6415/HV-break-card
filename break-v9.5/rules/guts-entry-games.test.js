@@ -1,0 +1,9 @@
+'use strict';
+const assert=require('node:assert/strict'),{codes,definitions,E,bridge,scope}=require('./guts-entry-fixtures'),L=require('../card-library');
+(async()=>{const basic=Object.values(L.data.cards).filter(c=>c.kind==='C'&&!c.hasSkill&&c.stats.every(n=>n!==null)),used={},games=[];
+ for(const code of codes){const names=new Set([E.nm(code)]),school=L.card(code).schoolTags[0],pool=basic.filter(c=>c.schoolTags.includes(school)),pick=pool.filter(c=>{if(names.has(c.printedName))return false;names.add(c.printedName);return true;}).slice(0,3);assert(pick.length>=2);const cards={[code]:12};for(let i=0;i<28;i++){const c=pick[i%pick.length].code;cards[c]=(cards[c]||0)+1;}E.DECKS.gutsFamily={name:'Guts登場'+code,cards};used[code]={entered:0,paid:0};
+  class Traced extends E.Game{async enterCharacter(p,area,c,...args){const before=p.drop.length;await super.enterCharacter(p,area,c,...args);if(c===code&&area===definitions[code].area){used[code].entered++;if(p.drop.length-before===definitions[code].cost)used[code].paid++;}}}
+  for(const mode of ['strict','numeric'])for(let seed=0;seed<12;seed++){const g=new Traced({mode,seed,decks:['gutsFamily','gutsFamily'],agents:[E.AI,E.AI]});await g.run();assert(g.winner);const snap=g.cardSnapshot();assert.equal(Object.keys(snap.cards).length,80);for(const p of g.players){const expected=Object.entries(cards).flatMap(([c,n])=>Array(n).fill(c)).sort(),actual=Object.values(snap.cards).filter(c=>c.owner===p.idx).map(c=>c.code).sort();assert.deepEqual(actual,expected);}games.push({code,mode,seed});}
+  assert(used[code].entered>0,code+' was never entered');assert(used[code].paid>0,code+' was never paid');
+ }delete E.DECKS.gutsFamily;console.log(JSON.stringify({passed:true,scope,games:games.length,cards:codes.length,all80PhysicalIdentitiesConserved:true,strictAndNumeric:true,actualSkillUses:used}));
+})().catch(e=>{console.error(e);process.exitCode=1;});

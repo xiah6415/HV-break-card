@@ -265,9 +265,10 @@ async function charactersEntered(g,p,entries) {
   for(const {key}of entries)if(key==='block'||key.startsWith('side:')){const ref=g.roleReference(p,key);if(!ref)throw new Error('Missing actual blocker receipt');const receipt=`${g.turnNo}:${p.idx}:${ref.id}:${ref.incarnation}:${key}`;p.ts.blockEntryReceipts ||= [];if(!p.ts.blockEntryReceipts.includes(receipt))p.ts.blockEntryReceipts.push(receipt);}
   const passive=entries.some(({key})=>{const code=g.courtTargets(p).find(t=>t.key===key)?.card;return byShort[code]?.profiles[0].activation?.skill_type==='passive';});
   if(!passive&&!stored(g).effects.some(e=>e.kind==='watch'&&e.event==='character_entry'&&e.actor===p.idx&&active(e,g)))return;
-  const revision=identity.ensure(g).revision;
+  // Payments and draws change move revision; a repeated entry is still the same role instance.
+  identity.ensure(g);
   for(const {key,origin='hand',reason='rule'} of entries) {
-    const character=g.roleReference(p,key),receipt=`entry:${g.turnNo}:${p.idx}:${character.id}:${character.incarnation}:${revision}`;
+    const character=g.roleReference(p,key),receipt=`entry:${g.turnNo}:${p.idx}:${character.id}:${character.incarnation}:${key}`;
     if(stored(g).receipts.includes(receipt)||g.sharedRulesEvents?.some(e=>e.receipt===receipt))continue;
     const role=key==='block'?'center_blocker':key.startsWith('side:')?'side_blocker':key;
     (g.sharedRulesEvents ||= []).push({type:'character_entry',player:p.idx,card:character.id,character,role,origin,reason,receipt});
