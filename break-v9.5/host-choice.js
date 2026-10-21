@@ -149,6 +149,7 @@ const PREFER_MAX = new Set(['draw_count', 'entry_count', 'move_count', 'target_c
 const PREFER_MIN = new Set(['mill_count']);
 function aiValue(req) {
   const r = checkRequest(req); if (!r.ok) throw Error(r.error);
+  if(req.context?.ineffectiveReason&&req.options.some(o=>o.value===false))return false;
   const { input, options, kind } = req;
   if (!options.length && input.type !== 'ack' && !(input.type === 'cards' && input.min === 0)) throw Error('沒有合法選項：' + kind);
   switch (input.type) {

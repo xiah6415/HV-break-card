@@ -236,6 +236,11 @@ class Kernel {
   _destination(value,id,ctx) {
     const parts=value.split('.'), actor=parts.shift();
     let zone=parts.join('.'), player=actor==='owner' ? this.card(id).owner : this.owner(actor,ctx);
+    if(zone==='choose_deck_top_or_bottom') {
+      const answer=this._decide('mode',ctx,['deck_top','deck_bottom'],{player});
+      legal(['deck_top','deck_bottom'].includes(answer),'Invalid deck destination');
+      zone=answer==='deck_top'?'deck':'deck_bottom';
+    }
     if (zone==='deck_bottom') return {player,zone:'deck',bottom:true};
     if(zone.endsWith('.guts')) {
       let area=zone.slice(0,-5);
@@ -255,11 +260,12 @@ class Kernel {
     // A player discarding from their own private hand retains that choice.
     const chooser=node.pool.zone==='hand'?recipient:ctx.controller;
     const dest=node.destination;
+    if(dest.endsWith('chosen_court_area.guts')&&!COURT.some(a=>this.top(this.owner(dest.split('.')[0],ctx),a))){ctx.bind[node.bind||'moved']=[];return false;}
     if(dest.endsWith('.guts') && !dest.includes('chosen_court_area')) {
       const parts=dest.split('.'),player=parts[0]==='owner'?recipient:this.owner(parts[0],ctx);
       if(!this.top(player,parts[1])){ctx.bind[node.bind || 'moved']=[];return false;}
     }
-    if (dest.endsWith('.hand') && !this._handAllowed(dest.startsWith('owner.')?recipient:ctx.controller,ctx)) { ctx.bind[node.bind || 'moved']=[]; return false; }
+    if (dest.endsWith('.hand') && !this._handAllowed(dest.startsWith('owner.')?recipient:this.owner(dest.split('.')[0],ctx),ctx)) { if(ctx.inPayment)throw new Unpayable();ctx.bind[node.bind || 'moved']=[]; return false; }
     let n;
     if (node.count_mode==='all') n=ids.length;
     else if (node.count_mode==='one_of_exact') {
@@ -454,8 +460,8 @@ class Kernel {
           let applied=value;
           if(node.increase_guard){
             need(node.increase_guard.kind==='source_skill_maximum'&&node.operation==='add'&&value>=0,'Unsupported numeric guard');
-            const own=this.state.effects.filter(e=>e.kind==='numeric'&&this.active(e)&&same(e.source,ctx.source)&&same(e.target,target)&&e.parameter===param).reduce((n,e)=>n+e.value,0);
-            applied=Math.min(value,Math.max(0,node.increase_guard.max_result-this.card(target.id).printed.parameters[param]-own));
+            // Guard this increment, never the final value of other effects.
+            applied=Math.min(value,Math.max(0,node.increase_guard.max_result-old));
             if(!applied)continue;
           }
           this.effect('numeric',{target,parameter:param,operation:node.operation,value:applied},ctx,node.duration);
@@ -472,7 +478,7 @@ class Kernel {
       if (n.kind && !['selector','compare','all','any','equal_fields','count_compare','uniform_affiliation','all_result_cards_match','printed_parameter','sum_result_parameter','result_count','source_skill_maximum'].includes(n.kind)) need(KINDS.has(n.kind),'Unsupported mechanism '+n.kind);
       if (n.filters) for (const k of Object.keys(n.filters)) need(FILTERS.has(k),'Unsupported filter '+k);
       if (n.target_scope) need(n.target_scope.membership==='snapshot_on_resolution','Target membership is not supported');
-      if(n.destination)need((!n.destination.includes('choose_deck') || n.destination==='choose_deck_top_or_bottom') && !n.destination.endsWith('.deck_top'),'Destination mechanism not implemented');
+      if(n.destination)need((!n.destination.includes('choose_deck') || ['choose_deck_top_or_bottom','self.choose_deck_top_or_bottom'].includes(n.destination)) && !n.destination.endsWith('.deck_top'),'Destination mechanism not implemented');
       if(n.kind==='invalidate_skill')need(!n.selector.keyword_families && !n.selector.union_with?.keyword_families,'Keyword invalidation not implemented');
       if (n.kind==='keyword') need(n.keyword==='one_touch','Keyword not implemented: '+n.keyword);
       if (n.kind==='compare') {
@@ -519,7 +525,12 @@ class Kernel {
         if(ids.length<n)throw new Unpayable();const paid=this._selection(ids,n,ctx,'guts');for(const id of paid)this._move(id,this.card(id).owner,'drop',ctx);ctx.bind.paid=paid;ctx.paid.push(...paid);return paid.length>0; }
       case 'payment_branch': {
         if(!this._paymentAvailable(node.payment,ctx))return false;
-        const yes=this._decide('activate_payment',ctx,[true,false],{payment:node.payment});legal(typeof yes==='boolean','Payment decision must be boolean');if(!yes)return false;
+        // Warn without forbidding a human choice. A serving/blocking ball has
+        // no attack-offense field; do not confuse an old attack card with it.
+        const leaves=[];walk(node.then,n=>{if(KINDS.has(n.kind)&&!['sequence','conditional'].includes(n.kind))leaves.push(n);});
+        const attackOnly=leaves.length>0&&leaves.every(n=>n.kind==='numeric'&&n.target==='opponent_ball'&&n.parameter==='attack_offense');
+        const ineffectiveReason=attackOnly&&this.state.ball?.kind!=='attack'?'來球不是攻擊，攻擊進攻值效果無效；支付費用不會改變來球數值。':null;
+        const yes=this._decide('activate_payment',ctx,[true,false],{payment:node.payment,...(ineffectiveReason?{ineffectiveReason}:{})});legal(typeof yes==='boolean','Payment decision must be boolean');if(!yes)return false;
         const saved=clone(this.state), before=clone(ctx);ctx.inPayment=true;ctx.paid=[];
         try {this._run(node.payment,ctx);} catch(e) {if(!(e instanceof Unpayable))throw e;this.state=saved;Object.assign(ctx,before);return false;}
         ctx.inPayment=false;ctx.bind.paid=[...ctx.paid];return this._run(node.then,ctx)||ctx.paid.length>0;

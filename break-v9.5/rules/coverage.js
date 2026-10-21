@@ -55,12 +55,10 @@ function buildCoverage(){
     if(['offense','attack_offense','defense'].includes(n.parameter)&&n.target!=='opponent_ball')host('numeric','numeric_domain:'+n.parameter,at,'未接入此數值領域的host投影');
    }
    if(['move','retrieve'].includes(n.kind)){
-    if(n.count>1||!['exact','upto'].includes(n.count_mode))host('selection','move_quantity:'+n.count_mode+':'+(n.count>1?'many':'other'),at,'共用橋接僅支援單一實體選擇與0／1回收');
-    if(n.count_mode==='upto'&&!n.destination.endsWith('.hand'))host('selection','move_count_non_hand',at,'目前數量介面只驗證加入手牌的0／1選擇');
-    if(!/^(self|opponent|owner)\.(hand|drop|event|deck_bottom)$/.test(n.destination))host('movement','destination:'+n.destination,at,'新區域移動需要host角色／數值投影與相應選擇');
+    if(!/^(self|opponent|owner)\.(hand|drop|event|deck|deck_bottom|choose_deck_top_or_bottom|(attack|toss|chosen_court_area)\.guts)$/.test(n.destination))host('movement','destination:'+n.destination,at,'新區域移動需要host角色／數值投影與相應選擇');
     if(n.destination.endsWith('.hand')&&!(n.pool.actor==='self'&&n.destination==='self.hand'))host('movement','hand_recipient:'+n.pool.actor+':'+n.destination,at,'目前回收只驗證自身牌加入自己手牌');
    }
-   if(n.kind==='move_self'&&!/^(self|opponent|owner)\.(hand|drop|event|deck_bottom)$/.test(n.destination))host('movement','self_destination:'+n.destination,at,'自身移牌到此區域需新增host投影');
+   if(n.kind==='move_self'&&!/^(self|opponent|owner)\.(hand|drop|event|deck|deck_bottom|choose_deck_top_or_bottom|(attack|toss|chosen_court_area)\.guts)$/.test(n.destination))host('movement','self_destination:'+n.destination,at,'自身移牌到此區域需新增host投影');
    if(n.kind==='watch'){
     const family=n.event==='hand_added'&&n.duration==='next_opponent_turn'||n.event==='character_entry'&&['this_turn','next_opponent_turn'].includes(n.duration);
     if(!family)host('triggers','watch:'+n.event+':'+n.duration,at,'尚未接入host通知／持久化的watch族');

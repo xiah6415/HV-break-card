@@ -796,6 +796,7 @@ const AI = {
         }).value;
       }
       case 'skill': {
+        if(req.ctx?.ineffectiveReason)return false;
         if (req.ctx && req.ctx.need != null && req.ctx.need <= 0 && ['D01-005', 'P01-039'].includes(req.ctx.card)) return false;
         return true;
       }

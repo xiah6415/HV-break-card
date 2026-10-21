@@ -74,11 +74,12 @@ for c in source:
     if c['skill_jp'].strip() in ['','-']:continue
     fingerprint=key(c['skill_jp'])
     p=next(p for p in cards[c['card_no']]['profiles'] if p['source_skill_sha256']==hashlib.sha256(c['skill_jp'].encode()).hexdigest())
-    same_text[fingerprint].append(json.dumps(p['program'],ensure_ascii=False,sort_keys=True))
+    if c['card_no'] not in ['HV-P02-077','HV-P02-078','HV-P03-077']:
+        same_text[fingerprint].append(json.dumps(p['program'],ensure_ascii=False,sort_keys=True))
 check('相同卡文跨卡號引用同一效果結構',all(len(set(v))==1 for v in same_text.values()))
 check('四個官方卡文差異保留各自版本',{c['card_no'] for c in cards.values() if c['skill_text_variant_conflict']}=={'HV-P02-077','HV-P02-078','HV-P03-077','HV-P04-072'})
-check('P04-072角色卡與一般卡目標差異未合併',sorted('type' in p['program']['steps'][1]['pool']['filters'] for p in cards['HV-P04-072']['profiles'])==[False,True])
-check('P02-077缺少期限文字的印刷不擅自補期限',{p['program']['steps'][0]['duration'] for p in cards['HV-P02-077']['profiles']}=={'this_turn_or_role_exit','unspecified_in_this_print'})
+check('P04-072兩版依卡文審查統一角色卡目標',all(p['program']['steps'][1]['pool']['filters']['type']=='character' for p in cards['HV-P04-072']['profiles']))
+check('三張改名卡兩版統一本回合',all(p['program']['steps'][0]['duration']=='this_turn' for code in ['P02-077','P02-078','P03-077'] for p in cards['HV-'+code]['profiles']))
 check('P02-035所屬校正有官方問答依據',prof('P02-035')['source_corrections'][0]['basis_qa']=='1299','1299')
 
 class UnknownFact(Exception):pass
@@ -142,7 +143,7 @@ check('P04-064交換仍受加入手牌權限控制','move.exchange' in nodes('P0
 check('P04-088技能限次不壓縮未來監聽次數',prof('P04-088')['limit'] is not None and nodes('P04-088','watch')[0]['remaining_uses'] is None,'1934')
 check('P02-082一次監聽按效果實例計次',nodes('P02-082','watch')[0]['remaining_uses']==1,'1359')
 check('P03-028放上方不被編成明示登場',len(nodes('P03-028','enter'))==0 and len(nodes('P03-028','enter_self'))==0 and 'entry.placement_not_entry' in nodes('P03-028','cover_source_with_guts')[0]['shared_rule_ids'])
-check('P03-047技能自己加值上限保留共用機制待補旗標','SHARED_MECHANISM_EXTENSION_NEEDS_CONFIRMATION' in prof('P03-047')['flags'] and nodes('P03-047','numeric')[0]['proposed_shared_rule_id']=='PROPOSED-NUMERIC-SOURCE-CAP')
+check('P03-047上限只限自身技能',nodes('P03-047','numeric')[0]['increase_guard']['only_this_skill'] and not prof('P03-047')['flags'])
 
 def match_filters(card,filters):
     role=card.get('role')

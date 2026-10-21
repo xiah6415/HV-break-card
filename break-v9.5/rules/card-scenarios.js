@@ -2,7 +2,7 @@
 'use strict';
 const assert=require('node:assert/strict'),{fixture}=require('./batch-smoke'),I=require('./node-inventory');
 function testCard(catalog,card){
- const p=card.profiles[0],all=I.nodes(p),condition=all.find(n=>n.kind==='conditional')?.condition,cost=all.some(n=>n.kind==='pay_guts');
+ const p=card.profiles[0],all=I.nodes(p),condition=all.find(n=>n.kind==='conditional')?.condition,cost=all.some(n=>n.kind==='pay_guts'||n.kind==='move'&&n.classification_role==='payment');
  const phase=p.activation.skill_type==='passive'?p.activation.trigger.destination_any[0]:p.activation.activation_phases[0];
  const variants=[{key:'positive',max:true},{key:condition?'condition_false':'decline',max:!!condition,...(condition?{focus:{node_id:condition.node_id,value:false}}:{})},{key:cost?'cost_short':'no_add',max:true}];
  for(const s of variants){
@@ -11,6 +11,8 @@ function testCard(catalog,card){
   if(s.key==='cost_short')for(const area of ['serve','block','receive','toss','attack','side:0','side:1']){
    const ids=k.zone(0,area);for(const paid of ids.slice(0,p.activation.skill_type==='passive'&&area===phase?ids.length:-1)){ids.splice(ids.indexOf(paid),1);k.card(paid).zone='0.drop';k.zone(0,'drop').push(paid);}
   }
+  if(s.key==='cost_short')for(const n of all.filter(n=>n.kind==='move'&&n.classification_role==='payment'))for(const paid of k.pool(n.pool,k._context(id,0)).filter(x=>x!==id)){const c=k.card(paid),zone=k.state.zones[c.zone];zone.splice(zone.indexOf(paid),1);c.zone=c.owner+'.deck';k.zone(c.owner,'deck').push(paid);}
+  if(s.key==='cost_short'&&all.some(n=>n.kind==='move'&&n.classification_role==='payment'&&n.pool.zone==='hand'))k.resolveProgram({kind:'ban_action',action:'add_hand',actor:'self',scope:{},duration:'this_turn'},0);
   if(s.key==='no_add')k.resolveProgram({kind:'ban_action',action:'add_hand',actor:'self',scope:{},duration:'this_turn'},0);
   const before=k.snapshot(),predicates=[],oldPredicate=k._predicate;
   k._predicate=function(n,c){const value=oldPredicate.call(this,n,c);if(n===condition)predicates.push(value);return value;};

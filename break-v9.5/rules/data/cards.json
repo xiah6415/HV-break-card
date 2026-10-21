@@ -25,14 +25,14 @@
     "proposed_shared_extensions": 1,
     "unresolved_target_membership_profiles": 1,
     "program_node_counts": {
-      "sequence": 1053,
+      "sequence": 1054,
       "payment_branch": 192,
       "pay_guts": 127,
       "numeric": 319,
       "ban_action": 16,
-      "conditional": 236,
+      "conditional": 237,
       "all": 36,
-      "compare": 168,
+      "compare": 169,
       "optional": 7,
       "deck_selection": 16,
       "watch": 44,
@@ -26560,37 +26560,65 @@
             "kind": "sequence",
             "steps": [
               {
-                "kind": "optional",
+                "kind": "conditional",
+                "condition": {
+                  "kind": "compare",
+                  "field": "self.hand.count",
+                  "op": "gte",
+                  "value": 2,
+                  "checkpoint": "when_condition_reached",
+                  "node_id": "program.steps[0].condition",
+                  "shared_rule_ids": [
+                    "condition.checkpoint"
+                  ]
+                },
                 "then": {
                   "kind": "sequence",
                   "steps": [
                     {
-                      "kind": "move",
-                      "pool": {
-                        "kind": "selector",
-                        "actor": "self",
-                        "zone": "hand",
-                        "filters": {},
-                        "node_id": "program.steps[0].then.steps[0].pool",
+                      "kind": "optional",
+                      "then": {
+                        "kind": "sequence",
+                        "steps": [
+                          {
+                            "kind": "move",
+                            "pool": {
+                              "kind": "selector",
+                              "actor": "self",
+                              "zone": "hand",
+                              "filters": {},
+                              "node_id": "program.steps[0].then.steps[0].then.steps[0].pool",
+                              "shared_rule_ids": [
+                                "target.explicit_selector"
+                              ]
+                            },
+                            "destination": "owner.drop",
+                            "count": 2,
+                            "count_mode": "exact",
+                            "bind": "moved",
+                            "node_id": "program.steps[0].then.steps[0].then.steps[0]",
+                            "shared_rule_ids": [
+                              "move.owner",
+                              "resource.shortfall",
+                              "selection.chooser"
+                            ],
+                            "category_tags": [
+                              "資源與移動"
+                            ],
+                            "classification_role": "effect",
+                            "polarity": "contextual"
+                          }
+                        ],
+                        "node_id": "program.steps[0].then.steps[0].then",
                         "shared_rule_ids": [
-                          "target.explicit_selector"
+                          "effect.order"
                         ]
                       },
-                      "destination": "owner.drop",
-                      "count": 2,
-                      "count_mode": "exact",
-                      "bind": "moved",
+                      "bind": "optional",
                       "node_id": "program.steps[0].then.steps[0]",
                       "shared_rule_ids": [
-                        "move.owner",
-                        "resource.shortfall",
-                        "selection.chooser"
-                      ],
-                      "category_tags": [
-                        "資源與移動"
-                      ],
-                      "classification_role": "effect",
-                      "polarity": "contextual"
+                        "effect.independent"
+                      ]
                     }
                   ],
                   "node_id": "program.steps[0].then",
@@ -26598,10 +26626,11 @@
                     "effect.order"
                   ]
                 },
-                "bind": "optional",
+                "evaluate_once": true,
                 "node_id": "program.steps[0]",
                 "shared_rule_ids": [
-                  "effect.independent"
+                  "condition.checkpoint",
+                  "condition.snapshot"
                 ]
               },
               {
@@ -26729,9 +26758,7 @@
               ]
             }
           ],
-          "flags": [
-            "OPTIONAL_EXACT_PAYMENT_BRANCH_SCENARIO_REVIEW"
-          ],
+          "flags": [],
           "practice_override": null
         }
       ],
@@ -28791,7 +28818,7 @@
                   "宮侑",
                   "宮治"
                 ],
-                "duration": "unspecified_in_this_print",
+                "duration": "this_turn",
                 "character_count": 1,
                 "target_scope": {
                   "mode": "single",
@@ -28935,7 +28962,7 @@
                   "宮侑",
                   "宮治"
                 ],
-                "duration": "this_turn_or_role_exit",
+                "duration": "this_turn",
                 "character_count": 1,
                 "target_scope": {
                   "mode": "single",
@@ -29056,7 +29083,7 @@
                   "澤村大地",
                   "黒尾鉄朗"
                 ],
-                "duration": "this_turn_or_role_exit",
+                "duration": "this_turn",
                 "character_count": 1,
                 "target_scope": {
                   "mode": "single",
@@ -29170,7 +29197,7 @@
                   "澤村大地",
                   "黒尾鉄朗"
                 ],
-                "duration": "unspecified_in_this_print",
+                "duration": "this_turn",
                 "character_count": 1,
                 "target_scope": {
                   "mode": "single",
@@ -43043,9 +43070,7 @@
               ]
             }
           ],
-          "flags": [
-            "SHARED_MECHANISM_EXTENSION_NEEDS_CONFIRMATION"
-          ],
+          "flags": [],
           "practice_override": null,
           "transcription_note": "本技能加值上限需新增可重用規則，不能把所有舉球加值一律封頂"
         }
@@ -47806,7 +47831,7 @@
                   "日向翔陽",
                   "百沢雄大"
                 ],
-                "duration": "this_turn_or_role_exit",
+                "duration": "this_turn",
                 "character_count": 1,
                 "target_scope": {
                   "mode": "single",
@@ -47918,7 +47943,7 @@
                   "日向翔陽",
                   "百沢雄大"
                 ],
-                "duration": "unspecified_in_this_print",
+                "duration": "this_turn",
                 "character_count": 1,
                 "target_scope": {
                   "mode": "single",
@@ -67886,6 +67911,7 @@
                     "tags": [
                       "疑似ユース"
                     ],
+                    "type": "character",
                     "exclude_names": [
                       "日向翔陽"
                     ]
@@ -95357,7 +95383,7 @@
     "status": "STRICT_PROGRAM_CONTRACT_PASSED_NOT_GAME_VALIDATED",
     "schema_artifact": "BREAK-card-program-schema.json",
     "profiles": 545,
-    "nodes": 3134,
+    "nodes": 3137,
     "known_node_kinds": 48
   },
   "validation": {

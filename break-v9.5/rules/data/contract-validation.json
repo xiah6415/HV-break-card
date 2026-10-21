@@ -4,7 +4,7 @@
   "failed": 0,
   "structure_counts": {
     "profiles": 545,
-    "nodes": 3134,
+    "nodes": 3137,
     "known_node_kinds": 48
   },
   "checks": [
@@ -133,7 +133,7 @@
       "passed": true
     },
     {
-      "title": "除三項指定資料補正外，其餘卡片效果內容保持一致",
+      "title": "除已審查資料補正外，其餘卡片效果內容保持一致",
       "passed": true
     },
     {
@@ -265,7 +265,7 @@
       "passed": true
     }
   ],
-  "mapping_sha256": "74977ec605f84bf576712fefb7c7e8a83fbce9d78634d3abe96be53c78936f07",
+  "mapping_sha256": "0840cdd31df080482ee3125e6a6ac48e20662039e069137098879ea2bebba770",
   "limitations": [
     "Candidate ID pools are prefiltered; this suite does not implement every card filter",
     "No state movement, trigger queue, expiry, undo or multiplayer integration",

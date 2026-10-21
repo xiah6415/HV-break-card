@@ -11,8 +11,8 @@ catalog=json.loads((A.ROOT/'rules/data/cards.json').read_text())
 approvals=json.loads((A.ROOT/'rules/approvals.json').read_text())
 legacy=json.loads((A.ROOT/'rules/legacy-skills.json').read_text())
 base=A.build_authority(catalog,approvals,legacy)
-assert base['counts']==dict(basic=183,shared=83,legacy=7,unapproved=268)
-assert [(m['id'],m['parameterForms']) for m in base['modules']]==[('sequence',1),('deck_selection',15),('numeric',77),('selector',153),('conditional',1),('payment_branch',1),('pay_guts',16),('compare',96),('draw',5)]
+assert base['counts']==dict(basic=183,shared=107,legacy=7,unapproved=244)
+assert [(m['id'],m['parameterForms']) for m in base['modules']]==[('sequence',1),('deck_selection',15),('numeric',77),('selector',152),('conditional',1),('payment_branch',1),('pay_guts',16),('compare',97),('draw',5),('move',20)]
 # Old per-card SHA/evidence fields no longer decide whether a card can run.
 a=copy.deepcopy(approvals);l=copy.deepcopy(legacy)
 for r in a['profiles'].values():r.pop('profile_sha256',None)
@@ -20,7 +20,7 @@ for r in l['cards'].values():r['profile_sha256']='unused'
 assert A.build_authority(catalog,a,l)['cards']==base['cards']
 # Removing a historical baseline still revokes that grant; support text grants nothing.
 pid=next(iter(a['profiles']));del a['profiles'][pid]
-assert A.build_authority(catalog,a,l)['counts']['shared']==82
+assert A.build_authority(catalog,a,l)['counts']['shared']==base['counts']['shared']-1
 # No accidentally expanded legacy whitelist or cross-controller duplicate grants.
 for change in ['missing','extra','duplicate']:
  a=copy.deepcopy(approvals);l=copy.deepcopy(legacy)
@@ -40,10 +40,10 @@ try:A.build_authority(c,approvals,legacy)
 except AssertionError as e:assert 'Module card tests failed' in str(e)
 else:raise AssertionError('Failing card test was released')
 lib=L.library_data();rt=R.runtime_data()
-assert lib['counts']['playable']==273 and lib['authority']==rt['authority']==base
-assert len(rt['approved'])==83
+assert lib['counts']['playable']==297 and lib['authority']==rt['authority']==base
+assert len(rt['approved'])==107
 for code in ['P01-089','P03-078','P03-079','P04-085']:
  assert lib['cards'][code]['playable']
  p=next(c for c in rt['catalog']['cards'] if c['card_no']=='HV-'+code)['profiles'][0]
  assert p['program'] and p['runtime_approved']
-print('authority: baseline without SHA + module tests / 273 strict / 83 shared passed')
+print('authority: baseline without SHA + module tests / 297 strict / 107 shared passed')

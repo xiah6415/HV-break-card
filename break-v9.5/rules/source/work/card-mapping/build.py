@@ -226,12 +226,12 @@ def formal_cost(text):
     return dict(kind='formal_declaration_cost',steps=[annotate(step,'formal_cost',True)],must_be_complete=True,
                 performed_for_this_skill_only=True,shared_rule_ids=['cost.declaration'])
 
-def rename(text):
+def rename(text,number):
     m=re.search(r'カード名を「([^」]+)」の代わりに「([^」]+)」か「([^」]+)」にする',text)
     assert m,text
     return seq(dict(kind='rename_before_entry',target='source',original_name=namekey(m[1]),
                     choose_name=[namekey(m[2]),namekey(m[3])],
-                    duration='this_turn_or_role_exit' if 'そのターン終了時' in text else 'unspecified_in_this_print',
+                    duration='this_turn' if number in ['HV-P02-077','HV-P02-078','HV-P03-077'] else ('this_turn_or_role_exit' if 'そのターン終了時' in text else 'unspecified_in_this_print'),
                     character_count=1))
 
 by_number=collections.defaultdict(list)
@@ -249,18 +249,13 @@ for number,records in by_number.items():
             activation=None;program=None;cost=None;status='NO_SKILL_BASE_DATA'
         else:
             activation=normalize_program_names(parse_activation(c,text));cost=formal_cost(text)
-            if activation['skill_type']=='permanent_entry_name': program=rename(text)
+            if activation['skill_type']=='permanent_entry_name': program=rename(text,number)
             else:
                 assert number in PROGRAMS,number
                 all_used_programs.add(number);program=copy.deepcopy(PROGRAMS[number])
-            if number=='HV-P04-072' and 'キャラカード1枚までをデッキの下' not in text:
-                program['steps'][1]['pool']['filters'].pop('type')
             program=annotate(normalize_program_names(program))
             status='STRUCTURED_FIRST_PASS_NOT_ENGINE_VALIDATED'
             if len(skill_groups)>1: flags.append('OFFICIAL_TEXT_VARIANTS_PRESERVED')
-            if number=='HV-P03-047':
-                flags.append('SHARED_MECHANISM_EXTENSION_NEEDS_CONFIRMATION')
-            if number=='HV-P02-064': flags.append('OPTIONAL_EXACT_PAYMENT_BRANCH_SCENARIO_REVIEW')
             if any(n.get('target_scope',{}).get('membership')=='unresolved' for n in walk(program)):
                 flags.append('TARGET_MEMBERSHIP_UNRESOLVED')
         base_profiles=[]

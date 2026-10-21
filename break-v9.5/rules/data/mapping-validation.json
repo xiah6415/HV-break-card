@@ -182,12 +182,12 @@
       "qa_id": null
     },
     {
-      "title": "P04-072角色卡與一般卡目標差異未合併",
+      "title": "P04-072兩版依卡文審查統一角色卡目標",
       "passed": true,
       "qa_id": null
     },
     {
-      "title": "P02-077缺少期限文字的印刷不擅自補期限",
+      "title": "三張改名卡兩版統一本回合",
       "passed": true,
       "qa_id": null
     },
@@ -347,7 +347,7 @@
       "qa_id": null
     },
     {
-      "title": "P03-047技能自己加值上限保留共用機制待補旗標",
+      "title": "P03-047上限只限自身技能",
       "passed": true,
       "qa_id": null
     },

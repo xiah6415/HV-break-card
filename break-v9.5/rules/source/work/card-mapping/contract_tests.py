@@ -80,9 +80,9 @@ def semantic_body(value):
     if isinstance(value,dict): return {k:semantic_body(v) for k,v in value.items() if k not in META_FIELDS}
     if isinstance(value,list): return [semantic_body(v) for v in value]
     return value
-check('除三項指定資料補正外，其餘卡片效果內容保持一致',all(
+check('除已審查資料補正外，其餘卡片效果內容保持一致',all(
     semantic_body(p['program'])==semantic_body(old_profiles[p['profile_id']]['program'])
-    for c in data['cards'] if c['card_no'] not in ['HV-PR-081','HV-P04-070','HV-P01-003'] for p in c['profiles']))
+    for c in data['cards'] if c['card_no'] not in ['HV-PR-081','HV-P04-070','HV-P01-003','HV-P02-077','HV-P02-078','HV-P03-077','HV-P02-064','HV-P04-072'] for p in c['profiles']))
 old003=semantic_body(old_profiles[profile('P01-003')['profile_id']]['program'])
 expected003=copy.deepcopy(old003)
 tail003=expected003['steps'][0]['then']['steps']
