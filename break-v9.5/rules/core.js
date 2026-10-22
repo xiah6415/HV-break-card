@@ -21,6 +21,21 @@ function distinctNameOptions(groups,used=[]) {
 class NeedsReview extends Error { constructor(message) { super(message); this.code='REQUIRES_REVIEW'; } }
 class IllegalAction extends Error { constructor(message) { super(message); this.code='ILLEGAL_ACTION'; } }
 class Unpayable extends Error {}
+class ModeChoice extends Error {constructor(request){super('Private mode probe');this.request=request;}}
+function modeLabel(n) {
+  const zh={serve:'發球',receive:'接球',block:'攔網',toss:'舉球',attack:'攻擊',draw:'抽牌',hand:'手牌',drop:'棄牌區',event:'Event區','receive.guts':'接球區Guts'};
+  const who=s=>s==='opponent'?'對方':'我方';
+  const filter=f=>[...(f.names||f.tags||[]),f.type==='character'?'角色卡':'',f.current_receive_gte!=null?'接球≥'+f.current_receive_gte:'',f.current_block_eq!=null?'攔網='+f.current_block_eq:''].filter(Boolean).join('・');
+  if(n.kind==='sequence')return n.steps.map(modeLabel).join('；');
+  if(n.kind==='conditional')return (n.condition.field==='phase'?(zh[n.condition.value]||n.condition.value)+'階段':n.condition.kind==='count_compare'?(zh[n.condition.pool.zone]||n.condition.pool.zone)+'至少'+n.condition.value+'張':'條件成立')+'：'+modeLabel(n.then);
+  if(n.kind==='draw')return who(n.actor)+'抽'+n.count+'張';
+  if(n.kind==='numeric')return (typeof n.target==='object'?filter(n.target.filters)||'場上角色':n.target==='$event.character'?'登場角色':'此角色')+'：'+(zh[n.parameter]||n.parameter)+(n.operation==='set'?'設為':n.value>=0?' +':' ')+n.value;
+  if(n.kind==='enter')return '從'+(zh[n.pool.zone]||n.pool.zone)+'讓'+(filter(n.pool.filters)||'角色')+'登場'+(zh[n.destination]||n.destination)+'區';
+  if(n.kind==='retrieve')return '從'+(zh[n.pool.zone]||n.pool.zone)+'取回'+(n.count_mode==='upto'?'最多':'')+n.count+'張'+filter(n.pool.filters);
+  if(n.kind==='watch')return (n.duration==='next_opponent_turn'?'下個對方回合':'本回合')+'・'+who(n.actor)+(zh[n.filters.role]||'角色')+'登場時：'+modeLabel(n.then);
+  if(n.kind==='ban_action')return (n.duration==='next_opponent_turn'?'下個對方回合':'本回合')+'・'+who(n.actor)+(n.scope.phases||[]).map(p=>zh[p]+'階段').join('／')+'禁止加入手牌';
+  return n.kind;
+}
 function need(ok, message) { if (!ok) throw new NeedsReview(message); }
 function legal(ok, message) { if (!ok) throw new IllegalAction(message); }
 function walk(value, fn) {
@@ -554,6 +569,7 @@ class Kernel {
       if(n.kind==='ban_action')validateBan(n);
       if(n.kind==='formal_declaration_cost')need(n.must_be_complete===true&&n.performed_for_this_skill_only===true&&Array.isArray(n.steps)&&n.steps.length>0,'Unsupported declaration cost parameters');
       if(n.kind==='mill')need(['self','opponent'].includes(n.actor)&&['exact','upto'].includes(n.count_mode)&&Number.isInteger(n.count)&&n.count>=0&&n.bind==='milled','Unsupported mill parameters');
+      if(n.kind==='choose_modes')need(n.count===1&&n.required===true&&Array.isArray(n.options)&&n.options.length>0&&n.options.every(o=>o&&KINDS.has(o.kind)),'Unsupported mode parameters');
       if(n.kind==='all_result_cards_match')need(['paid','milled','revealed'].includes(n.result)&&n.require_nonempty===true,'Unsupported result-match parameters');
       if(n.kind==='rename_before_entry')need(n.target==='source'&&n.character_count===1&&Array.isArray(n.choose_name)&&n.choose_name.length===2&&n.choose_name.every(x=>typeof x==='string')&&['this_turn','this_turn_or_role_exit'].includes(n.duration),'Unsupported entry-name parameters');
       if(n.kind==='keyword')need(['one_touch','doshat','feint','blockout','a_pass','two_attack','back_attack','multi_attack'].includes(n.keyword)&&Number.isInteger(n.N)&&n.N>=0&&Object.keys(n.parameters||{}).every(k=>n.keyword==='multi_attack'&&k==='affiliation')&&(n.keyword!=='multi_attack'||typeof n.parameters?.affiliation==='string'),'Keyword parameters not implemented: '+n.keyword);
@@ -616,7 +632,12 @@ class Kernel {
         ctx.inPayment=false;ctx.bind.paid=[...ctx.paid];return this._run(node.then,ctx)||ctx.paid.length>0;
       }
       case 'optional': { const yes=this._decide('optional',ctx,[true,false]);legal(typeof yes==='boolean','Optional decision must be boolean');ctx.bind.optional={performed:yes&&this._run(node.then,ctx)};return ctx.bind.optional.performed; }
-      case 'choose_modes': { const i=this._decide('mode',ctx,node.options.map((_,i)=>i));legal(Number.isInteger(i)&&i>=0&&i<node.options.length,'Invalid mode');return this._run(node.options[i],ctx); }
+      case 'choose_modes': {
+        const options=node.options.map((_,i)=>i).filter(i=>this._modeAvailable(node.options[i],ctx));
+        if(!options.length)return false;
+        const i=this._decide('mode',ctx,options,{effectModes:true,modeLabels:node.options.map(modeLabel)});
+        legal(options.includes(i),'Invalid mode');return this._run(node.options[i],ctx);
+      }
       case 'rename_before_entry': {
         const options=(ctx.entryNames||node.choose_name).filter(name=>node.choose_name.includes(name));
         legal(options.length>0,'No legal entry name');
@@ -638,6 +659,30 @@ class Kernel {
     }
   }
   _keywordAllowed(ctx,keywordFamily) {return this.permission({action:'use_keyword',player:ctx.controller,origin:'skill',keywordFamily}).allowed;}
+  _modeAvailable(node,ctx) {
+    // Explore only immediate resolution on private checkpoints. Never resolve
+    // queued future triggers, publish decisions, consume resources or RNG.
+    const saved=clone(this.state),choose=this.choose;
+    const explore=answers=>{
+      this.state=clone(saved);let cursor=0;
+      this.choose=req=>{if(cursor<answers.length)return clone(answers[cursor++]);throw new ModeChoice(req);};
+      try{return !!this._run(node,clone(ctx));}
+      catch(e){
+        if(e instanceof IllegalAction||e instanceof Unpayable)return false;
+        if(!(e instanceof ModeChoice))throw e;
+        const req=e.request;
+        if(req.kind==='revealResult')return explore([...answers,[]]);
+        if(req.kind==='reveal')return explore([...answers,true]);
+        if(req.count!=null){
+          const combinations=[];
+          const collect=(start,pick)=>{if(pick.length===req.count){combinations.push(pick);return;}for(let i=start;i<=req.options.length-(req.count-pick.length);i++)collect(i+1,[...pick,req.options[i]]);};collect(0,[]);
+          return combinations.some(value=>explore([...answers,value]));
+        }
+        return [...req.options].reverse().some(value=>explore([...answers,value]));
+      }
+    };
+    try{return explore([]);}finally{this.state=saved;this.choose=choose;}
+  }
   _keywordAvailable(ctx,keywordFamily) {
     if(!this._keywordAllowed(ctx,keywordFamily))return false;
     if(keywordFamily!=='back_attack')return true;

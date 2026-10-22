@@ -17,6 +17,8 @@ function matchesPrinted(profile,filters={}){
   if(key==='play_icons_any')return v.some(x=>icons.includes(x));
   if(key==='play_icons_exact')return JSON.stringify([...v].sort())===JSON.stringify([...icons].sort());
   if(key==='skillless')return !profile.program===v;
+  if(key==='current_receive_gte')return Number.isInteger(p.parameters?.receive)&&p.parameters.receive>=v;
+  if(key==='current_block_eq')return p.parameters?.block===v;
   if(key==='printed_receive_gte')return Number.isInteger(p.parameters?.receive)&&p.parameters.receive>=v;
   if(key==='printed_block_gte')return Number.isInteger(p.parameters?.block)&&p.parameters.block>=v;
   fail('Unseeded printed filter '+key);

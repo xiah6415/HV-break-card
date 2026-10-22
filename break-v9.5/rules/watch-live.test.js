@@ -6,7 +6,8 @@ let cases=0;
  for(const code of codes){
   const card=catalog.cards.find(c=>I.short(c.card_no)===code),p=card.profiles[0],watches=I.nodes(p).filter(n=>n.kind==='watch'&&!I.nodes(p).some(w=>w.kind==='watch'&&n.node_id?.startsWith(w.then.node_id+'.')));
   for(const w of watches)for(const expired of [false,true])for(const historical of w.event==='source_moved'?[false,true]:[false]){
-   const observer=p.activation.trigger?.event==='character_entry',phase=observer?(p.activation.trigger.filters.role_any?.[0]||p.activation.trigger.filters.role):p.activation.skill_type==='passive'?p.activation.trigger.destination_any[0]:p.activation.activation_phases[0],seeded=observer?require('./entry-observer-tests').setup(catalog,card):fixture(card,p,phase,{rich:true,conditioned:true,expanded:true,max:true,key:'positive'},0,catalog),{k,id,entryReason='rule'}=seeded;
+   const mode=I.nodes(p).find(n=>n.kind==='choose_modes'&&n.options.some(o=>w.node_id.startsWith(o.node_id+'.'))),modeIndex=mode?.options.findIndex(o=>w.node_id.startsWith(o.node_id+'.')),gate=I.nodes(p).find(n=>n.kind==='conditional'&&n.condition.field==='phase'&&w.node_id.startsWith(n.then.node_id+'.'));
+   const observer=p.activation.trigger?.event==='character_entry',phase=gate?.condition.value||(observer?(p.activation.trigger.filters.role_any?.[0]||p.activation.trigger.filters.role):p.activation.skill_type==='passive'?p.activation.trigger.destination_any[0]:p.activation.activation_phases[0]),seeded=observer?require('./entry-observer-tests').setup(catalog,card):fixture(card,p,phase,{rich:true,conditioned:true,expanded:true,max:true,key:'positive'},0,catalog),{k,id,entryReason='rule'}=seeded;
    const player=w.actor==='opponent'?1:0;let area,def,target,second;
    if(w.event==='character_entry'){
     const f=w.filters;area=f.role==='side_blocker'?'side:0':['block','center_blocker'].includes(f.role)?'block':f.role&&f.role!=='character'?f.role:'attack';
@@ -17,7 +18,8 @@ let cases=0;
    else if(w.event==='block_success'){def=card;target=id;}
    else if(w.event==='source_moved'){def=card;target=id;}
    else {assert.equal(w.event,'loss');for(const move of I.nodes({program:w.then}).filter(n=>['move','retrieve'].includes(n.kind))){def=catalog.cards.find(c=>!c.profiles[0].program&&matchesPrinted(c.profiles[0],move.pool.filters));target=k.addCard(def.card_no,0,move.pool.zone);}}
-   const before=k.snapshot(),agent={wantsAck:true,async choose(g,p,r){if(r.kind==='skill')return true;if(r.kind==='guts'||r.kind==='gutsCourt')return r.options.slice(0,r.need).map(o=>o.value);return r.options.find(o=>o.label?.includes('其餘放到牌庫底'))?.value??r.options[0].value;}};
+   const oldChoose=k.choose;k.choose=r=>r.effectModes?modeIndex:oldChoose(r);
+   const before=k.snapshot(),agent={wantsAck:true,async choose(g,p,r){if(r.ctx?.effectModes)return modeIndex;if(r.kind==='skill')return true;if(r.kind==='guts'||r.kind==='gutsCourt')return r.options.slice(0,r.need).map(o=>o.value);return r.options.find(o=>o.label?.includes('其餘放到牌庫底'))?.value??r.options[0].value;}};
    const g=new E.Game({mode:'strict',seed:7,decks:['k1014','seijoh'],agents:[agent,agent]});
    for(const q of g.players){for(const [host,z]of Object.entries({hand:'hand',deck:'deck',drop:'drop',ev:'event',sets:'sets'}))q[host]=before.zones[q.idx+'.'+z].map(id=>I.short(before.cards[id].cardNo));for(const z of roles)q.area[z]=before.zones[q.idx+'.'+z].map(id=>I.short(before.cards[id].cardNo));}
    g.cardState=null;g.beginTurn(g.players[0]);for(const q of g.players)q.ts.sides=[...before.zones[q.idx+'.side:0'],...before.zones[q.idx+'.side:1']].map(id=>I.short(before.cards[id].cardNo));g.ball={type:before.ball.kind,off:before.ball.offense};g.rulePhase=phases[phase];
@@ -50,7 +52,7 @@ let cases=0;
    g.sharedRulesState=JSON.parse(JSON.stringify(g.sharedRulesState));B.assertReady(g);cases++;
   }
  }
- assert.equal(cases,60);
+ assert.equal(cases,64);
  const g=new E.Game({seed:7,decks:['k1014','seijoh'],agents:[E.AI,E.AI]}),p=g.players[0];g.beginTurn(p);
  const state=g.cardSnapshot(),id=state.zones['0.deck'].at(-1);g.moveCard(p.deck,p.ev,p.deck.length-1);
  const base={kind:'watch',actor:0,source:{id,incarnation:0},duration:{kind:'this_turn',turn:g.turnNo}};
