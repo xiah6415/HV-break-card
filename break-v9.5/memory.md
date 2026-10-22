@@ -1178,3 +1178,11 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 
 ## 長尾整合與防降節點批次（2026-10-22）
 - 計畫：先審查合併Claude long-tail已推送7節點與局面測試，核對交換／雙方選擇／合計語意及正式接線；再完成protect_numeric_decrease全部5形態，含來球／角色單值／持續匹配P04-070（正常及事件登場均保護）、期限／Loss／Undo。各組依賴卡3局面、正式桌面與完整對局驗證後更新STATUS並部署，shuffle的主機亂數接線留後續獨立模組。
+
+## Claude：長尾節點批次（2026-10-22，分支 claude/long-tail）
+- 計畫：依分工實作 shuffle／draw_to_hand_size／exchange／sum_result_parameter／each_player_optional_draw／result_count／equal_fields／any；以 rules/claude-nodes.js 註冊、modules.js 一行匯入、測試放 rules/claude-node-tests.js；不改 STATUS、不部署
+- 結果：完成 7 節點（any、equal_fields、result_count、sum_result_parameter、draw_to_hand_size×2 形態、exchange、each_player_optional_draw）；32 模組／562 形態／250 卡，新開 9 張：P01-066、P01-090、P02-058、P03-083、P04-007、P04-064、P04-100、PR-080、PR-084（嚴格 485→494、共用 295→304、未自動化 56→47）
+- 退回 Codex：shuffle 需主機 RNG（core 無亂數，RNG 在 match.js）→ P01-034、PR-024、P04-093、P04-094；PR-063 需 external_action
+- 假設待確認：sum_result_parameter 遇「－」計 0（縁下 P04-007 付西谷等）；exchange 兩側都要選才交換、各最多 1、禁止加牌（手牌側）則不交換、加手牌發 hand_added；P04-100 各玩家自己選抽 2 或 0
+- 測試調整：batch-branches any 反例先處理 distinct_affiliation 條件、effective_name 替換排除來源名；watch-card-tests 敗北分支預期手牌含 draw_to_hand_size；ban-node-tests 無條件無費用 Event 跳過反例；modules.test 數字更新
+- 留給 Codex 統一更新的計數斷言：library／authority／numeric／legacy／coverage／primitive-audit 等（485→494、295→304、56→47）

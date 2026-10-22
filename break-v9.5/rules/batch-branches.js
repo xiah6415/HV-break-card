@@ -34,7 +34,10 @@ function expandFixture(k,{catalog,profile,source,player,phase,focus}){
  function target(){const n=nodes.find(n=>n.kind==='numeric'&&n.target?.kind==='selector');if(!n)gap('No branch target selector');const id=k.pool(n.target,ctx)[0];if(!id)gap('Empty branch target');return {id,selector:n.target};}
  function negate(n,forbidden=[]){
   if(n.kind==='all')return negate(n.conditions[0]);
-  if(n.kind==='any'){const names=n.conditions.filter(c=>c.kind==='compare'&&c.field.endsWith('.effective_name')).map(c=>c.value);for(const c of n.conditions)negate(c,names);return;}
+  if(n.kind==='any'){const names=n.conditions.filter(c=>c.kind==='compare'&&c.field.endsWith('.effective_name')).map(c=>c.value);
+   // 清場型否定（移走其他區角色）先做，避免抵銷之後放上的反例角色（P01-066：全鴎台 or 4 所屬）。
+   const clears=c=>c.kind==='compare'&&c.field==='self.court.distinct_affiliation_assignment_count';
+   for(const c of [...n.conditions.filter(clears),...n.conditions.filter(c=>!clears(c))])negate(c,names);return;}
   if(n.kind==='uniform_affiliation'){
    const who=owner(n.pool.actor),area=['serve','receive','toss','attack'].find(a=>a!==phase&&!k.top(who,a))||['serve','receive','toss','attack'].find(a=>a!==phase);
    replaceTop(who,area,pick({type:'character'},area,d=>n.options.every(tag=>!printed(d).affiliation_tags.includes(tag))));return;
@@ -59,7 +62,7 @@ function expandFixture(k,{catalog,profile,source,player,phase,focus}){
   }
   if(n.kind!=='compare')gap('Unimplemented branch predicate '+n.kind);
   let m=n.field.match(/^(self|opponent)\.(serve|receive|toss|attack)\.effective_name$/);
-  if(m){const who=owner(m[1]),area=m[2];replaceTop(who,area,pick({type:'character'},area,d=>![n.value,...forbidden].includes(printed(d).name)&&!(who===player&&uniformTag&&!printed(d).affiliation_tags.includes(uniformTag))));return;}
+  if(m){const who=owner(m[1]),area=m[2];replaceTop(who,area,pick({type:'character'},area,d=>![n.value,...forbidden,k.effectiveName(source)].includes(printed(d).name)&&!(who===player&&uniformTag&&!printed(d).affiliation_tags.includes(uniformTag))));return;}
   if(n.field==='target.effective_name'||n.field==='target.current_receive'){
    const t=target(),c=k.card(t.id),area=c.zone.split('.')[1];
    replaceTop(c.owner,area,pick(t.selector.filters,area,d=>n.field==='target.effective_name'?printed(d).name!==n.value:Number.isInteger(printed(d).parameters.receive)&&printed(d).parameters.receive>n.value));return;

@@ -28,6 +28,7 @@ module.exports={testBan,action};
 function testBanCard(catalog,card){
  const p=card.profiles[0],nodes=I.nodes(p),condition=nodes.find(n=>n.kind==='conditional')?.condition,hasCost=nodes.some(n=>n.kind==='payment_branch'),phase=p.activation.skill_type==='passive'?p.activation.trigger.destination_any[0]:p.activation.activation_phases[0];
  for(const mode of ['positive','negative',hasCost?'short':'source_left']){
+  if(mode==='negative'&&!condition&&!hasCost&&p.activation.skill_type==='event')continue; // 無條件無費用的 Event（P04-100）：沒有「不成立」分支，正向即全部
   const focus=mode==='negative'&&condition&&condition.field!=='source.entry_skill_name'?{node_id:condition.node_id,value:false}:undefined;
   const {k,id}=require('./batch-smoke').fixture(card,p,phase,{rich:true,conditioned:true,expanded:true,max:true,key:'positive',focus},0,catalog);
   const entryName=nodes.find(n=>n.kind==='compare'&&n.field==='source.entry_skill_name'),entrySource=entryName&&mode!=='negative'?k.addCard(catalog.cards.find(c=>c.profiles[0].variants[0].printed.name===entryName.value).card_no,0,'event'):null;

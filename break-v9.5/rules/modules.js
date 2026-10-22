@@ -20,6 +20,8 @@ completed.push({id:'ban_action',test:require('./ban-node-tests').testBan});
 completed.push({id:'invalidate_skill',test:require('./invalid-node-tests').testInvalid});
 completed.push({id:'choose_modes',test:require('./mode-node-tests').testModes});
 completed.push({id:'optional',test:require('./optional-node-tests').testOptional});
+
+completed.push(...require('./claude-nodes').completed);
 function testCard(catalog,card){
  if(I.dependencies(card).includes('optional'))return require('./optional-node-tests').testOptionalCard(catalog,card);
  if(I.dependencies(card).includes('choose_modes'))return require('./mode-node-tests').testModeCard(catalog,card);
