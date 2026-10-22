@@ -1,0 +1,15 @@
+'use strict';
+const assert=require('node:assert/strict'),E=require('../engine'),{UndoSession}=require('../undo-tools'),I=require('./node-inventory'),T=require('./formal-node-tests'),catalog=require('./data/cards.json');
+const copy=x=>JSON.parse(JSON.stringify(x)),tick=()=>new Promise(r=>setImmediate(r));
+async function check(code){
+ class Scenario extends E.Game{async run(){const card=catalog.cards.find(c=>I.short(c.card_no)===code),f=T.seedCard(catalog,card),s=f.k.snapshot();for(const p of this.players){for(const[h,z]of Object.entries({hand:'hand',deck:'deck',drop:'drop',ev:'event',sets:'sets'}))p[h]=s.zones[p.idx+'.'+z].map(id=>I.short(s.cards[id].cardNo));for(const z of Object.keys(p.area))p.area[z]=s.zones[p.idx+'.'+z].map(id=>I.short(s.cards[id].cardNo));}this.cardState=null;const p=this.players[0];this.beginTurn(p);this.rulePhase={receive:'rcv',attack:'atk'}[f.phase];this.ball={type:'attack',off:8};const action=await this.ask(p,{kind:'event',options:[{value:code,label:'發動技能'},{value:null,label:'取消'}]});if(action)await this.resolve(p,action,this.rulePhase);return this.ask(p,{kind:'turnEnd',options:[{value:true,label:'確認'}]});}}
+ const queue=[],errors=[],snapshot=g=>copy({players:g.players.map(p=>{const{g,agent,...d}=p;return d;}),cardState:g.cardState,sharedRulesState:g.sharedRulesState,sharedRulesPending:g.sharedRulesPending,phase:g.rulePhase,turn:g.turnNo});
+ const agent={choose:(g,p,req)=>new Promise(resolve=>queue.push({req,resolve,state:snapshot(g)}))},session=new UndoSession({Game:Scenario},{seed:7,decks:['k1014','seijoh'],agents:[agent,agent],onError:e=>errors.push(e)});session.start();await tick();const points=[];
+ const answer=r=>['guts','gutsCourt'].includes(r.kind)?r.options.slice(0,r.need).map(o=>o.value):r.options[0].value;
+ for(let i=0;i<30;i++){const t=queue.shift();assert(t);points.push(t);if(t.req.kind==='turnEnd')break;t.resolve(answer(t.req));await tick();}
+ assert.equal(points.at(-1).req.kind,'turnEnd');const p=session.game.players[0];if(code==='PR-082'){assert.equal(p.top('attack'),code);assert.equal(session.game.parameter(p,'attack','atk'),5);}else assert((code==='P03-014'?p.ev:p.drop).includes(code),'Source cost is committed before effect selection');
+ const history=copy(session.entries);let stale=points.at(-1);
+ for(let i=0;i<=history.length;i++){session.start(history.slice(0,i));await tick();const current=queue.shift();assert(current);assert.deepEqual(current.state,points[i].state,'Full formal-cost / effect choice Undo '+code+' '+i);stale.resolve(answer(stale.req));await tick();assert.deepEqual(snapshot(session.game),current.state,'Stale reply cannot pay or execute a restored declaration');stale=current;}
+ assert.deepEqual(errors,[]);session.stop();console.log('formal Undo '+code+': '+points.length+' complete choice boundaries, physical cards, paid cost, effect state and stale replies passed');
+}
+(async()=>{for(const c of ['P01-031','P03-014','PR-082'])await check(c);})().catch(e=>{console.error(e);process.exitCode=1;});

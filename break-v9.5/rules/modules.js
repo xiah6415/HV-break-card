@@ -15,7 +15,9 @@ completed.push({id:'all_result_cards_match',test:require('./result-match-node-te
 completed.push({id:'move_self',test:require('./self-move-node-tests').testSelfMove});
 completed.push({id:'mill',test:require('./mill-node-tests').testMill});
 completed.push({id:'enter',test:require('./enter-node-tests').testEnter});
+completed.push({id:'formal_declaration_cost',test:require('./formal-node-tests').testFormal});
 function testCard(catalog,card){
+ if(card.profiles[0].formal_cost)return require('./formal-node-tests').testFormalCard(catalog,card);
  if(card.card_no==='HV-P02-037')return require('./enter-node-tests').testSideCard(catalog,card);
  if(I.dependencies(card).includes('move_self')&&I.dependencies(card).includes('deck_selection'))return require('./self-move-node-tests').testSelfMoveCard(catalog,card);
  if(card.profiles[0].activation.trigger?.event==='character_entry')return require('./entry-observer-tests').testEntryCard(catalog,card);

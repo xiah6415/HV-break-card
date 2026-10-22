@@ -8,7 +8,7 @@ function matchesPrinted(profile,filters={}){
  return Object.entries(filters).every(([key,v])=>{
   if(key==='role')return v==='character'?p.type==='character':true;
   if(key==='position_has_any_other_than')return p.position_tags.some(x=>!v.includes(x));
-  if(key==='printed_attack')return p.parameters?.attack===v;
+  if(['printed_attack','printed_attack_eq'].includes(key))return p.parameters?.attack===v;
   if(key==='type')return p.type===v;
   if(key==='names')return v.includes(p.name);
   if(key==='exclude_names')return !v.includes(p.name);
@@ -143,6 +143,7 @@ function seedConditions(k,{catalog,profile,source,player,phase,expanded=false}){
   const eventCheck=nodes.find(n=>n.kind==='compare'&&n.field==='milled.event_count'),events=eventCheck?Math.min(mill.count,eventCheck.value):0;
   for(let i=mill.count-1;i>=0;i--)add(pick(filter||{type:i<events?'event':'character'}),who,'deck');
  }
+ for(const n of nodes.filter(n=>n.kind==='enter'&&n.as_side_blocker))if(!k.top(player,'block'))add(pick({type:'character'},{parameter:'block',exclude:k.pool(n.pool,ctx).map(id=>k.effectiveName(id))}),player,'block');
  k.assertState();notes.push({kind:'structured_conditions',own_uniform_tag:tag||null,entry_reason:entryReason});
  return {entryReason,notes};
 }

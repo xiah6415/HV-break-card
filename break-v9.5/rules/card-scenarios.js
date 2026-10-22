@@ -32,7 +32,7 @@ function testCard(catalog,card,{condition:override}={}){
   if(s.key==='positive'){
    assert(!rejected,'Positive fixture must execute '+card.card_no);
    if(condition)assert(predicates.includes(true),'Positive condition not reached '+card.card_no);
-   assert(after.effects.length>before.effects.length||after.events.some((e,i)=>i>=before.events.length&&e.type==='hand_added')||after.events.slice(before.events.length).some(e=>e.type==='phase_jump')||after.publicLog.some((e,i)=>i>=before.publicLog.length&&e.type==='deck_view'),'Positive fixture produced no skill effect '+card.card_no);
+   assert(after.effects.length>before.effects.length||after.events.some((e,i)=>i>=before.events.length&&e.type==='hand_added')||after.events.slice(before.events.length).some(e=>e.type==='phase_jump'||e.type==='character_entry'&&e.card!==id)||after.publicLog.some((e,i)=>i>=before.publicLog.length&&e.type==='deck_view'),'Positive fixture produced no skill effect '+card.card_no);
   }
   if(s.key==='condition_false')assert(predicates.includes(false)&&!predicates.includes(true),'Negative condition not reached or unexpectedly true '+card.card_no);
   if(s.key==='cost_short')assert(!after.decisions.slice(before.decisions.length).some(d=>d.request.kind==='activate_payment'),'Insufficient cost offered payment '+card.card_no);

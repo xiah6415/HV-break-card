@@ -6,7 +6,7 @@ const same = (a,b) => JSON.stringify(a) === JSON.stringify(b);
 const COURT = ['serve','block','receive','toss','attack','side:0','side:1'];
 const PARAMS = ['serve','block','receive','toss','attack'];
 const KINDS = new Set(['sequence','conditional','numeric','draw','draw_to_hand_size','move','move_self',
-  'pay_guts','payment_branch','retrieve','enter','enter_self','watch','ban_action','invalidate_skill',
+  'pay_guts','payment_branch','formal_declaration_cost','retrieve','enter','enter_self','watch','ban_action','invalidate_skill',
   'rename_before_entry','protect_numeric_decrease','phase_jump','optional','choose_modes','mill','keyword','deck_selection']);
 const FILTERS = new Set(['names','exclude_names','tags','tags_any','positions','positions_any','years','years_any',
   'role','role_any','type','skillless','play_icons_any','play_icons_exact','entry_origins','phase',
@@ -530,6 +530,7 @@ class Kernel {
       if (n.target_scope) need(n.target_scope.membership==='snapshot_on_resolution','Target membership is not supported');
       if(n.destination)need((!n.destination.includes('choose_deck') || ['choose_deck_top_or_bottom','self.choose_deck_top_or_bottom'].includes(n.destination)) && !n.destination.endsWith('.deck_top'),'Destination mechanism not implemented');
       if(n.kind==='invalidate_skill')need(!n.selector.keyword_families && !n.selector.union_with?.keyword_families,'Keyword invalidation not implemented');
+      if(n.kind==='formal_declaration_cost')need(n.must_be_complete===true&&n.performed_for_this_skill_only===true&&Array.isArray(n.steps)&&n.steps.length>0,'Unsupported declaration cost parameters');
       if(n.kind==='mill')need(['self','opponent'].includes(n.actor)&&['exact','upto'].includes(n.count_mode)&&Number.isInteger(n.count)&&n.count>=0&&n.bind==='milled','Unsupported mill parameters');
       if(n.kind==='all_result_cards_match')need(['paid','milled','revealed'].includes(n.result)&&n.require_nonempty===true,'Unsupported result-match parameters');
       if(n.kind==='rename_before_entry')need(n.target==='source'&&n.character_count===1&&Array.isArray(n.choose_name)&&n.choose_name.length===2&&n.choose_name.every(x=>typeof x==='string')&&['this_turn','this_turn_or_role_exit'].includes(n.duration),'Unsupported entry-name parameters');
@@ -567,6 +568,7 @@ class Kernel {
         if (ctx.inPayment && node.count_mode==='exact' && ids.length<n) throw new Unpayable();
         n=Math.min(n,ids.length);if(node.count_mode==='upto'){const max=n;n=this._decide('mill_count',ctx,Array.from({length:n+1},(_,i)=>i));legal(Number.isInteger(n)&&n>=0&&n<=max,'Invalid mill count');}
         const moved=[];for(let i=0;i<n;i++){const id=this.top(player,'deck');this._move(id,player,'drop',ctx);moved.push(id);}ctx.bind.milled=moved;if(ctx.inPayment)ctx.paid.push(...moved);return moved.length>0; }
+      case 'formal_declaration_cost': return this._formalCost(node,ctx);
       case 'pay_guts': { if(node.areas==='source_area'&&!this.current(ctx.source))throw new Unpayable();const areas=node.areas==='court'?COURT:node.areas==='source_area'?[this.card(ctx.source.id).zone.split('.')[1].startsWith('side:')?'block':this.card(ctx.source.id).zone.split('.')[1]]:node.areas;
         if(node.count_mode==='exact_each'){
           if(areas.some(a=>this.zone(ctx.controller,a).length-1<node.count_each))throw new Unpayable();
@@ -619,9 +621,9 @@ class Kernel {
     }
     if(kind==='two_attack'){this.state.keywordOutgoing={player:p,kind:'attack',offense:n,turn:this.state.turn.id};this._jump('end');return true;}
     if(kind==='back_attack'){
-      const id=ctx.source.id;legal(this.current(ctx.source),'Back attack requires a current source character');
-      this._enter(id,p,'attack',ctx,'skill',false,false,'back_attack');
-      this._numeric({target:'source',target_scope:scope,parameter:'attack',value:n,operation:'set'},ctx);return true;
+      const id=ctx.source.id,c=this.card(id);legal(c.incarnation===ctx.source.incarnation&&(this.current(ctx.source)||c.zone===p+'.hand'),'Back attack requires a current source character or its actual hand card');
+      ctx.bind.entered=this._enter(id,p,'attack',ctx,'skill',false,false,'back_attack');
+      this._numeric({target:'$entered',target_scope:scope,parameter:'attack',value:n,operation:'set'},ctx);return true;
     }
     if(kind==='multi_attack'){
       const tag=node.parameters.affiliation,attack=this.top(p,'attack'),setter=this.top(p,'toss');
@@ -719,10 +721,17 @@ class Kernel {
   _admit(p) { need(p?.program && p.activation,'Skill profile required');need(this.mode==='sandbox' || p.runtime_approved,'Card not approved for live execution');need(!p.flags?.some(f=>['TARGET_MEMBERSHIP_UNRESOLVED','OFFICIAL_TEXT_VARIANTS_PRESERVED','SHARED_MECHANISM_EXTENSION_NEEDS_CONFIRMATION','OPTIONAL_EXACT_PAYMENT_BRANCH_SCENARIO_REVIEW'].includes(f)),'Profile requires ruling review');
     if(p.activation.skill_type==='passive')need(['self_entry','character_entry'].includes(p.activation.trigger?.event),'Non-entry passive triggers not implemented');
     if(p.activation.trigger?.event==='character_entry'){const t=p.activation.trigger;need(t.source_role_checkpoint==='at_trigger'&&['self','opponent'].includes(t.actor)&&[null,'serve','receive','toss','attack','block'].includes(t.source_role)&&JSON.stringify(p.activation.source_zones)==='["court"]','Unsupported character-entry trigger');for(const key of Object.keys(t.filters||{}))need(FILTERS.has(key),'Unsupported entry filter '+key);}
-    this.preflight(p.program);if(p.formal_cost)for(const n of p.formal_cost.steps)this.preflight(n); }
+    this.preflight(p.program);if(p.formal_cost)this.preflight(p.formal_cost); }
+  _formalCost(node,ctx) {
+    const previous=ctx.inPayment;ctx.inPayment=true;ctx.paid=[];ctx.bind.paid=[];
+    try {for(const step of node.steps)this._run(step,ctx);}
+    catch(e){if(e instanceof Unpayable)throw new IllegalAction('Formal declaration cost cannot be paid');throw e;}
+    finally {ctx.inPayment=previous;}
+    ctx.bind.paid=[...ctx.paid];return ctx.paid.length>0;
+  }
   _resolveSkill(p,ctx) {
     const name=this.effectiveName(ctx.source.id);
-    if(p.formal_cost){ctx.inPayment=true;try{for(const n of p.formal_cost.steps)this._run(n,ctx);}catch(e){if(e instanceof Unpayable)throw new IllegalAction('Formal declaration cost cannot be paid');throw e;}ctx.inPayment=false;ctx.bind.paid=[...ctx.paid];}
+    if(p.formal_cost)this._run(p.formal_cost,ctx);
     this.depth++;let performed;try{performed=this._run(p.program,ctx);}finally{this.depth--;}
     if(performed&&p.limit)this.state.locks.push({player:ctx.controller,name,turn:this.state.turn.id});
     return performed;

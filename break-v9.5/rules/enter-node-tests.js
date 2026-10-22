@@ -46,7 +46,7 @@ function testEffectCard(catalog,card){
  for(const mode of ['positive','empty','restricted']){
   const {k,id,target,phase,side,entryReason='rule'}=seedCard(catalog,card),run=k._run,entries=[];
   k._run=function(n,c){if(n.kind!=='enter'){const before=this.state.effects.length,result=run.call(this,n,c);if(n.kind==='numeric'&&n.target==='$entered'&&!c.bind.entered)assert.equal(this.state.effects.length,before,'Missing entered target skips dependent numeric only');return result;}if(mode==='empty')for(const x of [...this.pool(n.pool,c)])this._move(x,0,'deck',c);if(mode==='restricted')this.effect('ban',{actor:0,action:'enter_character',scope:{role:n.destination}},c);const result=run.call(this,n,c);entries.push({result,ref:c.bind.entered});return result;};
-  const before=k.snapshot(),invoke=()=>target?k.enter(target,phase):card.profiles[0].activation.skill_type==='event'?k.playEvent(id):k.enter(id,phase,{side,reason:entryReason});invoke();
+  const before=k.snapshot(),invoke=()=>target?k.enter(target,phase):card.profiles[0].activation.skill_type==='event'?k.playEvent(id):card.profiles[0].activation.skill_type==='active'?k.useSkill(id):k.enter(id,phase,{side,reason:entryReason});invoke();
   assert(entries.length,card.card_no+' reached actual effect entry');
   if(mode==='positive')assert(entries.some(e=>e.result&&e.ref),card.card_no+' must actually enter a character');
   else {assert(entries.every(e=>!e.result&&e.ref===null),card.card_no+' no illegal fallback target');assert(k.state.effects.every(e=>e.kind!=='numeric'||e.target),'No fallback numeric target');}

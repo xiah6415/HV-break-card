@@ -3,7 +3,7 @@ const assert=require('node:assert/strict'),E=require('../engine'),I=require('./n
 const catalog=require('./data/cards.json'),released=testModules(catalog).cards,roles=['serve','block','receive','toss','attack'],params={serve:'srv',block:'blk',receive:'rcv',toss:'tos',attack:'atk'};
 (async()=>{
  for(const code of Object.keys(released)){
-  const card=catalog.cards.find(c=>I.short(c.card_no)===code),p=card.profiles[0],observer=p.activation.trigger?.event==='character_entry',deckMove=I.dependencies(card).includes('move_self')&&I.dependencies(card).includes('deck_selection');
+  const card=catalog.cards.find(c=>I.short(c.card_no)===code),p=card.profiles[0],observer=p.activation.trigger?.event==='character_entry',deckMove=!p.formal_cost&&I.dependencies(card).includes('move_self')&&I.dependencies(card).includes('deck_selection');
   let phase=p.activation.skill_type==='permanent_entry_name'?'attack':observer?(p.activation.trigger.filters.role_any?.[0]||p.activation.trigger.filters.role):p.activation.skill_type==='passive'?p.activation.trigger.destination_any[0]:p.activation.activation_phases[0];if(phase==='block')phase='block';
   const seed=I.dependencies(card).includes('enter')?require('./enter-node-tests').seedCard(catalog,card):observer?require('./entry-observer-tests').setup(catalog,card):deckMove?require('./node-module-tests').deckFixture(catalog,I.nodes(p).find(n=>n.kind==='deck_selection')):fixture(card,p,phase,{rich:true,conditioned:true,expanded:true,max:true,key:'positive'},0,catalog);
   if(deckMove){seed.id=seed.k.addCard(card.card_no,0,'hand');seed.k.state.turn.phase=phase;seed.k.state.ball={kind:'attack',offense:8,owner:1};}
