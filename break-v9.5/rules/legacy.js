@@ -146,7 +146,8 @@ function transaction(g,p,c,timing,notification=null) {
     let step;
     try {step=attempt(k,base,invoke,answers);}
     catch(e) {if(e.code==='ILLEGAL_ACTION'||e.code==='REQUIRES_REVIEW'&&e.message==='OPEN-EVENT-NO-CHANGE')return false;throw e;}
-    if(!step.boundary)return step.result.performed||step.result.invalid;
+    // 失效的 Event 仍可打出放到 Event 區；手牌角色技能失效時無法宣告（否則主機重複詢問、無任何變化）
+    if(!step.boundary)return step.result.performed||step.result.invalid&&byShort[c].profiles[0].variants[0].printed.type==='event';
     const req=step.boundary.request;
     return choices(req).some(answer=>possible([...answers,{request:req,answer}],budget));
   }
