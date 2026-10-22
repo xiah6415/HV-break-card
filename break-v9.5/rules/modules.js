@@ -17,6 +17,7 @@ completed.push({id:'mill',test:require('./mill-node-tests').testMill});
 completed.push({id:'enter',test:require('./enter-node-tests').testEnter});
 completed.push({id:'formal_declaration_cost',test:require('./formal-node-tests').testFormal});
 completed.push({id:'ban_action',test:require('./ban-node-tests').testBan});
+completed.push({id:'invalidate_skill',test:require('./invalid-node-tests').testInvalid});
 function testCard(catalog,card){
  if(card.profiles[0].formal_cost)return require('./formal-node-tests').testFormalCard(catalog,card);
  if(card.card_no==='HV-P02-037')return require('./enter-node-tests').testSideCard(catalog,card);
@@ -58,6 +59,7 @@ function testModules(catalog){
  for(const card of I.scope(catalog)){
   if(!eligible(card))continue;
   testCard(catalog,card);
+  if(I.dependencies(card).includes('invalidate_skill'))require('./invalid-node-tests').testInvalidCard(catalog,card);
   if(I.dependencies(card).includes('ban_action'))require('./ban-node-tests').testBanCard(catalog,card);
   if(I.dependencies(card).includes('enter'))require('./enter-node-tests').testEffectCard(catalog,card);
   if(card.profiles[0].activation.trigger?.event==='character_entry'){cards[I.short(card.card_no)]={profileId:card.profiles[0].profile_id,modules:I.dependencies(card)};continue;}

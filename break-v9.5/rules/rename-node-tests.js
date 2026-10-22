@@ -19,7 +19,7 @@ function testRenameCard(catalog,card){
   const k=F.game(catalog),id=k.addCard(card.card_no,0,'hand');k.state.turn.phase='attack';
   const other=plain(k,0,'toss');k.card(other).printed.name=mode==='restricted'?n.choose_name[0]:'Unrelated';
   // Receiver skill invalidation must not retroactively cancel a pre-entry name.
-  k.resolveProgram({kind:'invalidate_skill',actor:'self',selector:{roles:['attacker']},duration:'this_turn'},0);
+  k.resolveProgram({kind:'invalidate_skill',actor:'self',selector:{roles:['attack']},duration:'this_turn'},0);
   k.choose=r=>{assert.equal(r.kind,'name');if(mode==='restricted')assert.deepEqual(r.options,[n.choose_name[1]]);return mode==='first'?r.options[0]:r.options.at(-1);};
   const before=k.snapshot();k.enter(id,'attack');assert.equal(k.effectiveName(id),mode==='first'?n.choose_name[0]:n.choose_name[1]);assert.equal(k.card(id).printed.name,n.original_name);
   assert(k.matches(id,{names:[k.effectiveName(id)]},k._context(id,0)));assert(k.card(id).printed.affiliation_tags.length);

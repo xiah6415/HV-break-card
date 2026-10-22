@@ -63,7 +63,6 @@ function buildCoverage(){
     if(!family)host('triggers','watch:'+n.event+':'+n.duration,at,'尚未接入host通知／持久化的watch族');
    }
    if(n.kind==='protect_numeric_decrease'&&!(n.parameter==='all'&&n.duration==='this_turn'&&n.target_scope?.mode==='single'&&typeof n.target==='string'&&!n.target.includes('ball')))host('persistent','protect_shape',at,'目前僅保存單一角色、本回合、全部參數下降保護');
-   if(n.kind==='invalidate_skill')host('persistent','skill_invalidation',at,'host尚未保存／查詢此失效效果');
    if(n.kind==='enter_self')host('movement','skill_entry',at,'需接新增角色slot／數值、技能登場與觸發流程');
    if(n.kind==='choose_modes')host('selection','choose_modes',at,'共用橋接尚未實作mode選單');
    if(n.kind==='phase_jump')host('keywords','phase_transition',at,'核心支援的跳階段仍需host回合控制器銜接');

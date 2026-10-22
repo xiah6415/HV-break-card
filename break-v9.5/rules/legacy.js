@@ -3,7 +3,7 @@
 (function(root) {
 'use strict';
 const node=typeof module!=='undefined'&&module.exports;
-const {Kernel,distinctNameOptions,validateBan}=node?require('./core'):root.BreakRulesCore;
+const {Kernel,distinctNameOptions,validateBan,validateInvalid}=node?require('./core'):root.BreakRulesCore;
 const {attempt,settle}=node?require('./decisions'):root.BreakRulesDecisions;
 const identity=node?require('./identity'):root.BreakCardIdentity;
 const data=node?require('./runtime-data.json'):root.BreakRulesData;
@@ -34,10 +34,11 @@ function stored(g) {
 const watchSignatures=new Set();
 function signature(e) { return JSON.stringify([e.event,typeof e.duration==='string'?e.duration:e.duration.kind,e.filters||{},e.then,e.remaining_uses??e.remaining??null]); }
 (function walk(n){if(!n||typeof n!=='object')return;if(n.kind==='watch')watchSignatures.add(signature(n));for(const v of Object.values(n))if(v&&typeof v==='object')walk(v);})(data.catalog);
-function persistent(e) { return ['watch','protect','ban','keyword'].includes(e.kind); }
+function persistent(e) { return ['watch','protect','ban','invalid','keyword'].includes(e.kind); }
 function admitEffect(e) {
   if(e.kind==='keyword'&&['doshat','feint','blockout','a_pass','feint_block_ban'].includes(e.keyword)&&Number.isInteger(e.N)&&e.N>=0&&[0,1].includes(e.actor)&&['this_turn','next_opponent_turn'].includes(e.duration.kind))return;
   if(e.kind==='ban'&&[0,1].includes(e.actor)){try{validateBan({action:e.action,actor:'self',scope:e.scope,duration:e.duration.kind});return;}catch(_){}}
+  if(e.kind==='invalid'&&[0,1].includes(e.actor)){try{validateInvalid({actor:'self',duration:e.duration.kind,selector:e.selector});return;}catch(_){}}
   const admittedFamily=['hand_added','character_entry','loss','block_success','source_moved'].includes(e.event)&&['this_turn','next_opponent_turn'].includes(e.duration.kind);
   if(e.kind==='watch'&&admittedFamily&&watchSignatures.has(signature(e)))return;
   if(e.kind==='protect'&&e.parameter==='all'&&e.duration.kind==='this_turn'&&e.ballOwner===null&&e.targets.length===1&&e.targets.every(r=>typeof r.id==='string'&&Number.isInteger(r.incarnation)))return;
@@ -58,13 +59,14 @@ function finishTurn(g) {
 function loss(g) { if(g.sharedRulesState){stored(g).effects=[];g.sharedRulesState.receipts=[];}g.sharedRulesPending=null;g.sharedRulesEvents=[]; }
 function permission(g,action) {
   const effects=stored(g).effects;for(const e of effects)admitEffect(e);
-  if(!effects.some(e=>['ban','keyword'].includes(e.kind)&&active(e,g)))return {allowed:true};
+  if(!effects.some(e=>['ban','invalid','keyword'].includes(e.kind)&&active(e,g)))return {allowed:true};
   const k=new Kernel({catalog:data.catalog,ruleIds:data.ruleIds,fingerprint:data.fingerprint,mode:'live'});
   k.state.turn={id:Math.max(1,g.turnNo),player:g.turnP?.idx??action.player,phase:phase[g.rulePhase]||'draw',step:'free'};
-  k.state.effects=effects.filter(e=>['ban','keyword'].includes(e.kind));return k.permission(action);
+  k.state.effects=effects.filter(e=>['ban','invalid','keyword'].includes(e.kind));return k.permission(action);
 }
 function endDrawPhase(g) {if(g.sharedRulesState)stored(g).effects=stored(g).effects.filter(e=>e.duration.kind!=='this_draw_phase');}
 function blockOrigins(g,p) {const counts={};if(g.turnP===p&&!p.ts.finished)for(const receipt of p.ts.blockEntryReceipts||[]){const z=p.ts.blockEntryOrigins?.[receipt]||'hand';counts[z]=(counts[z]||0)+1;}return counts;}
+function skillAllowed(g,p,code,key=null) {const profile=byShort[code]?.profiles[0];if(!profile)return false;return permission(g,{action:'use_skill',player:p.idx,origin:'skill',type:profile.variants[0].printed.type,name:norm(key?g.cardName(p,key):displayName(profile.variants[0].printed.name)),role:key==='block'?'center_blocker':key?.startsWith('side:')?'side_blocker':key||'guts',sourceZone:key||(profile.variants[0].printed.type==='event'?'event':'hand'),phaseTags:profile.activation?.activation_phases||[],icons:profile.printed_play_icons||profile.activation?.activation_phases||[]}).allowed;}
 function eventAllowed(g,p,code,timing) {const printed=library.card(code);return !!printed&&permission(g,{action:'play_event',player:p.idx,origin:'rule',phase:phase[timing]||phase[g.rulePhase]||'draw',icons:printed.activationPhases}).allowed;}
 function blockGroupAllowed(g,p,count) {const counts=blockOrigins(g,p);return permission(g,{action:'enter_character',player:p.idx,origin:'rule',role:'center_blocker',entryOrigin:'hand',entryCount:blockEntered(g,p)+count,entryCounts:{...counts,hand:(counts.hand||0)+count},name:'',printed:{position_tags:[],parameters:{receive:'dash'}}}).allowed;}
 function blockEntered(g,p) {return g.turnP===p&&!p.ts.finished?(p.ts.blockEntryReceipts?.length||0):0;}
@@ -244,6 +246,7 @@ function transaction(g,p,c,timing,notification=null) {
         const text=e.action==='play_event'?`不能使用具有 ${(s.play_icons_any||[]).map(p=>labels[p]||'抽牌').join('／')} 圖示的Event`:e.action==='add_hand'?(s.origins?.length===1&&s.origins[0]==='skill'?'不能以技能加入手牌':'抽牌階段不能抽牌或加入手牌'):s.max_count!=null?`${s.entry_origins?.includes('hand')?'從手牌':''}最多登場 ${s.max_count} 人攔網`:`${s.names?.map(displayName).join('／')||s.positions?.join('／')||`原始接球 ${s.printed_receive_gte} 以上角色`}${s.entry_origins?.includes('hand')?'不能從手牌':'不能'}登場${role}`;
         g.log(`效果：${g.players[e.actor].name}${period}，${text}。`);
       }
+      else if(e.kind==='invalid')g.log(`效果：${g.players[e.actor].name}${e.duration.kind==='next_opponent_turn'?'下個回合':'本回合'}，符合角色／名稱／圖示／關鍵字條件的技能失效；已結算效果保留。`);
       else if(e.kind==='protect')g.log('登場效果：這位角色本回合的數值不會被降低。');
       else if(e.kind==='keyword')g.log(`效果：${({doshat:'ドシャット',feint:'フェイント',a_pass:'Aパス',blockout:'ブロックアウト',feint_block_ban:'下回合禁止攔網'})[e.keyword]}${e.N?' '+e.N:''}。`);
       else if(e.kind==='watch')g.log(`效果：${g.players[e.actor].name}${e.duration.kind==='next_opponent_turn'?'的下個回合':'本回合'}，${({hand_added:'加牌',character_entry:'符合條件的角色登場',loss:'喊 Loss',block_success:'攔網成功',source_moved:'來源卡移動'})[e.event]}時結算後續效果。`);
@@ -396,6 +399,6 @@ async function outgoing(g,p,type,off){
  if(!p.ts.keywordOutgoing&&!stored(g).effects.some(e=>e.kind==='keyword'&&active(e,g)&&e.actor===p.idx&&['doshat','feint'].includes(e.keyword)))return {type,off};
  const result=await transaction(g,p,null,g.rulePhase||'atk',{events:[],outgoing:{kind:type,offense:off}}).run();p.ts.keywordResolved={type:result.kind,off:result.offense};return p.ts.keywordResolved;
 }
-const api={blockGroupAllowed,endDrawPhase,eventAllowed,entryNames,distinctNameOptions,outgoing,sourceMoved,drawn,judgment,flushHostEvents:flushHandEvents,permission,entryAllowed,blockEntered,charactersEntered,entryPreview,protectedParameter,handles,canPlay,resolve,assertReady,handAdded,legacyEffect,beginTurn,finishTurn,loss,approvals:[...approved]};
+const api={skillAllowed,blockGroupAllowed,endDrawPhase,eventAllowed,entryNames,distinctNameOptions,outgoing,sourceMoved,drawn,judgment,flushHostEvents:flushHandEvents,permission,entryAllowed,blockEntered,charactersEntered,entryPreview,protectedParameter,handles,canPlay,resolve,assertReady,handAdded,legacyEffect,beginTurn,finishTurn,loss,approvals:[...approved]};
 if(node)module.exports=api;else root.BreakRulesLegacy=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

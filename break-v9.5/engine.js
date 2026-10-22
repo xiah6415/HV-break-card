@@ -545,7 +545,7 @@ class Game {
     let c = await this.ask(p, { kind: 'receiver', prompt: `來球：${ball.type === 'serve' ? '發球' : ball.type === 'block' ? '攔網回球' : '攻擊'} ${off}。選擇接球角色`, ball, options: cs.map(x => ({ label: `${nm(x)}　接 ${this.rcvPreview(p, x)}`, card: x, value: x })) });
     await this.enterCharacter(p, 'receive', c); c=p.top('receive'); this.src = nm(c);
     let r = this.parameter(p,'receive','rcv') - (sharedRules.protectedParameter(this,p,'receive','rcv')?0:p.restrict.rcv_minus||0);
-    if (legacySkill(c) && c === 'PR-022' && ball.type !== 'block' && off <= 2) { p.ts.apass = 1; this.log('澤村：A 傳球(1)'); if (p.guts('receive') >= 1 && await this.yes(p, 'skill', '澤村：付 1 Guts 抽 1？', { card: c })) { await this.pay(p, 'receive', 1); this.sdraw(p, 1); } }
+    if (legacySkill(c) && c === 'PR-022' && sharedRules.skillAllowed(this,p,c,'receive') && ball.type !== 'block' && off <= 2) { p.ts.apass = 1; this.log('澤村：A 傳球(1)'); if (p.guts('receive') >= 1 && await this.yes(p, 'skill', '澤村：付 1 Guts 抽 1？', { card: c })) { await this.pay(p, 'receive', 1); this.sdraw(p, 1); } }
     p.ts.rcv = r; p.ts.receiver = c; p.ts.receiverRef = this.cardReference(p, 'receive');
     this.log(`${p.name} 接球 ${nm(c)}：${r} vs ${ball.off}`);
     await this.eventLoop(p, 'rcv', {});
@@ -560,7 +560,7 @@ class Game {
     await this.enterCharacter(p, 'toss', t); t=p.top('toss'); this.src = nm(t);
     if(p.ts.keywordJump==='end'){const out=await this.confirmTurnEnd(p,{type:'attack',off:p.ts.keywordOutgoing.offense});this.finishTurn(p);return out;}
     let toss = this.parameter(p,'toss','tos') + (p.ts.apass || 0);
-    if (legacySkill(t) && t === 'P01-006' && p.guts('toss') >= 2 && await this.yes(p, 'skill', '影山：付 2 Guts → 翻牌庫頂找日向/オープン，本回合日向攻擊 +2？', { card: t })) {
+    if (legacySkill(t) && t === 'P01-006' && sharedRules.skillAllowed(this,p,t,'toss') && p.guts('toss') >= 2 && await this.yes(p, 'skill', '影山：付 2 Guts → 翻牌庫頂找日向/オープン，本回合日向攻擊 +2？', { card: t })) {
       await this.pay(p, 'toss', 2); p.ts.hin = 2;
       await this.revealTop(p, '影山', top => isHin(top) && top !== 'PR-057' || top === 'P01-078');
     }
@@ -632,6 +632,7 @@ class Game {
         continue;
       }
       if (!T || !(T.includes(timing) || (drawWindow && T.includes('drw')))) continue;
+      if(!sharedRules.skillAllowed(this,p,c)){res.push({card:c,label:nm(c)+'（技能失效，僅放入Event區）'});continue;}
       if (p.ts.used[c] && ['P03-087', 'P04-088', 'P04-089'].includes(c)) continue;
       const ok = {
         'PR-029': () => this.skillHandAllowed(p) && p.drop.some(x => isHin(x) && x !== 'PR-057' || nm(x) === '影山 飛雄'),
@@ -665,7 +666,7 @@ class Game {
     if(!isC(c)&&!sharedRules.eventAllowed(this,p,c,timing))throw Error('目前禁止使用這張事件卡');
     if (this.mode === 'numeric' && library.permission(c)?.kind === 'unapproved') {
       if (!this.playable(p,timing).some(o=>o.card===c)) throw Error('此卡現在不能使用');
-      this.moveCode(p.hand,p.ev,c);this.log(`${p.name} 放入 ${nm(c)}：技能未自動化，請手動處理`,'ev');return;
+      this.moveCode(p.hand,p.ev,c);this.log(`${p.name} 放入 ${nm(c)}：${sharedRules.skillAllowed(this,p,c)?'技能未自動化，請手動處理':'技能已失效，不執行效果'}`,'ev');return;
     }
     if (sharedRules.handles(c)) return sharedRules.resolve(this, p, c, timing);
     if (!legacySkill(c)) throw Error('技能未獲自動結算核准');
@@ -680,6 +681,7 @@ class Game {
     }
     this.moveCode(p.hand, p.ev, c); p.ts.used[c] = 1;
     this.log(`${p.name} 打出 ${nm(c)}`, 'ev');
+    if(!sharedRules.skillAllowed(this,p,c)){this.log('技能已失效：僅放入Event區，不支付費用或執行效果。','warn');return;}
     switch (c) {
       case 'PR-029': {
         for (const want of [x => isHin(x) && x !== 'PR-057', x => nm(x) === '影山 飛雄']) {
@@ -801,7 +803,7 @@ const AI = {
           const t = x.value; const rest = p.hand.slice(); rest.splice(rest.indexOf(t), 1);
           let s = st(t, 'tos') * 3 - val(t) * 0.3;
           if (!g.legalEntryNames(p, 'toss', t).some(name => rest.some(a => isC(a) && st(a, 'atk') != null && entryNames(a).some(other => other !== name)))) s -= 50;
-          if (legacySkill(t) && t === 'P01-006' && p.guts('toss') + (p.area.toss.length ? 1 : 0) >= 2 && rest.some(a => HIN.has(a))) s += 8;
+          if (legacySkill(t) && t === 'P01-006' && sharedRules.skillAllowed(g,p,t,'toss') && p.guts('toss') + (p.area.toss.length ? 1 : 0) >= 2 && rest.some(a => HIN.has(a))) s += 8;
           if (t === 'P01-033' && rest.filter(isA).length >= 2) s += 3;
           if (['日向 翔陽', '岩泉 一'].includes(nm(t))) s -= 10;
           return s;

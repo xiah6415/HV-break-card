@@ -24,7 +24,16 @@ function fixture(card,p,phase,scenario,player,definitions=catalog){
   const seeded=seedConditions(k,{catalog:definitions,profile:p,source:id,player,phase,expanded:scenario.expanded});
   if(scenario.expanded)Object.assign(seeded,expandFixture(k,{catalog:definitions,profile:p,source:id,player,phase,focus:scenario.focus}));
   if(scenario.noAdd)k.resolveProgram({kind:'ban_action',actor:'self',action:'add_hand',scope:{origins:['skill']},duration:'this_turn'},player);
-  return {k,id,...seeded};
+  // Thresholds reached after entry may need a bonus from another effect.
+  // Apply it to the real new incarnation, rather than changing printed stats.
+  const I=require('./node-inventory'),nodes=I.nodes(p),entryBoost=[];
+  for(const condition of nodes.filter(n=>n.kind==='compare'&&/^source.current_(attack|toss|receive|block|serve)$/.test(n.field)&&n.op==='gte')){
+   if(scenario.focus?.value===false&&scenario.focus.node_id===condition.node_id)continue;
+   const parameter=condition.field.slice('source.current_'.length),earlier=nodes.filter(n=>n.kind==='numeric'&&n.target==='source'&&n.parameter===parameter&&n.operation==='add'&&typeof n.value==='number'&&n.node_id<condition.node_id).reduce((sum,n)=>sum+n.value,0),value=Math.max(0,condition.value-p.variants[0].printed.parameters[parameter]-earlier);
+   if(value>0)entryBoost.push({parameter,value});
+  }
+  if(entryBoost.length){const enter=k._enter;k._enter=function(target,...args){const ref=enter.call(this,target,...args);if(target===id&&ref)for(const bonus of entryBoost)this._numeric({kind:'numeric',target:'source',target_scope:{mode:'single',binding:'reference',membership:'snapshot_on_resolution'},operation:'add',...bonus},this._context(id,player));return ref;};}
+  return {k,id,...seeded,entryBoost};
  }
  const printed=p.variants[0].printed;
  const pick=(role,exclude=[])=>neutral.find(c=>{const v=c.profiles[0].variants[0].printed;return ![printed.name,...exclude].includes(v.name)&&v.parameters[role]!=='dash'&&printed.affiliation_tags.some(t=>v.affiliation_tags.includes(t));})||neutral.find(c=>{const v=c.profiles[0].variants[0].printed;return ![printed.name,...exclude].includes(v.name)&&v.parameters[role]!=='dash';});

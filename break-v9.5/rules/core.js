@@ -39,6 +39,14 @@ function validateBan(n) {
   }
   return true;
 }
+function validateInvalid(n) {
+ need(['self','opponent','controller','owner'].includes(n.actor)&&['this_turn','next_opponent_turn'].includes(n.duration),'Unsupported invalidation parameters');
+ const check=s=>{need(s&&typeof s==='object'&&!Array.isArray(s)&&Object.keys(s).length,'Invalid skill selector');for(const[key,v]of Object.entries(s)){
+  if(key==='union_with'){check(v);continue;}if(key==='type'){need(['character','event'].includes(v),'Invalid skill type');continue;}
+  const values={roles:['character','receive','toss','attack','serve','block','center_blocker','side_blocker'],phase_tags:['serve','block','draw','receive','toss','attack'],source_zones:['hand','court','serve','block','receive','toss','attack','drop','event'],play_icons_any:['serve','block','draw','receive','toss','attack'],keyword_families:['one_touch','doshat']};
+  need(key==='names'||values[key],'Unsupported skill selector '+key);need(Array.isArray(v)&&v.length&&v.every(x=>typeof x==='string'&&(key==='names'||values[key].includes(x))),'Invalid skill selector '+key);
+ }};check(n.selector);return true;
+}
 class Kernel {
   constructor({catalog, ruleIds, fingerprint, mode='live', choose, state, practiceDrawBeforeReceive=false}={}) {
     need(catalog && Array.isArray(catalog.cards) && typeof fingerprint==='string','Catalog and fingerprint required');
@@ -220,7 +228,7 @@ class Kernel {
   }
   permission(action) {
     need([0,1].includes(action.player) && ['rule','skill'].includes(action.origin),'Permission context incomplete');
-    need(['add_hand','play_event','enter_character','use_skill'].includes(action.action),'Unknown permission action');
+    need(['add_hand','play_event','enter_character','use_skill','use_keyword'].includes(action.action),'Unknown permission action');
     action={phase:this.state.turn.phase,...action};
     for (const e of this.state.effects) if (this.active(e) && e.actor===action.player) {
       if(e.kind==='keyword'&&e.keyword==='feint_block_ban'&&action.action==='enter_character'&&this.roleMatches(action.role,'block'))return {allowed:false,layer:'resolve_step',effect:e.id};
@@ -228,9 +236,11 @@ class Kernel {
         if ('max_count' in e.scope) {const count=e.scope.entry_origins&&action.entryCounts?e.scope.entry_origins.reduce((n,z)=>n+(action.entryCounts[z]||0),0):action.entryCount;if(!(count>e.scope.max_count))continue;}
         return {allowed:false,layer:action.action==='play_event' ? 'play_card':'resolve_step',effect:e.id};
       }
-      if (e.kind==='invalid' && action.action==='use_skill') {
+      if (e.kind==='invalid' && ['use_skill','use_keyword'].includes(action.action)) {
         const sel=e.selector;
         const match=s=>{
+          if(s.union_with&&match(s.union_with))return true;
+          if(s.keyword_families){if(!action.keywordFamily||!s.keyword_families.includes(action.keywordFamily))return false;}else if(action.action==='use_keyword')return false;
           for(const key of ['type','name','role','phaseTags','sourceZone','icons']) {
             const used={type:'type',name:'names',role:'roles',phaseTags:'phase_tags',sourceZone:'source_zones',icons:'play_icons_any'}[key];
             if(s[used])need(action[key]!==undefined,'Skill context missing '+key);
@@ -240,8 +250,7 @@ class Kernel {
           (!s.phase_tags || s.phase_tags.every(x=>action.phaseTags.includes(x))) &&
           (!s.source_zones || s.source_zones.includes(action.sourceZone)) &&
           (!s.play_icons_any || s.play_icons_any.some(x=>action.icons.includes(x)));};
-        need(!sel.keyword_families && !sel.union_with?.keyword_families,'Keyword skill selectors not implemented');
-        if (match(sel) || sel.union_with && match(sel.union_with)) return {allowed:false,layer:'use_skill',effect:e.id};
+        if (match(sel)) return {allowed:false,layer:'use_skill',effect:e.id};
       }
     }
     return {allowed:true,layer:action.action==='use_skill'?'use_skill':'resolve_step'};
@@ -541,7 +550,7 @@ class Kernel {
       if (n.filters) for (const k of Object.keys(n.filters)) need(FILTERS.has(k),'Unsupported filter '+k);
       if (n.target_scope) need(n.target_scope.membership==='snapshot_on_resolution','Target membership is not supported');
       if(n.destination)need((!n.destination.includes('choose_deck') || ['choose_deck_top_or_bottom','self.choose_deck_top_or_bottom'].includes(n.destination)) && !n.destination.endsWith('.deck_top'),'Destination mechanism not implemented');
-      if(n.kind==='invalidate_skill')need(!n.selector.keyword_families && !n.selector.union_with?.keyword_families,'Keyword invalidation not implemented');
+      if(n.kind==='invalidate_skill')validateInvalid(n);
       if(n.kind==='ban_action')validateBan(n);
       if(n.kind==='formal_declaration_cost')need(n.must_be_complete===true&&n.performed_for_this_skill_only===true&&Array.isArray(n.steps)&&n.steps.length>0,'Unsupported declaration cost parameters');
       if(n.kind==='mill')need(['self','opponent'].includes(n.actor)&&['exact','upto'].includes(n.count_mode)&&Number.isInteger(n.count)&&n.count>=0&&n.bind==='milled','Unsupported mill parameters');
@@ -593,6 +602,8 @@ class Kernel {
         if(node.count_mode==='one_of_exact'){const counts=node.allowed_counts.filter(n=>n<=ids.length);if(!counts.length)throw new Unpayable();n=this._decide('payment_count',ctx,counts);legal(counts.includes(n),'Invalid Guts amount');}
         if(ids.length<n)throw new Unpayable();const paid=this._selection(ids,n,ctx,'guts');for(const id of paid)this._move(id,this.card(id).owner,'drop',ctx);ctx.bind.paid=paid;ctx.paid.push(...paid);return paid.length>0; }
       case 'payment_branch': {
+        const effects=[];walk(node.then,n=>{if(KINDS.has(n.kind)&&!['sequence','conditional'].includes(n.kind))effects.push(n);});
+        if(effects.length&&effects.every(n=>n.kind==='keyword'&&!this._keywordAllowed(ctx,n.keyword)))return false;
         if(!this._paymentAvailable(node.payment,ctx))return false;
         // Warn without forbidding a human choice. A serving/blocking ball has
         // no attack-offense field; do not confuse an old attack card with it.
@@ -626,7 +637,9 @@ class Kernel {
       default: throw new NeedsReview('Unsupported operation '+node.kind);
     }
   }
+  _keywordAllowed(ctx,keywordFamily) {return this.permission({action:'use_keyword',player:ctx.controller,origin:'skill',keywordFamily}).allowed;}
   _keyword(node,ctx) {
+    if(!this._keywordAllowed(ctx,node.keyword))return false;
     const p=ctx.controller,n=node.N,kind=node.keyword,scope={mode:'single',binding:'reference',membership:'snapshot_on_resolution'};
     if(kind==='one_touch'){
       need(this.state.turn.phase==='block'&&this.state.ball?.kind==='attack','One touch requires an incoming attack in block phase');
@@ -919,6 +932,6 @@ class Kernel {
     need(['rally','loss_triggers','interval'].includes(this.state.stage),'Invalid rally stage');
     const seen=new Set();for(const [zone,ids] of Object.entries(this.state.zones))for(const id of ids){need(!seen.has(id),'Physical card appears twice');seen.add(id);const c=this.card(id);need(c.zone===zone&&c.id===id&&[0,1].includes(c.owner)&&Number.isInteger(c.incarnation)&&c.incarnation>=0&&this.profiles[c.profileId],'Card identity/zone mismatch');}need(seen.size===Object.keys(this.state.cards).length,'Card conservation failed'); }
 }
-const api={validateBan,Kernel,distinctNameOptions,NeedsReview,IllegalAction,capabilities:{status:'HOST_CONTROLLER_REQUIRED',nodes:[...KINDS],keywords:['one_touch','doshat','feint','blockout','a_pass','two_attack','back_attack','multi_attack'],defaultCatalogLiveCardApprovals:0}};
+const api={validateInvalid,validateBan,Kernel,distinctNameOptions,NeedsReview,IllegalAction,capabilities:{status:'HOST_CONTROLLER_REQUIRED',nodes:[...KINDS],keywords:['one_touch','doshat','feint','blockout','a_pass','two_attack','back_attack','multi_attack'],defaultCatalogLiveCardApprovals:0}};
 if(typeof module!=='undefined')module.exports=api;else root.BreakRulesCore=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
