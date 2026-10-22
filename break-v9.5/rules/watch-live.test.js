@@ -8,7 +8,7 @@ let cases=0;
   for(const w of watches)for(const expired of [false,true])for(const historical of w.event==='source_moved'?[false,true]:[false]){
    const optionalGuard=I.nodes(p).find(n=>n.kind==='conditional'&&n.condition.field==='optional.performed'&&w.node_id.startsWith(n.then.node_id+'.'));
    const mode=I.nodes(p).find(n=>n.kind==='choose_modes'&&n.options.some(o=>w.node_id.startsWith(o.node_id+'.'))),modeIndex=mode?.options.findIndex(o=>w.node_id.startsWith(o.node_id+'.')),gate=I.nodes(p).find(n=>n.kind==='conditional'&&n.condition.field==='phase'&&w.node_id.startsWith(n.then.node_id+'.'));
-   const played=p.activation.trigger?.event==='event_played',covered=p.activation.trigger?.event==='source_covered',observer=covered||p.activation.trigger?.event==='character_entry',phase=gate?.condition.value||(played?p.activation.trigger.source_role:covered?p.activation.trigger.source_role:observer?(p.activation.trigger.filters.role_any?.[0]||p.activation.trigger.filters.role):p.activation.skill_type==='passive'?p.activation.trigger.destination_any[0]:p.activation.activation_phases[0]),seeded=played?require('./event-played-tests').setup(catalog,card):covered?require('./covered-tests').setup(catalog,card):observer?require('./entry-observer-tests').setup(catalog,card):fixture(card,p,phase,{rich:true,conditioned:true,expanded:true,max:true,key:'positive'},0,catalog),{k,id,entryReason='rule'}=seeded;
+   const played=p.activation.trigger?.event==='event_played',covered=p.activation.trigger?.event==='source_covered',observer=covered||p.activation.trigger?.event==='character_entry',phase=gate?.condition.value||(played?p.activation.trigger.source_role:covered?p.activation.trigger.source_role:observer?(p.activation.trigger.filters.role_any?.[0]||p.activation.trigger.filters.role):p.activation.skill_type==='passive'?p.activation.trigger.destination_any[0]:p.activation.activation_phases[0]),seeded=I.dependencies(card).includes('phase_jump')?require('./phase-jump-tests').setup(catalog,card):played?require('./event-played-tests').setup(catalog,card):covered?require('./covered-tests').setup(catalog,card):observer?require('./entry-observer-tests').setup(catalog,card):fixture(card,p,phase,{rich:true,conditioned:true,expanded:true,max:true,key:'positive'},0,catalog),{k,id,entryReason='rule'}=seeded;
    const player=w.actor==='opponent'?1:0;let area,def,target,second;
    if(w.event==='character_entry'){
     const f=w.filters;area=f.role==='side_blocker'?'side:0':['block','center_blocker'].includes(f.role)?'block':f.role&&f.role!=='character'?f.role:'attack';
@@ -32,6 +32,7 @@ let cases=0;
     else{k.enter(id,phase,{reason:entryReason});await g.enterCharacter(g.players[0],phase,code);}
    }
    else{p.activation.skill_type==='event'?k.playEvent(id):k.useSkill(id);await g.resolve(g.players[0],code,g.rulePhase);}
+   if(k.state.turn.step!=='free')k.advancePhase(k.state.turn.phase);
    const owner=g.players[0];if(!['source_moved','block_success'].includes(w.event)){const zone=k.card(id).zone.split('.')[1];k._atomic(()=>k._move(id,0,'drop',k._context(id,0)));g.moveCode(zone==='event'?owner.ev:owner[zone]||owner.area[zone],owner.drop,code);}
    const cleanSides=who=>{for(const z of ['side:0','side:1'])for(const card of [...k.zone(who,z)])k._atomic(()=>k._move(card,who,'drop',k._context(card,who)));if(g.players[who].ts.sides?.length)g.cleanupSides(g.players[who]);};
    if(w.duration==='next_opponent_turn'){cleanSides(0);k.endTurn();k.beginTurn(1);g.finishTurn(owner);g.beginTurn(g.players[1]);}
@@ -54,7 +55,7 @@ let cases=0;
    g.sharedRulesState=JSON.parse(JSON.stringify(g.sharedRulesState));B.assertReady(g);cases++;
   }
  }
- assert.equal(cases,72);
+ assert.equal(cases,76);
  const g=new E.Game({seed:7,decks:['k1014','seijoh'],agents:[E.AI,E.AI]}),p=g.players[0];g.beginTurn(p);
  const state=g.cardSnapshot(),id=state.zones['0.deck'].at(-1);g.moveCard(p.deck,p.ev,p.deck.length-1);
  const base={kind:'watch',actor:0,source:{id,incarnation:0},duration:{kind:'this_turn',turn:g.turnNo}};

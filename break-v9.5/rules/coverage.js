@@ -63,7 +63,7 @@ function buildCoverage(){
     if(!family)host('triggers','watch:'+n.event+':'+n.duration,at,'尚未接入host通知／持久化的watch族');
    }
    if(n.kind==='enter_self')host('movement','skill_entry',at,'需接新增角色slot／數值、技能登場與觸發流程');
-   if(n.kind==='phase_jump')host('keywords','phase_transition',at,'核心支援的跳階段仍需host回合控制器銜接');
+   // self/draw/start phase jumps are validated by core and the actual blockTurn flow.
   },rootAt);
   if(gate&&!gate.passed&&!reasons.some(r=>r.layer==='core'||r.layer==='review'))core('other','admission:'+gate.message,'profile',gate.message);
   const isApproved=admitted.has(p.profile_id);if(isApproved&&reasons.length)throw Error('Approved profile unexpectedly blocked: '+p.profile_id+' '+JSON.stringify(reasons));

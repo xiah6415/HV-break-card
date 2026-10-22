@@ -583,6 +583,7 @@ class Kernel {
       if(n.kind==='formal_declaration_cost')need(n.must_be_complete===true&&n.performed_for_this_skill_only===true&&Array.isArray(n.steps)&&n.steps.length>0,'Unsupported declaration cost parameters');
       if(n.kind==='exchange')need(Array.isArray(n.sides)&&n.sides.length===2&&n.sides.every(x=>x&&x.kind==='selector')&&n.count_each===1&&n.count_mode==='upto'&&n.requires_both===true&&n.atomic_movement===true,'Unsupported exchange parameters');
       if(n.kind==='each_player_optional_draw')need(Number.isInteger(n.count)&&n.count>0&&n.count_mode==='exact_or_zero'&&n.chooser==='each_affected_player','Unsupported optional draw parameters');
+      if(n.kind==='phase_jump')need(n.actor==='self'&&n.destination==='draw'&&n.position==='start'&&n.skip_current===true,'Unsupported phase jump parameters');
       if(n.kind==='mill')need(['self','opponent'].includes(n.actor)&&['exact','upto'].includes(n.count_mode)&&Number.isInteger(n.count)&&n.count>=0&&n.bind==='milled','Unsupported mill parameters');
       if(n.kind==='optional')need(n.bind==='optional'&&[undefined,'self','opponent'].includes(n.actor)&&n.then?.kind==='sequence','Unsupported optional parameters');
       if(n.kind==='choose_modes')need(n.count===1&&n.required===true&&Array.isArray(n.options)&&n.options.length>0&&n.options.every(o=>o&&KINDS.has(o.kind)),'Unsupported mode parameters');
