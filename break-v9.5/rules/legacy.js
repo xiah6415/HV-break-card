@@ -288,7 +288,7 @@ function transaction(g,p,c,timing,notification=null) {
     const payment=req.payment?.steps?.[0],isPassive=byShort[short[req.source]]?.profiles[0].activation?.skill_type==='passive';
     const zoneLabel=z=>({serve:'發球區',receive:'接球區',toss:'舉球區',attack:'攻擊區','attack.guts':'攻擊區Guts','receive.guts':'接球區Guts',hand:'手牌',event:'Event區',drop:'棄牌區',deck:'牌庫',block:'攔網角色',court:'場上角色',deck_bottom:'牌庫底',choose_deck_top_or_bottom:'牌庫頂或底'}[z]||z);
     const handDiscard=payment?.pool?.zone==='hand'&&payment.count===1&&payment.destination==='owner.drop';
-    const paymentPrompt=(payment?.kind==='pay_guts'?`是否支付 ${payment.count} Guts，發動登場效果？`:handDiscard?(isPassive?'是否棄 1 張手牌，發動登場效果？':'是否支付棄牌費用，對同一目標追加效果？'):payment?.kind==='mill'?`是否將牌庫頂 ${payment.count_mode==='upto'?'最多 ':''}${payment.count} 張送到棄牌區，發動效果？`:payment?.kind==='move'?`是否將 ${payment.count} 張${zoneLabel(payment.pool.zone)}放到${zoneLabel(payment.destination.split('.').slice(1).join('.'))}，發動效果？`:'是否支付費用，追加效果？')+(req.ineffectiveReason?' ⚠ '+req.ineffectiveReason:'');
+    const paymentPrompt=(payment?.kind==='move_self'?'是否將這張已被覆蓋的卡送到棄牌區，發動效果？':payment?.kind==='pay_guts'?`是否支付 ${payment.count} Guts，發動登場效果？`:handDiscard?(isPassive?'是否棄 1 張手牌，發動登場效果？':'是否支付棄牌費用，對同一目標追加效果？'):payment?.kind==='mill'?`是否將牌庫頂 ${payment.count_mode==='upto'?'最多 ':''}${payment.count} 張送到棄牌區，發動效果？`:payment?.kind==='move'?`是否將 ${payment.count} 張${zoneLabel(payment.pool.zone)}放到${zoneLabel(payment.destination.split('.').slice(1).join('.'))}，發動效果？`:'是否支付費用，追加效果？')+(req.ineffectiveReason?' ⚠ '+req.ineffectiveReason:'');
     const sourceName=req.kind==='trigger_order'?'效果':byShort[short[req.source]]?.display_name||g.src||'效果';
     const opts=available.map(answer=>{
       if(req.kind==='target') {
@@ -369,7 +369,8 @@ function protectedParameter(g,p,key,param) {
 }
 function protectedBall(g,owner) {return stored(g).effects.some(e=>e.kind==='protect'&&active(e,g)&&e.ballOwner===owner&&['all','offense'].includes(e.parameter));}
 function entryPreview(g,p,code,area,param) {
-  if(!stored(g).effects.some(e=>active(e,g)&&(e.kind==='watch'&&e.event==='character_entry'&&e.actor===p.idx||e.kind==='protect'&&e.selector&&(e.selector.actor==='opponent'?1-e.controller:e.controller)===p.idx)))return {value:byShort[code].profiles[0].variants[0].printed.parameters[params[param]],protected:false};
+  const covering=!!p.top(area)&&handles(p.top(area))&&byShort[p.top(area)].profiles[0].activation.trigger?.event==='source_covered';
+  if(!covering&&!stored(g).effects.some(e=>active(e,g)&&(e.kind==='watch'&&e.event==='character_entry'&&e.actor===p.idx||e.kind==='protect'&&e.selector&&(e.selector.actor==='opponent'?1-e.controller:e.controller)===p.idx)))return {value:byShort[code].profiles[0].variants[0].printed.parameters[params[param]],protected:false};
   return transaction(g,p,null,g.rulePhase||'drw',{events:[]}).entryPreview(code,area,params[param]);
 }
 async function charactersEntered(g,p,entries) {
@@ -378,16 +379,18 @@ async function charactersEntered(g,p,entries) {
   const physical=identity.ensure(g);for(const {key,origin='hand',reason='rule',coveredCharacter=null,entrySkillName=null}of entries){const ref=g.roleReference(p,key);if(!ref)throw Error('Missing actual entry reference');const card=physical.cards[ref.id];if(card.entryIncarnation!==ref.incarnation||card.entryTurn!==g.turnNo)Object.assign(card,{entryIncarnation:ref.incarnation,entryOrigin:origin,entryReason:reason,entryTurn:g.turnNo,coveredCharacter:copy(coveredCharacter),entrySkillName});}
   const keywordEntry=stored(g).effects.some(e=>e.kind==='keyword'&&active(e,g)&&e.actor===p.idx&&['a_pass','blockout'].includes(e.keyword));
   const passive=entries.some(({key})=>{const code=g.courtTargets(p).find(t=>t.key===key)?.card;return byShort[code]?.profiles[0].activation?.skill_type==='passive';});
+  const covered=entries.some(({key,coveredSource})=>{const ids=physical.zones[p.idx+'.'+key],id=coveredSource?.id??ids?.at(-2);return id&&handles(physical.cards[id].code)&&byShort[physical.cards[id].code].profiles[0].activation.trigger?.event==='source_covered';});
   const observer=g.players.some(q=>g.courtTargets(q).some(t=>handles(t.card)&&byShort[t.card].profiles[0].activation.trigger?.event==='character_entry'));
-  if(!passive&&!observer&&!keywordEntry&&!stored(g).effects.some(e=>active(e,g)&&(e.kind==='watch'&&e.event==='character_entry'&&e.actor===p.idx||e.kind==='protect'&&e.selector&&(e.selector.actor==='opponent'?1-e.controller:e.controller)===p.idx)))return;
+  if(!passive&&!covered&&!observer&&!keywordEntry&&!stored(g).effects.some(e=>active(e,g)&&(e.kind==='watch'&&e.event==='character_entry'&&e.actor===p.idx||e.kind==='protect'&&e.selector&&(e.selector.actor==='opponent'?1-e.controller:e.controller)===p.idx)))return;
   // Payments and draws change move revision; a repeated entry is still the same role instance.
   identity.ensure(g);
-  for(const {key,origin='hand',reason='rule',coveredCharacter=null,entrySkillName=null,entry_keyword_family=null} of entries) {
+  for(const {key,origin='hand',reason='rule',coveredCharacter=null,coveredSource=null,entrySkillName=null,entry_keyword_family=null} of entries) {
     const character=g.roleReference(p,key),receipt=`entry:${g.turnNo}:${p.idx}:${character.id}:${character.incarnation}:${key}`;
     if(stored(g).receipts.includes(receipt)||g.sharedRulesEvents?.some(e=>e.receipt===receipt))continue;
     const role=key==='block'?'center_blocker':key.startsWith('side:')?'side_blocker':key;
+    const previous=coveredSource?.id??physical.zones[p.idx+'.'+key]?.at(-2),coverage=previous?{id:previous,incarnation:physical.cards[previous].incarnation}:null;
     const passiveSources=g.players.flatMap(q=>g.courtTargets(q).filter(t=>handles(t.card)&&byShort[t.card].profiles[0].activation.trigger?.event==='character_entry').map(t=>({source:g.roleReference(q,t.key),role:t.key==='block'?'center_blocker':t.key.startsWith('side:')?'side_blocker':t.key})));
-    (g.sharedRulesEvents ||= []).push({type:'character_entry',player:p.idx,card:character.id,character,role,origin,reason,receipt,coveredCharacter,entrySkillName,entry_keyword_family,passiveSources,effectiveName:norm(g.cardName(p,key))});
+    (g.sharedRulesEvents ||= []).push({type:'character_entry',player:p.idx,card:character.id,character,role,origin,reason,receipt,coveredCharacter,coveredSource:coverage,coveredRole:coverage?role:null,entrySkillName,entry_keyword_family,passiveSources,effectiveName:norm(g.cardName(p,key))});
   }
   if(!g.sharedRulesDepth)return flushHandEvents(g);
 }

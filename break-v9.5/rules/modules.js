@@ -24,6 +24,7 @@ completed.push({id:'optional',test:require('./optional-node-tests').testOptional
 completed.push(...require('./claude-nodes').completed);
 completed.push({id:'protect_numeric_decrease',test:require('./protect-node-tests').testProtect});
 function testCard(catalog,card){
+ if(card.profiles[0].activation.trigger?.event==='source_covered')return require('./covered-tests').testCoveredCard(catalog,card);
  if(I.dependencies(card).includes('optional'))return require('./optional-node-tests').testOptionalCard(catalog,card);
  if(I.dependencies(card).includes('choose_modes'))return require('./mode-node-tests').testModeCard(catalog,card);
  if(card.profiles[0].formal_cost)return require('./formal-node-tests').testFormalCard(catalog,card);
@@ -66,6 +67,7 @@ function testModules(catalog){
  for(const card of I.scope(catalog)){
   if(!eligible(card))continue;
   testCard(catalog,card);
+  if(card.profiles[0].activation.trigger?.event==='source_covered'){cards[I.short(card.card_no)]={profileId:card.profiles[0].profile_id,modules:I.dependencies(card)};continue;}
   if(I.dependencies(card).includes('protect_numeric_decrease'))require('./protect-node-tests').testProtectCard(catalog,card);
   if(I.dependencies(card).includes('invalidate_skill'))require('./invalid-node-tests').testInvalidCard(catalog,card);
   if(I.dependencies(card).includes('ban_action'))require('./ban-node-tests').testBanCard(catalog,card);

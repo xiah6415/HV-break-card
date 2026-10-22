@@ -614,7 +614,7 @@ class Kernel {
       case 'draw_to_hand_size': { const player=this.owner(node.actor,ctx);ctx.bind.drawn=this._draw(player,Math.max(0,node.hand_size-this.zone(player,'hand').length),ctx);return ctx.bind.drawn.length>0; }
       case 'move': case 'retrieve': return this._moveSelected(node,ctx);
       case 'move_self': { const id=ctx.source.id, dest=this._destination(node.destination,id,ctx);
-        if(this.card(id).incarnation!==ctx.source.incarnation||this.card(id).zone===dest.player+'.'+dest.zone){if(ctx.inPayment)throw new Unpayable();ctx.bind[node.bind||'moved']=[];return false;}
+        if(this.card(id).incarnation!==ctx.source.incarnation||this.card(id).zone===dest.player+'.'+dest.zone||ctx.inPayment&&this.profile(id).activation?.trigger?.event==='source_covered'&&(!COURT.includes(this.card(id).zone.split('.')[1])||this.role(id)!=='guts')){if(ctx.inPayment)throw new Unpayable();ctx.bind[node.bind||'moved']=[];return false;}
         if(dest.zone==='hand'&&!this._handAllowed(dest.player,ctx)){if(ctx.inPayment)throw new Unpayable();ctx.bind.moved=[];return false;}
         this._move(id,dest.player,dest.zone,ctx,node.reason);if(dest.bottom){const d=this.zone(dest.player,'deck');d.unshift(d.pop());}ctx.bind.moved=[id];if(ctx.inPayment)ctx.paid.push(id);
         if(dest.zone==='hand')this._emit({type:'hand_added',player:dest.player,card:id,operation:'add_hand'});return true; }
@@ -791,7 +791,7 @@ class Kernel {
       if(e.remaining!==null)e.remaining--;
       this.state.queue.push({id:this.id('q'),controller:e.controller,source:e.source,event,program:clone(e.then),generated:true,window:event.window});
     }
-    if(event.type==='character_entry')this._entryObservers(event);
+    if(event.type==='character_entry'){this._entryObservers(event);this._coveredObserver(event);}
   }
   _entryObservers(event) {
     const sources=event.passiveSources??[0,1].flatMap(player=>this.court(player).map(id=>({source:this.reference(id),role:this.role(id)})));
@@ -805,6 +805,14 @@ class Kernel {
       if(!this._skillAllowed(ctx,p))continue;
       this.state.queue.push({id:this.id('q'),controller:c.owner,source:clone(source),event:clone(event),program:p.program,profileId:p.profile_id,generated:false,window:event.window});
     }
+  }
+  _coveredObserver(event) {
+    const source=event.coveredSource;if(!source||source.id===event.card)return;
+    const c=this.card(source.id),p=this.profile(source.id),t=p.activation?.trigger;
+    if(!p.program||t?.event!=='source_covered'||this.mode==='live'&&!p.runtime_approved)return;
+    if(c.owner!==event.player||!this.roleMatches(event.coveredRole,t.source_role)||!this.matches(event.card,t.filters||{},{controller:c.owner},event))return;
+    this._admit(p);
+    this.state.queue.push({id:this.id('q'),controller:c.owner,source:clone(source),event:clone(event),program:p.program,profileId:p.profile_id,generated:false,covered:true,window:event.window});
   }
   _enqueuePassive(id,event) {
     const p=this.profile(id),a=p.activation;if(!p.program || a?.skill_type!=='passive' || a.trigger?.event!=='self_entry')return;
@@ -822,7 +830,7 @@ class Kernel {
         const own=this.state.queue.filter(q=>q.controller===player);
         const id=own.length===1?own[0].id:this._decide('trigger_order',{controller:player,source:null},own.map(q=>q.id));
         legal(own.some(q=>q.id===id),'Invalid trigger order');const index=this.state.queue.findIndex(q=>q.id===id),job=this.state.queue.splice(index,1)[0];
-        if(!job.generated && (!this.state.cards[job.source.id] || ['hand','deck','sets'].includes(this.card(job.source.id).zone.split('.')[1])))continue;
+        if(!job.generated && !job.covered && (!this.state.cards[job.source.id] || ['hand','deck','sets'].includes(this.card(job.source.id).zone.split('.')[1])))continue;
         const ctx=this._context(job.source?.id,job.controller,job.event);ctx.source=job.source;
         if(!job.generated && !this._skillAllowed(ctx,this.profiles[job.profileId]))continue;
         this.state.events.push({type:'resolve_trigger',id:job.id,controller:job.controller,generated:job.generated});
@@ -833,13 +841,16 @@ class Kernel {
   }
   _skillAllowed(ctx,p) {
     const id=ctx.source.id,c=this.card(id),a=p.activation;
+    // A covered source is Guts, not a character whose skill can be invalidated.
+    if(a.trigger?.event==='source_covered')return true;
     if(this.state.locks.some(l=>l.player===ctx.controller&&l.turn===this.state.turn.id&&l.name===this.effectiveName(id)))return false;
     return this.permission({action:'use_skill',player:ctx.controller,origin:'skill',role:this.role(id),name:this.effectiveName(id),
       phaseTags:a.activation_phases,sourceZone:c.zone.split('.')[1],icons:a.activation_phases,type:c.printed.type}).allowed;
   }
   _admit(p) { need(p?.program && p.activation,'Skill profile required');need(this.mode==='sandbox' || p.runtime_approved,'Card not approved for live execution');need(!p.flags?.some(f=>['TARGET_MEMBERSHIP_UNRESOLVED','OFFICIAL_TEXT_VARIANTS_PRESERVED','SHARED_MECHANISM_EXTENSION_NEEDS_CONFIRMATION','OPTIONAL_EXACT_PAYMENT_BRANCH_SCENARIO_REVIEW'].includes(f)),'Profile requires ruling review');
-    if(p.activation.skill_type==='passive')need(['self_entry','character_entry'].includes(p.activation.trigger?.event),'Non-entry passive triggers not implemented');
+    if(p.activation.skill_type==='passive')need(['self_entry','character_entry','source_covered'].includes(p.activation.trigger?.event),'Non-entry passive triggers not implemented');
     if(p.activation.trigger?.event==='character_entry'){const t=p.activation.trigger;need(t.source_role_checkpoint==='at_trigger'&&['self','opponent'].includes(t.actor)&&[null,'serve','receive','toss','attack','block'].includes(t.source_role)&&JSON.stringify(p.activation.source_zones)==='["court"]','Unsupported character-entry trigger');for(const key of Object.keys(t.filters||{}))need(FILTERS.has(key),'Unsupported entry filter '+key);}
+    if(p.activation.trigger?.event==='source_covered'){const t=p.activation.trigger;need(t.actor==='self'&&t.source_role_checkpoint==='before_coverage'&&['serve','receive','toss','attack','block'].includes(t.source_role)&&JSON.stringify(p.activation.source_zones)==='["court"]','Unsupported coverage trigger');for(const key of Object.keys(t.filters||{}))need(FILTERS.has(key),'Unsupported coverage filter '+key);}
     this.preflight(p.program);if(p.formal_cost)this.preflight(p.formal_cost); }
   _formalCost(node,ctx) {
     const previous=ctx.inPayment;ctx.inPayment=true;ctx.paid=[];ctx.bind.paid=[];
@@ -902,11 +913,11 @@ class Kernel {
     legal(allowed,'Entry restriction');
     if(p.activation?.skill_type==='passive')this._admit(p);
     const sourceZone=c.zone.split('.')[1], entryOrigin=COURT.includes(sourceZone)&&this.role(id)==='guts'?'guts':sourceZone;
-    const covered=this.top(player,dest);c.coveredCharacter=covered?{effective_name:this.effectiveName(covered),tags:clone(this.card(covered).printed.affiliation_tags),positions:clone(this.card(covered).printed.position_tags)}:null;
+    const covered=this.top(player,dest),coveredRole=covered?this.role(covered):null;c.coveredCharacter=covered?{effective_name:this.effectiveName(covered),tags:clone(this.card(covered).printed.affiliation_tags),positions:clone(this.card(covered).printed.position_tags)}:null;
     c.entrySkillName=origin==='skill'&&ctx.source?this.effectiveName(ctx.source.id):null;
     this._move(id,player,dest,ctx,'explicit_entry');this._applyEntryName(id,entryName,ctx);
     c.entryOrigin=entryOrigin;c.entryReason=origin==='skill'?'skill':'rule';c.entryTurn=this.state.turn.id;
-    const event={type:'character_entry',player,card:id,character:this.reference(id),role:this.role(id),origin:entryOrigin,entry_keyword_family:keywordFamily,phase:this.state.turn.phase,window:this.state.turn.id+':'+this.state.turn.phase};
+    const event={type:'character_entry',player,card:id,character:this.reference(id),role:this.role(id),origin:entryOrigin,coveredSource:covered?this.reference(covered):null,coveredRole,entry_keyword_family:keywordFamily,phase:this.state.turn.phase,window:this.state.turn.id+':'+this.state.turn.phase};
     if(parameter==='block')this._recordBlockEntry(player,entryOrigin);
     this._emit(event);this._enqueuePassive(id,event);return this.reference(id);
   }
@@ -997,9 +1008,10 @@ class Kernel {
         legal(e.type==='character_entry'&&e.card===e.character?.id&&this.card(e.card).printed.type==='character'&&Number.isInteger(e.character.incarnation)&&e.character.incarnation>=0&&e.character.incarnation<=this.card(e.card).incarnation&&['serve','receive','toss','attack','center_blocker','side_blocker'].includes(e.role),'Entry event identity mismatch');
         if(e.character.incarnation===this.card(e.card).incarnation)legal(this.current(e.character)&&this.role(e.card)===e.role,'Current entry role mismatch');
         legal(['hand','drop','guts'].includes(e.origin)&&['rule','skill'].includes(e.reason),'Unknown entry origin');
+        if(e.coveredSource){legal(e.coveredSource.id!==e.card&&this.card(e.coveredSource.id).owner===e.player&&this.card(e.coveredSource.id).printed.type==='character'&&Number.isInteger(e.coveredSource.incarnation)&&e.coveredSource.incarnation>=0&&e.coveredSource.incarnation<=this.card(e.coveredSource.id).incarnation&&e.coveredRole===e.role,'Coverage receipt mismatch');}
         const c=this.card(e.card);c.entryOrigin=e.origin;c.entryReason=e.reason;c.entryTurn=this.state.turn.id;
         c.coveredCharacter=clone(e.coveredCharacter??null);c.entrySkillName=e.entrySkillName??null;
-        const event={type:e.type,player:e.player,card:e.card,character:e.character,role:e.role,origin:e.origin,...(e.effectiveName?{effectiveName:e.effectiveName}:{}),...(e.passiveSources?{passiveSources:clone(e.passiveSources)}:{}),entry_keyword_family:e.entry_keyword_family??null,phase:this.state.turn.phase,window:this.state.turn.id+':'+this.state.turn.phase};
+        const event={type:e.type,player:e.player,card:e.card,character:e.character,role:e.role,origin:e.origin,...(e.effectiveName?{effectiveName:e.effectiveName}:{}),...(e.passiveSources?{passiveSources:clone(e.passiveSources)}:{}),coveredSource:clone(e.coveredSource??null),coveredRole:e.coveredRole??null,entry_keyword_family:e.entry_keyword_family??null,phase:this.state.turn.phase,window:this.state.turn.id+':'+this.state.turn.phase};
         this._emit(event);this._enqueuePassive(e.card,event);
       }
     }
