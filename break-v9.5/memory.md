@@ -1194,3 +1194,4 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 ## Claude：下一批入口腳本審查＋實戰巡檢（2026-10-22，分支 claude/next-review）
 - 計畫：審查 source_covered／event_played／self_entry_cover 10 張腳本對卡文與 QA；qa-play 40 輪＋新開 14 張定向對打
 - 結果：SCRIPT-REVIEW 第 4 節，10 張腳本一致；入口共通要求（觸發順序由玩家定、來源離場仍可結算、被蓋卡是 Guts 不受失效）；需確認 P03-039 剛打出的 Event 能否算進 Event 區 2 張
+- 巡檢發現（qa-play 40 輪 3999/4000）：seed29 烏野 vs 青葉城西卡死——岩泉 P04-020 讓對手下回合 [接球][手牌] 技能失效，成田 P02-011 仍被列為可用，核心回 invalid 不搬牌→無限詢問。修正 legacy.js possible()：invalid 只對 Event 視為可打出（角色手牌技能失效則不提供）；新增 rules/invalid-hand.test.js（未修時失敗）
