@@ -30,10 +30,12 @@ function modeLabel(n) {
   if(n.kind==='conditional')return (n.condition.field==='phase'?(zh[n.condition.value]||n.condition.value)+'階段':n.condition.kind==='count_compare'?(zh[n.condition.pool.zone]||n.condition.pool.zone)+'至少'+n.condition.value+'張':'條件成立')+'：'+modeLabel(n.then);
   if(n.kind==='draw')return who(n.actor)+'抽'+n.count+'張';
   if(n.kind==='numeric')return (typeof n.target==='object'?filter(n.target.filters)||'場上角色':n.target==='$event.character'?'登場角色':'此角色')+'：'+(zh[n.parameter]||n.parameter)+(n.operation==='set'?'設為':n.value>=0?' +':' ')+n.value;
+  if(n.kind==='move')return '從'+who(n.pool.actor)+(zh[n.pool.zone]||n.pool.zone)+'選擇'+(n.count_mode==='all'?'全部':n.count+'張')+(n.pool.filters.type==='event'?'Event':'牌')+'放到'+(n.destination==='owner.drop'?'棄牌區':who(n.destination.split('.')[0])+(zh[n.destination.split('.')[1]]||n.destination));
+  if(n.kind==='shuffle')return who(n.actor)+'洗牌';
   if(n.kind==='enter')return '從'+(zh[n.pool.zone]||n.pool.zone)+'讓'+(filter(n.pool.filters)||'角色')+'登場'+(zh[n.destination]||n.destination)+'區';
   if(n.kind==='retrieve')return '從'+(zh[n.pool.zone]||n.pool.zone)+'取回'+(n.count_mode==='upto'?'最多':'')+n.count+'張'+filter(n.pool.filters);
   if(n.kind==='watch')return (n.duration==='next_opponent_turn'?'下個對方回合':'本回合')+'・'+who(n.actor)+(zh[n.filters.role]||'角色')+'登場時：'+modeLabel(n.then);
-  if(n.kind==='ban_action')return (n.duration==='next_opponent_turn'?'下個對方回合':'本回合')+'・'+who(n.actor)+(n.scope.phases||[]).map(p=>zh[p]+'階段').join('／')+'禁止加入手牌';
+  if(n.kind==='ban_action')return (n.duration==='next_opponent_turn'?'下個對方回合':'本回合')+'・'+who(n.actor)+(n.scope.phases||[]).map(p=>zh[p]+'階段').join('／')+(n.action==='add_hand'?'禁止加入手牌':n.action==='enter_character'?(n.scope.max_count!=null?'最多登場'+n.scope.max_count+'名':'禁止登場')+(zh[n.scope.role]||'')+'角色':'禁止'+n.action);
   return n.kind;
 }
 function need(ok, message) { if (!ok) throw new NeedsReview(message); }
@@ -569,6 +571,7 @@ class Kernel {
       if(n.kind==='ban_action')validateBan(n);
       if(n.kind==='formal_declaration_cost')need(n.must_be_complete===true&&n.performed_for_this_skill_only===true&&Array.isArray(n.steps)&&n.steps.length>0,'Unsupported declaration cost parameters');
       if(n.kind==='mill')need(['self','opponent'].includes(n.actor)&&['exact','upto'].includes(n.count_mode)&&Number.isInteger(n.count)&&n.count>=0&&n.bind==='milled','Unsupported mill parameters');
+      if(n.kind==='optional')need(n.bind==='optional'&&[undefined,'self','opponent'].includes(n.actor)&&n.then?.kind==='sequence','Unsupported optional parameters');
       if(n.kind==='choose_modes')need(n.count===1&&n.required===true&&Array.isArray(n.options)&&n.options.length>0&&n.options.every(o=>o&&KINDS.has(o.kind)),'Unsupported mode parameters');
       if(n.kind==='all_result_cards_match')need(['paid','milled','revealed'].includes(n.result)&&n.require_nonempty===true,'Unsupported result-match parameters');
       if(n.kind==='rename_before_entry')need(n.target==='source'&&n.character_count===1&&Array.isArray(n.choose_name)&&n.choose_name.length===2&&n.choose_name.every(x=>typeof x==='string')&&['this_turn','this_turn_or_role_exit'].includes(n.duration),'Unsupported entry-name parameters');
@@ -631,7 +634,7 @@ class Kernel {
         try {this._run(node.payment,ctx);} catch(e) {if(!(e instanceof Unpayable))throw e;this.state=saved;Object.assign(ctx,before);return false;}
         ctx.inPayment=false;ctx.bind.paid=[...ctx.paid];return this._run(node.then,ctx)||ctx.paid.length>0;
       }
-      case 'optional': { const yes=this._decide('optional',ctx,[true,false]);legal(typeof yes==='boolean','Optional decision must be boolean');ctx.bind.optional={performed:yes&&this._run(node.then,ctx)};return ctx.bind.optional.performed; }
+      case 'optional': { const yes=this._modeAvailable(node.then,ctx)?this._decide('optional',ctx,[true,false],{player:this.owner(node.actor||'self',ctx),effectDescription:modeLabel(node.then)}):false;legal(typeof yes==='boolean','Optional decision must be boolean');ctx.bind.optional={performed:yes&&this._run(node.then,ctx)};return ctx.bind.optional.performed; }
       case 'choose_modes': {
         const options=node.options.map((_,i)=>i).filter(i=>this._modeAvailable(node.options[i],ctx));
         if(!options.length)return false;

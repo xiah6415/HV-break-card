@@ -70,7 +70,7 @@ def WATCH_NUM(area,param,value,duration='next_opponent_turn',actor='opponent',fi
     return ON('character_entry',duration,NUM(param,value,'$event.character',op=op),actor=actor,filters=f)
 def COIN(): return dict(kind='external_action',action='coin',bind='random',alternative_requires_both_consent=True)
 def EXTERNAL(action): return dict(kind='external_action',action=action,bind='external')
-def OPT(*steps): return dict(kind='optional',then=seq(*steps),bind='optional')
+def OPT(*steps,actor=None): return dict(kind='optional',then=seq(*steps),bind='optional',**({'actor':actor} if actor else {}))
 def CHOOSE(*options): return dict(kind='choose_modes',count=1,options=[seq(*o) if isinstance(o,list) else seq(o) for o in options],required=True)
 def RETURN_HAND_DRAW(n,actor='opponent'):
     return seq(dict(kind='move',pool=SEL('hand',actor),destination=f'{actor}.deck',count_mode='all',reason='effect',bind='moved'),dict(kind='shuffle',actor=actor),DRAW(n,actor))

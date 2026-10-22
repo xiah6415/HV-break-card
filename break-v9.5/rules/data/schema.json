@@ -4055,6 +4055,12 @@
         "bind": {
           "type": "string",
           "minLength": 1
+        },
+        "actor": {
+          "enum": [
+            "self",
+            "opponent"
+          ]
         }
       },
       "required": [

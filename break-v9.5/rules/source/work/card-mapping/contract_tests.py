@@ -89,7 +89,10 @@ def semantic_body(value):
     return value
 check('除已審查資料補正外，其餘卡片效果內容保持一致',all(
     semantic_body(p['program'])==semantic_body(old_profiles[p['profile_id']]['program'])
-    for c in data['cards'] if c['card_no'] not in ['HV-PR-081','HV-P04-070','HV-P01-003','HV-P02-077','HV-P02-078','HV-P03-077','HV-P02-064','HV-P04-072'] for p in c['profiles']))
+    for c in data['cards'] if c['card_no'] not in ['HV-P02-004','HV-PR-081','HV-P04-070','HV-P01-003','HV-P02-077','HV-P02-078','HV-P03-077','HV-P02-064','HV-P04-072'] for p in c['profiles']))
+expected004=semantic_body(old_profiles[profile('P02-004')['profile_id']]['program'])
+expected004['steps'][0]['then']['steps'][0]['actor']='opponent'
+check('P02-004僅補對手選擇權，不改移牌／監聽效果',semantic_body(profile('P02-004')['program'])==expected004)
 old003=semantic_body(old_profiles[profile('P01-003')['profile_id']]['program'])
 expected003=copy.deepcopy(old003)
 tail003=expected003['steps'][0]['then']['steps']
