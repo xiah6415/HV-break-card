@@ -1190,3 +1190,7 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 測試：257卡各3局面／正式桌面對照、球／角色／持續匹配5形態、QA1779／1815、未來正常／事件登場、來源離場與期限、68延遲對照、長尾與防降25完整Undo邊界、3局新核心通過；可重建資料、build／pilot、95套回歸、fuzz3000、6×300及qa-play15（1500局0例外／卡死，14筆合法負值）全過。入場紀錄重複通知保留原資訊；防降純減值付費提示接AI略過。
 - 同步Claude補修：合併1b3e256（含6a6de6e）；交換形態的盤點預檢、PR-084登場來源／回合、P01-090無搬牌的敗北監聽已在本批等效補正，PR-084的主機風險亦有實際流程測試。保留本批正確總數與已驗證程式，合併後所有已測程式／資料／產物SHA256保持一致。
 - 部署：5e1ef8a已普通推送，Pages built／無錯誤；公開index、牌庫、規則資料、pilot、STATUS及14張新開卡圖皆HTTP200且SHA256與本機一致；公開嚴格501／數值541／共用311＋舊7、卡文版本／未完成入口／shuffle與external卡仍鎖定核對通過。https://xiah6415.github.io/HV-break-card/break-v9.5/?v=5e1ef8a-release 。依分工下一步source_covered預估257→262、event_played→264、self_entry_cover→266；shuffle另接主機亂數。
+
+## Claude：下一批入口腳本審查＋實戰巡檢（2026-10-22，分支 claude/next-review）
+- 計畫：審查 source_covered／event_played／self_entry_cover 10 張腳本對卡文與 QA；qa-play 40 輪＋新開 14 張定向對打
+- 結果：SCRIPT-REVIEW 第 4 節，10 張腳本一致；入口共通要求（觸發順序由玩家定、來源離場仍可結算、被蓋卡是 Guts 不受失效）；需確認 P03-039 剛打出的 Event 能否算進 Event 區 2 張
