@@ -4,7 +4,7 @@ const params={serve:'srv',block:'blk',receive:'rcv',toss:'tos',attack:'atk'},rol
 (async()=>{
  let count=0;
  for(const card of I.scope(catalog).filter(c=>I.entryKey(c)==='passive:character_entry'&&require('./modules').eligible(c)))for(const mode of ['positive','wrong_role','short']){
-  const f=setup(catalog,card,mode),{k,id,target,dest}=f,before=k.snapshot(),choose=k.choose;
+  const f=I.dependencies(card).includes('enter_self')?require('./self-entry-tests').setup(catalog,card,mode):setup(catalog,card,mode),{k,id,target,dest}=f,before=k.snapshot(),choose=k.choose;
   k.choose=r=>r.kind==='parameter'?r.options.at(-1):choose(r);
   const agent={wantsAck:true,async choose(g,p,r){if(r.kind==='skill')return true;if(r.kind==='guts')return r.options.slice(0,r.need).map(o=>o.value);return r.options[0].value;}};
   const g=new E.Game({mode:'strict',seed:7,decks:['k1014','seijoh'],agents:[agent,agent]});

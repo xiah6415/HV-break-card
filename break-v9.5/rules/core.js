@@ -583,6 +583,7 @@ class Kernel {
       if(n.kind==='formal_declaration_cost')need(n.must_be_complete===true&&n.performed_for_this_skill_only===true&&Array.isArray(n.steps)&&n.steps.length>0,'Unsupported declaration cost parameters');
       if(n.kind==='exchange')need(Array.isArray(n.sides)&&n.sides.length===2&&n.sides.every(x=>x&&x.kind==='selector')&&n.count_each===1&&n.count_mode==='upto'&&n.requires_both===true&&n.atomic_movement===true,'Unsupported exchange parameters');
       if(n.kind==='each_player_optional_draw')need(Number.isInteger(n.count)&&n.count>0&&n.count_mode==='exact_or_zero'&&n.chooser==='each_affected_player','Unsupported optional draw parameters');
+      if(n.kind==='enter_self')need(['receive','attack','block'].includes(n.destination)&&n.as_side_blocker===(n.destination==='block')&&n.bind==='entered','Unsupported self entry parameters');
       if(n.kind==='phase_jump')need(n.actor==='self'&&n.destination==='draw'&&n.position==='start'&&n.skip_current===true,'Unsupported phase jump parameters');
       if(n.kind==='mill')need(['self','opponent'].includes(n.actor)&&['exact','upto'].includes(n.count_mode)&&Number.isInteger(n.count)&&n.count>=0&&n.bind==='milled','Unsupported mill parameters');
       if(n.kind==='optional')need(n.bind==='optional'&&[undefined,'self','opponent'].includes(n.actor)&&n.then?.kind==='sequence','Unsupported optional parameters');
@@ -665,7 +666,8 @@ class Kernel {
         const leaves=[];walk(node.then,n=>{if(KINDS.has(n.kind)&&!['sequence','conditional'].includes(n.kind))leaves.push(n);});
         const attackOnly=leaves.length>0&&leaves.every(n=>n.kind==='numeric'&&n.target==='opponent_ball'&&n.parameter==='attack_offense');
         const protectedAttack=attackOnly&&leaves.every(n=>n.operation==='add'&&Number.isInteger(n.value)&&n.value<0)&&this._protected('opponent_ball','offense',ctx);
-        const ineffectiveReason=attackOnly&&this.state.ball?.kind!=='attack'?'來球不是攻擊，攻擊進攻值效果無效；支付費用不會改變來球數值。':protectedAttack?'來球受到防降保護，支付費用不會降低來球數值。':null;
+        const failedSelfEntry=leaves.length>0&&leaves.every(n=>n.kind==='enter_self'&&!this._selfEntryAvailable(n,ctx));
+        const ineffectiveReason=failedSelfEntry?'此卡目前不能合法登場；仍可支付費用，但不會移動。':attackOnly&&this.state.ball?.kind!=='attack'?'來球不是攻擊，攻擊進攻值效果無效；支付費用不會改變來球數值。':protectedAttack?'來球受到防降保護，支付費用不會降低來球數值。':null;
         const yes=this._decide('activate_payment',ctx,[true,false],{payment:node.payment,...(ineffectiveReason?{ineffectiveReason}:{})});legal(typeof yes==='boolean','Payment decision must be boolean');if(!yes)return false;
         const saved=clone(this.state), before=clone(ctx);ctx.inPayment=true;ctx.paid=[];
         try {this._run(node.payment,ctx);} catch(e) {if(!(e instanceof Unpayable))throw e;this.state=saved;Object.assign(ctx,before);return false;}
@@ -695,11 +697,17 @@ class Kernel {
       }
       case 'phase_jump': this._jump(node.destination);return true;
       case 'keyword': return this._keyword(node,ctx);
-      case 'enter': case 'enter_self': { const ids=node.kind==='enter_self'?[ctx.source.id]:this.pool(node.pool,ctx).filter(id=>this._entryOptions(id,ctx.controller,node.destination,node.as_side_blocker,'skill').names.length);let n=node.kind==='enter_self'?1:Math.min(node.count,ids.length);
+      case 'enter': case 'enter_self': { const ids=node.kind==='enter_self'?(this._selfEntryAvailable(node,ctx)?[ctx.source.id]:[]):this.pool(node.pool,ctx).filter(id=>this._entryOptions(id,ctx.controller,node.destination,node.as_side_blocker,'skill').names.length);let n=node.kind==='enter_self'?ids.length:Math.min(node.count,ids.length);
         if(node.count_mode==='upto'){const max=n;n=this._decide('entry_count',ctx,Array.from({length:n+1},(_,i)=>i));legal(Number.isInteger(n)&&n>=0&&n<=max,'Invalid entry count');}
-        if(!n){ctx.bind.entered=null;return false;}need(n===1,'Multiple entry transaction not implemented');const id=node.kind==='enter_self'?ids[0]:this._selection(ids,1,ctx,'entry')[0];ctx.bind.entered=this._enter(id,ctx.controller,node.destination,ctx,'skill',node.as_side_blocker,true);return !!ctx.bind.entered; }
+        if(!n){ctx.bind.entered=null;return false;}need(n===1,'Multiple entry transaction not implemented');const id=node.kind==='enter_self'?ids[0]:this._selection(ids,1,ctx,'entry')[0];ctx.bind.entered=this._enter(id,ctx.controller,node.destination,ctx,'skill',node.as_side_blocker,true);if(node.kind==='enter_self'&&ctx.bind.entered)ctx.source=clone(ctx.bind.entered);return !!ctx.bind.entered; }
       default: throw new NeedsReview('Unsupported operation '+node.kind);
     }
+  }
+  _selfEntryAvailable(node,ctx) {
+    const c=ctx.source&&this.state.cards[ctx.source.id];
+    // This exact source may enter from its declaration-cost drop, but never
+    // substitute a different copy after an intervening leave/re-entry.
+    return !!(c&&c.owner===ctx.controller&&c.incarnation===ctx.source.incarnation&&this._entryOptions(c.id,ctx.controller,node.destination,node.as_side_blocker,'skill').names.length);
   }
   _keywordAllowed(ctx,keywordFamily) {return this.permission({action:'use_keyword',player:ctx.controller,origin:'skill',keywordFamily}).allowed;}
   _modeAvailable(node,ctx) {

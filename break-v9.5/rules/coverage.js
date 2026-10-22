@@ -62,7 +62,6 @@ function buildCoverage(){
     const family=['hand_added','character_entry','loss','block_success','source_moved'].includes(n.event)&&['this_turn','next_opponent_turn'].includes(n.duration);
     if(!family)host('triggers','watch:'+n.event+':'+n.duration,at,'尚未接入host通知／持久化的watch族');
    }
-   if(n.kind==='enter_self')host('movement','skill_entry',at,'需接新增角色slot／數值、技能登場與觸發流程');
    // self/draw/start phase jumps are validated by core and the actual blockTurn flow.
   },rootAt);
   if(gate&&!gate.passed&&!reasons.some(r=>r.layer==='core'||r.layer==='review'))core('other','admission:'+gate.message,'profile',gate.message);

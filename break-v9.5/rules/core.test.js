@@ -158,13 +158,13 @@ test('A once-only effect instance does not resolve twice',()=>{
 test('Pending passive is canceled if the turn player invalidates it before it resolves',()=>{
  const g=game('block');add(g,'P03-096',0,'event');add(g,'P04-088',0,'event');const food=add(g,'P03-096',1);
  g.registerWatch(watch('character_entry','opponent',seq({kind:'invalidate_skill',actor:'opponent',duration:'this_turn',selector:{roles:['block']}})),0);
- const source=add(g,'P02-003',1);raw(g,seq({kind:'enter_self',destination:'block',as_side_blocker:false}),1,source);
+ const source=add(g,'P02-003',1);raw(g,seq({kind:'enter',pool:{kind:'selector',actor:'self',zone:'hand',filters:{type:'character'}},count:1,count_mode:'exact',destination:'block',as_side_blocker:false,bind:'entered'}),1,source);
  assert.equal(g.parameter(source,'block'),2);assert.equal(g.zone(1,'hand').includes(food),true);assert.equal(g.state.events.filter(e=>e.type==='resolve_trigger'&&e.controller===1).length,0);
 },['33']);
 test('Pending passive is canceled if its source is moved to a hidden zone',()=>{
  const g=game('block');add(g,'P03-096',0,'event');add(g,'P04-088',0,'event');const food=add(g,'P03-096',1);
  g.registerWatch(watch('character_entry','opponent',seq({kind:'move',pool:{kind:'selector',actor:'opponent',zone:'block',filters:{role:'character'}},destination:'owner.hand',count:1,count_mode:'exact'})),0);
- const source=add(g,'P02-003',1);raw(g,seq({kind:'enter_self',destination:'block',as_side_blocker:false}),1,source);
+ const source=add(g,'P02-003',1);raw(g,seq({kind:'enter',pool:{kind:'selector',actor:'self',zone:'hand',filters:{type:'character'}},count:1,count_mode:'exact',destination:'block',as_side_blocker:false,bind:'entered'}),1,source);
  assert.equal(g.zone(1,'hand').includes(source),true);assert.equal(g.zone(1,'hand').includes(food),true);assert.equal(g.state.events.filter(e=>e.type==='resolve_trigger'&&e.controller===1).length,0);
 });
 
