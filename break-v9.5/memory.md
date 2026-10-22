@@ -1177,3 +1177,6 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 假設待確認：sum_result_parameter 遇「－」計 0（縁下 P04-007 付西谷等）；exchange 兩側都要選才交換、各最多 1、禁止加牌（手牌側）則不交換、加手牌發 hand_added；P04-100 各玩家自己選抽 2 或 0
 - 測試調整：batch-branches any 反例先處理 distinct_affiliation 條件、effective_name 替換排除來源名；watch-card-tests 敗北分支預期手牌含 draw_to_hand_size；ban-node-tests 無條件無費用 Event 跳過反例；modules.test 數字更新
 - 留給 Codex 統一更新的計數斷言：library／authority／numeric／legacy／coverage／primitive-audit 等（485→494、295→304、56→47）
+- 補修（同批）：coverage.js local() 保留 exchange sides 形狀（否則 preflight 誤擋 P03-083）；frequent-live 將核心登場來源／回合帶入主機實體（PR-084）；watch-live 敗北監聽無搬牌時用預設卡、案例 64→66
+- 風險：主機（engine.js）自己處理的登場不寫 entryReason／entryTurn，只有共用腳本登場會寫→PR-084「本回合以技能登場」在舊引擎技能登場時會判不成立，請 Codex 確認
+- 僅剩計數斷言待 Codex：library／authority／numeric／legacy／coverage／primitive-audit（485→494、295→304、56→47）、batch-index candidate 16→10

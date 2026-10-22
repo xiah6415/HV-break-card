@@ -17,7 +17,8 @@ let cases=0;
    }else if(w.event==='hand_added'){def=catalog.cards.find(c=>c.card_no==='HV-D01-009');target=k.addCard(def.card_no,player,'drop');}
    else if(w.event==='block_success'){def=card;target=id;}
    else if(w.event==='source_moved'){def=card;target=id;}
-   else {assert.equal(w.event,'loss');for(const move of I.nodes({program:w.then}).filter(n=>['move','retrieve'].includes(n.kind))){def=catalog.cards.find(c=>!c.profiles[0].program&&matchesPrinted(c.profiles[0],move.pool.filters));target=k.addCard(def.card_no,0,move.pool.zone);}}
+   else {assert.equal(w.event,'loss');def=catalog.cards.find(c=>c.card_no==='HV-D01-009'); // 無搬牌的敗北監聽（P01-090 補到 7 張）
+   for(const move of I.nodes({program:w.then}).filter(n=>['move','retrieve'].includes(n.kind))){def=catalog.cards.find(c=>!c.profiles[0].program&&matchesPrinted(c.profiles[0],move.pool.filters));target=k.addCard(def.card_no,0,move.pool.zone);}}
    const oldChoose=k.choose;k.choose=r=>r.effectModes?modeIndex:oldChoose(r);
    const before=k.snapshot(),agent={wantsAck:true,async choose(g,p,r){if(r.ctx?.effectModes)return modeIndex;if(r.kind==='skill')return true;if(r.kind==='guts'||r.kind==='gutsCourt')return r.options.slice(0,r.need).map(o=>o.value);return r.options.find(o=>o.label?.includes('其餘放到牌庫底'))?.value??r.options[0].value;}};
    const g=new E.Game({mode:'strict',seed:7,decks:['k1014','seijoh'],agents:[agent,agent]});
@@ -52,7 +53,7 @@ let cases=0;
    g.sharedRulesState=JSON.parse(JSON.stringify(g.sharedRulesState));B.assertReady(g);cases++;
   }
  }
- assert.equal(cases,64);
+ assert.equal(cases,66); // +2：P01-090 敗北監聽（有效／過期）
  const g=new E.Game({seed:7,decks:['k1014','seijoh'],agents:[E.AI,E.AI]}),p=g.players[0];g.beginTurn(p);
  const state=g.cardSnapshot(),id=state.zones['0.deck'].at(-1);g.moveCard(p.deck,p.ev,p.deck.length-1);
  const base={kind:'watch',actor:0,source:{id,incarnation:0},duration:{kind:'this_turn',turn:g.turnNo}};

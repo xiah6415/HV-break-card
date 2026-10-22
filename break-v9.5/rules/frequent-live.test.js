@@ -25,7 +25,7 @@ const catalog=require('./data/cards.json'),released=testModules(catalog).cards,r
     await require('./legacy').charactersEntered(g,g.players[0],[{key:phase,origin:'hand',reason:'skill',entrySkillName:name}]);
    }else{k.enter(id,phase,{reason:entryReason,side});if(side){g.players[0].hand.splice(g.players[0].hand.indexOf(code),1);g.players[0].ts.sides.push(code);await require('./legacy').charactersEntered(g,g.players[0],[{key:'side:0',origin:'hand',reason:'rule'}]);}else await g.enterCharacter(g.players[0],phase,code);}
   }
-  else {p.activation.skill_type==='event'?k.playEvent(id):k.useSkill(id);await g.resolve(g.players[0],code,g.rulePhase);}
+  else {{const ID=require('./identity'),state=ID.ensure(g);for(const q of g.players)for(const z of roles){const src=before.zones[q.idx+'.'+z],dst=state.zones[q.idx+'.'+z];src.forEach((x,i)=>{const c=before.cards[x];if(c.entryTurn!==undefined&&dst[i]){const h=state.cards[dst[i]];h.entryOrigin=c.entryOrigin;h.entryReason=c.entryReason;h.entryTurn=c.entryTurn-before.turn.id+Math.max(1,g.turnNo);}});}}/* 主機實體帶入核心登場來源／回合（PR-084） */p.activation.skill_type==='event'?k.playEvent(id):k.useSkill(id);await g.resolve(g.players[0],code,g.rulePhase);}
   for(const {node,ids}of multiple){const count=Math.min(node.count,ids.length);assert.equal(ids.filter(x=>k.card(x).zone.endsWith('.drop')).length,count,code+' must move the full selected quantity');assert.equal(picked.length,count,code+' host must collect every card choice');assert.equal(new Set(picked).size,count,code+' cannot select the same physical card twice');}
   if(side)assert.equal(require('./legacy').blockEntered(g,g.players[0]),2,code+' counts original side entry and skill replacement');
   for(const q of g.players){
