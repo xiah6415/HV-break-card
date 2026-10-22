@@ -666,11 +666,11 @@ class Game {
     if(!isC(c)&&!sharedRules.eventAllowed(this,p,c,timing))throw Error('目前禁止使用這張事件卡');
     if (this.mode === 'numeric' && library.permission(c)?.kind === 'unapproved') {
       if (!this.playable(p,timing).some(o=>o.card===c)) throw Error('此卡現在不能使用');
-      this.moveCode(p.hand,p.ev,c);this.log(`${p.name} 放入 ${nm(c)}：${sharedRules.skillAllowed(this,p,c)?'技能未自動化，請手動處理':'技能已失效，不執行效果'}`,'ev');return;
+      const played=sharedRules.eventPlayStarted(this,p,c);this.moveCode(p.hand,p.ev,c);this.log(`${p.name} 放入 ${nm(c)}：${sharedRules.skillAllowed(this,p,c)?'技能未自動化，請手動處理':'技能已失效，不執行效果'}`,'ev');await sharedRules.eventPlayed(this,p,played,timing);return;
     }
     if (sharedRules.handles(c)) return sharedRules.resolve(this, p, c, timing);
     if (!legacySkill(c)) throw Error('技能未獲自動結算核准');
-    return sharedRules.legacyEffect(this, () => this.resolveLegacy(p, c, timing));
+    return sharedRules.legacyEffect(this, async () => {const played=isC(c)?null:sharedRules.eventPlayStarted(this,p,c);const result=await this.resolveLegacy(p,c,timing);if(played)await sharedRules.eventPlayed(this,p,played,timing);return result;});
   }
   async resolveLegacy(p, c, timing) {
     if (!legacySkill(c)) throw Error('不在舊技能白名單');

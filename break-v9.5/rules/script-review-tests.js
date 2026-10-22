@@ -47,9 +47,9 @@ function testReview(catalog){
  {const k=F.game(catalog),source=plain(k),n=node('P02-080','move'),def=catalog.cards.find(c=>c.profiles[0].variants[0].printed.position_tags.some(p=>['監督','元監督','コーチ'].includes(p))),ids=[k.addCard(def.card_no,1,'event'),k.addCard(def.card_no,1,'event')];
   k.choose=r=>{assert.equal(r.player,0);return [ids[1]];};k.resolveProgram(n,0,source);assert.deepEqual(k.zone(1,'deck'),[ids[1]]);assert.deepEqual(k.zone(1,'event'),[ids[0]]);
  }
- // 12: future event_played entry stays locked; its cost primitive pays exactly two.
+ // 12: event_played is supported; its cost primitive still pays exactly two.
  {const k=F.game(catalog),source=k.addCard('HV-P03-039',0,'serve'),n=node('P03-039','move'),def=catalog.cards.find(c=>c.profiles[0].variants[0].printed.affiliation_tags.includes('稲荷崎')&&c.profiles[0].activation?.activation_phases.includes('serve'));
-  const ids=Array.from({length:4},()=>k.addCard(def.card_no,0,'event')),ctx=k._context(source,0);ctx.inPayment=true;k.choose=r=>{assert.equal(r.count,2);return ids.slice(1,3);};k._atomic(()=>k._run(n,ctx));assert.equal(k.zone(0,'drop').length,2);assert.deepEqual(k.zone(0,'event'),[ids[0],ids[3]]);assert(!I.entrySupported(card('P03-039')));
+  const ids=Array.from({length:4},()=>k.addCard(def.card_no,0,'event')),ctx=k._context(source,0);ctx.inPayment=true;k.choose=r=>{assert.equal(r.count,2);return ids.slice(1,3);};k._atomic(()=>k._run(n,ctx));assert.equal(k.zone(0,'drop').length,2);assert.deepEqual(k.zone(0,'event'),[ids[0],ids[3]]);assert(I.entrySupported(card('P03-039')));
  }
  // 13: at the exact threshold, opponent chooses their own private discard.
  for(const [code,threshold]of [['P04-018',4],['PR-025',3]])for(const count of [threshold,threshold-1]){

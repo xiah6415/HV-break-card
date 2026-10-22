@@ -97,7 +97,7 @@ function transaction(g,p,c,timing,notification=null) {
         const id=physical.zones[q.idx+'.'+hostZone][zone.startsWith('side:')?+zone.slice(5):index];
         const card=k.state.cards[temporary];delete k.state.cards[temporary];
         card.id=id;card.incarnation=physical.cards[id].incarnation;k.state.cards[id]=card;
-        for(const key of ['entryOrigin','entryReason','entryTurn','entrySkillName','coveredCharacter'])if(physical.cards[id][key]!==undefined)card[key]=copy(physical.cards[id][key]);
+        for(const key of ['entryOrigin','entryReason','entryTurn','entrySkillName','coveredCharacter','eventPlaySerial','eventPlayNotifiedSerial'])if(physical.cards[id][key]!==undefined)card[key]=copy(physical.cards[id][key]);
         k.zone(q.idx,zone)[index]=id;short[id]=code;
       }
     }
@@ -160,7 +160,7 @@ function transaction(g,p,c,timing,notification=null) {
     for(const key of Object.keys(next.zones)) {
       const [player,zone]=key.split('.');
       next.zones[key]=zone==='sides'?[...state.zones[player+'.side:0'],...state.zones[player+'.side:1']]:[...state.zones[player+'.'+(zone==='ev'?'event':zone)]];
-      for(const id of next.zones[key]){next.cards[id].zone=key;next.cards[id].incarnation=state.cards[id].incarnation;for(const field of ['entryOrigin','entryReason','entryTurn','entrySkillName','coveredCharacter'])if(state.cards[id][field]!==undefined)next.cards[id][field]=copy(state.cards[id][field]);if(state.events.some(e=>e.type==='character_entry'&&e.character?.id===id&&e.character.incarnation===state.cards[id].incarnation))next.cards[id].entryIncarnation=state.cards[id].incarnation;}
+      for(const id of next.zones[key]){next.cards[id].zone=key;next.cards[id].incarnation=state.cards[id].incarnation;for(const field of ['entryOrigin','entryReason','entryTurn','entrySkillName','coveredCharacter','eventPlaySerial','eventPlayNotifiedSerial'])if(state.cards[id][field]!==undefined)next.cards[id][field]=copy(state.cards[id][field]);if(state.events.some(e=>e.type==='character_entry'&&e.character?.id===id&&e.character.incarnation===state.cards[id].incarnation))next.cards[id].entryIncarnation=state.cards[id].incarnation;}
     }
     next.revision=physical.revision+state.events.filter(e=>e.type==='move').length;
     identity.restore(g,next);
@@ -394,6 +394,23 @@ async function charactersEntered(g,p,entries) {
   }
   if(!g.sharedRulesDepth)return flushHandEvents(g);
 }
+function eventPlayStarted(g,p,code) {
+  assertReady(g);const ref=g.cardReference(p,'hand',p.hand.indexOf(code)),physical=identity.ensure(g);
+  if(!ref||library.card(code).kind!=='E')throw Error('Event play requires an actual hand Event');
+  const c=physical.cards[ref.id];c.eventPlaySerial=(c.eventPlaySerial||0)+1;return ref.id;
+}
+async function eventPlayed(g,p,card,timing) {
+  assertReady(g);const physical=identity.ensure(g),c=physical.cards[card];
+  if(!c||c.owner!==p.idx||library.card(c.code).kind!=='E')throw Error('Missing actual Event play identity');
+  const passiveSources=g.players.flatMap(q=>g.courtTargets(q).filter(t=>handles(t.card)&&byShort[t.card].profiles[0].activation.trigger?.event==='event_played').map(t=>({source:g.roleReference(q,t.key),role:t.key==='block'?'center_blocker':t.key.startsWith('side:')?'side_blocker':t.key})));
+  if(c.eventPlayNotifiedSerial===c.eventPlaySerial)return;
+  if(!passiveSources.length){c.eventPlayNotifiedSerial=c.eventPlaySerial;return;}
+  if(!Number.isInteger(c.eventPlaySerial)||c.eventPlaySerial<1)throw Error('Missing actual Event play marker');
+  const receipt=`event:${g.turnNo}:${p.idx}:${card}:${c.eventPlaySerial}`;
+  if(stored(g).receipts.includes(receipt)||g.sharedRulesEvents?.some(e=>e.receipt===receipt))return;
+  (g.sharedRulesEvents ||= []).push({type:'event_played',player:p.idx,card,origin:'hand',playSerial:c.eventPlaySerial,phase:phase[timing],receipt,passiveSources});
+  if(!g.sharedRulesDepth)return flushHandEvents(g);
+}
 async function flushHandEvents(g) {
   if(!g.sharedRulesEvents?.length)return;
   return transaction(g,g.turnP,null,g.rulePhase||'drw',{events:copy(g.sharedRulesEvents)}).run();
@@ -407,6 +424,6 @@ async function outgoing(g,p,type,off){
  if(!p.ts.keywordOutgoing&&!stored(g).effects.some(e=>e.kind==='keyword'&&active(e,g)&&e.actor===p.idx&&['doshat','feint'].includes(e.keyword)))return {type,off};
  const result=await transaction(g,p,null,g.rulePhase||'atk',{events:[],outgoing:{kind:type,offense:off}}).run();p.ts.keywordResolved={type:result.kind,off:result.offense};return p.ts.keywordResolved;
 }
-const api={protectedBall,skillAllowed,blockGroupAllowed,endDrawPhase,eventAllowed,entryNames,distinctNameOptions,outgoing,sourceMoved,drawn,judgment,flushHostEvents:flushHandEvents,permission,entryAllowed,blockEntered,charactersEntered,entryPreview,protectedParameter,handles,canPlay,resolve,assertReady,handAdded,legacyEffect,beginTurn,finishTurn,loss,approvals:[...approved]};
+const api={eventPlayStarted,eventPlayed,protectedBall,skillAllowed,blockGroupAllowed,endDrawPhase,eventAllowed,entryNames,distinctNameOptions,outgoing,sourceMoved,drawn,judgment,flushHostEvents:flushHandEvents,permission,entryAllowed,blockEntered,charactersEntered,entryPreview,protectedParameter,handles,canPlay,resolve,assertReady,handAdded,legacyEffect,beginTurn,finishTurn,loss,approvals:[...approved]};
 if(node)module.exports=api;else root.BreakRulesLegacy=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

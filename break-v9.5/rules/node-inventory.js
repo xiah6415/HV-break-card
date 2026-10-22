@@ -19,7 +19,7 @@ function entrySupported(c){const a=c.profiles[0].activation;return reviewClear(c
 function dependencies(c){return [...new Set(c.profiles.flatMap(p=>nodes(p).map(n=>n.kind)))].sort();}
 const PRIORITY=['numeric','selector','conditional','payment_branch','pay_guts','compare','draw'];
 const BASE_ENTRIES=['event','active','passive:self_entry'];
-const LIVE_ENTRIES=[...BASE_ENTRIES,'permanent_entry_name','passive:character_entry','passive:source_covered'];
+const LIVE_ENTRIES=[...BASE_ENTRIES,'permanent_entry_name','passive:character_entry','passive:source_covered','passive:event_played'];
 const entryKey=c=>c.profiles[0].activation.skill_type==='passive'?'passive:'+c.profiles[0].activation.trigger?.event:c.profiles[0].activation.skill_type;
 const reviewClear=c=>c.profiles.length===1&&!c.skill_text_variant_conflict&&!c.profiles[0].flags?.length;
 function inventory(catalog,completed,released=[]){
