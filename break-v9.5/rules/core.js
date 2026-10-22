@@ -603,7 +603,7 @@ class Kernel {
         if(ids.length<n)throw new Unpayable();const paid=this._selection(ids,n,ctx,'guts');for(const id of paid)this._move(id,this.card(id).owner,'drop',ctx);ctx.bind.paid=paid;ctx.paid.push(...paid);return paid.length>0; }
       case 'payment_branch': {
         const effects=[];walk(node.then,n=>{if(KINDS.has(n.kind)&&!['sequence','conditional'].includes(n.kind))effects.push(n);});
-        if(effects.length&&effects.every(n=>n.kind==='keyword'&&!this._keywordAllowed(ctx,n.keyword)))return false;
+        if(effects.length&&effects.every(n=>n.kind==='keyword'&&!this._keywordAvailable(ctx,n.keyword)))return false;
         if(!this._paymentAvailable(node.payment,ctx))return false;
         // Warn without forbidding a human choice. A serving/blocking ball has
         // no attack-offense field; do not confuse an old attack card with it.
@@ -638,8 +638,14 @@ class Kernel {
     }
   }
   _keywordAllowed(ctx,keywordFamily) {return this.permission({action:'use_keyword',player:ctx.controller,origin:'skill',keywordFamily}).allowed;}
+  _keywordAvailable(ctx,keywordFamily) {
+    if(!this._keywordAllowed(ctx,keywordFamily))return false;
+    if(keywordFamily!=='back_attack')return true;
+    const id=ctx.source?.id,c=id&&this.card(id);
+    return !!(c&&c.incarnation===ctx.source.incarnation&&(this.current(ctx.source)||c.zone===ctx.controller+'.hand')&&this._entryOptions(id,ctx.controller,'attack',false,'skill').names.length);
+  }
   _keyword(node,ctx) {
-    if(!this._keywordAllowed(ctx,node.keyword))return false;
+    if(!this._keywordAvailable(ctx,node.keyword))return false;
     const p=ctx.controller,n=node.N,kind=node.keyword,scope={mode:'single',binding:'reference',membership:'snapshot_on_resolution'};
     if(kind==='one_touch'){
       need(this.state.turn.phase==='block'&&this.state.ball?.kind==='attack','One touch requires an incoming attack in block phase');

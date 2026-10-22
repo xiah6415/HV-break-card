@@ -30,6 +30,7 @@
 | formal_declaration_cost 形態／依賴技能卡／新增開放 | 1／15／10（送棄牌、放Event、付Guts；只計本次付款、完整還原） |
 | ban_action 形態／依賴技能卡／新增開放 | 14／16／8（角色、位置、名稱、來源、圖示、印刷值、階段及人數） |
 | invalidate_skill 形態／依賴技能卡／新增開放 | 11／11／11（整體技能與關鍵字分開、聯集、改名與已結算保留） |
+| Claude 第3節必測局面 | 失效10項已納入；模式7項留choose_modes批次（共17項）；P02-066部分費用官方未明示，沿用完整不足不扣款 |
 | 已支援觸發入口 | 5：event、active、passive:self_entry、permanent_entry_name、passive:character_entry |
 | 本組測卡／每卡局面／本次新開 | 232／3＋整體／關鍵字失效、費用、已結算保留與完整Undo／11 |
 | 累計路徑前7節點：節點齊備／入口與資料許可 | 31／27（測試前預估） |
