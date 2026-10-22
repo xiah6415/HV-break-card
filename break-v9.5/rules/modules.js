@@ -19,6 +19,7 @@ completed.push({id:'formal_declaration_cost',test:require('./formal-node-tests')
 completed.push({id:'ban_action',test:require('./ban-node-tests').testBan});
 completed.push({id:'invalidate_skill',test:require('./invalid-node-tests').testInvalid});
 completed.push({id:'choose_modes',test:require('./mode-node-tests').testModes});
+completed.push(...require('./claude-nodes').completed);
 function testCard(catalog,card){
  if(I.dependencies(card).includes('choose_modes'))return require('./mode-node-tests').testModeCard(catalog,card);
  if(card.profiles[0].formal_cost)return require('./formal-node-tests').testFormalCard(catalog,card);

@@ -1169,3 +1169,11 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 結果：choose_modes完成1容器形態／9依賴卡，新增9；25節點554形態，嚴格485／數值541／共用295＋舊7／未自動化56，原297池累開241。當下預演篩掉無效模式但不改狀態或消耗費用，正式與新核心顯示效果說明；Claude剩餘7項已納入（P04-098按卡文設6、P01-082設7），正式入口仍橋接。
 - 測試：241卡各3局面、正式桌面全區與數值對照、Claude7項模式必測、64延遲效果對照、14完整Undo邊界及舊回覆隔離、3局新核心通過；build／pilot、89套回歸（盤點預檢與過期計數修正後重驗）、fuzz3000、6×300及qa-play15（1500局0例外／卡死，15筆合法負值）通過；沿用既有單選UI。
 - 部署：532e044已普通推送，Pages built／無錯誤；公開index、牌庫、規則資料、pilot、STATUS及9張新卡圖皆HTTP200且SHA256與本機一致，公開嚴格485／數值541／共用295＋舊7與未完成／疑義卡鎖定核對通過。https://xiah6415.github.io/HV-break-card/break-v9.5/?v=532e044-release 。下一步optional預估241→243（+2），再接protect_numeric_decrease預估→248。
+
+## Claude：長尾節點批次（2026-10-22，分支 claude/long-tail）
+- 計畫：依分工實作 shuffle／draw_to_hand_size／exchange／sum_result_parameter／each_player_optional_draw／result_count／equal_fields／any；以 rules/claude-nodes.js 註冊、modules.js 一行匯入、測試放 rules/claude-node-tests.js；不改 STATUS、不部署
+- 結果：完成 7 節點（any、equal_fields、result_count、sum_result_parameter、draw_to_hand_size×2 形態、exchange、each_player_optional_draw）；32 模組／562 形態／250 卡，新開 9 張：P01-066、P01-090、P02-058、P03-083、P04-007、P04-064、P04-100、PR-080、PR-084（嚴格 485→494、共用 295→304、未自動化 56→47）
+- 退回 Codex：shuffle 需主機 RNG（core 無亂數，RNG 在 match.js）→ P01-034、PR-024、P04-093、P04-094；PR-063 需 external_action
+- 假設待確認：sum_result_parameter 遇「－」計 0（縁下 P04-007 付西谷等）；exchange 兩側都要選才交換、各最多 1、禁止加牌（手牌側）則不交換、加手牌發 hand_added；P04-100 各玩家自己選抽 2 或 0
+- 測試調整：batch-branches any 反例先處理 distinct_affiliation 條件、effective_name 替換排除來源名；watch-card-tests 敗北分支預期手牌含 draw_to_hand_size；ban-node-tests 無條件無費用 Event 跳過反例；modules.test 數字更新
+- 留給 Codex 統一更新的計數斷言：library／authority／numeric／legacy／coverage／primitive-audit 等（485→494、295→304、56→47）

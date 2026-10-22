@@ -38,7 +38,7 @@ function testWatchCard(catalog,card){
    for(const [param,value]of expected)assert.equal(k.parameter(target,param),value,card.card_no+' exact generated numeric');
    if(w.event==='hand_added')for(const who of [0,1]){const draws=children.filter(n=>n.kind==='draw'&&(n.actor==='self'?0:1)===who).reduce((sum,n)=>sum+n.count,0);assert.equal(k.zone(who,'hand').length,before.zones[who+'.hand'].length+(who===player?1:0)+draws);}
    if(w.event==='source_moved')assert.equal(k.zone(0,'hand').length,before.zones['0.hand'].length+I.nodes({program:w.then}).filter(n=>n.kind==='draw').reduce((sum,n)=>sum+n.count,0));
-   if(w.event==='loss'){const delta=I.nodes({program:w.then}).filter(n=>['move','retrieve'].includes(n.kind)).reduce((sum,n)=>sum+(n.destination.endsWith('.hand')?n.count:n.pool.zone==='hand'?-n.count:0),0);assert.equal(k.zone(0,'hand').length,before.zones['0.hand'].length+delta);}
+   if(w.event==='loss'){const delta=I.nodes({program:w.then}).filter(n=>['move','retrieve'].includes(n.kind)).reduce((sum,n)=>sum+(n.destination.endsWith('.hand')?n.count:n.pool.zone==='hand'?-n.count:0),0);let want=before.zones['0.hand'].length+delta;for(const d of I.nodes({program:w.then}).filter(n=>n.kind==='draw_to_hand_size'&&n.actor==='self'))want=Math.max(want,Math.min(d.hand_size,want+before.zones['0.deck'].length));assert.equal(k.zone(0,'hand').length,want);}
    if(w.remaining_uses===1)assert.equal(k.state.effects.find(e=>e.id===effect.id).remaining,0);
   }
   k.assertState();k.restore(before);invoke();assert.deepEqual(k.snapshot(),after,'Generated card effect Undo/replay '+card.card_no);

@@ -7,7 +7,7 @@ const COURT = ['serve','block','receive','toss','attack','side:0','side:1'];
 const PARAMS = ['serve','block','receive','toss','attack'];
 const KINDS = new Set(['sequence','conditional','numeric','draw','draw_to_hand_size','move','move_self',
   'pay_guts','payment_branch','formal_declaration_cost','retrieve','enter','enter_self','watch','ban_action','invalidate_skill',
-  'rename_before_entry','protect_numeric_decrease','phase_jump','optional','choose_modes','mill','keyword','deck_selection']);
+  'rename_before_entry','protect_numeric_decrease','phase_jump','optional','choose_modes','mill','keyword','deck_selection','exchange','each_player_optional_draw']);
 const FILTERS = new Set(['names','exclude_names','tags','tags_any','positions','positions_any','years','years_any',
   'role','role_any','type','skillless','play_icons_any','play_icons_exact','entry_origins','phase',
   'printed_attack','printed_attack_eq','printed_block_gte','printed_receive_gte','current_receive_gte',
@@ -523,7 +523,7 @@ class Kernel {
       if (typeof value==='object') {
         if (value.kind==='result_count') value=(ctx.bind[value.result] || []).length;
         else if (value.kind==='printed_parameter') { need(typeof target!=='string','Printed ball value unsupported');value=this.card(target.id).printed.parameters[value.parameter]; }
-        else if (value.kind==='sum_result_parameter') value=(ctx.bind[value.result] || []).reduce((n,id)=>n+this.card(id).printed.parameters[value.parameter],0);
+        else if (value.kind==='sum_result_parameter') value=(ctx.bind[value.result] || []).reduce((n,id)=>{const v=this.card(id).printed.parameters?.[value.parameter];return n+(Number.isInteger(v)?v:0);},0); // 「－」（dash）不計入合計（視為 0）
         else throw new NeedsReview('Unsupported numeric expression');
       }
       need(Number.isInteger(value),'Numeric value must be an integer');
@@ -568,6 +568,8 @@ class Kernel {
       if(n.kind==='invalidate_skill')validateInvalid(n);
       if(n.kind==='ban_action')validateBan(n);
       if(n.kind==='formal_declaration_cost')need(n.must_be_complete===true&&n.performed_for_this_skill_only===true&&Array.isArray(n.steps)&&n.steps.length>0,'Unsupported declaration cost parameters');
+      if(n.kind==='exchange')need(Array.isArray(n.sides)&&n.sides.length===2&&n.sides.every(x=>x&&x.kind==='selector')&&n.count_each===1&&n.count_mode==='upto'&&n.requires_both===true&&n.atomic_movement===true,'Unsupported exchange parameters');
+      if(n.kind==='each_player_optional_draw')need(Number.isInteger(n.count)&&n.count>0&&n.count_mode==='exact_or_zero'&&n.chooser==='each_affected_player','Unsupported optional draw parameters');
       if(n.kind==='mill')need(['self','opponent'].includes(n.actor)&&['exact','upto'].includes(n.count_mode)&&Number.isInteger(n.count)&&n.count>=0&&n.bind==='milled','Unsupported mill parameters');
       if(n.kind==='choose_modes')need(n.count===1&&n.required===true&&Array.isArray(n.options)&&n.options.length>0&&n.options.every(o=>o&&KINDS.has(o.kind)),'Unsupported mode parameters');
       if(n.kind==='all_result_cards_match')need(['paid','milled','revealed'].includes(n.result)&&n.require_nonempty===true,'Unsupported result-match parameters');
@@ -602,6 +604,28 @@ class Kernel {
         if(dest.zone==='hand'&&!this._handAllowed(dest.player,ctx)){if(ctx.inPayment)throw new Unpayable();ctx.bind.moved=[];return false;}
         this._move(id,dest.player,dest.zone,ctx,node.reason);if(dest.bottom){const d=this.zone(dest.player,'deck');d.unshift(d.pop());}ctx.bind.moved=[id];if(ctx.inPayment)ctx.paid.push(id);
         if(dest.zone==='hand')this._emit({type:'hand_added',player:dest.player,card:id,operation:'add_hand'});return true; }
+      // Claude 長尾節點（2026-10-22）。交換：兩側各最多 1 張，必須兩側都選才交換（QA：不能只移單邊）；一次原子移動。
+      case 'exchange': {
+        const player=ctx.controller,[a,b]=node.sides.map(sel=>this.pool(sel,ctx));
+        const toHand=node.sides.map(sel=>sel.zone==='hand');
+        // 一側是手牌時，另一側的牌會加入手牌：被禁止加牌就不能交換（QA：岩泉）
+        if(!a.length||!b.length||toHand.some(Boolean)&&!this._handAllowed(player,ctx)){ctx.bind[node.bind||'exchanged']=[];return false;}
+        const n=this._decide('move_count',ctx,[0,1],{player});legal(n===0||n===1,'Invalid exchange count');
+        if(!n){ctx.bind[node.bind||'exchanged']=[];return false;}
+        const x=this._selection(a,1,ctx,'move_cards',player,{destination:node.sides[1].zone})[0],y=this._selection(b,1,ctx,'move_cards',player,{destination:node.sides[0].zone})[0];
+        const place=(id,zone)=>{const area=zone.split('.')[0];if(zone==='hand'){this._move(id,player,'hand',ctx);this._emit({type:'hand_added',player,card:id,operation:'add_hand'});}else{legal(zone.endsWith('.guts')&&COURT.includes(area),'Unsupported exchange zone '+zone);this._move(id,player,area,ctx,'effect',true);}};
+        place(x,node.sides[1].zone);place(y,node.sides[0].zone);
+        ctx.bind[node.bind||'exchanged']=[x,y];return true;
+      }
+      // 自己與對手各自決定要不要抽 count 張（只能全抽或不抽；QA）；牌庫不足時能抽多少抽多少。
+      case 'each_player_optional_draw': {
+        const drawn=[];
+        for(const player of [ctx.controller,1-ctx.controller]){
+          const n=this._decide('draw_count',ctx,[0,node.count],{player});legal(n===0||n===node.count,'Invalid optional draw');
+          if(n)drawn.push(...this._draw(player,n,ctx));
+        }
+        ctx.bind[node.bind||'drawn']=drawn;return drawn.length>0;
+      }
       case 'mill': { const ids=this.zone(this.owner(node.actor,ctx),'deck'),player=this.owner(node.actor,ctx);let n=node.count;
         if (ctx.inPayment && node.count_mode==='exact' && ids.length<n) throw new Unpayable();
         n=Math.min(n,ids.length);if(node.count_mode==='upto'){const max=n;n=this._decide('mill_count',ctx,Array.from({length:n+1},(_,i)=>i));legal(Number.isInteger(n)&&n>=0&&n<=max,'Invalid mill count');}
