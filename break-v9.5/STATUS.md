@@ -35,6 +35,8 @@
 | Claude長尾完成節點／參數形態／新增開放 | 7／8／9（any、equal_fields、result_count、sum_result_parameter、draw_to_hand_size、exchange、each_player_optional_draw）；shuffle待主機亂數接線 |
 | protect_numeric_decrease 形態／依賴技能卡／新增開放 | 5／7／5（球總值、角色單值／全值、持續匹配；P04-021待source_covered入口） |
 | Claude 第3節必測局面 | 17項均已納入；P04-098依卡文設為6，P01-082設為7；P02-066依總則7-7-3完整費用不足不扣款 |
+| Claude 第4節入口審查 | 10張審查與必測局面已整合，入口尚未開放；P03-039費用範圍待確認 |
+| 失效角色手牌技能 | 不再提供發動選項，失效Event仍可打出；seed29卡死修正 |
 | 已支援觸發入口 | 5：event、active、passive:self_entry、permanent_entry_name、passive:character_entry |
 | 本組測卡／每卡局面／本次新開 | 257／3＋核心／正式桌面對照、交換／雙方決策、保護範圍／未來登場、期限及完整Undo／14（Claude9＋防降5） |
 | 累計路徑前7節點：節點齊備／入口與資料許可 | 31／27（測試前預估） |
