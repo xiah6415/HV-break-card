@@ -2,7 +2,7 @@
 'use strict';
 const assert=require('node:assert/strict'),{fixture}=require('./batch-smoke'),I=require('./node-inventory');
 function testCard(catalog,card,{condition:override}={}){
- const p=card.profiles[0],all=I.nodes(p),condition=override||all.find(n=>n.kind==='conditional')?.condition,cost=all.some(n=>n.kind==='pay_guts'||n.kind==='move'&&n.classification_role==='payment');
+ const p=card.profiles[0],all=I.nodes(p),condition=override||all.find(n=>n.kind==='conditional'&&!all.some(w=>w.kind==='watch'&&n.node_id?.startsWith(w.then.node_id+'.')))?.condition,cost=all.some(n=>n.kind==='pay_guts'||n.kind==='move'&&n.classification_role==='payment');
  const phase=p.activation.skill_type==='passive'?p.activation.trigger.destination_any[0]:p.activation.activation_phases[0];
  const variants=[{key:'positive',max:true},{key:condition?'condition_false':'decline',max:!!condition,...(condition?{focus:{node_id:condition.node_id,value:false}}:{})},{key:cost?'cost_short':'no_add',max:true}];
  for(const s of variants){
@@ -30,7 +30,7 @@ function testCard(catalog,card,{condition:override}={}){
   if(s.key==='positive'){
    assert(!rejected,'Positive fixture must execute '+card.card_no);
    if(condition)assert(predicates.includes(true),'Positive condition not reached '+card.card_no);
-   assert(after.effects.length>before.effects.length||after.events.some((e,i)=>i>=before.events.length&&e.type==='hand_added')||after.publicLog.some((e,i)=>i>=before.publicLog.length&&e.type==='deck_view'),'Positive fixture produced no skill effect '+card.card_no);
+   assert(after.effects.length>before.effects.length||after.events.some((e,i)=>i>=before.events.length&&e.type==='hand_added')||after.events.slice(before.events.length).some(e=>e.type==='phase_jump')||after.publicLog.some((e,i)=>i>=before.publicLog.length&&e.type==='deck_view'),'Positive fixture produced no skill effect '+card.card_no);
   }
   if(s.key==='condition_false')assert(predicates.includes(false)&&!predicates.includes(true),'Negative condition not reached or unexpectedly true '+card.card_no);
   if(s.key==='cost_short')assert(!after.decisions.slice(before.decisions.length).some(d=>d.request.kind==='activate_payment'),'Insufficient cost offered payment '+card.card_no);

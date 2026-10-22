@@ -56,6 +56,7 @@ function seedConditions(k,{catalog,profile,source,player,phase,expanded=false}){
    let dest=zone==='event_or_drop'?'drop':zone,bottom=false,role=null;
    if(zone==='court'||zone==='block'){
     role=zone==='block'?'block':roleFor(filters,parameter);dest=role;
+    if(filters.role==='block'){dest=['block','side:0','side:1'].find(z=>!k.top(who,z));if(!dest)fail('No blocker fixture slot');}
     if(k.top(who,dest)&&!(expanded&&filters.role&&filters.role!=='character')){
      dest=['serve','block','receive','toss','attack'].find(z=>!k.top(who,z));
      if(!dest)fail('No free court fixture slot');
@@ -67,7 +68,7 @@ function seedConditions(k,{catalog,profile,source,player,phase,expanded=false}){
     bottom=true;
    }else if(expanded&&['serve','receive','toss','attack'].includes(zone))role=zone;
    else if(!['hand','drop','event','event_or_drop','deck','sets'].includes(zone))fail('Unseeded zone '+zone);
-   const d=pick(filters,{parameter:role,tag:who===player&&role?tag:null,exclude:[...exclude,...(distinct?[...names]:[])],receiveMax});
+   const d=pick(filters,{parameter:role,tag:who===player&&role?tag:null,exclude:[...exclude,...(distinct||filters.role==='block'?[...names]:[]),...(filters.role==='block'&&sourceLeaves?[k.card(source).printed.name]:[])],receiveMax});
    const id=add(d,who,dest,bottom);
    if(dest==='hand')protectedHand.add(id);
    ids=pool(sel);names=new Set(ids.map(id=>k.effectiveName(id)));
@@ -103,6 +104,9 @@ function seedConditions(k,{catalog,profile,source,player,phase,expanded=false}){
   if(expanded&&n.kind==='numeric'&&n.target?.kind==='selector')ensure({...n.target,filters:{...n.target.filters,...(targetName?{names:[targetName]}:{})}},1,{receiveMax:targetReceive===null?undefined:Math.max(1,targetReceive-2)});
   if(n.kind==='selector'&&!n.zone.startsWith('$')&&!deferred.some(prefix=>n.node_id?.startsWith(prefix)))ensure(n,1);
   if(expanded&&['move','retrieve'].includes(n.kind)&&Number.isInteger(n.count)&&n.count>1&&!deferred.some(prefix=>n.node_id?.startsWith(prefix)))ensure(n.pool,n.count,{distinct:!!n.group_constraints?.distinct_names});
+ }
+ if(expanded&&nodes.some(n=>n.kind==='compare'&&n.field==='self.court.distinct_affiliation_assignment_count')){
+  const used=new Set(k.card(source).printed.affiliation_tags);for(const area of ['serve','block','receive','toss','attack'].filter(a=>a!==phase).slice(0,3)){const d=choices.find(d=>printed(d).type==='character'&&printed(d).parameters[area]!=='dash'&&printed(d).affiliation_tags.some(t=>!used.has(t)));if(!d)fail('Missing distinct school court');for(const t of printed(d).affiliation_tags)used.add(t);add(d,player,area);}
  }
  // Seed positive boundaries, including the Event just placed before its effect.
  for(const n of nodes.filter(n=>n.kind==='count_compare')){

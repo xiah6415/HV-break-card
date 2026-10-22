@@ -9,6 +9,7 @@ completed.push({id:'retrieve',test:require('./retrieve-node-tests').testRetrieve
 completed.push({id:'watch',test:require('./watch-node-tests').testWatch});
 completed.push({id:'uniform_affiliation',test:require('./uniform-node-tests').testUniformAffiliation});
 completed.push({id:'all',test:require('./all-node-tests').testAll});
+completed.push({id:'keyword',test:require('./keyword-node-tests').testKeyword});
 function testCard(catalog,card){
  if(I.dependencies(card).some(k=>!['sequence','deck_selection'].includes(k)))return C.testCard(catalog,card);
  const p=card.profiles[0],deckNodes=I.nodes(p).filter(n=>n.kind==='deck_selection');

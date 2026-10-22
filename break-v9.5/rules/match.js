@@ -48,7 +48,7 @@ class Match {
   const cards=['target','payment_cards','move_cards','guts','entry','revealResult'].includes(req.kind);
   const numbers=['target_count','payment_count','move_count','draw_count','mill_count','entry_count'].includes(req.kind);
   const input=cards?{type:'cards',min:req.count,max:req.count,ordered:false}:numbers?{type:'number'}:{type:'single'};
-  const prompt=req.kind==='reveal'?`點擊查看牌庫頂 ${req.top_count} 張`:req.kind==='revealResult'?req.eligible_count?'確認查看的卡片，再選擇加入手牌':'沒有符合的牌；確認後安排放回牌庫':req.ordering?'安排其餘牌的順序（先選的先抽到）':req.kind==='mode'?'其餘牌放回牌庫頂或底？':null;
+  const prompt=req.kind==='reveal'?`點擊查看牌庫頂 ${req.top_count} 張`:req.kind==='revealResult'?req.eligible_count?'確認查看的卡片，再選擇加入手牌':'沒有符合的牌；確認後安排放回牌庫':req.ordering?'安排其餘牌的順序（先選的先抽到）':req.kind==='mode'?req.keywordOutgoing?'選擇回球進攻值':'其餘牌放回牌庫頂或底？':null;
   return this._ask(req.kind,req.player,input,req.options,{...(prompt?{prompt}:{}),...(req.count!=null?{count:req.count}:{}),...(req.destination?{destination:req.destination}:{}),...(req.target?{target:req.target}:{}),...(req.payment?{payment:req.payment}:{}),...(req.ineffectiveReason?{ineffectiveReason:req.ineffectiveReason,prompt:req.ineffectiveReason+' 是否仍支付費用？'}:{})},'kernel',req.source?{id:req.source,incarnation:this._kernel.card(req.source).incarnation,cardNo:this._kernel.card(req.source).cardNo}:null);
  }
  _pump(){
@@ -60,7 +60,7 @@ class Match {
    this._answers=cont?copy(cont.answers):[];this._cursor=0;
    this._kernel.restore(baseline);Object.assign(this._m,meta,{pending:null,continuation:null});
    this._kernel.choose=req=>this._native(req);
-   try{this._step();if(this._cursor!==this._answers.length)throw Error('Unconsumed replay answers');}
+   try{this._step();if(this._kernel.state.forcedLoss){const lost=this._kernel.state.forcedLoss;delete this._kernel.state.forcedLoss;this._lose(lost.reason);}else if(this._kernel.state.keywordOutgoing?.turn===this._kernel.state.turn.id&&this._kernel.state.turn.phase==='end'&&this._m.pc!=='turnEnd'){this._kernel.advancePhase('end');this._m.outgoingType='attack';this._next('turnEnd');}else if(this._kernel.state.turn.phase==='draw'&&['blockEvent','blockJudge'].includes(this._m.pc)){this._cleanupSides(this._m.actor);this._next('drawAck');}if(this._cursor!==this._answers.length)throw Error('Unconsumed replay answers');}
    catch(e){if(!(e instanceof Boundary))throw e;this._kernel.restore(e.state);Object.assign(this._m,meta,{pending:e.request,continuation:{baseline,answers:this._answers}});return;}
   }
   throw Error('Match transition limit');
@@ -116,9 +116,9 @@ class Match {
    case 'defend': {if(k.state.ball.kind==='attack'&&this._cards(p,'block').length&&this._blockMax(p)){const c=this._ask('defend',p,{type:'single'},['receive','block'],{ball:copy(k.state.ball)});this._next(c==='block'?'block':'drawAck');}else this._next('drawAck');break;}
    case 'block': {this._setPhase('block');const ids=this._cards(p,'block'),a=this._ask('block',p,{type:'block',min:1,max:Math.min(ids.length,this._blockMax(p))},ids,{block:{maxCount:this._blockMax(p),distinctEffectiveNames:true,centerRequired:true},ball:copy(k.state.ball)});this._enterBlock(a);this._next('blockEvent');break;}
    case 'blockEvent': this._event('blockJudge');break;
-   case 'blockJudge': {const n=['block','side:0','side:1'].reduce((n,z)=>n+(k.top(p,z)?k.parameter(k.top(p,z),'block'):0),0);this._m.roleTotals[p].block=n;this._cleanupSides(p);if(n<k.state.ball.offense)this._lose('攔網 '+n+' 小於進攻 '+k.state.ball.offense);else{k._atomic(()=>{k._emit({type:'block_success',player:p,defense:n});k._drain();});this._m.outgoingType='block';this._next('turnEnd');}break;}
+   case 'blockJudge': {const n=['block','side:0','side:1'].reduce((n,z)=>n+(k.top(p,z)?k.parameter(k.top(p,z),'block'):0),0);this._m.roleTotals[p].block=n;if(n<k.state.ball.offense){this._cleanupSides(p);this._lose('攔網 '+n+' 小於進攻 '+k.state.ball.offense);}else{k._atomic(()=>{k._emit({type:'block_success',player:p,defense:n});k._drain();});this._cleanupSides(p);this._m.outgoingType='block';this._next('turnEnd');}break;}
    case 'drawAck': if(this._m.wantsAck[p])this._ask('ack',p,{type:'ack'},[true],{ball:copy(k.state.ball)});this._next('drawRule');break;
-   case 'drawRule': k.drawRule(p,1);this._next('drawEvent');break;
+   case 'drawRule': k.drawRule(p,1);if(k.state.turn.step!=='free')k.advancePhase('draw');this._next('drawEvent');break;
    case 'drawEvent': this._event('receive');break;
    case 'receive': this._setPhase('receive');this._pick('receive','receiver','receiveEvent');break;
    case 'receiveEvent': this._event('receiveJudge');break;
@@ -128,9 +128,9 @@ class Match {
    case 'attack': this._setPhase('attack');this._pick('attack','attacker','attackEvent');break;
    case 'attackEvent': this._event('attackDone');break;
    case 'attackDone': this._m.roleTotals[p].toss=this._param(p,'toss');this._m.roleTotals[p].attack=this._param(p,'attack');this._m.outgoingType='attack';this._next('turnEnd');break;
-   case 'turnEnd': {const out=this._outgoing();if(this._m.wantsAck[p])this._ask('turnEnd',p,{type:'ack'},[true],{outgoing:copy(out)});this._m.outgoing=copy(out);k.endTurn();k.state.ball=out;this._next('defendStart');break;}
+   case 'turnEnd': {const base=this._outgoing(),out={...base,...k.outgoing(base.kind,base.offense)};if(this._m.wantsAck[p])this._ask('turnEnd',p,{type:'ack'},[true],{outgoing:copy(out)});this._m.outgoing=copy(out);k.endTurn();k.state.ball=out;this._next('defendStart');break;}
    case 'lossConfirm': this._ask('lossConfirm',p,{type:'ack'},[true],{reason:this._m.lossReason});this._next('lossResolve');break;
-   case 'lossResolve': {k.loss(p,{voluntary:false});k.finishLoss();this._m.phase='loss';this._notice('loss',{player:p,reason:this._m.lossReason,winner:1-p,final:!this._zone(p,'sets').length});if(!this._zone(p,'sets').length){this._m.winner=1-p;this._m.phase='finished';this._next('done');}else this._next('interval');break;}
+   case 'lossResolve': {this._cleanupSides(p);k.loss(p,{voluntary:false});k.finishLoss();this._m.phase='loss';this._notice('loss',{player:p,reason:this._m.lossReason,winner:1-p,final:!this._zone(p,'sets').length});if(!this._zone(p,'sets').length){this._m.winner=1-p;this._m.phase='finished';this._next('done');}else this._next('interval');break;}
    case 'interval': {this._m.phase='interval';for(let q=0;q<2;q++)k.drawRule(q,Math.max(0,6-this._zone(q,'hand').length));this._move(k.top(p,'sets'),p,'hand');this._m.server=1-p;this._next('rallyStart');break;}
    default: throw Error('Unknown match pc '+this._m.pc);
   }

@@ -1,7 +1,7 @@
 'use strict';
 const assert=require('node:assert/strict'),I=require('./node-inventory'),{fixture}=require('./batch-smoke'),{matchesPrinted}=require('./batch-fixtures');
 function testWatchCard(catalog,card){
- const p=card.profiles[0],watches=I.nodes(p).filter(n=>n.kind==='watch');
+ const p=card.profiles[0],watches=I.nodes(p).filter(n=>n.kind==='watch'&&!I.nodes(p).some(w=>w.kind==='watch'&&n.node_id?.startsWith(w.then.node_id+'.')));
  for(const w of watches)for(const expired of [false,true]){
   const phase=p.activation.skill_type==='passive'?p.activation.trigger.destination_any[0]:p.activation.activation_phases[0];
   const {k,id,entryReason='rule'}=fixture(card,p,phase,{rich:true,max:true,conditioned:true,expanded:true,key:'positive'},0,catalog);
@@ -9,7 +9,7 @@ function testWatchCard(catalog,card){
   if(p.activation.skill_type==='event')k.playEvent(id);else if(p.activation.skill_type==='active')k.useSkill(id);else if(entryName){const event=k.addCard(catalog.cards.find(c=>c.profiles[0].variants[0].printed.name===entryName.value).card_no,0,'event');k._atomic(()=>{k._enter(id,0,phase,k._context(event,0),'skill');k._drain();});}else k.enter(id,phase,{reason:entryReason});
   const effect=k.state.effects.find(e=>e.kind==='watch'&&e.then.node_id===w.then.node_id);assert(effect,'Positive card must register watch '+card.card_no);
   // Generated effects remain valid after the declaring card has left play.
-  if(w.event!=='source_moved')k._atomic(()=>k._move(id,0,'drop',k._context(id,0)));
+  if(!['source_moved','block_success'].includes(w.event))k._atomic(()=>k._move(id,0,'drop',k._context(id,0)));
   if(w.duration==='next_opponent_turn'){k.endTurn();k.beginTurn(1);}
   if(expired){k.endTurn();k.beginTurn(1-k.state.turn.player);}
   const player=expired?k.state.turn.player:effect.actor;
@@ -26,12 +26,13 @@ function testWatchCard(catalog,card){
    target=k.addCard('HV-D01-009',player,'drop');invoke=()=>k.resolveProgram({kind:'move_self',destination:'owner.hand'},player,target);
   }else if(w.event==='loss'){
    for(const move of I.nodes({program:w.then}).filter(n=>['move','retrieve'].includes(n.kind))){const def=catalog.cards.find(c=>matchesPrinted(c.profiles[0],move.pool.filters));target=k.addCard(def.card_no,0,move.pool.zone);}invoke=()=>k.loss(player);
-  }else if(w.event==='source_moved'){target=id;invoke=()=>k.resolveProgram({kind:'move_self',destination:'owner.drop'},0,id);}
+  }else if(w.event==='block_success'){k.advancePhase('block');target=id;invoke=()=>k.notifyHostEvents([{type:'block_success',player:k.state.turn.player,defense:k.state.ball.offense}]);}
+  else if(w.event==='source_moved'){target=id;invoke=()=>k.resolveProgram({kind:'move_self',destination:'owner.drop'},0,id);}
   else assert.fail('Missing released-card follow-up '+w.event);
   const before=k.snapshot();invoke();const after=k.snapshot(),fired=after.events.slice(before.events.length).filter(e=>e.type==='resolve_trigger'&&e.generated);
   assert.equal(fired.length,expired?0:1,card.card_no+' '+w.event+' expiry='+expired);
   if(!expired){
-   const nums=I.nodes({program:w.then}).filter(n=>n.kind==='numeric');
+   const children=I.nodes({program:w.then}),nums=children.filter(n=>n.kind==='numeric'&&!children.some(w=>w.kind==='watch'&&n.node_id?.startsWith(w.then.node_id+'.')));
    const expected=new Map();
    for(const n of nums){const param=n.parameter==='chosen'?after.effects.findLast(e=>e.kind==='numeric'&&e.target.id===target).parameter:n.parameter;expected.set(param,n.operation==='set'?n.value:(expected.get(param)??k.card(target).printed.parameters[param])+n.value);}
    for(const [param,value]of expected)assert.equal(k.parameter(target,param),value,card.card_no+' exact generated numeric');

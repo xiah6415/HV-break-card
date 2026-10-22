@@ -194,6 +194,7 @@ class Kernel {
     need(['add_hand','play_event','enter_character','use_skill'].includes(action.action),'Unknown permission action');
     action={phase:this.state.turn.phase,...action};
     for (const e of this.state.effects) if (this.active(e) && e.actor===action.player) {
+      if(e.kind==='keyword'&&e.keyword==='feint_block_ban'&&action.action==='enter_character'&&this.roleMatches(action.role,'block'))return {allowed:false,layer:'resolve_step',effect:e.id};
       if (e.kind==='ban' && e.action===action.action && this._scopeMatch(e.scope,action)) {
         if ('max_count' in e.scope && !(action.entryCount>e.scope.max_count)) continue;
         return {allowed:false,layer:action.action==='play_event' ? 'play_card':'resolve_step',effect:e.id};
@@ -512,7 +513,7 @@ class Kernel {
       if (n.target_scope) need(n.target_scope.membership==='snapshot_on_resolution','Target membership is not supported');
       if(n.destination)need((!n.destination.includes('choose_deck') || ['choose_deck_top_or_bottom','self.choose_deck_top_or_bottom'].includes(n.destination)) && !n.destination.endsWith('.deck_top'),'Destination mechanism not implemented');
       if(n.kind==='invalidate_skill')need(!n.selector.keyword_families && !n.selector.union_with?.keyword_families,'Keyword invalidation not implemented');
-      if (n.kind==='keyword') need(n.keyword==='one_touch','Keyword not implemented: '+n.keyword);
+      if(n.kind==='keyword')need(['one_touch','doshat','feint','blockout','a_pass','two_attack','back_attack','multi_attack'].includes(n.keyword)&&Number.isInteger(n.N)&&n.N>=0&&Object.keys(n.parameters||{}).every(k=>n.keyword==='multi_attack'&&k==='affiliation')&&(n.keyword!=='multi_attack'||typeof n.parameters?.affiliation==='string'),'Keyword parameters not implemented: '+n.keyword);
       if (n.kind==='compare') {
         need(new Set(['random.result','revealed.affiliation_intersects_self_court','opponent.block_defense','self.attack.guts.count','self.court.distinct_affiliation_assignment_count','source.covered_character.tags','source.covered_character.positions','source.covered_character.effective_name','source.entry_skill_name','revealed.count','moved.count']).has(n.field)||/^(phase|current_turn_id|both\.set\.count_sum|opponent_ball\.(kind|offense)|(self|opponent)\.(hand|sets|set)\.count|(self|opponent)\.(serve|receive|toss|attack)\.(effective_name|printed_attack)|(paid|milled|retrieved|drawn)\.(count|event_count|names_are_distinct)|optional\.performed|(source|target)\.(effective_name|role|entry_origin|entry_reason|entry_turn|current_(serve|receive|block|toss|attack)))$/.test(n.field),'Fact is not implemented: '+n.field);
       }
@@ -574,13 +575,51 @@ class Kernel {
       case 'invalidate_skill': this.effect('invalid',{actor:this.owner(node.actor,ctx),selector:node.selector},ctx,node.duration);return true;
       case 'protect_numeric_decrease': { const targets=this._targets(node,ctx);if(!targets.length)return false;const ball=typeof targets[0]==='string';this.effect('protect',{targets:ball?[]:targets,ballOwner:ball?(targets[0]==='self_ball'?ctx.controller:1-ctx.controller):null,parameter:node.parameter},ctx,node.duration);return true; }
       case 'phase_jump': this._jump(node.destination);return true;
-      case 'keyword': need(this.state.turn.phase==='block' && this.state.ball?.kind==='attack','One touch requires an incoming attack in block phase');this._numeric({target:'opponent_ball',target_scope:{mode:'single',binding:'reference',membership:'snapshot_on_resolution'},parameter:'attack_offense',value:-node.N,operation:'add'},ctx);this._jump('draw');return true;
+      case 'keyword': return this._keyword(node,ctx);
       case 'enter': case 'enter_self': { const ids=node.kind==='enter_self'?[ctx.source.id]:this.pool(node.pool,ctx);let n=node.kind==='enter_self'?1:Math.min(node.count,ids.length);
         if(node.count_mode==='upto'){const max=n;n=this._decide('entry_count',ctx,Array.from({length:n+1},(_,i)=>i));legal(Number.isInteger(n)&&n>=0&&n<=max,'Invalid entry count');}
         if(!n){ctx.bind.entered=null;return false;}need(n===1,'Multiple entry transaction not implemented');const id=node.kind==='enter_self'?ids[0]:this._selection(ids,1,ctx,'entry')[0];ctx.bind.entered=this._enter(id,ctx.controller,node.destination,ctx,'skill',node.as_side_blocker,true);return !!ctx.bind.entered; }
       default: throw new NeedsReview('Unsupported operation '+node.kind);
     }
   }
+  _keyword(node,ctx) {
+    const p=ctx.controller,n=node.N,kind=node.keyword,scope={mode:'single',binding:'reference',membership:'snapshot_on_resolution'};
+    if(kind==='one_touch'){
+      need(this.state.turn.phase==='block'&&this.state.ball?.kind==='attack','One touch requires an incoming attack in block phase');
+      this._numeric({target:'opponent_ball',target_scope:scope,parameter:'attack_offense',value:-n,operation:'add'},ctx);this._jump('draw');return true;
+    }
+    if(kind==='two_attack'){this.state.keywordOutgoing={player:p,kind:'attack',offense:n,turn:this.state.turn.id};this._jump('end');return true;}
+    if(kind==='back_attack'){
+      const id=ctx.source.id;legal(this.current(ctx.source),'Back attack requires a current source character');
+      this._enter(id,p,'attack',ctx,'skill',false,false,'back_attack');
+      this._numeric({target:'source',target_scope:scope,parameter:'attack',value:n,operation:'set'},ctx);return true;
+    }
+    if(kind==='multi_attack'){
+      const tag=node.parameters.affiliation,attack=this.top(p,'attack'),setter=this.top(p,'toss');
+      if(!attack||!setter||!this.court(p).every(id=>this.card(id).printed.affiliation_tags.includes(tag)))return false;
+      const ids=COURT.flatMap(z=>this.zone(p,z).slice(0,-1)).filter(id=>this.card(id).printed.affiliation_tags.includes(tag)&&this.effectiveName(id)!==this.effectiveName(setter));
+      if(!ids.length)return false;
+      const count=this._decide('payment_count',ctx,Array.from({length:Math.min(n,ids.length)+1},(_,i)=>i));
+      legal(Number.isInteger(count)&&count>=0&&count<=Math.min(n,ids.length),'Invalid multi-attack count');if(!count)return false;
+      const paid=this._selection(ids,count,ctx,'payment_cards');for(const id of paid)this._move(id,p,'drop',ctx);
+      const value=new Set(paid.map(id=>this.effectiveName(id))).size;ctx.bind.target=this.reference(attack);
+      return this._numeric({target:'$target',target_scope:scope,parameter:'attack',value,operation:'add'},ctx);
+    }
+    if(kind==='blockout'&&ctx.event.keywordResolution==='blockout'){
+      this.state.forcedLoss={player:this.state.turn.player,reason:'ブロックアウト：原始攔網值不大於 '+n};this.state.queue=[];return true;
+    }
+    need(['doshat','feint','blockout','a_pass'].includes(kind),'Keyword not implemented: '+kind);
+    this.effect('keyword',{keyword:kind,N:n,parameters:node.parameters||{},actor:kind==='blockout'?1-p:p},ctx,kind==='blockout'?'next_opponent_turn':'this_turn');return true;
+  }
+  outgoing(kind,offense) { return this._atomic(()=>{
+    const p=this.state.turn.player,override=this.state.keywordOutgoing;
+    if(override?.turn===this.state.turn.id&&override.player===p){kind=override.kind;offense=override.offense;}
+    const effects=this.state.effects.filter(e=>e.kind==='keyword'&&e.actor===p&&this.active(e)&&e.keyword===(kind==='block'?'doshat':kind==='attack'?'feint':null));
+    if(effects.length){const options=[...new Set(effects.map(e=>e.N))],value=options.length===1?options[0]:this._decide('mode',this._context(null,p),options,{keywordOutgoing:true});legal(options.includes(value),'Invalid outgoing value');offense=value;
+      if(kind==='attack'&&!this.state.effects.some(e=>e.kind==='keyword'&&e.keyword==='feint_block_ban'&&e.createdTurn===this.state.turn.id))this.effect('keyword',{keyword:'feint_block_ban',N:0,parameters:{},actor:1-p,createdTurn:this.state.turn.id},this._context(null,p),'next_opponent_turn');
+    }
+    return {kind,offense};
+  }); }
   _registerWatch(node,ctx) {
     this.preflight(node.then);legal(['character_entry','hand_added','source_moved','loss','turn_end','block_success'].includes(node.event),'Unknown trigger event');
     return this.effect('watch',{event:node.event,actor:this.owner(node.actor,ctx),filters:node.filters || {},then:node.then,remaining_uses:node.remaining_uses??null,remaining:node.remaining_uses ?? null},ctx,node.duration);
@@ -588,6 +627,12 @@ class Kernel {
   _emit(event) {
     event={phase:this.state.turn.phase,window:this.state.turn.id+':'+this.state.turn.phase,...clone(event)};
     this.state.events.push(clone(event));
+    for(const e of this.state.effects)if(e.kind==='keyword'&&this.active(e)&&e.actor===event.player&&event.type==='character_entry'){
+      let program=null;
+      if(e.keyword==='a_pass'&&event.role==='toss')program={kind:'numeric',target:'$event.character',target_scope:{mode:'single',binding:'reference',membership:'snapshot_on_resolution'},parameter:'toss',operation:'add',value:e.N};
+      if(e.keyword==='blockout'&&['center_blocker','side_blocker'].includes(event.role)&&Number.isInteger(this.card(event.card).printed.parameters.block)&&this.card(event.card).printed.parameters.block<=e.N)program={kind:'keyword',keyword:'blockout',N:e.N,parameters:{}};
+      if(program)this.state.queue.push({id:this.id('q'),controller:e.controller,source:e.source,event:{...event,keywordResolution:e.keyword},program,generated:true,window:event.window});
+    }
     for (const e of this.state.effects) if(e.kind==='watch' && this.active(e) && e.actor===event.player && e.event===event.type && e.remaining!==0) {
       if(e.event==='source_moved'&&event.card!==e.source?.id)continue;
       const id=event.card || event.character?.id;
@@ -651,7 +696,7 @@ class Kernel {
     const performed=this._resolveSkill(p,ctx);
     this._drain();return {performed,invalid:false};
   }
-  _enter(id,player,area,ctx,origin='hand',side=false,skipRestricted=false) {
+  _enter(id,player,area,ctx,origin='hand',side=false,skipRestricted=false,keywordFamily=null) {
     const c=this.card(id),p=this.profile(id);let dest=area;
     if(side){dest=['side:0','side:1'].find(z=>!this.top(player,z));legal(dest,'No side blocker slot');need(this.top(player,'block'),'Centerless side-block exception is not implemented');}
     legal(COURT.includes(dest)&&c.printed.type==='character','Invalid character destination');
@@ -672,7 +717,7 @@ class Kernel {
     c.entrySkillName=origin==='skill'&&ctx.source?this.effectiveName(ctx.source.id):null;
     this._move(id,player,dest,ctx,'explicit_entry');
     c.entryOrigin=entryOrigin;c.entryReason=origin==='skill'?'skill':'rule';c.entryTurn=this.state.turn.id;
-    const event={type:'character_entry',player,card:id,character:this.reference(id),role:this.role(id),origin:entryOrigin,phase:this.state.turn.phase,window:this.state.turn.id+':'+this.state.turn.phase};
+    const event={type:'character_entry',player,card:id,character:this.reference(id),role:this.role(id),origin:entryOrigin,entry_keyword_family:keywordFamily,phase:this.state.turn.phase,window:this.state.turn.id+':'+this.state.turn.phase};
     if(parameter==='block'){this.state.turn.blockEntries ||= [0,0];this.state.turn.blockEntries[player]++;}
     this._emit(event);this._enqueuePassive(id,event);return this.reference(id);
   }
@@ -749,7 +794,7 @@ class Kernel {
   }); }
   beginTurn(player,phase='draw') { return this._atomic(()=>{legal(this.state.stage==='rally'&&this.state.turn.step==='cleaned'&&player===1-this.state.turn.player,'Previous turn must be cleaned and handed to the opponent');this.state.turn={id:this.state.turn.id+1,player,phase,step:'free'};for(const e of this.state.effects)if(e.duration.kind==='next_opponent_turn'&&e.duration.activeTurn===null&&e.duration.player===player)e.duration.activeTurn=this.state.turn.id;}); }
   endTurn() { return this._atomic(()=>{legal(this.state.stage==='rally'&&this.state.turn.step==='free'&&!this.state.queue.length,'Cannot end outside an idle free step');this._emit({type:'turn_end',player:this.state.turn.player});this._drain();this._cleanup(false);this.state.turn.step='cleaned';}); }
-  _cleanup(loss) { this.state.effects=this.state.effects.filter(e=>!loss&&e.duration.kind==='next_opponent_turn'&&e.duration.activeTurn===null);this.state.locks=[];this.state.events.push({type:'cleanup',reason:loss?'loss':'turn_end'}); }
+  _cleanup(loss) { this.state.effects=this.state.effects.filter(e=>!loss&&e.duration.kind==='next_opponent_turn'&&e.duration.activeTurn===null);this.state.locks=[];delete this.state.keywordOutgoing;delete this.state.forcedLoss;this.state.events.push({type:'cleanup',reason:loss?'loss':'turn_end'}); }
   loss(player,{voluntary=true}={}) { return this._atomic(()=>{
     legal(this.state.stage==='rally'&&player===this.state.turn.player,'Only current player can lose this rally');
     legal(!voluntary||this.state.turn.step==='free'&&!this.state.queue.length,'Voluntary Loss needs an idle free step');
@@ -767,6 +812,6 @@ class Kernel {
     need(['rally','loss_triggers','interval'].includes(this.state.stage),'Invalid rally stage');
     const seen=new Set();for(const [zone,ids] of Object.entries(this.state.zones))for(const id of ids){need(!seen.has(id),'Physical card appears twice');seen.add(id);const c=this.card(id);need(c.zone===zone&&c.id===id&&[0,1].includes(c.owner)&&Number.isInteger(c.incarnation)&&c.incarnation>=0&&this.profiles[c.profileId],'Card identity/zone mismatch');}need(seen.size===Object.keys(this.state.cards).length,'Card conservation failed'); }
 }
-const api={Kernel,NeedsReview,IllegalAction,capabilities:{status:'HOST_CONTROLLER_REQUIRED',nodes:[...KINDS],keywords:['one_touch'],defaultCatalogLiveCardApprovals:0}};
+const api={Kernel,NeedsReview,IllegalAction,capabilities:{status:'HOST_CONTROLLER_REQUIRED',nodes:[...KINDS],keywords:['one_touch','doshat','feint','blockout','a_pass','two_attack','back_attack','multi_attack'],defaultCatalogLiveCardApprovals:0}};
 if(typeof module!=='undefined')module.exports=api;else root.BreakRulesCore=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

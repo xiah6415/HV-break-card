@@ -67,8 +67,9 @@ function expandFixture(k,{catalog,profile,source,player,phase,focus}){
   if(n.field==='opponent.attack.printed_attack'){replaceTop(1-player,'attack',pick({type:'character'},'attack',d=>printed(d).parameters.attack>n.value));return;}
   if(n.field==='source.entry_origin'){moveToDeck(source);k.resolveProgram({kind:'move_self',destination:'owner.drop'},player,source);entryReason='skill';return;}
   if(n.field==='phase'){const other=profile.activation.activation_phases.find(p=>p!==n.value);if(!other)gap('No alternate activation phase');k.advancePhase(other);return;}
+  if(n.field==='self.court.distinct_affiliation_assignment_count'){for(const a of ['serve','block','receive','toss','attack'].filter(a=>a!==phase))for(const id of [...k.zone(player,a)])moveToDeck(id);return;}
   if(n.field==='self.attack.guts.count'){add(base,player,'attack',true);return;}
-  if(n.field==='opponent_ball.kind'){k.state.ball.kind=n.value==='serve'?'attack':'serve';return;}
+  if(n.field==='opponent_ball.kind'){k.state.ball.kind=n.op==='in'?['serve','attack','block'].find(k=>!n.value.includes(k)):n.value==='serve'?'attack':'serve';return;}
   if(n.field==='opponent_ball.offense'){k.state.ball.offense=n.op==='lte'?n.value+1:n.value-1;return;}
   if(n.field==='retrieved.count'){const choose=k.choose;k.choose=req=>req.kind==='move_count'?0:choose(req);return;}
   if(n.field==='paid.names_are_distinct'){

@@ -370,6 +370,7 @@ class Game {
         }
         this.log(`${loser.name} ロスト：${lossReason}`, 'lost');
       }
+      if(loser.ts.sides?.length)this.cleanupSides(loser);
       await sharedRules.judgment(this,loser,'loss');
       await this.notice({ type: 'loss', player: loser.idx, reason: lossReason, winner: loser.opp.idx, final: !loser.sets.length });
       this.turnP = null;
@@ -398,6 +399,7 @@ class Game {
   finishTurn(p) { for (const q of this.players) if (q !== p) for (const [key, fx] of Object.entries(q.effects)) if (fx.manual?.turn === this.turnNo) { if (this.validEffect(q,key)) for (const [param,delta] of Object.entries(fx.manual.mods)) fx.mods[param] -= delta; delete fx.manual; } delete p.ts.blockEntryReceipts; p.effects = {}; p.restrict = {}; p.ts.finished = true; turnEffects.finish(this, this.turnNo); sharedRules.finishTurn(this); }
   beginTurn(p) { if (this.turnP) this.finishTurn(this.turnP); this.turnP = p; this.turnNo++; p.restrict = {...p.pending, ...turnEffects.begin(this, p.idx)}; p.pending = {}; p.ts = { used: {} }; p.newCount = {}; this.src = ''; this.rulePhase = 'drw'; sharedRules.beginTurn(this, p); }
   currentOutgoing(p, outgoing) {
+    if(p.ts.keywordResolved)return {...p.ts.keywordResolved};
     const off = outgoing.type === 'serve' ? this.parameter(p, 'serve', 'srv') : outgoing.type === 'attack' ? p.ts.toss + p.ts.atk : outgoing.off;
     return {...outgoing, off:Number.isFinite(off) ? off : outgoing.off};
   }
@@ -423,6 +425,7 @@ class Game {
     } else throw Error('未知的手動操作');
   }
   async confirmTurnEnd(p, outgoing) {
+    outgoing=await sharedRules.outgoing(this,p,outgoing.type,outgoing.off);
     for (;;) {
       outgoing = this.currentOutgoing(p, outgoing);
       if (!p.agent.wantsAck) return outgoing;
@@ -504,17 +507,19 @@ class Game {
     const sides = cb.cards.filter(c => c !== center); p.ts.sides = [];
     for (const c of sides) this.moveCode(p.hand, p.ts.sides, c);
     await sharedRules.charactersEntered(this,p,[{key:'block'},...sides.map((c,i)=>({key:'side:'+i}))]);
+    if(p.ts.keywordJump==='draw'){delete p.ts.keywordJump;this.cleanupSides(p);return this.receiveTurn(p);}
     p.ts.blk = this.courtTargets(p).filter(t=>t.key==='block'||t.key.startsWith('side:')).reduce((n,t)=>n+this.parameter(p,t.key,'blk'),0); p.ts.blockers = cb.cards.slice();
     this.log(`${p.name} 攔網 ${cb.cards.map(short).join('＋')}：攔 ${p.ts.blk} vs ${this.ball.off}`);
     await this.eventLoop(p, 'blk', {});
-    this.cleanupSides(p);
-    if (p.ts.blk < this.ball.off) this.lost(p, `攔網 ${p.ts.blk} 小於進攻 ${this.ball.off}`);
+    if(p.ts.keywordJump==='draw'){delete p.ts.keywordJump;this.cleanupSides(p);return this.receiveTurn(p);}
+    if (p.ts.blk < this.ball.off) {this.cleanupSides(p);this.lost(p, `攔網 ${p.ts.blk} 小於進攻 ${this.ball.off}`);}
     await sharedRules.judgment(this,p,'block_success',{defense:p.ts.blk});
+    this.cleanupSides(p);
     this.log(`攔網成功（${p.ts.blk} ≥ ${this.ball.off}），回球 0；側攔進棄牌區`);
-    await this.confirmTurnEnd(p, { type: 'block', off: 0 });
+    const outgoing=await this.confirmTurnEnd(p, { type: 'block', off: 0 });
     this.finishTurn(p);
     this.tag(p.idx + ':block');
-    return { type: 'block', off: 0 };
+    return outgoing;
   }
 
   // ---------- receive turn
@@ -543,6 +548,7 @@ class Game {
     if (!ts.length) this.lost(p, '沒有能舉球的角色');
     const t = await this.ask(p, { kind: 'setter', prompt: '選擇舉球角色', options: ts.map(x => ({ label: `${nm(x)}　舉 ${st(x, 'tos')}`, card: x, value: x })) });
     await this.enterCharacter(p, 'toss', t); this.src = nm(t);
+    if(p.ts.keywordJump==='end'){const out=await this.confirmTurnEnd(p,{type:'attack',off:p.ts.keywordOutgoing.offense});this.finishTurn(p);return out;}
     let toss = this.parameter(p,'toss','tos') + (p.ts.apass || 0);
     if (legacySkill(t) && t === 'P01-006' && p.guts('toss') >= 2 && await this.yes(p, 'skill', '影山：付 2 Guts → 翻牌庫頂找日向/オープン，本回合日向攻擊 +2？', { card: t })) {
       await this.pay(p, 'toss', 2); p.ts.hin = 2;
@@ -552,6 +558,7 @@ class Game {
     p.ts.toss = toss; p.ts.setter = t; p.ts.setterRef = this.cardReference(p, 'toss');
     this.log(`${p.name} 舉球 ${nm(t)}：${toss}`);
     await this.eventLoop(p, 'tos', {});
+    if(p.ts.keywordJump==='end'){const out=await this.confirmTurnEnd(p,{type:'attack',off:p.ts.keywordOutgoing.offense});this.finishTurn(p);return out;}
     // attack
     this.rulePhase = 'atk';
     const as = [...new Set(p.handC().filter(x => this.canEnter(p, 'attack', x)))];
@@ -627,6 +634,7 @@ class Game {
   async eventLoop(p, timing, ctx) {
     this.rulePhase = timing;
     for (;;) {
+      if(p.ts.keywordJump)return;
       const opts = this.playable(p, timing);
       const canManual = this.mode === 'numeric' && !!p.agent.wantsAck;
       if (!opts.length && !canManual) return;
@@ -817,6 +825,7 @@ const AI = {
         const key = req.ctx.target, active = { receive: 'rcv', toss: 'tos', attack: 'atk', block: 'blk', serve: 'srv' }[key] || 'blk';
         return (opts.find(o => o.value === active) || opts[0]).value;
       }
+      case 'rulesChoice': if(req.ctx?.keywordOutgoing)return opts.reduce((a,b)=>Number(a.value)>Number(b.value)?a:b).value;return opts[0].value;
       case 'guts': case 'gutsCourt': return opts.slice(0, req.need).map(o => o.value);
       case 'event': {
         const cards = opts.filter(x => x.value);

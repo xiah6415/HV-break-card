@@ -75,7 +75,7 @@ function buildCoverage(){
    if(['enter','enter_self'].includes(n.kind))host('movement','skill_entry',at,'需接新增角色slot／數值、技能登場與觸發流程');
    if(n.kind==='mill')host('selection','mill',at,'共用橋接尚未驗證mill數量與公開結果流程');
    if(n.kind==='choose_modes')host('selection','choose_modes',at,'共用橋接尚未實作mode選單');
-   if(n.kind==='phase_jump'||n.kind==='keyword'&&n.keyword==='one_touch')host('keywords','phase_transition',at,'核心支援的跳階段仍需host回合控制器銜接');
+   if(n.kind==='phase_jump')host('keywords','phase_transition',at,'核心支援的跳階段仍需host回合控制器銜接');
   },rootAt);
   if(gate&&!gate.passed&&!reasons.some(r=>r.layer==='core'||r.layer==='review'))core('other','admission:'+gate.message,'profile',gate.message);
   const isApproved=admitted.has(p.profile_id);if(isApproved&&reasons.length)throw Error('Approved profile unexpectedly blocked: '+p.profile_id+' '+JSON.stringify(reasons));

@@ -38,7 +38,7 @@ for(const cp of baseline.checkpoints.filter(cp=>['payment_cards','turnEnd'].incl
 }
 const docs=fs.readFileSync(path.join(__dirname,'HOST-CONTRACT.md'),'utf8');
 for(const kind of [...new Set([...host.gameKinds,...host.kernelKinds])])assert(docs.includes('| '+kind+' |'),'documented '+kind);
-for(const file of ['../engine.js','core.js']){const source=fs.readFileSync(path.join(__dirname,file),'utf8');for(const m of source.matchAll(/(?:kind:\s*|_decide\(|_selection\([^\n]*?ctx,)'([a-zA-Z_]+)'/g)){if(['C','E'].includes(m[1]))continue;assert([...host.gameKinds,...host.kernelKinds].includes(m[1]),'source kind '+m[1]);}}
+for(const file of ['../engine.js','core.js']){const source=fs.readFileSync(path.join(__dirname,file),'utf8');for(const m of source.matchAll(/(?:kind:\s*|_decide\(|_selection\([^\n]*?ctx,)'([a-zA-Z_]+)'/g)){if(['C','E','attack',...require('./core').capabilities.nodes].includes(m[1]))continue;assert([...host.gameKinds,...host.kernelKinds].includes(m[1]),'source kind '+m[1]);}}
 const m=create(),r=next(m);assert(host.validateRequest(r));assert(host.validateAnswer(r,envelope(r,'serve')));assert(!host.validateAnswer(r,envelope(r,0)));assert(!host.validateRequest({...r,kind:'future'}));
 assert.throws(()=>m.command({kind:'manual'}),/UNSUPPORTED_COMMAND/);
 assert.throws(()=>new Match({decks:[F.decks.basic.map((c,i)=>i?'D01-009':'PR-022'),F.decks.basic]}),/UNSUPPORTED_SKILL/);
