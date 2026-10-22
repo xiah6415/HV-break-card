@@ -605,7 +605,7 @@ class Kernel {
       case 'protect_numeric_decrease': { const targets=this._targets(node,ctx);if(!targets.length)return false;const ball=typeof targets[0]==='string';this.effect('protect',{targets:ball?[]:targets,ballOwner:ball?(targets[0]==='self_ball'?ctx.controller:1-ctx.controller):null,parameter:node.parameter},ctx,node.duration);return true; }
       case 'phase_jump': this._jump(node.destination);return true;
       case 'keyword': return this._keyword(node,ctx);
-      case 'enter': case 'enter_self': { const ids=node.kind==='enter_self'?[ctx.source.id]:this.pool(node.pool,ctx);let n=node.kind==='enter_self'?1:Math.min(node.count,ids.length);
+      case 'enter': case 'enter_self': { const ids=node.kind==='enter_self'?[ctx.source.id]:this.pool(node.pool,ctx).filter(id=>this._entryOptions(id,ctx.controller,node.destination,node.as_side_blocker,'skill').names.length);let n=node.kind==='enter_self'?1:Math.min(node.count,ids.length);
         if(node.count_mode==='upto'){const max=n;n=this._decide('entry_count',ctx,Array.from({length:n+1},(_,i)=>i));legal(Number.isInteger(n)&&n>=0&&n<=max,'Invalid entry count');}
         if(!n){ctx.bind.entered=null;return false;}need(n===1,'Multiple entry transaction not implemented');const id=node.kind==='enter_self'?ids[0]:this._selection(ids,1,ctx,'entry')[0];ctx.bind.entered=this._enter(id,ctx.controller,node.destination,ctx,'skill',node.as_side_blocker,true);return !!ctx.bind.entered; }
       default: throw new NeedsReview('Unsupported operation '+node.kind);
@@ -741,17 +741,23 @@ class Kernel {
     const performed=this._resolveSkill(p,ctx);
     this._drain();return {performed,invalid:false};
   }
-  _enter(id,player,area,ctx,origin='hand',side=false,skipRestricted=false,keywordFamily=null) {
-    const c=this.card(id),p=this.profile(id);let dest=area;
-    if(side){dest=['side:0','side:1'].find(z=>!this.top(player,z));legal(dest,'No side blocker slot');need(this.top(player,'block'),'Centerless side-block exception is not implemented');}
-    legal(COURT.includes(dest)&&c.printed.type==='character','Invalid character destination');
+  _entryOptions(id,player,area,side=false,origin='hand') {
+    const c=this.card(id);let dest=area;
+    if(side){dest=['side:0','side:1'].find(z=>!this.top(player,z));if(!dest||!this.top(player,'block'))return {dest,names:[]};}
+    if(!COURT.includes(dest)||c.printed.type!=='character')return {dest,names:[],error:'Invalid character destination'};
     const parameter=dest.startsWith('side:')||dest==='block'?'block':dest;
-    legal(c.printed.parameters[parameter]!=='dash','Dash parameter cannot enter');
+    if(c.printed.parameters[parameter]==='dash')return {dest,names:[],error:'Dash parameter cannot enter'};
     const other=dest==='attack'?this.top(player,'toss'):dest==='toss'?this.top(player,'receive'):null;
     const entryCount=parameter==='block'?(this.state.turn.blockEntries?.[player]||0)+1:1;
     const names=this.entryNames(id).filter(name=>(!other||this.effectiveName(other)!==name)&&(parameter!=='block'||!['block','side:0','side:1'].map(z=>this.top(player,z)).filter(x=>x&&x!==id).some(x=>this.effectiveName(x)===name))&&this.permission({action:'enter_character',player,origin:origin==='skill'?'skill':'rule',role:parameter==='block'?(side?'side_blocker':'center_blocker'):dest,entryOrigin:c.zone.split('.')[1]==='hand'?'hand':this.role(id)==='guts'&&COURT.includes(c.zone.split('.')[1])?'guts':c.zone.split('.')[1],entryCount,name,printed:c.printed}).allowed);
+    return {dest,names};
+  }
+  _enter(id,player,area,ctx,origin='hand',side=false,skipRestricted=false,keywordFamily=null) {
+    const c=this.card(id),p=this.profile(id),{dest,names,error}=this._entryOptions(id,player,area,side,origin);
     if(!names.length&&skipRestricted)return null;
-    legal(names.length,'Entry restriction or No legal entry name');
+    legal(names.length,error||'Entry restriction or No legal entry name');
+    const parameter=dest.startsWith('side:')||dest==='block'?'block':dest;
+    const other=dest==='attack'?this.top(player,'toss'):dest==='toss'?this.top(player,'receive'):null;
     const entryName=this._prepareEntryName(id,ctx,names),name=entryName?.name||this.effectiveName(id);
     legal(!other || this.effectiveName(other)!==name,'Same-name role entry forbidden');
     if(parameter==='block')legal(!['block','side:0','side:1'].map(z=>this.top(player,z)).filter(x=>x&&x!==id).some(x=>this.effectiveName(x)===name),'Same-name blockers forbidden');

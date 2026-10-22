@@ -14,7 +14,9 @@ completed.push({id:'rename_before_entry',test:require('./rename-node-tests').tes
 completed.push({id:'all_result_cards_match',test:require('./result-match-node-tests').testResultMatch});
 completed.push({id:'move_self',test:require('./self-move-node-tests').testSelfMove});
 completed.push({id:'mill',test:require('./mill-node-tests').testMill});
+completed.push({id:'enter',test:require('./enter-node-tests').testEnter});
 function testCard(catalog,card){
+ if(card.card_no==='HV-P02-037')return require('./enter-node-tests').testSideCard(catalog,card);
  if(I.dependencies(card).includes('move_self')&&I.dependencies(card).includes('deck_selection'))return require('./self-move-node-tests').testSelfMoveCard(catalog,card);
  if(card.profiles[0].activation.trigger?.event==='character_entry')return require('./entry-observer-tests').testEntryCard(catalog,card);
  if(card.profiles[0].activation.skill_type==='permanent_entry_name')return require('./rename-node-tests').testRenameCard(catalog,card);
@@ -53,6 +55,7 @@ function testModules(catalog){
  for(const card of I.scope(catalog)){
   if(!eligible(card))continue;
   testCard(catalog,card);
+  if(I.dependencies(card).includes('enter'))require('./enter-node-tests').testEffectCard(catalog,card);
   if(card.profiles[0].activation.trigger?.event==='character_entry'){cards[I.short(card.card_no)]={profileId:card.profiles[0].profile_id,modules:I.dependencies(card)};continue;}
   if(I.dependencies(card).includes('all_result_cards_match'))require('./result-match-node-tests').testResultCard(catalog,card);
   if(I.dependencies(card).includes('all'))require('./all-node-tests').testAllCard(catalog,card);

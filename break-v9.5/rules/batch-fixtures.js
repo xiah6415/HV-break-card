@@ -93,7 +93,7 @@ function seedConditions(k,{catalog,profile,source,player,phase,expanded=false}){
    const who=owner(m[1]),area=m[2];add(pick({names:[n.value]},{parameter:area,tag:who===player?tag:null}),who,area);
   }
   if(n.field==='source.entry_reason'&&n.op==='eq')entryReason=n.value;
-  if(expanded&&n.field==='opponent.attack.printed_attack')add(pick({type:'character'},{parameter:'attack',attackValue:n}),1-player,'attack');
+  if(expanded&&['self.attack.printed_attack','opponent.attack.printed_attack'].includes(n.field))add(pick({type:'character'},{parameter:'attack',attackValue:n}),n.field.startsWith('self.')?player:1-player,'attack');
   if(expanded&&n.field==='opponent_ball.kind'&&n.op==='eq')k.state.ball.kind=n.value;
   if(expanded&&n.field==='opponent_ball.offense')k.state.ball.offense=desired(n.op,n.value);
  }

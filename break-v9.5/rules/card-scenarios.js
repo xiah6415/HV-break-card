@@ -6,7 +6,7 @@ function testCard(catalog,card,{condition:override}={}){
  const phase=p.activation.skill_type==='passive'?p.activation.trigger.destination_any[0]:p.activation.activation_phases[0];
  const variants=[{key:'positive',max:true},{key:condition?'condition_false':'decline',max:!!condition,...(condition?{focus:{node_id:condition.node_id,value:false}}:{})},{key:cost?'cost_short':'no_add',max:true}];
  for(const s of variants){
-  const scenario={...s,...(condition?.field==='source.entry_skill_name'?{focus:undefined}:{}),rich:true,conditioned:true,expanded:true};
+  const scenario={...s,...(['source.entry_skill_name','source.role'].includes(condition?.field)?{focus:undefined}:{}),rich:true,conditioned:true,expanded:true};
   const {k,id,entryReason='rule'}=fixture(card,p,phase,scenario,0,catalog);
   if(s.key==='cost_short')for(const area of ['serve','block','receive','toss','attack','side:0','side:1']){
    const ids=k.zone(0,area);for(const paid of ids.slice(0,p.activation.skill_type==='passive'&&area===phase?ids.length:-1)){ids.splice(ids.indexOf(paid),1);k.card(paid).zone='0.drop';k.zone(0,'drop').push(paid);}
@@ -21,9 +21,11 @@ function testCard(catalog,card,{condition:override}={}){
   }
   const entryName=all.find(n=>n.kind==='compare'&&n.field==='source.entry_skill_name');
   const entrySource=entryName?k.addCard(catalog.cards.find(c=>c.profiles[0].variants[0].printed.name===entryName.value).card_no,0,'event'):null;
+  const needsSide=all.some(n=>n.kind==='compare'&&n.field==='source.role'&&n.value==='side_blocker'),side=needsSide&&!(s.key==='condition_false'&&condition?.field==='source.role');
+  if(needsSide){const def=catalog.cards.find(c=>!c.profiles[0].program&&c.profiles[0].variants[0].printed.parameters.block!=='dash'&&![k.effectiveName(id),'青根高伸'].includes(c.profiles[0].variants[0].printed.name));k.addCard(def.card_no,0,'block');}
   const before=k.snapshot(),predicates=[],oldPredicate=k._predicate;
   k._predicate=function(n,c){const value=oldPredicate.call(this,n,c);if(n===condition)predicates.push(value);return value;};
-  function invoke(){return p.activation.skill_type==='event'?k.playEvent(id):p.activation.skill_type==='active'?k.useSkill(id):entrySource&&!(s.key==='condition_false'&&condition===entryName)?k._atomic(()=>{const ref=k._enter(id,0,phase,k._context(entrySource,0),'skill');k._drain();return ref;}):k.enter(id,phase,{reason:entryReason});}
+  function invoke(){return p.activation.skill_type==='event'?k.playEvent(id):p.activation.skill_type==='active'?k.useSkill(id):entrySource&&!(s.key==='condition_false'&&condition===entryName)?k._atomic(()=>{const ref=k._enter(id,0,phase,k._context(entrySource,0),'skill');k._drain();return ref;}):k.enter(id,phase,{reason:entryReason,side});}
   let rejected=false;
   try{invoke();}catch(e){if(e.message!=='OPEN-EVENT-NO-CHANGE')throw e;rejected=true;assert.deepEqual(k.snapshot(),before);}
   const after=k.snapshot();

@@ -1,0 +1,13 @@
+'use strict';
+const assert=require('node:assert/strict'),E=require('../engine'),{UndoSession}=require('../undo-tools'),I=require('./node-inventory'),{fixture}=require('./batch-smoke'),catalog=require('./data/cards.json');
+const copy=x=>JSON.parse(JSON.stringify(x)),tick=()=>new Promise(r=>setImmediate(r));
+class Scenario extends E.Game{async run(){const card=catalog.cards.find(c=>c.card_no==='HV-P04-014'),{k}=require('./enter-node-tests').seedCard(catalog,card);const s=k.snapshot();for(const p of this.players){for(const[h,z]of Object.entries({hand:'hand',deck:'deck',drop:'drop',ev:'event',sets:'sets'}))p[h]=s.zones[p.idx+'.'+z].map(x=>I.short(s.cards[x].cardNo));for(const z of Object.keys(p.area))p.area[z]=s.zones[p.idx+'.'+z].map(x=>I.short(s.cards[x].cardNo));}this.cardState=null;const p=this.players[0];this.beginTurn(p);this.rulePhase='rcv';this.ball={type:'attack',off:8};await this.enterCharacter(p,'receive','P04-014');return this.ask(p,{kind:'turnEnd',options:[{value:true,label:'確認'}]});}}
+(async()=>{
+ const queue=[],errors=[],snapshot=g=>copy({players:g.players.map(p=>{const{g,agent,...d}=p;return d;}),cardState:g.cardState,sharedRulesState:g.sharedRulesState,sharedRulesPending:g.sharedRulesPending,phase:g.rulePhase,turn:g.turnNo});
+ const agent={choose:(g,p,req)=>new Promise(resolve=>queue.push({req,resolve,state:snapshot(g)}))},session=new UndoSession({Game:Scenario},{seed:7,decks:['k1014','seijoh'],agents:[agent,agent],onError:e=>errors.push(e)});session.start();await tick();const points=[];
+ const answer=req=>req.kind==='guts'?req.options.slice(0,req.need).map(o=>o.value):req.kind==='skill'?true:req.options[0].value;
+ for(let i=0;i<20;i++){const t=queue.shift();assert(t);points.push(t);if(t.req.kind==='turnEnd')break;t.resolve(answer(t.req));await tick();}
+ assert.equal(points.at(-1).req.kind,'turnEnd');assert.notEqual(session.game.players[0].top('receive'),'P04-014','Skill must replace the receiver');assert(points.some(t=>t.req.prompt?.includes('是否讓符合條件')));assert(points.some(t=>t.req.prompt?.includes('要由效果登場')));const history=copy(session.entries);let stale=points.at(-1);
+ for(let i=0;i<=history.length;i++){session.start(history.slice(0,i));await tick();const current=queue.shift();assert(current);assert.deepEqual(current.state,points[i].state,'Full entry cost/card choice/court/stat Undo '+i);stale.resolve(answer(stale.req));await tick();assert.deepEqual(snapshot(session.game),current.state,'Late selection reply cannot enter into restored court');stale=current;}
+ assert.deepEqual(errors,[]);session.stop();console.log('enter Undo: cost, optional count, actual card selection, complete court/metadata/stat boundaries and stale response isolation passed');
+})().catch(e=>{console.error(e);process.exitCode=1;});

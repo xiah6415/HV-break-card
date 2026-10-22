@@ -11,8 +11,8 @@ catalog=json.loads((A.ROOT/'rules/data/cards.json').read_text())
 approvals=json.loads((A.ROOT/'rules/approvals.json').read_text())
 legacy=json.loads((A.ROOT/'rules/legacy-skills.json').read_text())
 base=A.build_authority(catalog,approvals,legacy)
-assert base['counts']==dict(basic=183,shared=248,legacy=7,unapproved=103)
-assert [(m['id'],m['parameterForms']) for m in base['modules']]==[('sequence',1),('deck_selection',15),('numeric',77),('selector',152),('conditional',1),('payment_branch',1),('pay_guts',16),('compare',97),('draw',5),('move',20),('count_compare',13),('retrieve',7),('watch',26),('uniform_affiliation',18),('all',1),('keyword',15),('rename_before_entry',25),('all_result_cards_match',18),('move_self',6),('mill',6)]
+assert base['counts']==dict(basic=183,shared=257,legacy=7,unapproved=94)
+assert [(m['id'],m['parameterForms']) for m in base['modules']]==[('sequence',1),('deck_selection',15),('numeric',77),('selector',152),('conditional',1),('payment_branch',1),('pay_guts',16),('compare',97),('draw',5),('move',20),('count_compare',13),('retrieve',7),('watch',26),('uniform_affiliation',18),('all',1),('keyword',15),('rename_before_entry',25),('all_result_cards_match',18),('move_self',6),('mill',6),('enter',7)]
 # Old per-card SHA/evidence fields no longer decide whether a card can run.
 a=copy.deepcopy(approvals);l=copy.deepcopy(legacy)
 for r in a['profiles'].values():r.pop('profile_sha256',None)
@@ -40,10 +40,10 @@ try:A.build_authority(c,approvals,legacy)
 except AssertionError as e:assert 'Module card tests failed' in str(e)
 else:raise AssertionError('Failing card test was released')
 lib=L.library_data();rt=R.runtime_data()
-assert lib['counts']['playable']==438 and lib['authority']==rt['authority']==base
-assert len(rt['approved'])==248
+assert lib['counts']['playable']==447 and lib['authority']==rt['authority']==base
+assert len(rt['approved'])==257
 for code in ['P01-089','P03-078','P03-079','P04-085']:
  assert lib['cards'][code]['playable']
  p=next(c for c in rt['catalog']['cards'] if c['card_no']=='HV-'+code)['profiles'][0]
  assert p['program'] and p['runtime_approved']
-print('authority: baseline without SHA + module tests / 438 strict / 248 shared passed')
+print('authority: baseline without SHA + module tests / 447 strict / 257 shared passed')

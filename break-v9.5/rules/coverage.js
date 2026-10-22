@@ -50,7 +50,7 @@ function buildCoverage(){
     if(!['current_turn_cleanup_or_role_exit','this_turn_or_role_exit','this_turn'].includes(n.duration))host('numeric','numeric_duration:'+n.duration,at,'此數值期限未接入host清理／啟用流程');
     if(n.target?.actor==='opponent'&&n.target_scope?.binding==='choose')host('selection','opponent_target_viewpoint',at,'目前場上目標介面需補對手角色名稱與視角資訊');
     if(n.target_scope?.mode==='multiple')host('selection','multiple_numeric_targets',at,'目前玩家目標選擇橋接僅支援單一實體');
-    if(typeof n.target==='string'&&!['source','$target','$event.character','opponent_ball'].includes(n.target))host('numeric','numeric_target:'+n.target,at,'此綁定或球域尚未由host完整投影驗證');
+    if(typeof n.target==='string'&&!['source','$target','$entered','$event.character','opponent_ball'].includes(n.target))host('numeric','numeric_target:'+n.target,at,'此綁定或球域尚未由host完整投影驗證');
     if(['offense','attack_offense','defense'].includes(n.parameter)&&n.target!=='opponent_ball')host('numeric','numeric_domain:'+n.parameter,at,'未接入此數值領域的host投影');
    }
    if(['move','retrieve'].includes(n.kind)){
@@ -71,7 +71,7 @@ function buildCoverage(){
    }
    if(n.kind==='protect_numeric_decrease'&&!(n.parameter==='all'&&n.duration==='this_turn'&&n.target_scope?.mode==='single'&&typeof n.target==='string'&&!n.target.includes('ball')))host('persistent','protect_shape',at,'目前僅保存單一角色、本回合、全部參數下降保護');
    if(n.kind==='invalidate_skill')host('persistent','skill_invalidation',at,'host尚未保存／查詢此失效效果');
-   if(['enter','enter_self'].includes(n.kind))host('movement','skill_entry',at,'需接新增角色slot／數值、技能登場與觸發流程');
+   if(n.kind==='enter_self')host('movement','skill_entry',at,'需接新增角色slot／數值、技能登場與觸發流程');
    if(n.kind==='choose_modes')host('selection','choose_modes',at,'共用橋接尚未實作mode選單');
    if(n.kind==='phase_jump')host('keywords','phase_transition',at,'核心支援的跳階段仍需host回合控制器銜接');
   },rootAt);

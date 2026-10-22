@@ -516,7 +516,7 @@ class Game {
     for(let i=0;i<ordered.length;i++)if(entryNames(ordered[i]).length>1)this.effect(p,i?'side:'+(i-1):'block').name=chosen[i];
     await sharedRules.charactersEntered(this,p,[{key:'block'},...sides.map((c,i)=>({key:'side:'+i}))]);
     if(p.ts.keywordJump==='draw'){delete p.ts.keywordJump;this.cleanupSides(p);return this.receiveTurn(p);}
-    p.ts.blk = this.courtTargets(p).filter(t=>t.key==='block'||t.key.startsWith('side:')).reduce((n,t)=>n+this.parameter(p,t.key,'blk'),0); p.ts.blockers = cb.cards.slice();
+    p.ts.blk = this.courtTargets(p).filter(t=>t.key==='block'||t.key.startsWith('side:')).reduce((n,t)=>n+this.parameter(p,t.key,'blk'),0); p.ts.blockers = this.courtTargets(p).filter(t=>t.key==='block'||t.key.startsWith('side:')).map(t=>t.card);
     this.log(`${p.name} 攔網 ${cb.cards.map(short).join('＋')}：攔 ${p.ts.blk} vs ${this.ball.off}`);
     await this.eventLoop(p, 'blk', {});
     if(p.ts.keywordJump==='draw'){delete p.ts.keywordJump;this.cleanupSides(p);return this.receiveTurn(p);}
@@ -540,8 +540,8 @@ class Game {
     // receive
     const cs = [...new Set(p.handC().filter(c => this.canEnter(p,'receive',c)))];
     if (!cs.length) this.lost(p, '沒有能接球的角色');
-    const c = await this.ask(p, { kind: 'receiver', prompt: `來球：${ball.type === 'serve' ? '發球' : ball.type === 'block' ? '攔網回球' : '攻擊'} ${off}。選擇接球角色`, ball, options: cs.map(x => ({ label: `${nm(x)}　接 ${this.rcvPreview(p, x)}`, card: x, value: x })) });
-    await this.enterCharacter(p, 'receive', c); this.src = nm(c);
+    let c = await this.ask(p, { kind: 'receiver', prompt: `來球：${ball.type === 'serve' ? '發球' : ball.type === 'block' ? '攔網回球' : '攻擊'} ${off}。選擇接球角色`, ball, options: cs.map(x => ({ label: `${nm(x)}　接 ${this.rcvPreview(p, x)}`, card: x, value: x })) });
+    await this.enterCharacter(p, 'receive', c); c=p.top('receive'); this.src = nm(c);
     let r = this.parameter(p,'receive','rcv') - (sharedRules.protectedParameter(this,p,'receive','rcv')?0:p.restrict.rcv_minus||0);
     if (legacySkill(c) && c === 'PR-022' && ball.type !== 'block' && off <= 2) { p.ts.apass = 1; this.log('澤村：A 傳球(1)'); if (p.guts('receive') >= 1 && await this.yes(p, 'skill', '澤村：付 1 Guts 抽 1？', { card: c })) { await this.pay(p, 'receive', 1); this.sdraw(p, 1); } }
     p.ts.rcv = r; p.ts.receiver = c; p.ts.receiverRef = this.cardReference(p, 'receive');
@@ -554,8 +554,8 @@ class Game {
     this.rulePhase = 'tos';
     const ts = [...new Set(p.handC().filter(x => this.canEnter(p, 'toss', x)))];
     if (!ts.length) this.lost(p, '沒有能舉球的角色');
-    const t = await this.ask(p, { kind: 'setter', prompt: '選擇舉球角色', options: ts.map(x => ({ label: `${nm(x)}　舉 ${st(x, 'tos')}`, card: x, value: x })) });
-    await this.enterCharacter(p, 'toss', t); this.src = nm(t);
+    let t = await this.ask(p, { kind: 'setter', prompt: '選擇舉球角色', options: ts.map(x => ({ label: `${nm(x)}　舉 ${st(x, 'tos')}`, card: x, value: x })) });
+    await this.enterCharacter(p, 'toss', t); t=p.top('toss'); this.src = nm(t);
     if(p.ts.keywordJump==='end'){const out=await this.confirmTurnEnd(p,{type:'attack',off:p.ts.keywordOutgoing.offense});this.finishTurn(p);return out;}
     let toss = this.parameter(p,'toss','tos') + (p.ts.apass || 0);
     if (legacySkill(t) && t === 'P01-006' && p.guts('toss') >= 2 && await this.yes(p, 'skill', '影山：付 2 Guts → 翻牌庫頂找日向/オープン，本回合日向攻擊 +2？', { card: t })) {

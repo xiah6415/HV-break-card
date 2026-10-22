@@ -5,9 +5,9 @@ const catalog=require('./data/cards.json'),released=testModules(catalog).cards,r
  for(const code of Object.keys(released)){
   const card=catalog.cards.find(c=>I.short(c.card_no)===code),p=card.profiles[0],observer=p.activation.trigger?.event==='character_entry',deckMove=I.dependencies(card).includes('move_self')&&I.dependencies(card).includes('deck_selection');
   let phase=p.activation.skill_type==='permanent_entry_name'?'attack':observer?(p.activation.trigger.filters.role_any?.[0]||p.activation.trigger.filters.role):p.activation.skill_type==='passive'?p.activation.trigger.destination_any[0]:p.activation.activation_phases[0];if(phase==='block')phase='block';
-  const seed=observer?require('./entry-observer-tests').setup(catalog,card):deckMove?require('./node-module-tests').deckFixture(catalog,I.nodes(p).find(n=>n.kind==='deck_selection')):fixture(card,p,phase,{rich:true,conditioned:true,expanded:true,max:true,key:'positive'},0,catalog);
+  const seed=I.dependencies(card).includes('enter')?require('./enter-node-tests').seedCard(catalog,card):observer?require('./entry-observer-tests').setup(catalog,card):deckMove?require('./node-module-tests').deckFixture(catalog,I.nodes(p).find(n=>n.kind==='deck_selection')):fixture(card,p,phase,{rich:true,conditioned:true,expanded:true,max:true,key:'positive'},0,catalog);
   if(deckMove){seed.id=seed.k.addCard(card.card_no,0,'hand');seed.k.state.turn.phase=phase;seed.k.state.ball={kind:'attack',offense:8,owner:1};}
-  const {k,id,target,entryReason='rule'}=seed,before=k.snapshot();
+  const {k,id,target,side=false,entryReason='rule'}=seed,before=k.snapshot();
   const multiple=I.nodes(p).filter(n=>n.kind==='move'&&n.count>1&&n.pool.zone.endsWith('.guts')).map(n=>({node:n,ids:k.pool(n.pool,k._context(id,0))})),picked=[];
   const agent={wantsAck:true,async choose(g,p,r){if(r.kind==='skill')return true;if(r.kind==='guts'||r.kind==='gutsCourt')return r.options.slice(0,r.need).map(o=>o.value);const value=r.options.find(o=>o.label?.includes('其餘放到牌庫底'))?.value??r.options[0].value;if(r.prompt?.includes('確認全部後才搬牌'))picked.push(value);return value;}};
   const oldChoose=k.choose;k.choose=r=>r.kind==='name'?r.options[0]:oldChoose(r);
@@ -22,13 +22,15 @@ const catalog=require('./data/cards.json'),released=testModules(catalog).cards,r
     k._atomic(()=>{k._enter(id,0,phase,k._context(eventId,0),'skill');k._drain();});
     g.players[0].ev.push(I.short(event.card_no));g.place(g.players[0],phase,code);
     await require('./legacy').charactersEntered(g,g.players[0],[{key:phase,origin:'hand',reason:'skill',entrySkillName:name}]);
-   }else{k.enter(id,phase,{reason:entryReason});await g.enterCharacter(g.players[0],phase,code);}
+   }else{k.enter(id,phase,{reason:entryReason,side});if(side){g.players[0].hand.splice(g.players[0].hand.indexOf(code),1);g.players[0].ts.sides.push(code);await require('./legacy').charactersEntered(g,g.players[0],[{key:'side:0',origin:'hand',reason:'rule'}]);}else await g.enterCharacter(g.players[0],phase,code);}
   }
   else {p.activation.skill_type==='event'?k.playEvent(id):k.useSkill(id);await g.resolve(g.players[0],code,g.rulePhase);}
   for(const {node,ids}of multiple){const count=Math.min(node.count,ids.length);assert.equal(ids.filter(x=>k.card(x).zone.endsWith('.drop')).length,count,code+' must move the full selected quantity');assert.equal(picked.length,count,code+' host must collect every card choice');assert.equal(new Set(picked).size,count,code+' cannot select the same physical card twice');}
+  if(side)assert.equal(require('./legacy').blockEntered(g,g.players[0]),2,code+' counts original side entry and skill replacement');
   for(const q of g.players){
    for(const [host,z]of Object.entries({hand:'hand',deck:'deck',drop:'drop',ev:'event',sets:'sets'}))assert.deepEqual(q[host],k.zone(q.idx,z).map(id=>I.short(k.card(id).cardNo)),code+' '+host);
-   for(const area of roles){const top=k.top(q.idx,area);if(!top)continue;assert.equal(g.cardName(q,area).normalize('NFKC').replace(/\s/g,''),k.effectiveName(top),code+' '+area+' name');for(const [parameter,old]of Object.entries(params))assert.equal(g.parameter(q,area,old),k.parameter(top,parameter)==='dash'?null:k.parameter(top,parameter),code+' '+area+'.'+parameter);}
+   assert.deepEqual(q.ts.sides,['side:0','side:1'].map(a=>k.top(q.idx,a)).filter(Boolean).map(id=>I.short(k.card(id).cardNo)),code+' side identities');
+   for(const area of [...roles,...q.ts.sides.map((_,i)=>'side:'+i)]){const top=k.top(q.idx,area);if(!top)continue;assert.equal(g.cardName(q,area).normalize('NFKC').replace(/\s/g,''),k.effectiveName(top),code+' '+area+' name');for(const [parameter,old]of Object.entries(params))assert.equal(g.parameter(q,area,old),k.parameter(top,parameter)==='dash'?null:k.parameter(top,parameter),code+' '+area+'.'+parameter);}
   }
  }
  console.log('live frequent batch: '+Object.keys(released).length+' cards; persistent-core vs public-game zones and all parameters passed');
