@@ -56,7 +56,11 @@ let cases=0;
  const base={kind:'watch',actor:0,source:{id,incarnation:0},duration:{kind:'this_turn',turn:g.turnNo}};
  g.sharedRulesState={version:1,fingerprint:require('./runtime-data.json').fingerprint,effects:[{...base,event:'source_moved'}],next:1,receipts:[]};
  g.moveCard(p.ev,p.drop,p.ev.length-1);assert.equal(g.sharedRulesEvents.length,1);assert.equal(g.sharedRulesEvents[0].from_zone,'event');assert.equal(g.sharedRulesEvents[0].to_zone,'drop');
- g.sharedRulesEvents=[];g.sharedRulesState.effects=[{...base,event:'hand_added',filters:{}}];g.draw(p);assert.equal(g.sharedRulesEvents.length,1);assert.equal(g.sharedRulesEvents[0].operation,'draw');
- g.sharedRulesEvents=[];g.sharedRulesState.effects=[{...base,event:'hand_added',filters:{exclude_operations:['draw']}}];g.draw(p);assert.equal(g.sharedRulesEvents.length,0);
+ // Probe generic draw notifications directly; an incomplete mock watch is
+ // not a valid committed journal for the public draw command.
+ g.sharedRulesEvents=[];g.sharedRulesState.effects=[];g.draw(p);const drawn=g.cardReference(p,'hand').id;
+ g.sharedRulesState.effects=[{...base,event:'hand_added',filters:{}}];B.drawn(g,p,drawn,g.cardState.revision);assert.equal(g.sharedRulesEvents.length,1);assert.equal(g.sharedRulesEvents[0].operation,'draw');
+ const skipDraw=require('./runtime-data.json').catalog.cards.flatMap(c=>c.profiles.flatMap(p=>I.nodes(p))).find(n=>n.kind==='watch'&&n.event==='hand_added'&&n.filters?.exclude_operations?.includes('draw'));assert(skipDraw);
+ g.sharedRulesEvents=[];g.sharedRulesState.effects=[{...structuredClone(skipDraw),...base,event:'hand_added',duration:{kind:skipDraw.duration,createdTurn:g.turnNo-1,player:0,activeTurn:g.turnNo}}];B.assertReady(g);g.draw(p);assert.equal(g.sharedRulesEvents.length,0);
  console.log('watch live: '+cases+' generated-event/expiry cases; all zones and parameters match core');
 })().catch(e=>{console.error(e);process.exitCode=1;});

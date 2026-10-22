@@ -62,13 +62,6 @@ function buildCoverage(){
     const family=['hand_added','character_entry','loss','block_success','source_moved'].includes(n.event)&&['this_turn','next_opponent_turn'].includes(n.duration);
     if(!family)host('triggers','watch:'+n.event+':'+n.duration,at,'尚未接入host通知／持久化的watch族');
    }
-   if(n.kind==='ban_action'){
-    const scope=n.scope||{},keys=Object.keys(scope).sort(),shape=JSON.stringify(keys);
-    const add=n.action==='add_hand'&&JSON.stringify(scope)==='{"origins":["skill"]}';
-    const receive=n.action==='enter_character'&&scope.role==='receive'&&shape==='["printed_receive_gte","role"]';
-    const block=n.action==='enter_character'&&scope.role==='block'&&shape==='["max_count","role"]';
-    if(n.duration!=='next_opponent_turn'||!(add||receive||block))host('persistent','ban:'+n.action+':'+n.duration+':'+shape,at,'其他權限範圍／期限尚未接入host各動作入口');
-   }
    if(n.kind==='protect_numeric_decrease'&&!(n.parameter==='all'&&n.duration==='this_turn'&&n.target_scope?.mode==='single'&&typeof n.target==='string'&&!n.target.includes('ball')))host('persistent','protect_shape',at,'目前僅保存單一角色、本回合、全部參數下降保護');
    if(n.kind==='invalidate_skill')host('persistent','skill_invalidation',at,'host尚未保存／查詢此失效效果');
    if(n.kind==='enter_self')host('movement','skill_entry',at,'需接新增角色slot／數值、技能登場與觸發流程');

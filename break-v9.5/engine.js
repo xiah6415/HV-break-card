@@ -161,7 +161,8 @@ class Game {
   async yes(p, kind, prompt, ctx) { const r = await this.ask(p, { kind, prompt, ctx, options: [{ label: '發動', value: true }, { label: '不發動', value: false }] }); return r; }
 
   // ---------- card movement
-  draw(p, n = 1, why = '') {
+  draw(p, n = 1, why = '', origin = 'rule') {
+    if(!sharedRules.permission(this,{action:'add_hand',player:p.idx,origin}).allowed){this.log(`${p.name} 目前不能抽牌`,'warn');return 0;}
     const got = [];
     for (let i = 0; i < n; i++) { if (!p.deck.length) { this.log(`${p.name} 牌庫空，無法抽牌`, 'warn'); break; } const c = this.moveCard(p.deck, p.hand, p.deck.length - 1); got.push(c); sharedRules.drawn(this,p,this.cardReference(p,'hand').id,this.cardState.revision);p.newCount[c] = (p.newCount[c] || 0) + 1; }
     if (got.length) {
@@ -172,7 +173,7 @@ class Game {
     return got.length;
   }
   skillHandAllowed(p) { return !p.restrict.no_add && sharedRules.permission(this,{action:'add_hand',player:p.idx,origin:'skill'}).allowed; }
-  sdraw(p, n = 1) { sharedRules.assertReady(this); if (!this.skillHandAllowed(p)) { this.log(`${p.name} 被岩泉封鎖，${this.src || '技能'}的抽牌無效`, 'warn'); return 0; } return this.draw(p, n, this.src || '技能'); }
+  sdraw(p, n = 1) { sharedRules.assertReady(this); if (!this.skillHandAllowed(p)) { this.log(`${p.name} 被岩泉封鎖，${this.src || '技能'}的抽牌無效`, 'warn'); return 0; } return this.draw(p, n, this.src || '技能','skill'); }
   async sadd(p, c, src, index = src.indexOf(c)) {
     if (!this.skillHandAllowed(p)) { this.log(`${p.name} 被岩泉封鎖，無法加入手牌`, 'warn'); return false; }
     sharedRules.assertReady(this);
@@ -396,8 +397,9 @@ class Game {
     for (const key of Object.keys(p.effects)) if (key.startsWith('side:')) delete p.effects[key];
     if (sides.length) this.log(`側攔 ${sides.map(nm).join('、')} → 棄牌區`, 'guts');
   }
-  finishTurn(p) { for (const q of this.players) if (q !== p) for (const [key, fx] of Object.entries(q.effects)) if (fx.manual?.turn === this.turnNo) { if (this.validEffect(q,key)) for (const [param,delta] of Object.entries(fx.manual.mods)) fx.mods[param] -= delta; delete fx.manual; } delete p.ts.blockEntryReceipts; p.effects = {}; p.restrict = {}; p.ts.finished = true; turnEffects.finish(this, this.turnNo); sharedRules.finishTurn(this); }
-  beginTurn(p) { if (this.turnP) this.finishTurn(this.turnP); this.turnP = p; this.turnNo++; p.restrict = {...p.pending, ...turnEffects.begin(this, p.idx)}; p.pending = {}; p.ts = { used: {} }; p.newCount = {}; this.src = ''; this.rulePhase = 'drw'; sharedRules.beginTurn(this, p); }
+  finishTurn(p) { for (const q of this.players) if (q !== p) for (const [key, fx] of Object.entries(q.effects)) if (fx.manual?.turn === this.turnNo) { if (this.validEffect(q,key)) for (const [param,delta] of Object.entries(fx.manual.mods)) fx.mods[param] -= delta; delete fx.manual; } delete p.ts.blockEntryReceipts;delete p.ts.blockEntryOrigins; p.effects = {}; p.restrict = {}; p.ts.finished = true; turnEffects.finish(this, this.turnNo); sharedRules.finishTurn(this); }
+  setRulePhase(timing) {if(this.rulePhase==='drw'&&timing!=='drw')sharedRules.endDrawPhase(this);this.rulePhase=timing;}
+  beginTurn(p) { if (this.turnP) this.finishTurn(this.turnP); this.turnP = p; this.turnNo++; p.restrict = {...p.pending, ...turnEffects.begin(this, p.idx)}; p.pending = {}; p.ts = { used: {} }; p.newCount = {}; this.src = ''; this.setRulePhase('drw'); sharedRules.beginTurn(this, p); }
   currentOutgoing(p, outgoing) {
     if(p.ts.keywordResolved)return {...p.ts.keywordResolved};
     const off = outgoing.type === 'serve' ? this.parameter(p, 'serve', 'srv') : outgoing.type === 'attack' ? p.ts.toss + p.ts.atk : outgoing.off;
@@ -439,7 +441,7 @@ class Game {
   // ---------- serve
   async serveTurn(p) {
     this.beginTurn(p);
-    this.rulePhase = 'srv';
+    this.setRulePhase('srv');
     await this.notice({ type: 'serve', player: p.idx });
     const o = p.opp;
     const cs = [...new Set(p.handC().filter(c => st(c, 'srv') != null))];
@@ -469,7 +471,7 @@ class Game {
     }
     return await this.receiveTurn(p);
   }
-  blockMax(p) { const legacy=p.restrict.one_blocker?1:p.restrict.two_blockers?2:3;return [3,2,1].find(n=>n<=legacy&&sharedRules.permission(this,{action:'enter_character',player:p.idx,origin:'rule',role:'center_blocker',entryOrigin:'hand',entryCount:sharedRules.blockEntered(this,p)+n}).allowed)||0; }
+  blockMax(p) { const legacy=p.restrict.one_blocker?1:p.restrict.two_blockers?2:3;return [3,2,1].find(n=>n<=legacy&&sharedRules.blockGroupAllowed(this,p,n))||0; }
   blockCands(p) { return p.handC().filter(c => st(c, 'blk') != null); }
   evalBlock(p, combo, off = this.ball.off) {
     const o = p.opp, evInHand = p.hand.some(x => !isC(x));
@@ -495,7 +497,7 @@ class Game {
     return res.slice(0, 12);
   }
   async blockTurn(p, combos) {
-    this.rulePhase = 'blk';
+    this.setRulePhase('blk');
     const pick = await this.ask(p, { kind: 'block', build: { cands: this.blockCands(p), max: this.blockMax(p) }, prompt: `組攔網（需 ≥ ${this.ball.off}）`, options: combos.map((cb, i) => ({ label: `${cb.cards.map(short).join('＋')}　攔 ${cb.total}${cb.tsu ? '（含月島 +6）' : ''}${cb.natsu ? '（還要用日向夏 +1）' : ''}`, value: i, cards: cb.cards })) });
     let cb, center;
     if (pick && typeof pick === 'object') {
@@ -536,7 +538,7 @@ class Game {
     if (p.agent.wantsAck) await this.ask(p, { kind: 'ack', prompt: `抽牌階段：來球 ${ball.type === 'serve' ? '發球' : ball.type === 'block' ? '攔網回球' : '攻擊'} ${off}，先抽 1 張`, options: [{ label: '抽 1 張', value: true }] });
     this.draw(p, 1, '抽牌階段');
     await this.eventLoop(p, 'drw', {});
-    this.rulePhase = 'rcv';
+    this.setRulePhase('rcv');
     // receive
     const cs = [...new Set(p.handC().filter(c => this.canEnter(p,'receive',c)))];
     if (!cs.length) this.lost(p, '沒有能接球的角色');
@@ -551,7 +553,7 @@ class Game {
     if (r < ball.off) this.lost(p, `接球 ${r} 小於來球 ${ball.off}`);
     this.log(`接球成功（${r} ≥ ${ball.off}）`);
     // toss
-    this.rulePhase = 'tos';
+    this.setRulePhase('tos');
     const ts = [...new Set(p.handC().filter(x => this.canEnter(p, 'toss', x)))];
     if (!ts.length) this.lost(p, '沒有能舉球的角色');
     let t = await this.ask(p, { kind: 'setter', prompt: '選擇舉球角色', options: ts.map(x => ({ label: `${nm(x)}　舉 ${st(x, 'tos')}`, card: x, value: x })) });
@@ -568,7 +570,7 @@ class Game {
     await this.eventLoop(p, 'tos', {});
     if(p.ts.keywordJump==='end'){const out=await this.confirmTurnEnd(p,{type:'attack',off:p.ts.keywordOutgoing.offense});this.finishTurn(p);return out;}
     // attack
-    this.rulePhase = 'atk';
+    this.setRulePhase('atk');
     const as = [...new Set(p.handC().filter(x => this.canEnter(p, 'attack', x)))];
     if (!as.length) this.lost(p, '沒有能攻擊的角色');
     const a = await this.ask(p, { kind: 'attacker', prompt: '選擇攻擊角色', options: as.map(x => ({ label: `${nm(x)}　攻 ${st(x, 'atk')}${isHin(x) && p.ts.hin ? ' +2' : x === 'PR-057' ? '（登場時選名稱）' : ''}`, card: x, value: x })) });
@@ -614,6 +616,7 @@ class Game {
     const seen = new Set();
     for (const c of p.hand) {
       if (seen.has(c)) continue; seen.add(c);
+      if(!isC(c)&&!sharedRules.eventAllowed(this,p,c,timing))continue;
       if (sharedRules.handles(c)) {
         if (sharedRules.canPlay(this, p, c, timing)) res.push({card:c,label:nm(c)+(p.ts.used?.[c]?'（技能已失效，僅放入Event區）':'')});
         continue;
@@ -641,7 +644,7 @@ class Game {
     return res;
   }
   async eventLoop(p, timing, ctx) {
-    this.rulePhase = timing;
+    this.setRulePhase(timing);
     for (;;) {
       if(p.ts.keywordJump)return;
       const opts = this.playable(p, timing);
@@ -657,8 +660,9 @@ class Game {
   }
   async resolve(p, c, timing) {
     sharedRules.assertReady(this);
-    this.rulePhase = timing;
+    this.setRulePhase(timing);
     const o = p.opp; this.src = nm(c);
+    if(!isC(c)&&!sharedRules.eventAllowed(this,p,c,timing))throw Error('目前禁止使用這張事件卡');
     if (this.mode === 'numeric' && library.permission(c)?.kind === 'unapproved') {
       if (!this.playable(p,timing).some(o=>o.card===c)) throw Error('此卡現在不能使用');
       this.moveCode(p.hand,p.ev,c);this.log(`${p.name} 放入 ${nm(c)}：技能未自動化，請手動處理`,'ev');return;

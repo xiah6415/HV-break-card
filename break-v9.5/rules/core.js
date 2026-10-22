@@ -27,6 +27,18 @@ function walk(value, fn) {
   if (Array.isArray(value)) value.forEach(v=>walk(v,fn));
   else if (value && typeof value==='object') { fn(value); Object.values(value).forEach(v=>walk(v,fn)); }
 }
+function validateBan(n) {
+  need(['enter_character','play_event','add_hand','use_skill'].includes(n.action)&&['self','opponent','owner','controller'].includes(n.actor)&&['next_opponent_turn','this_turn','this_draw_phase'].includes(n.duration)&&n.scope&&typeof n.scope==='object'&&!Array.isArray(n.scope),'Unsupported ban parameters');
+  const enums={origins:['rule','skill'],phases:['serve','block','draw','receive','toss','attack','end'],entry_origins:['hand','drop','guts'],play_icons_any:['serve','block','draw','receive','toss','attack']};
+  for(const [key,v]of Object.entries(n.scope)){
+    if(enums[key])need(Array.isArray(v)&&v.length>0&&v.every(x=>enums[key].includes(x)),'Unsupported ban scope '+key);
+    else if(['positions','names'].includes(key))need(Array.isArray(v)&&v.length>0&&v.every(x=>typeof x==='string'&&x.length),'Unsupported ban scope '+key);
+    else if(key==='role')need(['serve','block','center_blocker','side_blocker','receive','toss','attack','character'].includes(v),'Unsupported ban role');
+    else if(['max_count','printed_receive_gte'].includes(key))need(Number.isInteger(v)&&v>=0,'Unsupported ban limit');
+    else throw new NeedsReview('Unsupported ban scope '+key);
+  }
+  return true;
+}
 class Kernel {
   constructor({catalog, ruleIds, fingerprint, mode='live', choose, state, practiceDrawBeforeReceive=false}={}) {
     need(catalog && Array.isArray(catalog.cards) && typeof fingerprint==='string','Catalog and fingerprint required');
@@ -213,7 +225,7 @@ class Kernel {
     for (const e of this.state.effects) if (this.active(e) && e.actor===action.player) {
       if(e.kind==='keyword'&&e.keyword==='feint_block_ban'&&action.action==='enter_character'&&this.roleMatches(action.role,'block'))return {allowed:false,layer:'resolve_step',effect:e.id};
       if (e.kind==='ban' && e.action===action.action && this._scopeMatch(e.scope,action)) {
-        if ('max_count' in e.scope && !(action.entryCount>e.scope.max_count)) continue;
+        if ('max_count' in e.scope) {const count=e.scope.entry_origins&&action.entryCounts?e.scope.entry_origins.reduce((n,z)=>n+(action.entryCounts[z]||0),0):action.entryCount;if(!(count>e.scope.max_count))continue;}
         return {allowed:false,layer:action.action==='play_event' ? 'play_card':'resolve_step',effect:e.id};
       }
       if (e.kind==='invalid' && action.action==='use_skill') {
@@ -530,6 +542,7 @@ class Kernel {
       if (n.target_scope) need(n.target_scope.membership==='snapshot_on_resolution','Target membership is not supported');
       if(n.destination)need((!n.destination.includes('choose_deck') || ['choose_deck_top_or_bottom','self.choose_deck_top_or_bottom'].includes(n.destination)) && !n.destination.endsWith('.deck_top'),'Destination mechanism not implemented');
       if(n.kind==='invalidate_skill')need(!n.selector.keyword_families && !n.selector.union_with?.keyword_families,'Keyword invalidation not implemented');
+      if(n.kind==='ban_action')validateBan(n);
       if(n.kind==='formal_declaration_cost')need(n.must_be_complete===true&&n.performed_for_this_skill_only===true&&Array.isArray(n.steps)&&n.steps.length>0,'Unsupported declaration cost parameters');
       if(n.kind==='mill')need(['self','opponent'].includes(n.actor)&&['exact','upto'].includes(n.count_mode)&&Number.isInteger(n.count)&&n.count>=0&&n.bind==='milled','Unsupported mill parameters');
       if(n.kind==='all_result_cards_match')need(['paid','milled','revealed'].includes(n.result)&&n.require_nonempty===true,'Unsupported result-match parameters');
@@ -750,6 +763,12 @@ class Kernel {
     const performed=this._resolveSkill(p,ctx);
     this._drain();return {performed,invalid:false};
   }
+  _entryCounts(player,origin,count=1) {
+    const current=this.state.turn.blockEntriesByOrigin?.[player]||{hand:this.state.turn.blockEntries?.[player]||0};return {...current,[origin]:(current[origin]||0)+count};
+  }
+  _recordBlockEntry(player,origin) {
+    const counts=this._entryCounts(player,origin);this.state.turn.blockEntriesByOrigin ||= [{},{}];this.state.turn.blockEntriesByOrigin[player]=counts;this.state.turn.blockEntries ||= [0,0];this.state.turn.blockEntries[player]++;
+  }
   _entryOptions(id,player,area,side=false,origin='hand') {
     const c=this.card(id);let dest=area;
     if(side){dest=['side:0','side:1'].find(z=>!this.top(player,z));if(!dest||!this.top(player,'block'))return {dest,names:[]};}
@@ -758,7 +777,7 @@ class Kernel {
     if(c.printed.parameters[parameter]==='dash')return {dest,names:[],error:'Dash parameter cannot enter'};
     const other=dest==='attack'?this.top(player,'toss'):dest==='toss'?this.top(player,'receive'):null;
     const entryCount=parameter==='block'?(this.state.turn.blockEntries?.[player]||0)+1:1;
-    const names=this.entryNames(id).filter(name=>(!other||this.effectiveName(other)!==name)&&(parameter!=='block'||!['block','side:0','side:1'].map(z=>this.top(player,z)).filter(x=>x&&x!==id).some(x=>this.effectiveName(x)===name))&&this.permission({action:'enter_character',player,origin:origin==='skill'?'skill':'rule',role:parameter==='block'?(side?'side_blocker':'center_blocker'):dest,entryOrigin:c.zone.split('.')[1]==='hand'?'hand':this.role(id)==='guts'&&COURT.includes(c.zone.split('.')[1])?'guts':c.zone.split('.')[1],entryCount,name,printed:c.printed}).allowed);
+    const names=this.entryNames(id).filter(name=>(!other||this.effectiveName(other)!==name)&&(parameter!=='block'||!['block','side:0','side:1'].map(z=>this.top(player,z)).filter(x=>x&&x!==id).some(x=>this.effectiveName(x)===name))&&this.permission({action:'enter_character',player,origin:origin==='skill'?'skill':'rule',role:parameter==='block'?(side?'side_blocker':'center_blocker'):dest,entryOrigin:c.zone.split('.')[1]==='hand'?'hand':this.role(id)==='guts'&&COURT.includes(c.zone.split('.')[1])?'guts':c.zone.split('.')[1],entryCount,entryCounts:this._entryCounts(player,c.zone.split('.')[1]==='hand'?'hand':this.role(id)==='guts'&&COURT.includes(c.zone.split('.')[1])?'guts':c.zone.split('.')[1]),name,printed:c.printed}).allowed);
     return {dest,names};
   }
   _enter(id,player,area,ctx,origin='hand',side=false,skipRestricted=false,keywordFamily=null) {
@@ -772,7 +791,7 @@ class Kernel {
     if(parameter==='block')legal(!['block','side:0','side:1'].map(z=>this.top(player,z)).filter(x=>x&&x!==id).some(x=>this.effectiveName(x)===name),'Same-name blockers forbidden');
     const count=parameter==='block'?(this.state.turn.blockEntries?.[player]||0)+1:1;
     const allowed=this.permission({action:'enter_character',player,origin:origin==='skill'?'skill':'rule',role:parameter==='block'?(side?'side_blocker':'center_blocker'):dest,
-      entryOrigin:c.zone.split('.')[1]==='hand'?'hand':this.role(id)==='guts'&&COURT.includes(c.zone.split('.')[1])?'guts':c.zone.split('.')[1],entryCount:count,name,printed:c.printed}).allowed;
+      entryOrigin:c.zone.split('.')[1]==='hand'?'hand':this.role(id)==='guts'&&COURT.includes(c.zone.split('.')[1])?'guts':c.zone.split('.')[1],entryCount:count,entryCounts:this._entryCounts(player,c.zone.split('.')[1]==='hand'?'hand':this.role(id)==='guts'&&COURT.includes(c.zone.split('.')[1])?'guts':c.zone.split('.')[1]),name,printed:c.printed}).allowed;
     if(!allowed&&skipRestricted)return null;
     legal(allowed,'Entry restriction');
     if(p.activation?.skill_type==='passive')this._admit(p);
@@ -782,7 +801,7 @@ class Kernel {
     this._move(id,player,dest,ctx,'explicit_entry');this._applyEntryName(id,entryName,ctx);
     c.entryOrigin=entryOrigin;c.entryReason=origin==='skill'?'skill':'rule';c.entryTurn=this.state.turn.id;
     const event={type:'character_entry',player,card:id,character:this.reference(id),role:this.role(id),origin:entryOrigin,entry_keyword_family:keywordFamily,phase:this.state.turn.phase,window:this.state.turn.id+':'+this.state.turn.phase};
-    if(parameter==='block'){this.state.turn.blockEntries ||= [0,0];this.state.turn.blockEntries[player]++;}
+    if(parameter==='block')this._recordBlockEntry(player,entryOrigin);
     this._emit(event);this._enqueuePassive(id,event);return this.reference(id);
   }
   _jump(phase) { const old=this.state.turn.id+':'+this.state.turn.phase;this.state.queue=this.state.queue.filter(q=>q.window!==old);this.state.effects=this.state.effects.filter(e=>e.duration.kind!=='this_draw_phase');this.state.turn.phase=phase;this.state.turn.step='start';this.state.events.push({type:'phase_jump',from:old,to:phase}); }
@@ -813,7 +832,7 @@ class Kernel {
     legal(Array.isArray(ids)&&ids.length>=1&&ids.length<=3&&new Set(ids).size===ids.length&&ids.includes(center),'Invalid blocker group');
     const ordered=[center,...ids.filter(id=>id!==center)],groups=ordered.map((id,i)=>{
       const c=this.card(id);legal(c.owner===player&&c.zone===player+'.hand'&&c.printed.type==='character'&&c.printed.parameters.block!=='dash','Invalid blocker');
-      return this.entryNames(id).filter(name=>this.permission({action:'enter_character',player,origin:'rule',entryOrigin:'hand',entryCount:(this.state.turn.blockEntries?.[player]||0)+ids.length,role:i?'side_blocker':'center_blocker',name,printed:c.printed}).allowed);
+      return this.entryNames(id).filter(name=>this.permission({action:'enter_character',player,origin:'rule',entryOrigin:'hand',entryCount:(this.state.turn.blockEntries?.[player]||0)+ids.length,entryCounts:this._entryCounts(player,'hand',ids.length),role:i?'side_blocker':'center_blocker',name,printed:c.printed}).allowed);
     });
     legal(distinctNameOptions(groups).length,'Same-name blockers forbidden or entry restriction');
     const chosen=[],entries=[];
@@ -825,7 +844,7 @@ class Kernel {
       const id=ordered[i],c=this.card(id),area=i?'side:'+(i-1):'block',ctx=this._context(id,player),covered=this.top(player,area);
       c.coveredCharacter=covered?{effective_name:this.effectiveName(covered),tags:clone(this.card(covered).printed.affiliation_tags),positions:clone(this.card(covered).printed.position_tags)}:null;
       this._move(id,player,area,ctx,'explicit_entry');this._applyEntryName(id,entries[i],ctx);c.entryOrigin='hand';c.entryReason='rule';c.entryTurn=this.state.turn.id;c.entrySkillName=null;
-      this.state.turn.blockEntries ||= [0,0];this.state.turn.blockEntries[player]++;
+      this._recordBlockEntry(player,'hand');
     }
     // All members and chosen names exist before any entry-trigger resolves.
     for(const id of ordered){const event={type:'character_entry',player,card:id,character:this.reference(id),role:this.role(id),origin:'hand',phase:'block',window:this.state.turn.id+':block'};this._emit(event);this._enqueuePassive(id,event);}
@@ -900,6 +919,6 @@ class Kernel {
     need(['rally','loss_triggers','interval'].includes(this.state.stage),'Invalid rally stage');
     const seen=new Set();for(const [zone,ids] of Object.entries(this.state.zones))for(const id of ids){need(!seen.has(id),'Physical card appears twice');seen.add(id);const c=this.card(id);need(c.zone===zone&&c.id===id&&[0,1].includes(c.owner)&&Number.isInteger(c.incarnation)&&c.incarnation>=0&&this.profiles[c.profileId],'Card identity/zone mismatch');}need(seen.size===Object.keys(this.state.cards).length,'Card conservation failed'); }
 }
-const api={Kernel,distinctNameOptions,NeedsReview,IllegalAction,capabilities:{status:'HOST_CONTROLLER_REQUIRED',nodes:[...KINDS],keywords:['one_touch','doshat','feint','blockout','a_pass','two_attack','back_attack','multi_attack'],defaultCatalogLiveCardApprovals:0}};
+const api={validateBan,Kernel,distinctNameOptions,NeedsReview,IllegalAction,capabilities:{status:'HOST_CONTROLLER_REQUIRED',nodes:[...KINDS],keywords:['one_touch','doshat','feint','blockout','a_pass','two_attack','back_attack','multi_attack'],defaultCatalogLiveCardApprovals:0}};
 if(typeof module!=='undefined')module.exports=api;else root.BreakRulesCore=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
