@@ -12,7 +12,10 @@ completed.push({id:'all',test:require('./all-node-tests').testAll});
 completed.push({id:'keyword',test:require('./keyword-node-tests').testKeyword});
 completed.push({id:'rename_before_entry',test:require('./rename-node-tests').testRename});
 completed.push({id:'all_result_cards_match',test:require('./result-match-node-tests').testResultMatch});
+completed.push({id:'move_self',test:require('./self-move-node-tests').testSelfMove});
 function testCard(catalog,card){
+ if(I.dependencies(card).includes('move_self')&&I.dependencies(card).includes('deck_selection'))return require('./self-move-node-tests').testSelfMoveCard(catalog,card);
+ if(card.profiles[0].activation.trigger?.event==='character_entry')return require('./entry-observer-tests').testEntryCard(catalog,card);
  if(card.profiles[0].activation.skill_type==='permanent_entry_name')return require('./rename-node-tests').testRenameCard(catalog,card);
  if(I.dependencies(card).some(k=>!['sequence','deck_selection'].includes(k)))return C.testCard(catalog,card);
  const p=card.profiles[0],deckNodes=I.nodes(p).filter(n=>n.kind==='deck_selection');
@@ -49,6 +52,7 @@ function testModules(catalog){
  for(const card of I.scope(catalog)){
   if(!eligible(card))continue;
   testCard(catalog,card);
+  if(card.profiles[0].activation.trigger?.event==='character_entry'){cards[I.short(card.card_no)]={profileId:card.profiles[0].profile_id,modules:I.dependencies(card)};continue;}
   if(I.dependencies(card).includes('all_result_cards_match'))require('./result-match-node-tests').testResultCard(catalog,card);
   if(I.dependencies(card).includes('all'))require('./all-node-tests').testAllCard(catalog,card);
   if(I.dependencies(card).includes('watch'))require('./watch-card-tests').testWatchCard(catalog,card);

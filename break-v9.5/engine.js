@@ -596,6 +596,7 @@ class Game {
   async enterAttack(p, a, fromDrop) {
     const o = p.opp; this.src = nm(a);
     await this.enterCharacter(p, 'attack', a, fromDrop);
+    a=p.top('attack');
     let atk = this.parameter(p,'attack','atk');
     const g = p.guts('attack');
     const t = p.ts.setter;

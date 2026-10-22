@@ -1,0 +1,13 @@
+'use strict';
+const assert=require('node:assert/strict'),E=require('../engine'),{UndoSession}=require('../undo-tools'),I=require('./node-inventory'),{setup}=require('./entry-observer-tests'),catalog=require('./data/cards.json');
+const copy=x=>JSON.parse(JSON.stringify(x)),tick=()=>new Promise(r=>setImmediate(r));
+(async()=>{for(const code of ['P03-033','P03-016']){
+ class Scenario extends E.Game{async run(){const card=catalog.cards.find(c=>I.short(c.card_no)===code),{k,target,dest}=setup(catalog,card),s=k.snapshot();for(const p of this.players){for(const [h,z]of Object.entries({hand:'hand',deck:'deck',drop:'drop',ev:'event',sets:'sets'}))p[h]=s.zones[p.idx+'.'+z].map(id=>I.short(s.cards[id].cardNo));for(const z of Object.keys(p.area))p.area[z]=s.zones[p.idx+'.'+z].map(id=>I.short(s.cards[id].cardNo));}this.cardState=null;const p=this.players[0];this.beginTurn(p);this.rulePhase=dest==='attack'?'atk':'tos';this.ball={type:'attack',off:8};if(dest==='attack')await this.enterAttack(p,I.short(k.card(target).cardNo));else await this.enterCharacter(p,dest,I.short(k.card(target).cardNo));return this.ask(p,{kind:'turnEnd',options:[{value:true,label:'結束回合'}]});}}
+ const queue=[],errors=[],snapshot=g=>copy({players:g.players.map(p=>{const{g,agent,...d}=p;return d;}),cardState:g.cardState,sharedRulesState:g.sharedRulesState,sharedRulesPending:g.sharedRulesPending,phase:g.rulePhase,turn:g.turnNo,ball:g.ball});
+ const agent={choose:(g,p,req)=>new Promise(resolve=>queue.push({req,resolve,state:snapshot(g)}))},session=new UndoSession({Game:Scenario},{seed:7,decks:['k1014','seijoh'],agents:[agent,agent],onError:e=>errors.push(e)});session.start();await tick();const points=[];
+ const value=req=>req.kind==='guts'?req.options.slice(0,req.need).map(o=>o.value):true;
+ for(let i=0;i<10;i++){const ticket=queue.shift();assert(ticket);points.push(ticket);if(ticket.req.kind==='turnEnd')break;ticket.resolve(value(ticket.req));await tick();}
+ assert.equal(points.at(-1).req.kind,'turnEnd');const history=copy(session.entries);let stale=points.at(-1);
+ for(let i=0;i<=history.length;i++){session.start(history.slice(0,i));await tick();const current=queue.shift();assert(current);assert.deepEqual(current.state,points[i].state,code+' full entry/cost/source movement Undo boundary '+i);stale.resolve(value(stale.req));await tick();assert.deepEqual(snapshot(session.game),current.state,'Old answer cannot alter restored intrinsic effect');stale=current;}
+ assert.deepEqual(errors,[]);session.stop();console.log(code+': complete trigger, payment, returned/replaced source and stale-answer Undo passed');
+}})().catch(e=>{console.error(e);process.exitCode=1;});

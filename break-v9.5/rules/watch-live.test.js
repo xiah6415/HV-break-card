@@ -6,11 +6,11 @@ let cases=0;
  for(const code of codes){
   const card=catalog.cards.find(c=>I.short(c.card_no)===code),p=card.profiles[0],watches=I.nodes(p).filter(n=>n.kind==='watch'&&!I.nodes(p).some(w=>w.kind==='watch'&&n.node_id?.startsWith(w.then.node_id+'.')));
   for(const w of watches)for(const expired of [false,true])for(const historical of w.event==='source_moved'?[false,true]:[false]){
-   const phase=p.activation.skill_type==='passive'?p.activation.trigger.destination_any[0]:p.activation.activation_phases[0],{k,id,entryReason='rule'}=fixture(card,p,phase,{rich:true,conditioned:true,expanded:true,max:true,key:'positive'},0,catalog);
+   const observer=p.activation.trigger?.event==='character_entry',phase=observer?(p.activation.trigger.filters.role_any?.[0]||p.activation.trigger.filters.role):p.activation.skill_type==='passive'?p.activation.trigger.destination_any[0]:p.activation.activation_phases[0],seeded=observer?require('./entry-observer-tests').setup(catalog,card):fixture(card,p,phase,{rich:true,conditioned:true,expanded:true,max:true,key:'positive'},0,catalog),{k,id,entryReason='rule'}=seeded;
    const player=w.actor==='opponent'?1:0;let area,def,target,second;
    if(w.event==='character_entry'){
     const f=w.filters;area=f.role==='side_blocker'?'side:0':['block','center_blocker'].includes(f.role)?'block':f.role&&f.role!=='character'?f.role:'attack';
-    const other=area==='attack'?k.top(player,'toss'):area==='toss'?k.top(player,'receive'):null,blockers=area==='block'||area.startsWith('side')?['block','side:0','side:1'].map(z=>k.top(player,z)).filter(Boolean):[];
+    const other=area==='attack'?(observer&&phase==='toss'?seeded.target:k.top(player,'toss')):area==='toss'?k.top(player,'receive'):null,blockers=area==='block'||area.startsWith('side')?['block','side:0','side:1'].map(z=>k.top(player,z)).filter(Boolean):[];
     def=catalog.cards.find(c=>{const pr=c.profiles[0],printed=pr.variants[0].printed;return !pr.program&&matchesPrinted(pr,{type:'character',...Object.fromEntries(Object.entries(f).filter(([key])=>!['role','entry_origins'].includes(key)))})&&printed.parameters[area.startsWith('side')?'block':area]!=='dash'&&(!other||k.effectiveName(other)!==printed.name)&&!blockers.some(x=>k.effectiveName(x)===printed.name)&&(!area.startsWith('side')||k.top(player,'block')||c.card_no!=='HV-D01-009');});
     assert(def,code);target=k.addCard(def.card_no,player,'hand');if(w.remaining_uses===1)second=k.addCard(def.card_no,player,'hand');if(area.startsWith('side')&&!k.top(player,'block'))k.addCard('HV-D01-009',player,'block');
    }else if(w.event==='hand_added'){def=catalog.cards.find(c=>c.card_no==='HV-D01-009');target=k.addCard(def.card_no,player,'drop');}
@@ -21,13 +21,14 @@ let cases=0;
    const g=new E.Game({mode:'strict',seed:7,decks:['k1014','seijoh'],agents:[agent,agent]});
    for(const q of g.players){for(const [host,z]of Object.entries({hand:'hand',deck:'deck',drop:'drop',ev:'event',sets:'sets'}))q[host]=before.zones[q.idx+'.'+z].map(id=>I.short(before.cards[id].cardNo));for(const z of roles)q.area[z]=before.zones[q.idx+'.'+z].map(id=>I.short(before.cards[id].cardNo));}
    g.cardState=null;g.beginTurn(g.players[0]);for(const q of g.players)q.ts.sides=[...before.zones[q.idx+'.side:0'],...before.zones[q.idx+'.side:1']].map(id=>I.short(before.cards[id].cardNo));g.ball={type:before.ball.kind,off:before.ball.offense};g.rulePhase=phases[phase];
-   if(p.activation.skill_type==='passive'){
+   if(observer){k.enter(seeded.target,phase);await g.enterCharacter(g.players[0],phase,I.short(k.card(seeded.target).cardNo));}
+   else if(p.activation.skill_type==='passive'){
     const name=I.nodes(p).find(n=>n.kind==='compare'&&n.field==='source.entry_skill_name')?.value;
     if(name){const event=catalog.cards.find(c=>c.profiles[0].variants[0].printed.name===name),eventId=k.addCard(event.card_no,0,'event');k._atomic(()=>{k._enter(id,0,phase,k._context(eventId,0),'skill');k._drain();});g.players[0].ev.push(I.short(event.card_no));g.place(g.players[0],phase,code);await B.charactersEntered(g,g.players[0],[{key:phase,origin:'hand',reason:'skill',entrySkillName:name}]);}
     else{k.enter(id,phase,{reason:entryReason});await g.enterCharacter(g.players[0],phase,code);}
    }
    else{p.activation.skill_type==='event'?k.playEvent(id):k.useSkill(id);await g.resolve(g.players[0],code,g.rulePhase);}
-   const owner=g.players[0];if(!['source_moved','block_success'].includes(w.event)){k._atomic(()=>k._move(id,0,'drop',k._context(id,0)));g.moveCode(p.activation.skill_type==='event'?owner.ev:owner.area[phase],owner.drop,code);}
+   const owner=g.players[0];if(!['source_moved','block_success'].includes(w.event)){const zone=k.card(id).zone.split('.')[1];k._atomic(()=>k._move(id,0,'drop',k._context(id,0)));g.moveCode(zone==='event'?owner.ev:owner[zone]||owner.area[zone],owner.drop,code);}
    const cleanSides=who=>{for(const z of ['side:0','side:1'])for(const card of [...k.zone(who,z)])k._atomic(()=>k._move(card,who,'drop',k._context(card,who)));if(g.players[who].ts.sides?.length)g.cleanupSides(g.players[who]);};
    if(w.duration==='next_opponent_turn'){cleanSides(0);k.endTurn();k.beginTurn(1);g.finishTurn(owner);g.beginTurn(g.players[1]);}
    if(expired)for(let i=0;i<2;i++){const old=g.turnP;cleanSides(old.idx);k.endTurn();k.beginTurn(1-k.state.turn.player);g.finishTurn(old);g.beginTurn(g.players[k.state.turn.player]);}
@@ -49,7 +50,7 @@ let cases=0;
    g.sharedRulesState=JSON.parse(JSON.stringify(g.sharedRulesState));B.assertReady(g);cases++;
   }
  }
- assert.equal(cases,54);
+ assert.equal(cases,56);
  const g=new E.Game({seed:7,decks:['k1014','seijoh'],agents:[E.AI,E.AI]}),p=g.players[0];g.beginTurn(p);
  const state=g.cardSnapshot(),id=state.zones['0.deck'].at(-1);g.moveCard(p.deck,p.ev,p.deck.length-1);
  const base={kind:'watch',actor:0,source:{id,incarnation:0},duration:{kind:'this_turn',turn:g.turnNo}};

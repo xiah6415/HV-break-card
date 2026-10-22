@@ -116,8 +116,8 @@ class Kernel {
     const c=this.card(id), p=c.printed, role=this.role(id);
     for (const [key,v] of Object.entries(filters)) {
       let ok=true;
-      if (key==='names') ok=v.includes(this.effectiveName(id));
-      else if (key==='exclude_names') ok=!v.includes(this.effectiveName(id));
+      if (key==='names') ok=v.includes(event.effectiveName??this.effectiveName(id));
+      else if (key==='exclude_names') ok=!v.includes(event.effectiveName??this.effectiveName(id));
       else if (key==='tags') ok=v.every(x=>p.affiliation_tags.includes(x));
       else if (key==='tags_any') ok=v.some(x=>p.affiliation_tags.includes(x));
       else if (key==='positions') ok=v.every(x=>p.position_tags.includes(x));
@@ -558,6 +558,7 @@ class Kernel {
       case 'draw_to_hand_size': { const player=this.owner(node.actor,ctx);ctx.bind.drawn=this._draw(player,Math.max(0,node.hand_size-this.zone(player,'hand').length),ctx);return ctx.bind.drawn.length>0; }
       case 'move': case 'retrieve': return this._moveSelected(node,ctx);
       case 'move_self': { const id=ctx.source.id, dest=this._destination(node.destination,id,ctx);
+        if(this.card(id).incarnation!==ctx.source.incarnation||this.card(id).zone===dest.player+'.'+dest.zone){if(ctx.inPayment)throw new Unpayable();ctx.bind[node.bind||'moved']=[];return false;}
         if(dest.zone==='hand'&&!this._handAllowed(dest.player,ctx)){if(ctx.inPayment)throw new Unpayable();ctx.bind.moved=[];return false;}
         this._move(id,dest.player,dest.zone,ctx,node.reason);if(dest.bottom){const d=this.zone(dest.player,'deck');d.unshift(d.pop());}ctx.bind.moved=[id];if(ctx.inPayment)ctx.paid.push(id);
         if(dest.zone==='hand')this._emit({type:'hand_added',player:dest.player,card:id,operation:'add_hand'});return true; }
@@ -565,7 +566,7 @@ class Kernel {
         if (ctx.inPayment && node.count_mode==='exact' && ids.length<n) throw new Unpayable();
         n=Math.min(n,ids.length);if(node.count_mode==='upto'){const max=n;n=this._decide('mill_count',ctx,Array.from({length:n+1},(_,i)=>i));legal(Number.isInteger(n)&&n>=0&&n<=max,'Invalid mill count');}
         const moved=[];for(let i=0;i<n;i++){const id=this.top(player,'deck');this._move(id,player,'drop',ctx);moved.push(id);}ctx.bind.milled=moved;if(ctx.inPayment)ctx.paid.push(...moved);return moved.length>0; }
-      case 'pay_guts': { const areas=node.areas==='court'?COURT:node.areas==='source_area'?[this.card(ctx.source.id).zone.split('.')[1].startsWith('side:')?'block':this.card(ctx.source.id).zone.split('.')[1]]:node.areas;
+      case 'pay_guts': { if(node.areas==='source_area'&&!this.current(ctx.source))throw new Unpayable();const areas=node.areas==='court'?COURT:node.areas==='source_area'?[this.card(ctx.source.id).zone.split('.')[1].startsWith('side:')?'block':this.card(ctx.source.id).zone.split('.')[1]]:node.areas;
         if(node.count_mode==='exact_each'){
           if(areas.some(a=>this.zone(ctx.controller,a).length-1<node.count_each))throw new Unpayable();
           const paid=[];for(const area of areas){const ids=this.zone(ctx.controller,area).slice(0,-1);paid.push(...this._selection(ids,node.count_each,ctx,'guts',ctx.controller,{area}));}
@@ -653,6 +654,7 @@ class Kernel {
   }
   _emit(event) {
     event={phase:this.state.turn.phase,window:this.state.turn.id+':'+this.state.turn.phase,...clone(event)};
+    if(event.type==='character_entry')event.effectiveName??=this.effectiveName(event.card);
     this.state.events.push(clone(event));
     for(const e of this.state.effects)if(e.kind==='keyword'&&this.active(e)&&e.actor===event.player&&event.type==='character_entry'){
       let program=null;
@@ -666,6 +668,20 @@ class Kernel {
       if(Object.keys(e.filters).length && (!id || !this.matches(id,e.filters,{controller:e.controller},event)))continue;
       if(e.remaining!==null)e.remaining--;
       this.state.queue.push({id:this.id('q'),controller:e.controller,source:e.source,event,program:clone(e.then),generated:true,window:event.window});
+    }
+    if(event.type==='character_entry')this._entryObservers(event);
+  }
+  _entryObservers(event) {
+    const sources=event.passiveSources??[0,1].flatMap(player=>this.court(player).map(id=>({source:this.reference(id),role:this.role(id)})));
+    for(const {source,role}of sources){
+      const c=this.card(source.id),p=this.profile(source.id),a=p.activation,t=a?.trigger;
+      if(!p.program||a?.skill_type!=='passive'||t?.event!=='character_entry'||this.mode==='live'&&!p.runtime_approved)continue;
+      if(this.owner(t.actor,{controller:c.owner,source})!==event.player||t.source_role&&!this.roleMatches(role,t.source_role))continue;
+      if(!this.matches(event.card,t.filters||{},{controller:c.owner},event))continue;
+      this._admit(p);
+      const ctx=this._context(source.id,c.owner,event);ctx.source=source;
+      if(!this._skillAllowed(ctx,p))continue;
+      this.state.queue.push({id:this.id('q'),controller:c.owner,source:clone(source),event:clone(event),program:p.program,profileId:p.profile_id,generated:false,window:event.window});
     }
   }
   _enqueuePassive(id,event) {
@@ -700,7 +716,8 @@ class Kernel {
       phaseTags:a.activation_phases,sourceZone:c.zone.split('.')[1],icons:a.activation_phases,type:c.printed.type}).allowed;
   }
   _admit(p) { need(p?.program && p.activation,'Skill profile required');need(this.mode==='sandbox' || p.runtime_approved,'Card not approved for live execution');need(!p.flags?.some(f=>['TARGET_MEMBERSHIP_UNRESOLVED','OFFICIAL_TEXT_VARIANTS_PRESERVED','SHARED_MECHANISM_EXTENSION_NEEDS_CONFIRMATION','OPTIONAL_EXACT_PAYMENT_BRANCH_SCENARIO_REVIEW'].includes(f)),'Profile requires ruling review');
-    if(p.activation.skill_type==='passive')need(p.activation.trigger?.event==='self_entry','Non-entry passive triggers not implemented');
+    if(p.activation.skill_type==='passive')need(['self_entry','character_entry'].includes(p.activation.trigger?.event),'Non-entry passive triggers not implemented');
+    if(p.activation.trigger?.event==='character_entry'){const t=p.activation.trigger;need(t.source_role_checkpoint==='at_trigger'&&['self','opponent'].includes(t.actor)&&[null,'serve','receive','toss','attack','block'].includes(t.source_role)&&JSON.stringify(p.activation.source_zones)==='["court"]','Unsupported character-entry trigger');for(const key of Object.keys(t.filters||{}))need(FILTERS.has(key),'Unsupported entry filter '+key);}
     this.preflight(p.program);if(p.formal_cost)for(const n of p.formal_cost.steps)this.preflight(n); }
   _resolveSkill(p,ctx) {
     const name=this.effectiveName(ctx.source.id);
@@ -841,7 +858,7 @@ class Kernel {
         legal(['hand','drop','guts'].includes(e.origin)&&['rule','skill'].includes(e.reason),'Unknown entry origin');
         const c=this.card(e.card);c.entryOrigin=e.origin;c.entryReason=e.reason;c.entryTurn=this.state.turn.id;
         c.coveredCharacter=clone(e.coveredCharacter??null);c.entrySkillName=e.entrySkillName??null;
-        const event={type:e.type,player:e.player,card:e.card,character:e.character,role:e.role,origin:e.origin,entry_keyword_family:e.entry_keyword_family??null,phase:this.state.turn.phase,window:this.state.turn.id+':'+this.state.turn.phase};
+        const event={type:e.type,player:e.player,card:e.card,character:e.character,role:e.role,origin:e.origin,...(e.effectiveName?{effectiveName:e.effectiveName}:{}),...(e.passiveSources?{passiveSources:clone(e.passiveSources)}:{}),entry_keyword_family:e.entry_keyword_family??null,phase:this.state.turn.phase,window:this.state.turn.id+':'+this.state.turn.phase};
         this._emit(event);this._enqueuePassive(e.card,event);
       }
     }

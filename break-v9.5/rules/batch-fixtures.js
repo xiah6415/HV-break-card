@@ -7,6 +7,8 @@ function matchesPrinted(profile,filters={}){
  const p=profile.variants[0].printed,icons=profile.activation?.activation_phases||[];
  return Object.entries(filters).every(([key,v])=>{
   if(key==='role')return v==='character'?p.type==='character':true;
+  if(key==='position_has_any_other_than')return p.position_tags.some(x=>!v.includes(x));
+  if(key==='printed_attack')return p.parameters?.attack===v;
   if(key==='type')return p.type===v;
   if(key==='names')return v.includes(p.name);
   if(key==='exclude_names')return !v.includes(p.name);

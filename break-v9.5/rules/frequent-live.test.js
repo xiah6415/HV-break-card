@@ -3,15 +3,19 @@ const assert=require('node:assert/strict'),E=require('../engine'),I=require('./n
 const catalog=require('./data/cards.json'),released=testModules(catalog).cards,roles=['serve','block','receive','toss','attack'],params={serve:'srv',block:'blk',receive:'rcv',toss:'tos',attack:'atk'};
 (async()=>{
  for(const code of Object.keys(released)){
-  const card=catalog.cards.find(c=>I.short(c.card_no)===code),p=card.profiles[0],phase=p.activation.skill_type==='permanent_entry_name'?'attack':p.activation.skill_type==='passive'?p.activation.trigger.destination_any[0]:p.activation.activation_phases[0];
-  const {k,id,entryReason='rule'}=fixture(card,p,phase,{rich:true,conditioned:true,expanded:true,max:true,key:'positive'},0,catalog),before=k.snapshot();
+  const card=catalog.cards.find(c=>I.short(c.card_no)===code),p=card.profiles[0],observer=p.activation.trigger?.event==='character_entry',deckMove=I.dependencies(card).includes('move_self')&&I.dependencies(card).includes('deck_selection');
+  let phase=p.activation.skill_type==='permanent_entry_name'?'attack':observer?(p.activation.trigger.filters.role_any?.[0]||p.activation.trigger.filters.role):p.activation.skill_type==='passive'?p.activation.trigger.destination_any[0]:p.activation.activation_phases[0];if(phase==='block')phase='block';
+  const seed=observer?require('./entry-observer-tests').setup(catalog,card):deckMove?require('./node-module-tests').deckFixture(catalog,I.nodes(p).find(n=>n.kind==='deck_selection')):fixture(card,p,phase,{rich:true,conditioned:true,expanded:true,max:true,key:'positive'},0,catalog);
+  if(deckMove){seed.id=seed.k.addCard(card.card_no,0,'hand');seed.k.state.turn.phase=phase;seed.k.state.ball={kind:'attack',offense:8,owner:1};}
+  const {k,id,target,entryReason='rule'}=seed,before=k.snapshot();
   const multiple=I.nodes(p).filter(n=>n.kind==='move'&&n.count>1&&n.pool.zone.endsWith('.guts')).map(n=>({node:n,ids:k.pool(n.pool,k._context(id,0))})),picked=[];
   const agent={wantsAck:true,async choose(g,p,r){if(r.kind==='skill')return true;if(r.kind==='guts'||r.kind==='gutsCourt')return r.options.slice(0,r.need).map(o=>o.value);const value=r.options.find(o=>o.label?.includes('其餘放到牌庫底'))?.value??r.options[0].value;if(r.prompt?.includes('確認全部後才搬牌'))picked.push(value);return value;}};
   const oldChoose=k.choose;k.choose=r=>r.kind==='name'?r.options[0]:oldChoose(r);
   const g=new E.Game({mode:'strict',seed:7,decks:['k1014','seijoh'],agents:[agent,agent]});
   for(const q of g.players){for(const [host,z]of Object.entries({hand:'hand',deck:'deck',drop:'drop',ev:'event',sets:'sets'}))q[host]=before.zones[q.idx+'.'+z].map(id=>I.short(before.cards[id].cardNo));for(const z of roles)q.area[z]=before.zones[q.idx+'.'+z].map(id=>I.short(before.cards[id].cardNo));}
   g.cardState=null;g.beginTurn(g.players[0]);for(const q of g.players)q.ts.sides=[...before.zones[q.idx+'.side:0'],...before.zones[q.idx+'.side:1']].map(id=>I.short(before.cards[id].cardNo));g.ball={type:before.ball.kind,off:before.ball.offense};g.rulePhase={serve:'srv',block:'blk',draw:'drw',receive:'rcv',toss:'tos',attack:'atk'}[phase];
-  if(['passive','permanent_entry_name'].includes(p.activation.skill_type)){
+  if(observer){k.enter(target,phase);await g.enterCharacter(g.players[0],phase,I.short(k.card(target).cardNo));}
+  else if(['passive','permanent_entry_name'].includes(p.activation.skill_type)){
    const name=I.nodes(p).find(n=>n.kind==='compare'&&n.field==='source.entry_skill_name')?.value;
    if(name){
     const event=catalog.cards.find(c=>c.profiles[0].variants[0].printed.name===name),eventId=k.addCard(event.card_no,0,'event');
