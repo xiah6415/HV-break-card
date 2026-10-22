@@ -1149,3 +1149,7 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 結果：ban_action完成14形態／16依賴卡，新增8；23節點542形態，嚴格465／數值541／共用275＋舊7／未自動化76，原297池累開221。按節點欄位驗證禁止效果，接齊共用／舊流程／數值Event及規則／技能抽牌入口；按登場來源累計攔網名額，抽牌階段禁止到期即清除，正式入口仍橋接。
 - 測試：221卡各3局面、14範圍逐欄反例／期限／Loss、8新卡實際禁止／條件不符／費用不足、混合來源名額、13個完整Undo邊界與舊回覆隔離、3局新核心及58延遲對照通過；build／pilot、81套回歸（兩個舊測試修正後重驗）、fuzz3000、6×300通過。沿用既有UI形態；下一步invalidate_skill預估221→232（+11），再接choose_modes預估→241。
 - 部署：5e2e36a已普通推送，Pages built／無錯誤；公開index、牌庫、規則資料、pilot bundle、STATUS及8張新開卡圖皆HTTP200且SHA與本機一致，公開嚴格465／共用275，以及卡文疑義／P04-070／未完成protect卡仍鎖定均核對通過。https://xiah6415.github.io/HV-break-card/break-v9.5/?v=5e2e36a-release 。
+
+## Claude：實戰巡檢＋下兩批腳本審查（2026-10-22，分支 claude/qa-play）
+- qa-play.js：10 校嚴格牌組 AI／隨機互打。修正前 192 局 8 例外，根因 legacy.js entryPreview 預演一律回陣列→改名卡 name／監聽 parameter 中斷整局；改為依 request 型態回答（一行），qa-play.test.js 重現兩組（修正前失敗、修正後通過）。修正後 1,499 局剩 1 例外：back_attack 不可登場仍提供付費（待 Codex，見 QA-PLAY.md）。
+- SCRIPT-REVIEW.md 第 3 節：技能失效 11＋模式 9 共 20 張腳本與卡文一致；列必測局面，需確認 P02-066 牌庫不足時部分費用語意、P03-063 失效 Event 仍可打出放置。
