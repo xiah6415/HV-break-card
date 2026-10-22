@@ -58,7 +58,7 @@ P('P01-093',DRAW(),REVEAL(),IF(ALL(C('revealed.count','gte',1),C('revealed.affil
 P('P02-001',IF(C('both.set.count_sum','lte',1),PAY(G(3),NUM('receive',6),RET(SEL('drop',type='character',tags=['烏野'])))))
 P('P02-002',PAY([DISC(),G(2)],NUM('toss',2),RET(SEL('drop',names=['田中 龍之介']),mode='exact')))
 P('P02-003',IF(EV(2,'opponent'),PAY(PLACE(type='event'),DRAW(),NUM('block',6))))
-P('P02-004',IF(C('source.covered_character.tags','contains','烏野'),OPT(PLACE(actor='opponent',type='event')),IF(C('optional.performed','eq',False),ON('hand_added','next_opponent_turn',DRAW(),actor='opponent'))))
+P('P02-004',IF(C('source.covered_character.tags','contains','烏野'),OPT(PLACE(actor='opponent',type='event'),actor='opponent'),IF(C('optional.performed','eq',False),ON('hand_added','next_opponent_turn',DRAW(),actor='opponent'))))
 P('P02-005',IF(C('source.entry_skill_name','eq','助けてもらう!!!'),PAY(G(2),NUM('receive',2),RET(SEL('drop',names=['木下 久志'])))))
 P('P02-006',IF(EV(3,'opponent',play_icons_any=['serve']),DRAW(),NUM('receive',3)))
 P('P02-007',PAY(G(3),NUM('attack',4),WATCH_NUM('receive','receive',-2)),trigger=T('event_played',source_role='attack',names=['超インナークロス!!!']))

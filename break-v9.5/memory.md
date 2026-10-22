@@ -1170,6 +1170,11 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 測試：241卡各3局面、正式桌面全區與數值對照、Claude7項模式必測、64延遲效果對照、14完整Undo邊界及舊回覆隔離、3局新核心通過；build／pilot、89套回歸（盤點預檢與過期計數修正後重驗）、fuzz3000、6×300及qa-play15（1500局0例外／卡死，15筆合法負值）通過；沿用既有單選UI。
 - 部署：532e044已普通推送，Pages built／無錯誤；公開index、牌庫、規則資料、pilot、STATUS及9張新卡圖皆HTTP200且SHA256與本機一致，公開嚴格485／數值541／共用295＋舊7與未完成／疑義卡鎖定核對通過。https://xiah6415.github.io/HV-break-card/break-v9.5/?v=532e044-release 。下一步optional預估241→243（+2），再接protect_numeric_decrease預估→248。
 
+## 可選效果節點批次（2026-10-22）
+- 計畫：已fetch確認遠端尚無claude/long-tail可合併提交，先完成optional全庫形態、選擇／取消／未執行後段與Undo；依賴卡各3局面及正式桌面對照後開放，預估241→243（+2），統一更新STATUS並部署，保留Claude獨立節點分工。
+- 結果：optional完成2形態（自己／對手）／7依賴卡，新增P02-004、P02-064；26節點556形態，嚴格487／數值541／共用297＋舊7／未自動化54，原297池累開243。明示P02-004對手選擇權，無合法對象不詢問；接受／拒絕的performed分支、完整棄2與不足歸零接通，正式入口仍橋接。
+- 測試：243卡各3局面、5區完整棄2／拒絕／不足歸零、正式桌面全區與數值對照、66延遲對照、雙方接受／拒絕11個完整Undo邊界與舊回覆隔離、3局新核心通過；可重建來源／schema、build／pilot、92套回歸（兩處舊計數修正重驗）、fuzz3000、6×300、qa-play15（1500局0例外／卡死，16筆合法負值）通過。巡檢中Claude e6a4ece已推送，下批先審查合併。
+- 部署：c329e0d已普通推送，Pages built／無錯誤；公開index、牌庫、規則資料、pilot、STATUS及P02-004／P02-064卡圖皆HTTP200且SHA256與本機一致，公開嚴格487／數值541／共用297＋舊7及未完成／疑義卡鎖定核對通過。https://xiah6415.github.io/HV-break-card/break-v9.5/?v=c329e0d-release 。下一批審查合併Claude e6a4ece，再接protect_numeric_decrease預估243→248。
 ## Claude：長尾節點批次（2026-10-22，分支 claude/long-tail）
 - 計畫：依分工實作 shuffle／draw_to_hand_size／exchange／sum_result_parameter／each_player_optional_draw／result_count／equal_fields／any；以 rules/claude-nodes.js 註冊、modules.js 一行匯入、測試放 rules/claude-node-tests.js；不改 STATUS、不部署
 - 結果：完成 7 節點（any、equal_fields、result_count、sum_result_parameter、draw_to_hand_size×2 形態、exchange、each_player_optional_draw）；32 模組／562 形態／250 卡，新開 9 張：P01-066、P01-090、P02-058、P03-083、P04-007、P04-064、P04-100、PR-080、PR-084（嚴格 485→494、共用 295→304、未自動化 56→47）
@@ -1180,3 +1185,4 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 補修（同批）：coverage.js local() 保留 exchange sides 形狀（否則 preflight 誤擋 P03-083）；frequent-live 將核心登場來源／回合帶入主機實體（PR-084）；watch-live 敗北監聽無搬牌時用預設卡、案例 64→66
 - 風險：主機（engine.js）自己處理的登場不寫 entryReason／entryTurn，只有共用腳本登場會寫→PR-084「本回合以技能登場」在舊引擎技能登場時會判不成立，請 Codex 確認
 - 僅剩計數斷言待 Codex：library／authority／numeric／legacy／coverage／primitive-audit（485→494、295→304、56→47）、batch-index candidate 16→10
+- 同步 master（c329e0d optional）：解衝突後合併總數 33 模組／564 形態／252 卡（optional 243＋長尾 9）；watch-live 案例 66→68

@@ -5,6 +5,7 @@ function testWatchCard(catalog,card){
  for(const w of watches)for(const expired of [false,true]){
   const phase=p.activation.skill_type==='passive'?p.activation.trigger.destination_any[0]:p.activation.activation_phases[0];
   const {k,id,entryReason='rule'}=fixture(card,p,phase,{rich:true,max:true,conditioned:true,expanded:true,key:'positive'},0,catalog);
+  const optionalGuard=I.nodes(p).find(n=>n.kind==='conditional'&&n.condition.field==='optional.performed'&&w.node_id.startsWith(n.then.node_id+'.'));if(optionalGuard){const choose=k.choose;k.choose=r=>r.kind==='optional'?false:choose(r);}
   const entryName=I.nodes(p).find(n=>n.kind==='compare'&&n.field==='source.entry_skill_name');
   if(p.activation.skill_type==='event')k.playEvent(id);else if(p.activation.skill_type==='active')k.useSkill(id);else if(entryName){const event=k.addCard(catalog.cards.find(c=>c.profiles[0].variants[0].printed.name===entryName.value).card_no,0,'event');k._atomic(()=>{k._enter(id,0,phase,k._context(event,0),'skill');k._drain();});}else k.enter(id,phase,{reason:entryReason});
   const effect=k.state.effects.find(e=>e.kind==='watch'&&e.then.node_id===w.then.node_id);assert(effect,'Positive card must register watch '+card.card_no);

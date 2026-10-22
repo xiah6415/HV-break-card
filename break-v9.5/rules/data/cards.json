@@ -16615,6 +16615,7 @@
                         ]
                       },
                       "bind": "optional",
+                      "actor": "opponent",
                       "node_id": "program.steps[0].then.steps[0]",
                       "shared_rule_ids": [
                         "effect.independent"

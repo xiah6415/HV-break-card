@@ -121,7 +121,7 @@ node('protect_numeric_decrease', dict(target=TARGET, target_scope=ref('target_sc
 node('exchange', dict(sides=array(ref('selector'), 2), count_each=I, count_mode={'const': 'upto'}, requires_both={'const': True}, atomic_movement={'const': True}), ['sides', 'count_each', 'count_mode', 'requires_both', 'atomic_movement'])
 node('phase_jump', dict(actor=ACTOR, destination={'const': 'draw'}, position={'const': 'start'}, skip_current={'const': True}), ['actor', 'destination', 'position', 'skip_current'])
 node('external_action', dict(action=S, bind=S, alternative_requires_both_consent=B), ['action', 'bind'])
-node('optional', dict(then=ref('sequence'), bind=S), ['then', 'bind'])
+node('optional', dict(then=ref('sequence'), bind=S, actor=enum('self','opponent')), ['then', 'bind'])
 node('choose_modes', dict(count={'const': 1}, options=array(ref('sequence'), 1), required={'const': True}), ['count', 'options', 'required'])
 node('parameter_absent', dict(target=TARGET, target_scope=ref('target_scope'), parameter=PARAM, duration=DURATION), ['target', 'target_scope', 'parameter', 'duration'])
 node('force_judgment_failure', dict(judge=enum('serve', 'block', 'receive', 'toss', 'attack'), actor=ACTOR, duration=DURATION, condition=ref('predicate')), ['judge', 'actor', 'duration', 'condition'])

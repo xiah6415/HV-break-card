@@ -1,6 +1,6 @@
 {
   "status": "CONTRACT_AND_SCOPED_REFERENCE_CHECKS_NOT_GAME_SIMULATION",
-  "passed": 65,
+  "passed": 66,
   "failed": 0,
   "structure_counts": {
     "profiles": 545,
@@ -141,6 +141,10 @@
       "passed": true
     },
     {
+      "title": "P02-004僅補對手選擇權，不改移牌／監聽效果",
+      "passed": true
+    },
+    {
       "title": "P01-003僅新增完整後段可選分支，不改條件／數值／限制",
       "passed": true
     },
@@ -269,7 +273,7 @@
       "passed": true
     }
   ],
-  "mapping_sha256": "de64c2ff1f507c8afb91bd3f2de14c10479231602bdd993d8d196503b53057e0",
+  "mapping_sha256": "d0c0bebbcba6b926c5eeb8bc09063809f2b92af44cd6f4908e64e2f81d9a24bb",
   "limitations": [
     "Candidate ID pools are prefiltered; this suite does not implement every card filter",
     "No state movement, trigger queue, expiry, undo or multiplayer integration",
