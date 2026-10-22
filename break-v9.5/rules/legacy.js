@@ -259,6 +259,7 @@ function transaction(g,p,c,timing,notification=null) {
     }
     if(state.ball&&state.ball.offense!==ballOff){g.log(`來球進攻 ${state.ball.offense-ballOff<0?'−':'+'}${Math.abs(state.ball.offense-ballOff)} → ${state.ball.offense}`);ballOff=state.ball.offense;}
     for(const entry of state.publicLog.slice(publicLogCursor)){
+      if(entry.type==='deck_shuffled')g.log(`${g.players[entry.player].name} 洗牌（${entry.count} 張）。`);
       if(entry.type==='coin_result')g.log(`${g.players[entry.player].name} 擲硬幣：${entry.result==='heads'?'正面':'反面'}`);
       if(entry.type==='external_action')g.log(`${g.players[entry.player].name} 已確認完成卡片指定的動作／口號。`);
       if(entry.type==='deck_view'&&entry.visibility==='reveal')g.log(`翻開：${entry.cards.map(c=>byShort[short[c.id]].display_name).join('、')}`);

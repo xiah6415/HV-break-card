@@ -7,7 +7,7 @@ const COURT = ['serve','block','receive','toss','attack','side:0','side:1'];
 const PARAMS = ['serve','block','receive','toss','attack'];
 const KINDS = new Set(['sequence','conditional','numeric','draw','draw_to_hand_size','move','move_self',
   'pay_guts','payment_branch','formal_declaration_cost','retrieve','enter','enter_self','watch','ban_action','invalidate_skill',
-  'rename_before_entry','protect_numeric_decrease','phase_jump','external_action','optional','choose_modes','mill','keyword','deck_selection','exchange','each_player_optional_draw']);
+  'rename_before_entry','protect_numeric_decrease','phase_jump','shuffle','external_action','optional','choose_modes','mill','keyword','deck_selection','exchange','each_player_optional_draw']);
 const EXTERNAL_ACTIONS={tilt_card:'將此卡傾斜',coin:'投擲 1 次硬幣',say_巣立てヒナガラス:'說出「巣立て ヒナガラス」',raise_both_hands_and_say_ただーし:'雙手舉起此牌並喊「ただーし！」',say_ジャンバル最高_and_peace_sign:'說出「ジャンバル最高!!」並比出勝利手勢'};
 const FILTERS = new Set(['names','exclude_names','tags','tags_any','positions','positions_any','years','years_any',
   'role','role_any','type','skillless','play_icons_any','play_icons_exact','entry_origins','phase',
@@ -591,6 +591,7 @@ class Kernel {
       if(n.kind==='formal_declaration_cost')need(n.must_be_complete===true&&n.performed_for_this_skill_only===true&&Array.isArray(n.steps)&&n.steps.length>0,'Unsupported declaration cost parameters');
       if(n.kind==='exchange')need(Array.isArray(n.sides)&&n.sides.length===2&&n.sides.every(x=>x&&x.kind==='selector')&&n.count_each===1&&n.count_mode==='upto'&&n.requires_both===true&&n.atomic_movement===true,'Unsupported exchange parameters');
       if(n.kind==='each_player_optional_draw')need(Number.isInteger(n.count)&&n.count>0&&n.count_mode==='exact_or_zero'&&n.chooser==='each_affected_player','Unsupported optional draw parameters');
+      if(n.kind==='shuffle')need(['self','opponent'].includes(n.actor),'Unsupported shuffle parameters');
       if(n.kind==='external_action')need(['tilt_card','coin','say_巣立てヒナガラス','raise_both_hands_and_say_ただーし','say_ジャンバル最高_and_peace_sign'].includes(n.action)&&n.bind===(n.action==='coin'?'random':'external')&&(n.action!=='coin'||n.alternative_requires_both_consent===true),'Unsupported external action parameters');
       if(n.kind==='enter_self')need(['receive','attack','block'].includes(n.destination)&&n.as_side_blocker===(n.destination==='block')&&n.bind==='entered','Unsupported self entry parameters');
       if(n.kind==='phase_jump')need(n.actor==='self'&&n.destination==='draw'&&n.position==='start'&&n.skip_current===true,'Unsupported phase jump parameters');
@@ -704,8 +705,12 @@ class Kernel {
         if(node.target_scope.membership==='continuous_matching'){this.effect('protect',{targets:[],ballOwner:null,parameter:node.parameter,selector:node.target},ctx,node.duration);return true;}
         const targets=this._targets(node,ctx);if(!targets.length)return false;const ball=typeof targets[0]==='string';this.effect('protect',{targets:ball?[]:targets,ballOwner:ball?(targets[0]==='self_ball'?ctx.controller:1-ctx.controller):null,parameter:node.parameter},ctx,node.duration);return true;
       }
+      case 'shuffle': {
+        const player=this.owner(node.actor,ctx),ids=this.zone(player,'deck');if(ids.length<2)return false;
+        for(let i=ids.length-1;i>0;i--){const j=Math.floor(this._random()*(i+1));[ids[i],ids[j]]=[ids[j],ids[i]];}
+        this.state.publicLog.push({type:'deck_shuffled',player,count:ids.length});return true;
+      }
       case 'external_action': {
-
         legal(this._decide('external_action',ctx,[true],{action:node.action,actionLabel:EXTERNAL_ACTIONS[node.action]})===true,'Confirm external action');
         if(node.action==='coin'){
           const result=this._random()<0.5?'heads':'tails';ctx.bind[node.bind]={result};

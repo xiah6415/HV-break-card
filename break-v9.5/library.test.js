@@ -7,8 +7,8 @@ const digest=(data,algo='sha256')=>crypto.createHash(algo).update(data).digest('
 const sampleCodes=['P03-004','P03-022','P01-014','P01-001','P01-009','P01-024','P02-022','P02-032','P03-008','P03-018'];
 const sample={name:'新卡測試：無技能角色',cards:Object.fromEntries(sampleCodes.map(c=>[c,4]))};
 (async()=>{
- assert.deepEqual(L.data.counts,{cards:541,profiles:545,playable:521,basic:183,locked:20});
- assert.equal(added.length,165);assert.equal(Object.keys(E.DEF).length,541);assert.equal(bridge.approvals.length,331);
+ assert.deepEqual(L.data.counts,{cards:541,profiles:545,playable:525,basic:183,locked:16});
+ assert.equal(added.length,165);assert.equal(Object.keys(E.DEF).length,541);assert.equal(bridge.approvals.length,335);
  assert.equal(require('./rules/runtime-data.json').catalog.cards.length,541);
  for(const [p,sha] of Object.entries(L.data.sources))assert.equal(digest(fs.readFileSync(p)),sha);
  let versions=0,aliases=0;
@@ -28,18 +28,18 @@ const sample={name:'新卡測試：無技能角色',cards:Object.fromEntries(sam
   assert.equal(E.isHin(m.code),p.name==='日向翔陽');assert(require('./rules/runtime-data.json').catalog.cards.some(c=>c.card_no===m.number),'new card has host identity');
   assert.deepEqual(DT.parseDeck({c:[[m.versions[0].images[0],40]]},E.DEF).cards,{[m.code]:40});
  }
- for(const key of ['__proto__','constructor','toString','P03-004-FAKE.webp','HV-P04-093'])assert.throws(()=>DT.parseDeck({c:[[key,40]]},E.DEF),/尚未收錄|尚未開放/);
+ for(const key of ['__proto__','constructor','toString','P03-004-FAKE.webp',...L.search('','locked').slice(0,1).map(c=>c.number)])assert.throws(()=>DT.parseDeck({c:[[key,40]]},E.DEF),/尚未收錄|尚未開放/);
  assert.equal(L.code(' hv-p03-004-n.webp '),'P03-004');assert.equal(L.code('HVBP-002'),'BP-002');
  assert(E.hasSchool('P03-004','烏野'));assert(!E.hasSchool('P03-004','ユース'));assert(E.hasSchool('P03-022','ユース'));assert(E.hasSchool('P03-022','稲荷崎'));assert(!E.hasSchool('P03-015','白鳥沢'));assert(E.hasYear('PR-057',2));
  const names={};for(const m of Object.values(L.data.cards).filter(c=>c.playable)){(names[m.printedName]??=new Set).add(E.nm(m.code));}assert(Object.values(names).every(s=>s.size===1),'same printed name must never differ in whitespace');
- assert.equal(L.search('月島螢 P03-004','playable').length,1);assert.equal(L.search('','locked').length,20);assert.equal(L.search('','playable').length,521);
+ assert.equal(L.search('月島螢 P03-004','playable').length,1);assert.equal(L.search('','locked').length,16);assert.equal(L.search('','playable').length,525);
  for(const cards of [{...sample.cards,'P03-004':3},{'P01-001':40.5},{'P04-093':40},{'HV-P03-004-N.webp':40},{'P01-078':9,'P01-001':31}]){
   E.DECKS.invalid={name:'invalid',cards};assert.throws(()=>new E.Game({decks:['invalid','seijoh'],agents:[E.AI,E.AI]}));
  }delete E.DECKS.invalid;
  assert.deepEqual(DT.parseDeck(DT.exportDeck(sample),E.DEF),sample);E.DECKS.library=sample;
   const seen=new Set();let games=0;
  for(let seed=0;seed<200;seed++){
-  const cards=seed<20?Object.fromEntries(Array.from({length:10},(_,i)=>[added[(seed*10+i)%added.length].code,4])):sample.cards;
+  const cards=seed<Math.ceil(added.length/10)?Object.fromEntries(Array.from({length:10},(_,i)=>[added[(seed*10+i)%added.length].code,4])):sample.cards;
   E.DECKS.library={name:sample.name,cards};
   const g=new E.Game({seed,decks:['library',seed%2?'seijoh':'library'],agents:[E.AI,E.AI]});await g.run();games++;
   assert(g.winner);const physical=g.cardSnapshot();assert.equal(Object.keys(physical.cards).length,80);

@@ -26,7 +26,9 @@ completed.push({id:'protect_numeric_decrease',test:require('./protect-node-tests
 completed.push({id:'phase_jump',test:require('./phase-jump-tests').testPhaseJump});
 completed.push({id:'enter_self',test:require('./self-entry-tests').testEnterSelf});
 completed.push({id:'external_action',test:require('./external-tests').testExternal});
+completed.push({id:'shuffle',test:require('./shuffle-node-tests').testShuffle});
 function testCard(catalog,card){
+ if(I.dependencies(card).includes('shuffle'))return require('./shuffle-node-tests').testShuffleCard(catalog,card);
  if(I.dependencies(card).includes('external_action'))return require('./external-tests').testExternalCard(catalog,card);
  if(I.dependencies(card).includes('enter_self'))return require('./self-entry-tests').testSelfCard(catalog,card);
  if(I.dependencies(card).includes('phase_jump'))return require('./phase-jump-tests').testPhaseCard(catalog,card);
@@ -75,7 +77,7 @@ function testModules(catalog){
  for(const card of I.scope(catalog)){
   if(!eligible(card))continue;
   testCard(catalog,card);
-  if(I.dependencies(card).some(k=>['phase_jump','enter_self','external_action'].includes(k))||['source_covered','event_played','self_entry_cover'].includes(card.profiles[0].activation.trigger?.event)){cards[I.short(card.card_no)]={profileId:card.profiles[0].profile_id,modules:I.dependencies(card)};continue;}
+  if(I.dependencies(card).some(k=>['phase_jump','enter_self','external_action','shuffle'].includes(k))||['source_covered','event_played','self_entry_cover'].includes(card.profiles[0].activation.trigger?.event)){cards[I.short(card.card_no)]={profileId:card.profiles[0].profile_id,modules:I.dependencies(card)};continue;}
   if(I.dependencies(card).includes('protect_numeric_decrease'))require('./protect-node-tests').testProtectCard(catalog,card);
   if(I.dependencies(card).includes('invalidate_skill'))require('./invalid-node-tests').testInvalidCard(catalog,card);
   if(I.dependencies(card).includes('ban_action'))require('./ban-node-tests').testBanCard(catalog,card);
