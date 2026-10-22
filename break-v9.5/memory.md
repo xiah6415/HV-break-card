@@ -1176,9 +1176,6 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 測試：243卡各3局面、5區完整棄2／拒絕／不足歸零、正式桌面全區與數值對照、66延遲對照、雙方接受／拒絕11個完整Undo邊界與舊回覆隔離、3局新核心通過；可重建來源／schema、build／pilot、92套回歸（兩處舊計數修正重驗）、fuzz3000、6×300、qa-play15（1500局0例外／卡死，16筆合法負值）通過。巡檢中Claude e6a4ece已推送，下批先審查合併。
 - 部署：c329e0d已普通推送，Pages built／無錯誤；公開index、牌庫、規則資料、pilot、STATUS及P02-004／P02-064卡圖皆HTTP200且SHA256與本機一致，公開嚴格487／數值541／共用297＋舊7及未完成／疑義卡鎖定核對通過。https://xiah6415.github.io/HV-break-card/break-v9.5/?v=c329e0d-release 。下一批審查合併Claude e6a4ece，再接protect_numeric_decrease預估243→248。
 
-## 長尾整合與防降節點批次（2026-10-22）
-- 計畫：先審查合併Claude long-tail已推送7節點與局面測試，核對交換／雙方選擇／合計語意及正式接線；再完成protect_numeric_decrease全部5形態，含來球／角色單值／持續匹配P04-070（正常及事件登場均保護）、期限／Loss／Undo。各組依賴卡3局面、正式桌面與完整對局驗證後更新STATUS並部署，shuffle的主機亂數接線留後續獨立模組。
-
 ## Claude：長尾節點批次（2026-10-22，分支 claude/long-tail）
 - 計畫：依分工實作 shuffle／draw_to_hand_size／exchange／sum_result_parameter／each_player_optional_draw／result_count／equal_fields／any；以 rules/claude-nodes.js 註冊、modules.js 一行匯入、測試放 rules/claude-node-tests.js；不改 STATUS、不部署
 - 結果：完成 7 節點（any、equal_fields、result_count、sum_result_parameter、draw_to_hand_size×2 形態、exchange、each_player_optional_draw）；32 模組／562 形態／250 卡，新開 9 張：P01-066、P01-090、P02-058、P03-083、P04-007、P04-064、P04-100、PR-080、PR-084（嚴格 485→494、共用 295→304、未自動化 56→47）
@@ -1186,3 +1183,8 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 假設待確認：sum_result_parameter 遇「－」計 0（縁下 P04-007 付西谷等）；exchange 兩側都要選才交換、各最多 1、禁止加牌（手牌側）則不交換、加手牌發 hand_added；P04-100 各玩家自己選抽 2 或 0
 - 測試調整：batch-branches any 反例先處理 distinct_affiliation 條件、effective_name 替換排除來源名；watch-card-tests 敗北分支預期手牌含 draw_to_hand_size；ban-node-tests 無條件無費用 Event 跳過反例；modules.test 數字更新
 - 留給 Codex 統一更新的計數斷言：library／authority／numeric／legacy／coverage／primitive-audit 等（485→494、295→304、56→47）
+## 長尾整合與防降節點批次（2026-10-22）
+- 計畫：先審查合併Claude long-tail已推送7節點與局面測試，核對交換／雙方選擇／合計語意及正式接線；再完成protect_numeric_decrease全部5形態，含來球／角色單值／持續匹配P04-070（正常及事件登場均保護）、期限／Loss／Undo。各組依賴卡3局面、正式桌面與完整對局驗證後更新STATUS並部署，shuffle的主機亂數接線留後續獨立模組。
+
+- 整合結果：已合併e6a4ece；Claude7節點新增9卡、防降5形態新增5卡，合計34節點569形態，嚴格501／數值541／共用311＋舊7／未自動化40，原297池257。補普通角色登場紀錄以正確結算PR-084；球／單角色／持續稲荷崎匹配分開，P04-070包含後續正常／事件登場及來源離場，防降期限與手動球值接通，正式入口仍橋接。總則v1.06的7-7-3確認P02-066不可部分付款；缺失參數不參與加總或比較（https://www.takaratomy.co.jp/products/haikyuvobacabreak/rules/pdf/rules_general_v1.06.pdf）。
+- 測試：257卡各3局面／正式桌面對照、球／角色／持續匹配5形態、QA1779／1815、未來正常／事件登場、來源離場與期限、68延遲對照、長尾與防降25完整Undo邊界、3局新核心通過；可重建資料、build／pilot、95套回歸、fuzz3000、6×300及qa-play15（1500局0例外／卡死，14筆合法負值）全過。入場紀錄重複通知保留原資訊；防降純減值付費提示接AI略過。

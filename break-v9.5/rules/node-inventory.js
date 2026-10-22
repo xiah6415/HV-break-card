@@ -37,7 +37,9 @@ function inventory(catalog,completed,released=[]){
   const available=matches.filter(c=>c.reviewClear&&entrySet.has(c.entry));
   path.push({...step,nodeStep,completed:step.type==='node'?done.has(step.kind):LIVE_ENTRIES.includes(step.kind),nodesReady:matches.length,entryReady:available.length,currentEntryReady:matches.filter(c=>c.reviewClear&&LIVE_ENTRIES.includes(c.entry)).length});
  }
- return {scope:cards.length,kinds:rows.length,completed:[...completed],completedEntries:LIVE_ENTRIES,rows,path,next:path.find(s=>!s.completed),cards};
+ const pending=path.find(s=>!s.completed);let next=pending;
+ if(pending){const ready=new Set(done),entries=new Set(LIVE_ENTRIES);(pending.type==='node'?ready:entries).add(pending.kind);next={...pending,routeEntryReady:pending.entryReady,entryReady:cards.filter(c=>c.reviewClear&&entries.has(c.entry)&&c.dependencies.every(k=>ready.has(k))).length};}
+ return {scope:cards.length,kinds:rows.length,completed:[...completed],completedEntries:LIVE_ENTRIES,rows,path,next,cards};
 }
 module.exports={short,walk,nodes,scope,forms,parameters,clean,entrySupported,dependencies,inventory,entryKey,PRIORITY,LIVE_ENTRIES};
 if(require.main===module){const r=inventory(require('./data/cards.json'),require('./modules').completed.map(m=>m.id),Object.keys(require('./runtime-data.json').authority.cards).filter(c=>require('./runtime-data.json').authority.cards[c].kind==='shared'));console.log(JSON.stringify({scope:r.scope,kinds:r.kinds,completed:r.completed,path:r.path,next:r.next},null,2));}

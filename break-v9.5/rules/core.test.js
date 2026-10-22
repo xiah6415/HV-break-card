@@ -41,8 +41,9 @@ test('Unapproved card skill cannot execute live; placement rolls back',()=>{
 test('Unknown mechanism fails before drawing or mutating state',()=>{
  const g=game();add(g,'P03-048',0,'deck');unchangedAfter(g,()=>raw(g,seq(draw(),{kind:'invented_operation'})),NeedsReview);
 });
-test('Unimplemented continuous protection cannot execute',()=>{
- const g=game('receive');const id=add(g,'P04-070');unchangedAfter(g,()=>g.enter(id,'receive'),NeedsReview);
+test('Unresolved continuous protection scope cannot execute',()=>{
+ const g=game('receive');
+ const bad={kind:'protect_numeric_decrease',parameter:'all',duration:'this_turn',target:'source',target_scope:{mode:'all',binding:'all_matches',membership:'unresolved'}};assert.throws(()=>g.preflight(bad),NeedsReview);
 });
 test('An unresolved printed version cannot execute',()=>{
  const g=game('receive');const id=add(g,'P04-072');unchangedAfter(g,()=>g.playEvent(id),NeedsReview);

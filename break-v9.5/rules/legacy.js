@@ -3,7 +3,7 @@
 (function(root) {
 'use strict';
 const node=typeof module!=='undefined'&&module.exports;
-const {Kernel,distinctNameOptions,validateBan,validateInvalid}=node?require('./core'):root.BreakRulesCore;
+const {Kernel,distinctNameOptions,validateBan,validateInvalid,validateProtection}=node?require('./core'):root.BreakRulesCore;
 const {attempt,settle}=node?require('./decisions'):root.BreakRulesDecisions;
 const identity=node?require('./identity'):root.BreakCardIdentity;
 const data=node?require('./runtime-data.json'):root.BreakRulesData;
@@ -41,7 +41,9 @@ function admitEffect(e) {
   if(e.kind==='invalid'&&[0,1].includes(e.actor)){try{validateInvalid({actor:'self',duration:e.duration.kind,selector:e.selector});return;}catch(_){}}
   const admittedFamily=['hand_added','character_entry','loss','block_success','source_moved'].includes(e.event)&&['this_turn','next_opponent_turn'].includes(e.duration.kind);
   if(e.kind==='watch'&&admittedFamily&&watchSignatures.has(signature(e)))return;
-  if(e.kind==='protect'&&e.parameter==='all'&&e.duration.kind==='this_turn'&&e.ballOwner===null&&e.targets.length===1&&e.targets.every(r=>typeof r.id==='string'&&Number.isInteger(r.incarnation)))return;
+  if(e.kind==='protect'&&Array.isArray(e.targets)&&e.targets.every(r=>typeof r.id==='string'&&Number.isInteger(r.incarnation))&&[null,0,1].includes(e.ballOwner)){
+    const continuous=!!e.selector;try{validateProtection({parameter:e.parameter,duration:e.duration.kind,target:continuous?e.selector:e.ballOwner!==null?'self_ball':'source',target_scope:{mode:continuous?'all':'single',binding:continuous?'all_matches':'reference',membership:continuous?'continuous_matching':'snapshot_on_resolution'}});if(continuous||e.ballOwner!==null||e.targets.length)return;}catch(_){}
+  }
   throw new Error('Unintegrated persistent watcher mechanism');
 }
 function assertReady(g) {
@@ -157,7 +159,7 @@ function transaction(g,p,c,timing,notification=null) {
     for(const key of Object.keys(next.zones)) {
       const [player,zone]=key.split('.');
       next.zones[key]=zone==='sides'?[...state.zones[player+'.side:0'],...state.zones[player+'.side:1']]:[...state.zones[player+'.'+(zone==='ev'?'event':zone)]];
-      for(const id of next.zones[key]){next.cards[id].zone=key;next.cards[id].incarnation=state.cards[id].incarnation;for(const field of ['entryOrigin','entryReason','entryTurn','entrySkillName','coveredCharacter'])if(state.cards[id][field]!==undefined)next.cards[id][field]=copy(state.cards[id][field]);}
+      for(const id of next.zones[key]){next.cards[id].zone=key;next.cards[id].incarnation=state.cards[id].incarnation;for(const field of ['entryOrigin','entryReason','entryTurn','entrySkillName','coveredCharacter'])if(state.cards[id][field]!==undefined)next.cards[id][field]=copy(state.cards[id][field]);if(state.events.some(e=>e.type==='character_entry'&&e.character?.id===id&&e.character.incarnation===state.cards[id].incarnation))next.cards[id].entryIncarnation=state.cards[id].incarnation;}
     }
     next.revision=physical.revision+state.events.filter(e=>e.type==='move').length;
     identity.restore(g,next);
@@ -247,7 +249,7 @@ function transaction(g,p,c,timing,notification=null) {
         g.log(`效果：${g.players[e.actor].name}${period}，${text}。`);
       }
       else if(e.kind==='invalid')g.log(`效果：${g.players[e.actor].name}${e.duration.kind==='next_opponent_turn'?'下個回合':'本回合'}，符合角色／名稱／圖示／關鍵字條件的技能失效；已結算效果保留。`);
-      else if(e.kind==='protect')g.log('登場效果：這位角色本回合的數值不會被降低。');
+      else if(e.kind==='protect')g.log(e.selector?'本回合符合所屬的場上角色與之後登場角色受到防降保護。':e.ballOwner!==null?'下個對方回合，這個來球的進攻值受到防降保護。':'這位角色的指定參數受到防降保護。');
       else if(e.kind==='keyword')g.log(`效果：${({doshat:'ドシャット',feint:'フェイント',a_pass:'Aパス',blockout:'ブロックアウト',feint_block_ban:'下回合禁止攔網'})[e.keyword]}${e.N?' '+e.N:''}。`);
       else if(e.kind==='watch')g.log(`效果：${g.players[e.actor].name}${e.duration.kind==='next_opponent_turn'?'的下個回合':'本回合'}，${({hand_added:'加牌',character_entry:'符合條件的角色登場',loss:'喊 Loss',block_success:'攔網成功',source_moved:'來源卡移動'})[e.event]}時結算後續效果。`);
     }
@@ -283,7 +285,7 @@ function transaction(g,p,c,timing,notification=null) {
       }
     }
     const payment=req.payment?.steps?.[0],isPassive=byShort[short[req.source]]?.profiles[0].activation?.skill_type==='passive';
-    const zoneLabel=z=>({hand:'手牌',event:'Event區',drop:'棄牌區',deck:'牌庫',block:'攔網角色',court:'場上角色',deck_bottom:'牌庫底',choose_deck_top_or_bottom:'牌庫頂或底'}[z]||z);
+    const zoneLabel=z=>({serve:'發球區',receive:'接球區',toss:'舉球區',attack:'攻擊區','attack.guts':'攻擊區Guts','receive.guts':'接球區Guts',hand:'手牌',event:'Event區',drop:'棄牌區',deck:'牌庫',block:'攔網角色',court:'場上角色',deck_bottom:'牌庫底',choose_deck_top_or_bottom:'牌庫頂或底'}[z]||z);
     const handDiscard=payment?.pool?.zone==='hand'&&payment.count===1&&payment.destination==='owner.drop';
     const paymentPrompt=(payment?.kind==='pay_guts'?`是否支付 ${payment.count} Guts，發動登場效果？`:handDiscard?(isPassive?'是否棄 1 張手牌，發動登場效果？':'是否支付棄牌費用，對同一目標追加效果？'):payment?.kind==='mill'?`是否將牌庫頂 ${payment.count_mode==='upto'?'最多 ':''}${payment.count} 張送到棄牌區，發動效果？`:payment?.kind==='move'?`是否將 ${payment.count} 張${zoneLabel(payment.pool.zone)}放到${zoneLabel(payment.destination.split('.').slice(1).join('.'))}，發動效果？`:'是否支付費用，追加效果？')+(req.ineffectiveReason?' ⚠ '+req.ineffectiveReason:'');
     const sourceName=req.kind==='trigger_order'?'效果':byShort[short[req.source]]?.display_name||g.src||'效果';
@@ -298,7 +300,7 @@ function transaction(g,p,c,timing,notification=null) {
       if(req.kind==='parameter')return {label:labels[answer],value:Object.keys(params).find(key=>params[key]===answer),answer};
       if(req.kind==='mill_count')return {label:answer?`將牌庫頂 ${answer} 張送到棄牌區`:'不送牌',value:answer,answer};
       if(req.kind==='entry_count')return {label:answer?'讓 1 張符合條件的角色登場':'不登場',value:answer,answer};
-      if(req.kind==='move_count')return {label:answer?`移動 ${answer} 張`:'不移動',value:answer,answer};
+      if(req.kind==='move_count')return {label:req.selectionAction==='exchange'?answer?'交換兩側各1張':'不交換':answer?`移動 ${answer} 張`:'不移動',value:answer,answer};
       if(req.kind==='payment_count')return {label:`支付 ${answer} 張`,value:answer,answer};
       if(req.kind==='trigger_order') {
         const job=state.queue.find(q=>q.id===answer),name=byShort[short[job.source?.id]]?.display_name||'觸發效果';
@@ -309,8 +311,8 @@ function transaction(g,p,c,timing,notification=null) {
     const kind=req.kind==='parameter'?'parameter':req.kind==='target'?'target':['activate_payment','optional'].includes(req.kind)?'skill':'rulesChoice';
     const fromZones=[...new Set(req.options.filter(id=>typeof id==='string'&&state.cards[id]).map(id=>state.cards[id].zone.split('.')[1]))];
     const fromLabel=fromZones.length===1?({event:'Event 區',drop:'棄牌區',hand:'手牌',deck:'牌庫'}[fromZones[0]]||zoneLabel(fromZones[0])):'來源區';
-    const movePrompt=`從${fromLabel}選擇 1 張，放到${zoneLabel(req.destination?.split('.').slice(1).join('.'))}`;
-    const prompt=sourceName+'：'+({entry:'選擇要由效果登場的角色',entry_count:'是否讓符合條件的角色登場？',target:'選擇場上 1 位角色',draw_count:'選擇抽牌數量',mill_count:'選擇牌庫頂要送到棄牌區的張數（先選張數再公開）',payment_count:'選擇支付Guts數量',activate_payment:paymentPrompt,optional:req.effectDescription?'是否執行：'+req.effectDescription+'？':'是否執行這個登場效果？',payment_cards:req.destination==='self.event'?'選擇 1 張事件放到 Event 區':fromZones[0]==='hand'&&req.destination==='owner.drop'?'選擇 1 張符合條件的手牌棄掉':'支付費用：'+movePrompt,parameter:`選擇這位角色要增加的參數${req.target?`（${g.cardName(g.players[state.cards[req.target.id].owner],state.cards[req.target.id].zone.split('.')[1])}・${labels[state.cards[req.target.id].zone.split('.')[1]]||'側攔'}區）`:''}`,guts_destination:'選擇放置Guts的區域',move_count:'選擇移動數量',mode:req.effectModes?'選擇1項效果':req.keywordOutgoing?'選擇結束回合的回球進攻值':'其餘的牌放到哪裡？',move_cards:req.ordering?'安排其餘牌的順序（先選的會先抽到）':req.destination?.endsWith('.hand')?`從${fromLabel}選擇 1 張加入手牌`:fromZones[0]==='hand'&&req.destination==='owner.drop'?(isPassive?'請選 1 張手牌棄掉':'非抽牌加入手牌後，請選 1 張手牌棄掉'):movePrompt,trigger_order:'選擇同時觸發的結算順序'}[req.kind]);
+    const movePrompt=`${req.selectionAction==='exchange'?'交換：':''}從${fromLabel}選擇 1 張，放到${zoneLabel(req.destination?.split('.').slice(1).join('.'))}`;
+    const prompt=sourceName+'：'+({entry:'選擇要由效果登場的角色',entry_count:'是否讓符合條件的角色登場？',target:'選擇場上 1 位角色',draw_count:'選擇抽牌數量',mill_count:'選擇牌庫頂要送到棄牌區的張數（先選張數再公開）',payment_count:'選擇支付Guts數量',activate_payment:paymentPrompt,optional:req.effectDescription?'是否執行：'+req.effectDescription+'？':'是否執行這個登場效果？',payment_cards:req.destination==='self.event'?'選擇 1 張事件放到 Event 區':fromZones[0]==='hand'&&req.destination==='owner.drop'?'選擇 1 張符合條件的手牌棄掉':'支付費用：'+movePrompt,parameter:`選擇這位角色要增加的參數${req.target?`（${g.cardName(g.players[state.cards[req.target.id].owner],state.cards[req.target.id].zone.split('.')[1])}・${labels[state.cards[req.target.id].zone.split('.')[1]]||'側攔'}區）`:''}`,guts_destination:'選擇放置Guts的區域',move_count:req.selectionAction==='exchange'?'是否交換兩側各1張？':'選擇移動數量',mode:req.effectModes?'選擇1項效果':req.keywordOutgoing?'選擇結束回合的回球進攻值':'其餘的牌放到哪裡？',move_cards:req.ordering?'安排其餘牌的順序（先選的會先抽到）':req.destination?.endsWith('.hand')?`從${fromLabel}選擇 1 張加入手牌`:fromZones[0]==='hand'&&req.destination==='owner.drop'?(isPassive?'請選 1 張手牌棄掉':'非抽牌加入手牌後，請選 1 張手牌棄掉'):movePrompt,trigger_order:'選擇同時觸發的結算順序'}[req.kind]);
     let invalid=false;
     for(;;) {
       const value=await g.ask(owner,{kind,prompt:prompt+(invalid?'（請重新選擇有效選項）':''),timing,ctx:{card:short[req.source],...(req.effectModes?{effectModes:true}:{}),...(req.keywordOutgoing?{keywordOutgoing:true}:{}),...(req.ineffectiveReason?{ineffectiveReason:req.ineffectiveReason}:{}),...(req.kind==='parameter'?{target:state.cards[req.target?.id||req.source]?.zone.split('.')[1]}:{}),...(state.cards[req.source]?.zone===req.player+'.receive'&&g.ball?{need:g.ball.off-g.parameter(owner,'receive','rcv')}: {})},options:opts.map(({answer,...o})=>o)});
@@ -362,19 +364,21 @@ async function judgment(g,p,type,extra={}){
 function active(e,g) { if(e.duration.kind==='this_draw_phase'&&g.rulePhase!=='drw')return false;return e.duration.kind==='next_opponent_turn'?e.duration.activeTurn===g.turnNo:e.duration.turn===g.turnNo; }
 function protectedParameter(g,p,key,param) {
   const ref=g.roleReference(p,key);
-  return stored(g).effects.some(e=>e.kind==='protect'&&active(e,g)&&(e.parameter==='all'||e.parameter===params[param])&&e.targets.some(r=>g.sameReference(r,ref)));
+  return !!ref&&stored(g).effects.some(e=>e.kind==='protect'&&active(e,g)&&(e.parameter==='all'||e.parameter===params[param])&&(e.selector?((e.selector.actor==='opponent'?1-e.controller:e.controller)===p.idx&&g.courtTargets(p).some(t=>t.key===key&&(e.selector.filters.tags||[]).every(tag=>library.card(t.card).schoolTags.includes(tag)))):e.targets.some(r=>g.sameReference(r,ref))));
 }
+function protectedBall(g,owner) {return stored(g).effects.some(e=>e.kind==='protect'&&active(e,g)&&e.ballOwner===owner&&['all','offense'].includes(e.parameter));}
 function entryPreview(g,p,code,area,param) {
-  if(!stored(g).effects.some(e=>e.kind==='watch'&&e.event==='character_entry'&&e.actor===p.idx&&active(e,g)))return {value:byShort[code].profiles[0].variants[0].printed.parameters[params[param]],protected:false};
+  if(!stored(g).effects.some(e=>active(e,g)&&(e.kind==='watch'&&e.event==='character_entry'&&e.actor===p.idx||e.kind==='protect'&&e.selector&&(e.selector.actor==='opponent'?1-e.controller:e.controller)===p.idx)))return {value:byShort[code].profiles[0].variants[0].printed.parameters[params[param]],protected:false};
   return transaction(g,p,null,g.rulePhase||'drw',{events:[]}).entryPreview(code,area,params[param]);
 }
 async function charactersEntered(g,p,entries) {
   assertReady(g);
   for(const {key,origin='hand'}of entries)if(key==='block'||key.startsWith('side:')){const ref=g.roleReference(p,key);if(!ref)throw new Error('Missing actual blocker receipt');const receipt=`${g.turnNo}:${p.idx}:${ref.id}:${ref.incarnation}:${key}`;p.ts.blockEntryReceipts ||= [];if(!p.ts.blockEntryReceipts.includes(receipt))p.ts.blockEntryReceipts.push(receipt);p.ts.blockEntryOrigins ||= {};p.ts.blockEntryOrigins[receipt]=origin;}
+  const physical=identity.ensure(g);for(const {key,origin='hand',reason='rule',coveredCharacter=null,entrySkillName=null}of entries){const ref=g.roleReference(p,key);if(!ref)throw Error('Missing actual entry reference');const card=physical.cards[ref.id];if(card.entryIncarnation!==ref.incarnation||card.entryTurn!==g.turnNo)Object.assign(card,{entryIncarnation:ref.incarnation,entryOrigin:origin,entryReason:reason,entryTurn:g.turnNo,coveredCharacter:copy(coveredCharacter),entrySkillName});}
   const keywordEntry=stored(g).effects.some(e=>e.kind==='keyword'&&active(e,g)&&e.actor===p.idx&&['a_pass','blockout'].includes(e.keyword));
   const passive=entries.some(({key})=>{const code=g.courtTargets(p).find(t=>t.key===key)?.card;return byShort[code]?.profiles[0].activation?.skill_type==='passive';});
   const observer=g.players.some(q=>g.courtTargets(q).some(t=>handles(t.card)&&byShort[t.card].profiles[0].activation.trigger?.event==='character_entry'));
-  if(!passive&&!observer&&!keywordEntry&&!stored(g).effects.some(e=>e.kind==='watch'&&e.event==='character_entry'&&e.actor===p.idx&&active(e,g)))return;
+  if(!passive&&!observer&&!keywordEntry&&!stored(g).effects.some(e=>active(e,g)&&(e.kind==='watch'&&e.event==='character_entry'&&e.actor===p.idx||e.kind==='protect'&&e.selector&&(e.selector.actor==='opponent'?1-e.controller:e.controller)===p.idx)))return;
   // Payments and draws change move revision; a repeated entry is still the same role instance.
   identity.ensure(g);
   for(const {key,origin='hand',reason='rule',coveredCharacter=null,entrySkillName=null,entry_keyword_family=null} of entries) {
@@ -399,6 +403,6 @@ async function outgoing(g,p,type,off){
  if(!p.ts.keywordOutgoing&&!stored(g).effects.some(e=>e.kind==='keyword'&&active(e,g)&&e.actor===p.idx&&['doshat','feint'].includes(e.keyword)))return {type,off};
  const result=await transaction(g,p,null,g.rulePhase||'atk',{events:[],outgoing:{kind:type,offense:off}}).run();p.ts.keywordResolved={type:result.kind,off:result.offense};return p.ts.keywordResolved;
 }
-const api={skillAllowed,blockGroupAllowed,endDrawPhase,eventAllowed,entryNames,distinctNameOptions,outgoing,sourceMoved,drawn,judgment,flushHostEvents:flushHandEvents,permission,entryAllowed,blockEntered,charactersEntered,entryPreview,protectedParameter,handles,canPlay,resolve,assertReady,handAdded,legacyEffect,beginTurn,finishTurn,loss,approvals:[...approved]};
+const api={protectedBall,skillAllowed,blockGroupAllowed,endDrawPhase,eventAllowed,entryNames,distinctNameOptions,outgoing,sourceMoved,drawn,judgment,flushHostEvents:flushHandEvents,permission,entryAllowed,blockEntered,charactersEntered,entryPreview,protectedParameter,handles,canPlay,resolve,assertReady,handAdded,legacyEffect,beginTurn,finishTurn,loss,approvals:[...approved]};
 if(node)module.exports=api;else root.BreakRulesLegacy=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

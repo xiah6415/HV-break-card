@@ -42,7 +42,7 @@ function testResultCount(catalog){return forms(catalog,'result_count',node=>{
  }
 });}
 function testSumResult(catalog){return forms(catalog,'sum_result_parameter',node=>{
- // 一般數值相加；「－」視為 0（例：西谷 block「－」當 Guts 付出時不加也不壞）
+ // 一般數值相加；「－」沒有該參數，不加入合計（例：西谷 block「－」不當數值比較或加算）
  for(const values of [[1,2,3],[0,0,0],[2,'dash',3],[]]){
   const k=F.game(catalog),src=plain(k,0,'receive'),ctx=k._context(src,0);
   ctx.bind[node.result]=values.map(v=>{const id=k.addCard('HV-D01-009',0,'drop');k.card(id).printed.parameters[node.parameter]=v;return id;});

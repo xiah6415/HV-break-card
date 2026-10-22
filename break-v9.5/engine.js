@@ -415,7 +415,7 @@ class Game {
       else { const i = q.hand.findIndex((c, i) => this.sameReference(command.ref, this.cardReference(q, 'hand', i))); if (i < 0) throw Error('手牌已改變，請重選'); const c = this.moveCard(q.hand, q.drop, i); this.log(`${q.name} 手動棄掉 ${nm(c)}`); }
     } else if (['adjust','ball'].includes(command.kind)) {
       if (![1,-1].includes(command.delta)) throw Error('每次調整1點');
-      if (command.kind === 'ball') { if (!this.ball) throw Error('目前沒有來球'); this.ball.off += command.delta; this.log(`手動修正：來球總值 ${command.delta > 0 ? '+' : ''}${command.delta} → ${this.ball.off}`); }
+      if (command.kind === 'ball') { if (!this.ball) throw Error('目前沒有來球'); if(command.delta<0&&sharedRules.protectedBall(this,1-p.idx)){this.log('手動修正未生效：來球受到防降保護','warn');return;} this.ball.off += command.delta; this.log(`手動修正：來球總值 ${command.delta > 0 ? '+' : ''}${command.delta} → ${this.ball.off}`); }
       else {
         if (!Object.hasOwn(IDX, command.param) || !this.sameReference(command.ref, this.roleReference(q, command.key))) throw Error('角色已改變，請重選');
         const before = this.parameter(q, command.key, command.param); if (before == null) throw Error('不能調整「－」');

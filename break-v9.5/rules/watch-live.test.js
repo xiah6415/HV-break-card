@@ -35,7 +35,7 @@ let cases=0;
    const cleanSides=who=>{for(const z of ['side:0','side:1'])for(const card of [...k.zone(who,z)])k._atomic(()=>k._move(card,who,'drop',k._context(card,who)));if(g.players[who].ts.sides?.length)g.cleanupSides(g.players[who]);};
    if(w.duration==='next_opponent_turn'){cleanSides(0);k.endTurn();k.beginTurn(1);g.finishTurn(owner);g.beginTurn(g.players[1]);}
    if(expired)for(let i=0;i<2;i++){const old=g.turnP;cleanSides(old.idx);k.endTurn();k.beginTurn(1-k.state.turn.player);g.finishTurn(old);g.beginTurn(g.players[k.state.turn.player]);}
-   const q=g.players[player],followCode=I.short(def.card_no);
+   const q=g.players[player],followCode=def?I.short(def.card_no):null;
    if(w.event==='character_entry'){
     k.advancePhase(area.startsWith('side')?'block':area);g.rulePhase=phases[k.state.turn.phase];
     k.enter(target,area.startsWith('side')?'block':area,{side:area.startsWith('side')});
@@ -53,7 +53,7 @@ let cases=0;
    g.sharedRulesState=JSON.parse(JSON.stringify(g.sharedRulesState));B.assertReady(g);cases++;
   }
  }
- assert.equal(cases,66);
+ assert.equal(cases,68);
  const g=new E.Game({seed:7,decks:['k1014','seijoh'],agents:[E.AI,E.AI]}),p=g.players[0];g.beginTurn(p);
  const state=g.cardSnapshot(),id=state.zones['0.deck'].at(-1);g.moveCard(p.deck,p.ev,p.deck.length-1);
  const base={kind:'watch',actor:0,source:{id,incarnation:0},duration:{kind:'this_turn',turn:g.turnNo}};

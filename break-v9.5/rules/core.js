@@ -40,6 +40,16 @@ function modeLabel(n) {
 }
 function need(ok, message) { if (!ok) throw new NeedsReview(message); }
 function legal(ok, message) { if (!ok) throw new IllegalAction(message); }
+function validateProtection(n) {
+  need(['all','block','offense'].includes(n.parameter)&&['this_turn','next_opponent_turn'].includes(n.duration),'Unsupported protection parameters');
+  const s=n.target_scope;
+  need(s&&['snapshot_on_resolution','continuous_matching'].includes(s.membership),'Unresolved protection scope');
+  if(s.membership==='continuous_matching'){
+    need(s.mode==='all'&&s.binding==='all_matches'&&n.target?.kind==='selector'&&['self','opponent','controller','owner'].includes(n.target.actor)&&n.target.zone==='court','Unsupported continuous protection');
+    for(const [key,v]of Object.entries(n.target.filters||{}))need(key==='role'?v==='character':key==='tags'&&Array.isArray(v)&&v.length&&v.every(x=>typeof x==='string'),'Unsupported continuous protection filter');
+  }else need(s.mode==='single'&&s.binding==='reference'&&['source','$target','$entered','$event.character','self_ball','opponent_ball'].includes(n.target),'Unsupported protection target');
+  return true;
+}
 function walk(value, fn) {
   if (Array.isArray(value)) value.forEach(v=>walk(v,fn));
   else if (value && typeof value==='object') { fn(value); Object.values(value).forEach(v=>walk(v,fn)); }
@@ -508,7 +518,7 @@ class Kernel {
   }
   _protected(target,param,ctx) {
     return this.state.effects.some(e=>e.kind==='protect' && this.active(e) && (e.parameter==='all' || e.parameter===param) &&
-      (typeof target==='string' ? e.ballOwner===(target==='self_ball'?ctx.controller:1-ctx.controller) : e.targets.some(r=>same(r,target) && this.current(r))));
+      (typeof target==='string' ? e.ballOwner===(target==='self_ball'?ctx.controller:1-ctx.controller) : this.current(target)&&(e.selector?this.pool(e.selector,{controller:e.controller}).includes(target.id):e.targets.some(r=>same(r,target)))));
   }
   _numeric(node,ctx) {
     const targets=this._targets(node,ctx); let performed=false;
@@ -525,7 +535,7 @@ class Kernel {
       if (typeof value==='object') {
         if (value.kind==='result_count') value=(ctx.bind[value.result] || []).length;
         else if (value.kind==='printed_parameter') { need(typeof target!=='string','Printed ball value unsupported');value=this.card(target.id).printed.parameters[value.parameter]; }
-        else if (value.kind==='sum_result_parameter') value=(ctx.bind[value.result] || []).reduce((n,id)=>{const v=this.card(id).printed.parameters?.[value.parameter];return n+(Number.isInteger(v)?v:0);},0); // 「－」（dash）不計入合計（視為 0）
+        else if (value.kind==='sum_result_parameter') value=(ctx.bind[value.result] || []).reduce((n,id)=>{const v=this.card(id).printed.parameters?.[value.parameter];return n+(Number.isInteger(v)?v:0);},0); // 「－」沒有該參數，合計僅累加實際存在的數值
         else throw new NeedsReview('Unsupported numeric expression');
       }
       need(Number.isInteger(value),'Numeric value must be an integer');
@@ -542,7 +552,7 @@ class Kernel {
           const old=this.parameter(target.id,param); if (old==='dash') continue;
           const protectedValue=this._protected(target,param,ctx);
           if (node.operation==='add' && value<0 && protectedValue) continue;
-          need(!(node.operation==='set' && value<old && protectedValue),'Set-to-lower with protection needs review');
+          if(node.operation==='set' && value<old && protectedValue)continue;
           if (node.operation==='add' && value===0 || node.operation==='set' && value===old) continue;
           let applied=value;
           if(node.increase_guard){
@@ -565,7 +575,8 @@ class Kernel {
       if (n.kind && !['selector','compare','all','any','equal_fields','count_compare','uniform_affiliation','all_result_cards_match','printed_parameter','sum_result_parameter','result_count','source_skill_maximum'].includes(n.kind)) need(KINDS.has(n.kind),'Unsupported mechanism '+n.kind);
       if(n.group_constraints)this._retrieveCompatible([],n.group_constraints);
       if (n.filters) for (const k of Object.keys(n.filters)) need(FILTERS.has(k),'Unsupported filter '+k);
-      if (n.target_scope) need(n.target_scope.membership==='snapshot_on_resolution','Target membership is not supported');
+      if (n.target_scope) need(n.target_scope.membership==='snapshot_on_resolution'||n.kind==='protect_numeric_decrease'&&n.target_scope.membership==='continuous_matching','Target membership is not supported');
+      if(n.kind==='protect_numeric_decrease')validateProtection(n);
       if(n.destination)need((!n.destination.includes('choose_deck') || ['choose_deck_top_or_bottom','self.choose_deck_top_or_bottom'].includes(n.destination)) && !n.destination.endsWith('.deck_top'),'Destination mechanism not implemented');
       if(n.kind==='invalidate_skill')validateInvalid(n);
       if(n.kind==='ban_action')validateBan(n);
@@ -613,9 +624,9 @@ class Kernel {
         const toHand=node.sides.map(sel=>sel.zone==='hand');
         // 一側是手牌時，另一側的牌會加入手牌：被禁止加牌就不能交換（QA：岩泉）
         if(!a.length||!b.length||toHand.some(Boolean)&&!this._handAllowed(player,ctx)){ctx.bind[node.bind||'exchanged']=[];return false;}
-        const n=this._decide('move_count',ctx,[0,1],{player});legal(n===0||n===1,'Invalid exchange count');
+        const n=this._decide('move_count',ctx,[0,1],{player,selectionAction:'exchange'});legal(n===0||n===1,'Invalid exchange count');
         if(!n){ctx.bind[node.bind||'exchanged']=[];return false;}
-        const x=this._selection(a,1,ctx,'move_cards',player,{destination:node.sides[1].zone})[0],y=this._selection(b,1,ctx,'move_cards',player,{destination:node.sides[0].zone})[0];
+        const x=this._selection(a,1,ctx,'move_cards',player,{destination:'self.'+node.sides[1].zone,selectionAction:'exchange'})[0],y=this._selection(b,1,ctx,'move_cards',player,{destination:'self.'+node.sides[0].zone,selectionAction:'exchange'})[0];
         const place=(id,zone)=>{const area=zone.split('.')[0];if(zone==='hand'){this._move(id,player,'hand',ctx);this._emit({type:'hand_added',player,card:id,operation:'add_hand'});}else{legal(zone.endsWith('.guts')&&COURT.includes(area),'Unsupported exchange zone '+zone);this._move(id,player,area,ctx,'effect',true);}};
         place(x,node.sides[1].zone);place(y,node.sides[0].zone);
         ctx.bind[node.bind||'exchanged']=[x,y];return true;
@@ -652,7 +663,8 @@ class Kernel {
         // no attack-offense field; do not confuse an old attack card with it.
         const leaves=[];walk(node.then,n=>{if(KINDS.has(n.kind)&&!['sequence','conditional'].includes(n.kind))leaves.push(n);});
         const attackOnly=leaves.length>0&&leaves.every(n=>n.kind==='numeric'&&n.target==='opponent_ball'&&n.parameter==='attack_offense');
-        const ineffectiveReason=attackOnly&&this.state.ball?.kind!=='attack'?'來球不是攻擊，攻擊進攻值效果無效；支付費用不會改變來球數值。':null;
+        const protectedAttack=attackOnly&&leaves.every(n=>n.operation==='add'&&Number.isInteger(n.value)&&n.value<0)&&this._protected('opponent_ball','offense',ctx);
+        const ineffectiveReason=attackOnly&&this.state.ball?.kind!=='attack'?'來球不是攻擊，攻擊進攻值效果無效；支付費用不會改變來球數值。':protectedAttack?'來球受到防降保護，支付費用不會降低來球數值。':null;
         const yes=this._decide('activate_payment',ctx,[true,false],{payment:node.payment,...(ineffectiveReason?{ineffectiveReason}:{})});legal(typeof yes==='boolean','Payment decision must be boolean');if(!yes)return false;
         const saved=clone(this.state), before=clone(ctx);ctx.inPayment=true;ctx.paid=[];
         try {this._run(node.payment,ctx);} catch(e) {if(!(e instanceof Unpayable))throw e;this.state=saved;Object.assign(ctx,before);return false;}
@@ -676,7 +688,10 @@ class Kernel {
       case 'watch': this._registerWatch(node,ctx);return true;
       case 'ban_action': this.effect('ban',{actor:this.owner(node.actor,ctx),action:node.action,scope:node.scope},ctx,node.duration);return true;
       case 'invalidate_skill': this.effect('invalid',{actor:this.owner(node.actor,ctx),selector:node.selector},ctx,node.duration);return true;
-      case 'protect_numeric_decrease': { const targets=this._targets(node,ctx);if(!targets.length)return false;const ball=typeof targets[0]==='string';this.effect('protect',{targets:ball?[]:targets,ballOwner:ball?(targets[0]==='self_ball'?ctx.controller:1-ctx.controller):null,parameter:node.parameter},ctx,node.duration);return true; }
+      case 'protect_numeric_decrease': {
+        if(node.target_scope.membership==='continuous_matching'){this.effect('protect',{targets:[],ballOwner:null,parameter:node.parameter,selector:node.target},ctx,node.duration);return true;}
+        const targets=this._targets(node,ctx);if(!targets.length)return false;const ball=typeof targets[0]==='string';this.effect('protect',{targets:ball?[]:targets,ballOwner:ball?(targets[0]==='self_ball'?ctx.controller:1-ctx.controller):null,parameter:node.parameter},ctx,node.duration);return true;
+      }
       case 'phase_jump': this._jump(node.destination);return true;
       case 'keyword': return this._keyword(node,ctx);
       case 'enter': case 'enter_self': { const ids=node.kind==='enter_self'?[ctx.source.id]:this.pool(node.pool,ctx).filter(id=>this._entryOptions(id,ctx.controller,node.destination,node.as_side_blocker,'skill').names.length);let n=node.kind==='enter_self'?1:Math.min(node.count,ids.length);
@@ -1010,6 +1025,6 @@ class Kernel {
     need(['rally','loss_triggers','interval'].includes(this.state.stage),'Invalid rally stage');
     const seen=new Set();for(const [zone,ids] of Object.entries(this.state.zones))for(const id of ids){need(!seen.has(id),'Physical card appears twice');seen.add(id);const c=this.card(id);need(c.zone===zone&&c.id===id&&[0,1].includes(c.owner)&&Number.isInteger(c.incarnation)&&c.incarnation>=0&&this.profiles[c.profileId],'Card identity/zone mismatch');}need(seen.size===Object.keys(this.state.cards).length,'Card conservation failed'); }
 }
-const api={validateInvalid,validateBan,Kernel,distinctNameOptions,NeedsReview,IllegalAction,capabilities:{status:'HOST_CONTROLLER_REQUIRED',nodes:[...KINDS],keywords:['one_touch','doshat','feint','blockout','a_pass','two_attack','back_attack','multi_attack'],defaultCatalogLiveCardApprovals:0}};
+const api={validateProtection,validateInvalid,validateBan,Kernel,distinctNameOptions,NeedsReview,IllegalAction,capabilities:{status:'HOST_CONTROLLER_REQUIRED',nodes:[...KINDS],keywords:['one_touch','doshat','feint','blockout','a_pass','two_attack','back_attack','multi_attack'],defaultCatalogLiveCardApprovals:0}};
 if(typeof module!=='undefined')module.exports=api;else root.BreakRulesCore=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

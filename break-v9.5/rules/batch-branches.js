@@ -75,6 +75,7 @@ function expandFixture(k,{catalog,profile,source,player,phase,focus}){
   if(n.field==='both.set.count_sum'){while(k.zone(0,'sets').length+k.zone(1,'sets').length<=n.value)add(base,player,'sets');return;}
   if(['self.attack.printed_attack','opponent.attack.printed_attack'].includes(n.field)){replaceTop(n.field.startsWith('self.')?player:1-player,'attack',pick({type:'character'},'attack',d=>printed(d).parameters.attack>n.value));return;}
   if(/^source.current_(attack|toss|receive|block|serve)$/.test(n.field))return; // Fixture omits the external entry bonus in this negative case.
+  if(n.field==='source.entry_reason'){entryReason=n.value==='skill'?'rule':'skill';return;}
   if(n.field==='source.entry_origin'){moveToDeck(source);k.resolveProgram({kind:'move_self',destination:'owner.drop'},player,source);entryReason='skill';return;}
   if(n.field==='phase'){const other=profile.activation.activation_phases.find(p=>p!==n.value);if(!other)gap('No alternate activation phase');k.advancePhase(other);return;}
   if(n.field==='self.court.distinct_affiliation_assignment_count'){for(const a of ['serve','block','receive','toss','attack'].filter(a=>a!==phase))for(const id of [...k.zone(player,a)])moveToDeck(id);return;}

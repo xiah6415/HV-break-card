@@ -4,17 +4,17 @@
 |---|---|
 | 卡片／資料組 | 541／545 |
 | 數值模式可組牌 | 541 |
-| 嚴格模式可組牌 | 487 |
+| 嚴格模式可組牌 | 501 |
 | 無技能角色 | 183 |
-| 共用腳本自動技能 | 297 |
+| 共用腳本自動技能 | 311 |
 | 舊流程技能（待遷入單一核心） | 7 |
-| 未自動化技能 | 54 |
-| 原297張池／實際累計開放 | 297／243（含此前2張回收） |
-| 已完成節點模組清單 | 26：sequence、deck_selection、numeric、selector、conditional、payment_branch、pay_guts、compare、draw、move、count_compare、retrieve、watch、uniform_affiliation、all、keyword、rename_before_entry、all_result_cards_match、move_self、mill、enter、formal_declaration_cost、ban_action、invalidate_skill、choose_modes、optional |
-| 已測參數形態／涵蓋技能卡／資料組 | 556／351／355 |
+| 未自動化技能 | 40 |
+| 原297張池／實際累計開放 | 297／257（含此前2張回收） |
+| 已完成節點模組清單 | 34：sequence、deck_selection、numeric、selector、conditional、payment_branch、pay_guts、compare、draw、move、count_compare、retrieve、watch、uniform_affiliation、all、keyword、rename_before_entry、all_result_cards_match、move_self、mill、enter、formal_declaration_cost、ban_action、invalidate_skill、choose_modes、optional、any、equal_fields、result_count、sum_result_parameter、draw_to_hand_size、exchange、each_player_optional_draw、protect_numeric_decrease |
+| 已測參數形態／涵蓋技能卡／資料組 | 569／351／355 |
 | numeric／selector／conditional／payment_branch／pay_guts／compare／draw 形態 | 77／152／1／1／16／97／5 |
 | move 形態／審查必測項／已修正疑義卡 | 20／14／7（疑義均已裁定；未完成模組／入口維持鎖定） |
-| P04-070 範圍裁定／開放狀態 | 本回合持續匹配，含正常及事件效果登場；待protect_numeric_decrease模組 |
+| P04-070 範圍裁定／開放狀態 | 本回合持續匹配，含正常及事件效果登場；已開放，來源被覆蓋或離場後保護仍持續到本回合結束 |
 | count_compare 形態／依賴技能卡 | 13／45 |
 | retrieve 形態／依賴技能卡／分組約束 | 7／40／同區、不同名、共同所屬 |
 | watch 形態／依賴技能卡／新增開放 | 26／41／13（登場、加牌、Loss、攔網成功、來源移動） |
@@ -32,15 +32,17 @@
 | invalidate_skill 形態／依賴技能卡／新增開放 | 11／11／11（整體技能與關鍵字分開、聯集、改名與已結算保留） |
 | choose_modes 形態／依賴技能卡／新增開放 | 1容器／9／9（子效果由既有節點執行；當下檢查有效模式、原索引回答、完整效果說明） |
 | optional 形態／依賴技能卡／新增開放 | 2（自己／對手）／7（原297池6）／2；無可執行效果時略過，P02-004對手決定、P02-064不足2張直接歸零 |
-| Claude 第3節必測局面 | 17項均已納入；P04-098依卡文設為6，P01-082設為7；P02-066部分費用官方未明示，沿用完整不足不扣款 |
+| Claude長尾完成節點／參數形態／新增開放 | 7／8／9（any、equal_fields、result_count、sum_result_parameter、draw_to_hand_size、exchange、each_player_optional_draw）；shuffle待主機亂數接線 |
+| protect_numeric_decrease 形態／依賴技能卡／新增開放 | 5／7／5（球總值、角色單值／全值、持續匹配；P04-021待source_covered入口） |
+| Claude 第3節必測局面 | 17項均已納入；P04-098依卡文設為6，P01-082設為7；P02-066依總則7-7-3完整費用不足不扣款 |
 | 已支援觸發入口 | 5：event、active、passive:self_entry、permanent_entry_name、passive:character_entry |
-| 本組測卡／每卡局面／本次新開 | 243／3＋接受／拒絕／資源不足、對手選擇、全場角色歸零、延遲與完整Undo／2 |
+| 本組測卡／每卡局面／本次新開 | 257／3＋核心／正式桌面對照、交換／雙方決策、保護範圍／未來登場、期限及完整Undo／14（Claude9＋防降5） |
 | 累計路徑前7節點：節點齊備／入口與資料許可 | 31／27（測試前預估） |
 | 累計路徑前10節點：節點齊備／入口與資料許可 | 96／88（測試前預估） |
 | 累計路徑前13節點：節點齊備／入口與資料許可 | 133／122（測試前預估） |
 | 累計路徑前20節點：節點齊備／入口與資料許可 | 225／213（測試前預估，含路徑中入口完成） |
 | 累計路徑入口步驟：permanent_entry_name／passive:character_entry | 第15節點後168／第17節點後185（測試前預估） |
 | 後續入口步驟 | passive:source_covered、passive:event_played、passive:self_entry_cover |
-| 累計路徑下一步預估 | protect_numeric_decrease：243→248（+5）；再接source_covered／event_played／self_entry_cover（依使用者分工，待節點與逐卡驗證） |
+| 累計路徑下一步預估 | source_covered：257→262（+5）；event_played→264（+2）；self_entry_cover→266（+2），依使用者分工、待入口與逐卡驗證 |
 | 路徑計數起點（不計入前7／10／13／20） | sequence＋deck_selection |
 | 新UI選擇形態／逐卡SHA核准／新證據檔／計時紀錄 | 0／0／0／0（沿用既有單選／數量選擇，不新增UI形態） |
