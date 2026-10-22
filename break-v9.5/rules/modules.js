@@ -13,6 +13,7 @@ completed.push({id:'keyword',test:require('./keyword-node-tests').testKeyword});
 completed.push({id:'rename_before_entry',test:require('./rename-node-tests').testRename});
 completed.push({id:'all_result_cards_match',test:require('./result-match-node-tests').testResultMatch});
 completed.push({id:'move_self',test:require('./self-move-node-tests').testSelfMove});
+completed.push({id:'mill',test:require('./mill-node-tests').testMill});
 function testCard(catalog,card){
  if(I.dependencies(card).includes('move_self')&&I.dependencies(card).includes('deck_selection'))return require('./self-move-node-tests').testSelfMoveCard(catalog,card);
  if(card.profiles[0].activation.trigger?.event==='character_entry')return require('./entry-observer-tests').testEntryCard(catalog,card);

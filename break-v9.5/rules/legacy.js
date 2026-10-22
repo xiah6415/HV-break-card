@@ -129,7 +129,7 @@ function transaction(g,p,c,timing,notification=null) {
       collect(0,[]);return combinations;
     }
     if(req.kind==='guts_destination')return [...req.options];
-    if(['draw_count','move_count','payment_count','parameter','activate_payment','optional','trigger_order'].includes(req.kind))return [...req.options].reverse();
+    if(['draw_count','mill_count','move_count','payment_count','parameter','activate_payment','optional','trigger_order'].includes(req.kind))return [...req.options].reverse();
     throw new Error('Decision is outside migration scope: '+req.kind);
   }
   // A legal event needs at least one resolving effect. Explore the same rules,
@@ -257,7 +257,7 @@ function transaction(g,p,c,timing,notification=null) {
     const payment=req.payment?.steps?.[0],isPassive=byShort[short[req.source]]?.profiles[0].activation?.skill_type==='passive';
     const zoneLabel=z=>({hand:'手牌',event:'Event區',drop:'棄牌區',deck:'牌庫',block:'攔網角色',court:'場上角色',deck_bottom:'牌庫底',choose_deck_top_or_bottom:'牌庫頂或底'}[z]||z);
     const handDiscard=payment?.pool?.zone==='hand'&&payment.count===1&&payment.destination==='owner.drop';
-    const paymentPrompt=(payment?.kind==='pay_guts'?`是否支付 ${payment.count} Guts，發動登場效果？`:handDiscard?(isPassive?'是否棄 1 張手牌，發動登場效果？':'是否支付棄牌費用，對同一目標追加效果？'):payment?.kind==='move'?`是否將 ${payment.count} 張${zoneLabel(payment.pool.zone)}放到${zoneLabel(payment.destination.split('.').slice(1).join('.'))}，發動效果？`:'是否支付費用，追加效果？')+(req.ineffectiveReason?' ⚠ '+req.ineffectiveReason:'');
+    const paymentPrompt=(payment?.kind==='pay_guts'?`是否支付 ${payment.count} Guts，發動登場效果？`:handDiscard?(isPassive?'是否棄 1 張手牌，發動登場效果？':'是否支付棄牌費用，對同一目標追加效果？'):payment?.kind==='mill'?`是否將牌庫頂 ${payment.count_mode==='upto'?'最多 ':''}${payment.count} 張送到棄牌區，發動效果？`:payment?.kind==='move'?`是否將 ${payment.count} 張${zoneLabel(payment.pool.zone)}放到${zoneLabel(payment.destination.split('.').slice(1).join('.'))}，發動效果？`:'是否支付費用，追加效果？')+(req.ineffectiveReason?' ⚠ '+req.ineffectiveReason:'');
     const sourceName=req.kind==='trigger_order'?'效果':byShort[short[req.source]]?.display_name||g.src||'效果';
     const opts=available.map(answer=>{
       if(req.kind==='target') {
@@ -268,6 +268,7 @@ function transaction(g,p,c,timing,notification=null) {
       if(req.kind==='name')return {label:displayName(answer),value:answer,answer};
       if(req.kind==='mode')return {label:req.keywordOutgoing?`回球進攻 ${answer}`:answer==='deck_top'?'其餘放回牌庫頂':'其餘放到牌庫底',value:answer,answer};
       if(req.kind==='parameter')return {label:labels[answer],value:Object.keys(params).find(key=>params[key]===answer),answer};
+      if(req.kind==='mill_count')return {label:answer?`將牌庫頂 ${answer} 張送到棄牌區`:'不送牌',value:answer,answer};
       if(req.kind==='move_count')return {label:answer?`移動 ${answer} 張`:'不移動',value:answer,answer};
       if(req.kind==='payment_count')return {label:`支付 ${answer} 張`,value:answer,answer};
       if(req.kind==='trigger_order') {
@@ -280,7 +281,7 @@ function transaction(g,p,c,timing,notification=null) {
     const fromZones=[...new Set(req.options.filter(id=>typeof id==='string'&&state.cards[id]).map(id=>state.cards[id].zone.split('.')[1]))];
     const fromLabel=fromZones.length===1?({event:'Event 區',drop:'棄牌區',hand:'手牌',deck:'牌庫'}[fromZones[0]]||zoneLabel(fromZones[0])):'來源區';
     const movePrompt=`從${fromLabel}選擇 1 張，放到${zoneLabel(req.destination?.split('.').slice(1).join('.'))}`;
-    const prompt=sourceName+'：'+({target:'選擇場上 1 位角色',draw_count:'選擇抽牌數量',payment_count:'選擇支付Guts數量',activate_payment:paymentPrompt,optional:'是否執行這個登場效果？',payment_cards:req.destination==='self.event'?'選擇 1 張事件放到 Event 區':fromZones[0]==='hand'&&req.destination==='owner.drop'?'選擇 1 張符合條件的手牌棄掉':'支付費用：'+movePrompt,parameter:`選擇這位角色要增加的參數${req.target?`（${g.cardName(g.players[slots[req.target.id].player],slots[req.target.id].key)}・${labels[slots[req.target.id]?.key]||'側攔'}區）`:''}`,guts_destination:'選擇放置Guts的區域',move_count:'選擇移動數量',mode:req.keywordOutgoing?'選擇結束回合的回球進攻值':'其餘的牌放到哪裡？',move_cards:req.ordering?'安排其餘牌的順序（先選的會先抽到）':req.destination?.endsWith('.hand')?`從${fromLabel}選擇 1 張加入手牌`:fromZones[0]==='hand'&&req.destination==='owner.drop'?(isPassive?'請選 1 張手牌棄掉':'非抽牌加入手牌後，請選 1 張手牌棄掉'):movePrompt,trigger_order:'選擇同時觸發的結算順序'}[req.kind]);
+    const prompt=sourceName+'：'+({target:'選擇場上 1 位角色',draw_count:'選擇抽牌數量',mill_count:'選擇牌庫頂要送到棄牌區的張數（先選張數再公開）',payment_count:'選擇支付Guts數量',activate_payment:paymentPrompt,optional:'是否執行這個登場效果？',payment_cards:req.destination==='self.event'?'選擇 1 張事件放到 Event 區':fromZones[0]==='hand'&&req.destination==='owner.drop'?'選擇 1 張符合條件的手牌棄掉':'支付費用：'+movePrompt,parameter:`選擇這位角色要增加的參數${req.target?`（${g.cardName(g.players[slots[req.target.id].player],slots[req.target.id].key)}・${labels[slots[req.target.id]?.key]||'側攔'}區）`:''}`,guts_destination:'選擇放置Guts的區域',move_count:'選擇移動數量',mode:req.keywordOutgoing?'選擇結束回合的回球進攻值':'其餘的牌放到哪裡？',move_cards:req.ordering?'安排其餘牌的順序（先選的會先抽到）':req.destination?.endsWith('.hand')?`從${fromLabel}選擇 1 張加入手牌`:fromZones[0]==='hand'&&req.destination==='owner.drop'?(isPassive?'請選 1 張手牌棄掉':'非抽牌加入手牌後，請選 1 張手牌棄掉'):movePrompt,trigger_order:'選擇同時觸發的結算順序'}[req.kind]);
     let invalid=false;
     for(;;) {
       const value=await g.ask(owner,{kind,prompt:prompt+(invalid?'（請重新選擇有效選項）':''),timing,ctx:{card:short[req.source],...(req.keywordOutgoing?{keywordOutgoing:true}:{}),...(req.ineffectiveReason?{ineffectiveReason:req.ineffectiveReason}:{}),...(req.kind==='parameter'?{target:slots[req.target?.id||req.source]?.key}:{}),...(state.cards[req.source]?.zone===req.player+'.receive'&&g.ball?{need:g.ball.off-g.parameter(owner,slots[req.source].key,'rcv')}: {})},options:opts.map(({answer,...o})=>o)});

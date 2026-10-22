@@ -138,6 +138,11 @@ function seedConditions(k,{catalog,profile,source,player,phase,expanded=false}){
   moveToDeck(target);k.zone(player,'deck').splice(k.zone(player,'deck').indexOf(target),1);c.zone=player+'.hand';k.zone(player,'hand').push(target);
   k.state.turn.phase=area;k.enter(target,area,{reason:'skill'});k.state.turn.phase=oldPhase;
  }
+ if(expanded)for(const mill of nodes.filter(n=>n.kind==='mill')){
+  const who=owner(mill.actor),filter=nodes.find(n=>n.kind==='all_result_cards_match'&&n.result==='milled')?.filters||nodes.find(n=>n.kind==='retrieve'&&n.pool?.zone==='$milled')?.pool.filters;
+  const eventCheck=nodes.find(n=>n.kind==='compare'&&n.field==='milled.event_count'),events=eventCheck?Math.min(mill.count,eventCheck.value):0;
+  for(let i=mill.count-1;i>=0;i--)add(pick(filter||{type:i<events?'event':'character'}),who,'deck');
+ }
  k.assertState();notes.push({kind:'structured_conditions',own_uniform_tag:tag||null,entry_reason:entryReason});
  return {entryReason,notes};
 }

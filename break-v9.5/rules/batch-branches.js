@@ -44,6 +44,9 @@ function expandFixture(k,{catalog,profile,source,player,phase,focus}){
    if(n.op==='gte'||n.op==='eq'){let ids=k.pool(sel,ctx);while((n.distinct_by?new Set(ids.map(id=>k.effectiveName(id))).size:ids.length)+offset>=n.value&&ids.length){moveToDeck(ids.at(-1));ids=k.pool(sel,ctx);}return;}
    if(n.op==='lte'){if(!['event','drop','hand'].includes(sel.zone))gap('Count negative zone '+sel.zone);while(k.pool(sel,ctx).length+offset<=n.value)add(pick(sel.filters),who,sel.zone);return;}
   }
+  if(n.kind==='all_result_cards_match'&&n.result==='milled'){
+   const mill=nodes.find(x=>x.kind==='mill'),who=owner(mill.actor);add(pick({},null,d=>!matchesPrinted(d.p,n.filters)),who,'deck');return;
+  }
   if(n.kind==='all_result_cards_match'&&n.result==='paid'){
    const payment=nodes.slice(0,nodes.indexOf(n)).filter(x=>x.kind==='pay_guts').at(-1);
    const areas=payment?.areas==='court'?['serve','block','receive','toss','attack','side:0','side:1']:payment?.areas==='source_area'?[phase]:payment?.areas||[phase];
@@ -74,6 +77,7 @@ function expandFixture(k,{catalog,profile,source,player,phase,focus}){
   if(n.field==='self.attack.guts.count'){add(base,player,'attack',true);return;}
   if(n.field==='opponent_ball.kind'){k.state.ball.kind=n.op==='in'?['serve','attack','block'].find(k=>!n.value.includes(k)):n.value==='serve'?'attack':'serve';return;}
   if(n.field==='opponent_ball.offense'){k.state.ball.offense=n.op==='lte'?n.value+1:n.value-1;return;}
+  if(n.field==='milled.event_count'){const mill=nodes.find(x=>x.kind==='mill'),who=owner(mill.actor),count=n.op==='gte'?n.value-1:0;for(let i=mill.count-1;i>=0;i--)add(pick({type:i<count?'event':'character'}),who,'deck');return;}
   if(n.field==='retrieved.count'){const choose=k.choose;k.choose=req=>req.kind==='move_count'?0:choose(req);return;}
   if(n.field==='paid.names_are_distinct'){
    const ids=k.zone(player,phase);if(ids.length<2)gap('Not enough paid-card fixture');const p=k.profile(ids[1]),d=defs.find(d=>d.p.profile_id===p.profile_id);moveToDeck(ids[0]);add(d,player,phase,true);return;
