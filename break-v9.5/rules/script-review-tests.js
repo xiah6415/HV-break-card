@@ -57,10 +57,10 @@ function testReview(catalog){
   const chosen=k.zone(1,'hand').at(-1),choose=k.choose;let offered=false;
   k.choose=r=>{if(r.kind==='move_cards'&&r.player===1){offered=true;return [chosen];}return choose(r);};invoke(f);assert.equal(offered,count===threshold);assert.equal(k.zone(1,'drop').includes(chosen),count===threshold);
  }
- // 14: preserve covered effective-name metadata now; do not invent an entry.
+ // 14: preserve covered effective-name metadata; self-entry-cover is now supported.
  for(const code of ['PR-001','PR-002']){
   const k=F.game(catalog),covered=k.addCard('HV-PR-057',0,'attack'),expected=profile(code).activation.trigger.filters.covered_names[0];rename(k,covered,expected);
-  const next=plain(k,0,'hand');k.state.turn.phase='attack';k.enter(next,'attack');assert.equal(k.card(next).coveredCharacter.effective_name,expected);assert(!I.entrySupported(card(code)));
+  const next=plain(k,0,'hand');k.state.turn.phase='attack';k.enter(next,'attack');assert.equal(k.card(next).coveredCharacter.effective_name,expected);assert(I.entrySupported(card(code)));
  }
  // Six resolved doubts: both printed versions have identical semantics, but
  // their not-yet-supported trigger families remain locked.

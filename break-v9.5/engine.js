@@ -512,11 +512,12 @@ class Game {
       const name=entryNames(ordered[i]).length>1?await this.ask(p,{kind:'name',prompt:`${nm(ordered[i])}：選擇${i?'側攔':'中攔'}登場名稱`,ctx:{card:ordered[i],area:i?'side:'+(i-1):'block'},options:options.map(value=>({value,label:value}))}):options[0];
       if(!options.includes(name))throw Error('無效的攔網名稱');chosen.push(name);
     }
+    const previous=p.top('block'),coveredSource=this.roleReference(p,'block'),coveredCharacter=previous?{effective_name:this.cardName(p,'block').normalize('NFKC').replace(/\s/g,''),tags:library.card(previous).schoolTags,positions:library.card(previous).positionTags}:null;
     this.place(p, 'block', center); this.src = '月島';
     const sides = ordered.slice(1); p.ts.sides = [];
     for (const c of sides) this.moveCode(p.hand, p.ts.sides, c);
     for(let i=0;i<ordered.length;i++)if(entryNames(ordered[i]).length>1)this.effect(p,i?'side:'+(i-1):'block').name=chosen[i];
-    await sharedRules.charactersEntered(this,p,[{key:'block'},...sides.map((c,i)=>({key:'side:'+i}))]);
+    await sharedRules.charactersEntered(this,p,[{key:'block',coveredCharacter,coveredSource},...sides.map((c,i)=>({key:'side:'+i}))]);
     if(p.ts.keywordJump==='draw'){delete p.ts.keywordJump;this.cleanupSides(p);return this.receiveTurn(p);}
     p.ts.blk = this.courtTargets(p).filter(t=>t.key==='block'||t.key.startsWith('side:')).reduce((n,t)=>n+this.parameter(p,t.key,'blk'),0); p.ts.blockers = this.courtTargets(p).filter(t=>t.key==='block'||t.key.startsWith('side:')).map(t=>t.card);
     this.log(`${p.name} 攔網 ${cb.cards.map(short).join('＋')}：攔 ${p.ts.blk} vs ${this.ball.off}`);
