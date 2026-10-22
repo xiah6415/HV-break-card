@@ -83,6 +83,7 @@ function transaction(g,p,c,timing,notification=null) {
   if(!notification&&byShort[c].profiles[0].variants[0].printed.type!=='event'&&byShort[c].profiles[0].limit&&p.ts.used?.[c])throw new Error('Same-name skill already used this turn');
   const saved=copy(stored(g));
   const k=new Kernel({catalog:data.catalog,ruleIds:data.ruleIds,fingerprint:data.fingerprint,mode:'live',practiceDrawBeforeReceive:true});
+  if(g.rngState)k.state.rng=copy(g.rngState);
   const physical=identity.snapshot(g);
   k.state.turn={id:Math.max(1,g.turnNo),player:g.turnP?.idx??p.idx,phase:phase[timing],step:'free',blockEntries:g.players.map(q=>blockEntered(g,q)),blockEntriesByOrigin:g.players.map(q=>blockOrigins(g,q))};
   k.state.next=Math.max(k.state.next,saved.next);
@@ -127,6 +128,7 @@ function transaction(g,p,c,timing,notification=null) {
   const command=notification?{kind:'host_events',...notification}:{kind:'skill',player:p.idx,source,timing};
   const invoke=notification?kernel=>notification.outgoing?kernel.outgoing(notification.outgoing.kind,notification.outgoing.offense):kernel.notifyHostEvents(notification.events):kernel=>kernel.card(source).printed.type==='event'?kernel.playEvent(source):kernel.useSkill(source);
   function choices(req) {
+    if(['external_action','external_result'].includes(req.kind))return [true];
     if(req.kind==='revealResult')return [[]];
     if(req.kind==='reveal'||req.kind==='mode'||req.kind==='name')return [...req.options];
     if(req.kind==='guts')return [req.options.slice(0,req.count)];
@@ -155,6 +157,7 @@ function transaction(g,p,c,timing,notification=null) {
   const durable=state=>state.effects.filter((e,i)=>persistent(e)&&(savedIds.has(e.id)||i>=base.effects.length));
   let eventCursor=0,effectCursor=base.effects.length,publicLogCursor=base.publicLog.length,announced=false,ballOff=base.ball?.offense;
   function publish(state,complete,journal) {
+    if(g.rngState)Object.assign(g.rngState,copy(state.rng));
     for(const e of durable(state))admitEffect(e);
     const next=copy(physical);
     for(const key of Object.keys(next.zones)) {
@@ -256,6 +259,8 @@ function transaction(g,p,c,timing,notification=null) {
     }
     if(state.ball&&state.ball.offense!==ballOff){g.log(`來球進攻 ${state.ball.offense-ballOff<0?'−':'+'}${Math.abs(state.ball.offense-ballOff)} → ${state.ball.offense}`);ballOff=state.ball.offense;}
     for(const entry of state.publicLog.slice(publicLogCursor)){
+      if(entry.type==='coin_result')g.log(`${g.players[entry.player].name} 擲硬幣：${entry.result==='heads'?'正面':'反面'}`);
+      if(entry.type==='external_action')g.log(`${g.players[entry.player].name} 已確認完成卡片指定的動作／口號。`);
       if(entry.type==='deck_view'&&entry.visibility==='reveal')g.log(`翻開：${entry.cards.map(c=>byShort[short[c.id]].display_name).join('、')}`);
       if(entry.type==='deck_remainder')g.log(`${entry.result==='no_matching_card_added'?'本次沒有加入手牌；':''}其餘 ${entry.count} 張已放回牌庫${entry.destination==='deck_top'?'頂':'底'}。`);
     }
@@ -274,6 +279,10 @@ function transaction(g,p,c,timing,notification=null) {
       }
       return available.find(a=>a.length===selected.length&&selected.every(id=>a.includes(id)));
     }
+    if(['external_action','external_result'].includes(req.kind)){
+      const prompt=req.kind==='external_result'?req.actionLabel+'；確認後結算效果':req.action==='coin'?'投擲一次硬幣（系統產生正反面，不能指定結果）':req.actionLabel+'，完成後按確認';
+      for(;;){const answer=await g.ask(owner,{kind:'rulesChoice',prompt,timing,ctx:{card:short[req.source],externalAction:req.action},options:[{value:true,label:req.kind==='external_result'?'確認結果':req.action==='coin'?'擲硬幣':'已完成，繼續'}]});if(answer===true)return true;}
+    }
     if(req.kind==='reveal'||req.kind==='revealResult'){
       const options=req.kind==='reveal'?[{value:true,label:`查看牌庫頂 ${req.top_count} 張`}]:req.options.map(id=>({value:id,card:short[id],label:byShort[short[id]].display_name+' · 確認後繼續'}));
       const prompt=req.kind==='reveal'?`請點擊查看牌庫頂 ${req.top_count} 張`:`${req.visibility==='look'?'查看':'翻開'}的卡片${req.eligible_count?'：確認後選擇要加入手牌的牌':'：沒有符合條件的牌，確認後安排回牌庫'}（點任一卡片繼續）`;
@@ -288,7 +297,7 @@ function transaction(g,p,c,timing,notification=null) {
     const payment=req.payment?.steps?.[0],isPassive=byShort[short[req.source]]?.profiles[0].activation?.skill_type==='passive';
     const zoneLabel=z=>({serve:'發球區',receive:'接球區',toss:'舉球區',attack:'攻擊區','attack.guts':'攻擊區Guts','receive.guts':'接球區Guts',hand:'手牌',event:'Event區',drop:'棄牌區',deck:'牌庫',block:'攔網角色',court:'場上角色',deck_bottom:'牌庫底',choose_deck_top_or_bottom:'牌庫頂或底'}[z]||z);
     const handDiscard=payment?.pool?.zone==='hand'&&payment.count===1&&payment.destination==='owner.drop';
-    const paymentPrompt=(payment?.kind==='move_self'?'是否將這張已被覆蓋的卡送到棄牌區，發動效果？':payment?.kind==='pay_guts'?`是否支付 ${payment.count} Guts，發動登場效果？`:handDiscard?(isPassive?'是否棄 1 張手牌，發動登場效果？':'是否支付棄牌費用，對同一目標追加效果？'):payment?.kind==='mill'?`是否將牌庫頂 ${payment.count_mode==='upto'?'最多 ':''}${payment.count} 張送到棄牌區，發動效果？`:payment?.kind==='move'?`是否將 ${payment.count} 張${zoneLabel(payment.pool.zone)}放到${zoneLabel(payment.destination.split('.').slice(1).join('.'))}，發動效果？`:'是否支付費用，追加效果？')+(req.ineffectiveReason?' ⚠ '+req.ineffectiveReason:'');
+    const paymentPrompt=(payment?.kind==='external_action'?payment.action==='coin'?'是否擲一次硬幣，發動登場效果？':'是否完成卡上指定的口號／動作，發動效果？':payment?.kind==='move_self'?'是否將這張已被覆蓋的卡送到棄牌區，發動效果？':payment?.kind==='pay_guts'?`是否支付 ${payment.count} Guts，發動登場效果？`:handDiscard?(isPassive?'是否棄 1 張手牌，發動登場效果？':'是否支付棄牌費用，對同一目標追加效果？'):payment?.kind==='mill'?`是否將牌庫頂 ${payment.count_mode==='upto'?'最多 ':''}${payment.count} 張送到棄牌區，發動效果？`:payment?.kind==='move'?`是否將 ${payment.count} 張${zoneLabel(payment.pool.zone)}放到${zoneLabel(payment.destination.split('.').slice(1).join('.'))}，發動效果？`:'是否支付費用，追加效果？')+(req.ineffectiveReason?' ⚠ '+req.ineffectiveReason:'');
     const sourceName=req.kind==='trigger_order'?'效果':byShort[short[req.source]]?.display_name||g.src||'效果';
     const opts=available.map(answer=>{
       if(req.kind==='target') {

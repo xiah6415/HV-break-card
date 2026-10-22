@@ -47,8 +47,8 @@ class Match {
  _native(req){
   const cards=['target','payment_cards','move_cards','guts','entry','revealResult'].includes(req.kind);
   const numbers=['target_count','payment_count','move_count','draw_count','mill_count','entry_count'].includes(req.kind);
-  const input=cards?{type:'cards',min:req.count,max:req.count,ordered:false}:numbers?{type:'number'}:{type:'single'};
-  const prompt=req.kind==='reveal'?`點擊查看牌庫頂 ${req.top_count} 張`:req.kind==='revealResult'?req.eligible_count?'確認查看的卡片，再選擇加入手牌':'沒有符合的牌；確認後安排放回牌庫':req.ordering?'安排其餘牌的順序（先選的先抽到）':req.kind==='mode'?req.effectModes?'選擇1項效果':req.keywordOutgoing?'選擇回球進攻值':'其餘牌放回牌庫頂或底？':null;
+  const input=['external_action','external_result'].includes(req.kind)?{type:'ack'}:cards?{type:'cards',min:req.count,max:req.count,ordered:false}:numbers?{type:'number'}:{type:'single'};
+  const prompt=['external_action','external_result'].includes(req.kind)?req.actionLabel+(req.kind==='external_action'?'；完成後確認':'；確認結果後結算效果'):req.kind==='reveal'?`點擊查看牌庫頂 ${req.top_count} 張`:req.kind==='revealResult'?req.eligible_count?'確認查看的卡片，再選擇加入手牌':'沒有符合的牌；確認後安排放回牌庫':req.ordering?'安排其餘牌的順序（先選的先抽到）':req.kind==='mode'?req.effectModes?'選擇1項效果':req.keywordOutgoing?'選擇回球進攻值':'其餘牌放回牌庫頂或底？':null;
   return this._ask(req.kind,req.player,input,req.options,{...(prompt?{prompt}:{}),...(req.selectionAction==='exchange'?{selectionAction:req.selectionAction,prompt:req.kind==='move_count'?'是否交換兩側各1張？':'選擇交換的卡片'}:{}),...(req.effectDescription?{effectDescription:req.effectDescription,prompt:'是否執行：'+req.effectDescription+'？'}:{}),...(req.effectModes?{effectModes:true,modeLabels:req.modeLabels}:{}),...(req.count!=null?{count:req.count}:{}),...(req.destination?{destination:req.destination}:{}),...(req.target?{target:req.target}:{}),...(req.payment?{payment:req.payment}:{}),...(req.ineffectiveReason?{ineffectiveReason:req.ineffectiveReason,prompt:req.ineffectiveReason+' 是否仍支付費用？'}:{})},'kernel',req.source?{id:req.source,incarnation:this._kernel.card(req.source).incarnation,cardNo:this._kernel.card(req.source).cardNo}:null);
  }
  _pump(){

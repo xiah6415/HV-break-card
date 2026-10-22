@@ -107,7 +107,7 @@ function validateDeck(cards, mode='strict') {
 function validateDecks() { for (const deck of Object.values(DECKS)) validateDeck(deck.cards); }
 validateDecks();
 
-function rng(seed) { let a = seed >>> 0; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function rng(seed,state) { Object.assign(state,{algorithm:'mulberry32-v1',word:seed>>>0,calls:0});return () => { state.word=(state.word+0x6D2B79F5)>>>0;state.calls++;let t=state.word;t=Math.imul(t^t>>>15,1|t);t=t+Math.imul(t^t>>>7,61|t)^t;return ((t^t>>>14)>>>0)/4294967296; }; }
 function rm(arr, c) { const i = arr.indexOf(c); if (i >= 0) arr.splice(i, 1); return i >= 0; }
 const AREAS = ['serve', 'block', 'receive', 'toss', 'attack'];
 const AREA_ZH = { serve: '發球', block: '攔網', receive: '接球', toss: '舉球', attack: '攻擊' };
@@ -137,7 +137,7 @@ class Game {
     this.mode = library.checkMode(opts.mode || 'strict');
     if (!Array.isArray(opts.decks) || opts.decks.length !== 2) throw Error('需要兩副牌組');
     for (const key of opts.decks) { if (!Object.hasOwn(DECKS, key)) throw Error('找不到牌組：' + key); validateDeck(DECKS[key].cards, this.mode); }
-    this.rand = rng(opts.seed == null ? (Date.now() & 0xffffffff) : opts.seed);
+    this.rngState={};this.rand = rng(opts.seed == null ? (Date.now() & 0xffffffff) : opts.seed,this.rngState);
     this.logFn = opts.onLog || (() => {});
     this.reveal = opts.reveal == null ? -1 : opts.reveal; this.src = '';
     this.update = opts.onUpdate || (() => {});

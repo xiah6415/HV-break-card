@@ -36,7 +36,8 @@ for(const cp of baseline.checkpoints.filter(cp=>['payment_cards','turnEnd'].incl
  const after=m.snapshot();assert.equal(after.match.rally,before.match.rally+1);assert.deepEqual(after.zones[r.actor+'.receive'],oldCards);assert.equal(after.match.server,1-r.actor);assert.equal(after.zones[r.actor+'.sets'].length,before.zones[r.actor+'.sets'].length-1);
  assert(after.match.notices.some(n=>n.type==='loss'&&n.reason==='主動 Loss（放棄這球）'));
 }
-const docs=fs.readFileSync(path.join(__dirname,'HOST-CONTRACT.md'),'utf8');
+// New node request summaries live in STATUS, per the simplified documentation policy.
+const docs=['HOST-CONTRACT.md','../STATUS.md'].map(file=>fs.readFileSync(path.join(__dirname,file),'utf8')).join('\n');
 for(const kind of [...new Set([...host.gameKinds,...host.kernelKinds])])assert(docs.includes('| '+kind+' |'),'documented '+kind);
 for(const file of ['../engine.js','core.js']){const source=fs.readFileSync(path.join(__dirname,file),'utf8');for(const m of source.matchAll(/(?:kind:\s*|_decide\(|_selection\([^\n]*?ctx,)'([a-zA-Z_]+)'/g)){if(['C','E','attack',...require('./core').capabilities.nodes].includes(m[1]))continue;assert([...host.gameKinds,...host.kernelKinds].includes(m[1]),'source kind '+m[1]);}}
 const m=create(),r=next(m);assert(host.validateRequest(r));assert(host.validateAnswer(r,envelope(r,'serve')));assert(!host.validateAnswer(r,envelope(r,0)));assert(!host.validateRequest({...r,kind:'future'}));

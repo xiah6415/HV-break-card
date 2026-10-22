@@ -1,7 +1,7 @@
 /* Core-side structural contract. Renderers/AI answer it; rules remain authoritative. */
 'use strict';
 const gameKinds=['firstService','roll','mulligan','serve','defend','block','ack','receiver','setter','attacker','event','turnEnd','lossConfirm','skill','name','target','parameter','guts','gutsCourt','discard','cost','retrieve','summon','reveal','revealResult','rulesChoice'];
-const kernelKinds=['target','target_count','payment_cards','move_cards','move_count','guts','payment_count','guts_destination','parameter','draw_count','mill_count','activate_payment','optional','mode','entry_count','entry','trigger_order'];
+const kernelKinds=['target','target_count','payment_cards','move_cards','move_count','guts','payment_count','guts_destination','parameter','draw_count','mill_count','activate_payment','optional','mode','entry_count','entry','trigger_order','external_action','external_result'];
 const kinds=new Set([...gameKinds,...kernelKinds]),same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
 const integer=(n,min=0)=>Number.isInteger(n)&&n>=min;
 function validateRequest(r){

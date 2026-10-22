@@ -7,7 +7,8 @@ const COURT = ['serve','block','receive','toss','attack','side:0','side:1'];
 const PARAMS = ['serve','block','receive','toss','attack'];
 const KINDS = new Set(['sequence','conditional','numeric','draw','draw_to_hand_size','move','move_self',
   'pay_guts','payment_branch','formal_declaration_cost','retrieve','enter','enter_self','watch','ban_action','invalidate_skill',
-  'rename_before_entry','protect_numeric_decrease','phase_jump','optional','choose_modes','mill','keyword','deck_selection','exchange','each_player_optional_draw']);
+  'rename_before_entry','protect_numeric_decrease','phase_jump','external_action','optional','choose_modes','mill','keyword','deck_selection','exchange','each_player_optional_draw']);
+const EXTERNAL_ACTIONS={tilt_card:'將此卡傾斜',coin:'投擲 1 次硬幣',say_巣立てヒナガラス:'說出「巣立て ヒナガラス」',raise_both_hands_and_say_ただーし:'雙手舉起此牌並喊「ただーし！」',say_ジャンバル最高_and_peace_sign:'說出「ジャンバル最高!!」並比出勝利手勢'};
 const FILTERS = new Set(['names','exclude_names','tags','tags_any','positions','positions_any','years','years_any',
   'role','role_any','type','skillless','play_icons_any','play_icons_exact','entry_origins','phase',
   'printed_attack','printed_attack_eq','printed_block_gte','printed_receive_gte','current_receive_gte',
@@ -28,6 +29,8 @@ function modeLabel(n) {
   const filter=f=>[...(f.names||f.tags||[]),f.type==='character'?'角色卡':'',f.current_receive_gte!=null?'接球≥'+f.current_receive_gte:'',f.current_block_eq!=null?'攔網='+f.current_block_eq:''].filter(Boolean).join('・');
   if(n.kind==='sequence')return n.steps.map(modeLabel).join('；');
   if(n.kind==='conditional')return (n.condition.field==='phase'?(zh[n.condition.value]||n.condition.value)+'階段':n.condition.kind==='count_compare'?(zh[n.condition.pool.zone]||n.condition.pool.zone)+'至少'+n.condition.value+'張':'條件成立')+'：'+modeLabel(n.then);
+  if(n.kind==='external_action')return EXTERNAL_ACTIONS[n.action];
+  if(n.kind==='move_self')return '將此卡放到'+(zh[n.destination.split('.')[1]]||n.destination);
   if(n.kind==='draw')return who(n.actor)+'抽'+n.count+'張';
   if(n.kind==='numeric')return (typeof n.target==='object'?filter(n.target.filters)||'場上角色':n.target==='$event.character'?'登場角色':'此角色')+'：'+(zh[n.parameter]||n.parameter)+(n.operation==='set'?'設為':n.value>=0?' +':' ')+n.value;
   if(n.kind==='move')return '從'+who(n.pool.actor)+(zh[n.pool.zone]||n.pool.zone)+'選擇'+(n.count_mode==='all'?'全部':n.count+'張')+(n.pool.filters.type==='event'?'Event':'牌')+'放到'+(n.destination==='owner.drop'?'棄牌區':who(n.destination.split('.')[0])+(zh[n.destination.split('.')[1]]||n.destination));
@@ -83,7 +86,7 @@ class Kernel {
     this.mode=mode; this.choose=choose || (()=>{throw new NeedsReview('A player decision is required');});
     this.depth=0; this.draining=false; this.busy=false;
     this.state=state ? clone(state) : {version:1,fingerprint,executionMode:mode,rulesOptions:{practiceDrawBeforeReceive},revision:0,next:1,turn:{id:1,player:0,phase:'attack',step:'free'},
-      stage:'rally',cards:{},zones:{},effects:[],queue:[],locks:[],ball:null,decisions:[],events:[],publicLog:[]};
+      rng:{algorithm:'mulberry32-v1',word:1,calls:0},stage:'rally',cards:{},zones:{},effects:[],queue:[],locks:[],ball:null,decisions:[],events:[],publicLog:[]};
     need(this.state.version===1 && this.state.fingerprint===fingerprint && this.state.executionMode===mode && this.state.rulesOptions?.practiceDrawBeforeReceive===practiceDrawBeforeReceive,'State/catalog/policy version mismatch');
     for (let p=0;p<2;p++) for (const z of [...COURT,'hand','deck','drop','event','sets']) this.zone(p,z);
     this.assertState();
@@ -204,6 +207,11 @@ class Kernel {
     else if (['hand','deck','drop','event','sets',...COURT].includes(z)) ids=[...this.zone(player,z)];
     else throw new NeedsReview('Unsupported selector zone '+z);
     return ids.filter(id=>this.matches(id,selector.filters,ctx));
+  }
+  _random() {
+    const r=this.state.match?.rng||this.state.rng;
+    need(r?.algorithm==='mulberry32-v1'&&Number.isInteger(r.word)&&Number.isSafeInteger(r.calls),'Invalid random state');
+    r.word=(r.word+0x6D2B79F5)>>>0;r.calls++;let t=r.word;t=Math.imul(t^t>>>15,1|t);t=t+Math.imul(t^t>>>7,61|t)^t;return ((t^t>>>14)>>>0)/4294967296;
   }
   _decide(kind,ctx,options,extra={}) {
     const req={kind,player:ctx.controller,source:ctx.source?.id,options:clone(options),...extra};
@@ -583,6 +591,7 @@ class Kernel {
       if(n.kind==='formal_declaration_cost')need(n.must_be_complete===true&&n.performed_for_this_skill_only===true&&Array.isArray(n.steps)&&n.steps.length>0,'Unsupported declaration cost parameters');
       if(n.kind==='exchange')need(Array.isArray(n.sides)&&n.sides.length===2&&n.sides.every(x=>x&&x.kind==='selector')&&n.count_each===1&&n.count_mode==='upto'&&n.requires_both===true&&n.atomic_movement===true,'Unsupported exchange parameters');
       if(n.kind==='each_player_optional_draw')need(Number.isInteger(n.count)&&n.count>0&&n.count_mode==='exact_or_zero'&&n.chooser==='each_affected_player','Unsupported optional draw parameters');
+      if(n.kind==='external_action')need(['tilt_card','coin','say_巣立てヒナガラス','raise_both_hands_and_say_ただーし','say_ジャンバル最高_and_peace_sign'].includes(n.action)&&n.bind===(n.action==='coin'?'random':'external')&&(n.action!=='coin'||n.alternative_requires_both_consent===true),'Unsupported external action parameters');
       if(n.kind==='enter_self')need(['receive','attack','block'].includes(n.destination)&&n.as_side_blocker===(n.destination==='block')&&n.bind==='entered','Unsupported self entry parameters');
       if(n.kind==='phase_jump')need(n.actor==='self'&&n.destination==='draw'&&n.position==='start'&&n.skip_current===true,'Unsupported phase jump parameters');
       if(n.kind==='mill')need(['self','opponent'].includes(n.actor)&&['exact','upto'].includes(n.count_mode)&&Number.isInteger(n.count)&&n.count>=0&&n.bind==='milled','Unsupported mill parameters');
@@ -669,9 +678,9 @@ class Kernel {
         const failedSelfEntry=leaves.length>0&&leaves.every(n=>n.kind==='enter_self'&&!this._selfEntryAvailable(n,ctx));
         const ineffectiveReason=failedSelfEntry?'此卡目前不能合法登場；仍可支付費用，但不會移動。':attackOnly&&this.state.ball?.kind!=='attack'?'來球不是攻擊，攻擊進攻值效果無效；支付費用不會改變來球數值。':protectedAttack?'來球受到防降保護，支付費用不會降低來球數值。':null;
         const yes=this._decide('activate_payment',ctx,[true,false],{payment:node.payment,...(ineffectiveReason?{ineffectiveReason}:{})});legal(typeof yes==='boolean','Payment decision must be boolean');if(!yes)return false;
-        const saved=clone(this.state), before=clone(ctx);ctx.inPayment=true;ctx.paid=[];
+        const saved=clone(this.state), before=clone(ctx);ctx.inPayment=true;ctx.paid=[];ctx.externalPaid=false;
         try {this._run(node.payment,ctx);} catch(e) {if(!(e instanceof Unpayable))throw e;this.state=saved;Object.assign(ctx,before);return false;}
-        ctx.inPayment=false;ctx.bind.paid=[...ctx.paid];return this._run(node.then,ctx)||ctx.paid.length>0;
+        ctx.inPayment=false;ctx.bind.paid=[...ctx.paid];return this._run(node.then,ctx)||ctx.paid.length>0||ctx.externalPaid===true;
       }
       case 'optional': { const yes=this._modeAvailable(node.then,ctx)?this._decide('optional',ctx,[true,false],{player:this.owner(node.actor||'self',ctx),effectDescription:modeLabel(node.then)}):false;legal(typeof yes==='boolean','Optional decision must be boolean');ctx.bind.optional={performed:yes&&this._run(node.then,ctx)};return ctx.bind.optional.performed; }
       case 'choose_modes': {
@@ -694,6 +703,16 @@ class Kernel {
       case 'protect_numeric_decrease': {
         if(node.target_scope.membership==='continuous_matching'){this.effect('protect',{targets:[],ballOwner:null,parameter:node.parameter,selector:node.target},ctx,node.duration);return true;}
         const targets=this._targets(node,ctx);if(!targets.length)return false;const ball=typeof targets[0]==='string';this.effect('protect',{targets:ball?[]:targets,ballOwner:ball?(targets[0]==='self_ball'?ctx.controller:1-ctx.controller):null,parameter:node.parameter},ctx,node.duration);return true;
+      }
+      case 'external_action': {
+
+        legal(this._decide('external_action',ctx,[true],{action:node.action,actionLabel:EXTERNAL_ACTIONS[node.action]})===true,'Confirm external action');
+        if(node.action==='coin'){
+          const result=this._random()<0.5?'heads':'tails';ctx.bind[node.bind]={result};
+          legal(this._decide('external_result',ctx,[true],{action:'coin',result,actionLabel:result==='heads'?'硬幣結果：正面':'硬幣結果：反面'})===true,'Confirm coin result');
+          this.state.publicLog.push({type:'coin_result',player:ctx.controller,result});
+        }else{ctx.bind[node.bind]={performed:true,action:node.action};this.state.publicLog.push({type:'external_action',player:ctx.controller,action:node.action});}
+        if(ctx.inPayment)ctx.externalPaid=true;return true;
       }
       case 'phase_jump': this._jump(node.destination);return true;
       case 'keyword': return this._keyword(node,ctx);
