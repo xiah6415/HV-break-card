@@ -7,11 +7,17 @@ const COURT = ['serve','block','receive','toss','attack','side:0','side:1'];
 const PARAMS = ['serve','block','receive','toss','attack'];
 const KINDS = new Set(['sequence','conditional','numeric','draw','draw_to_hand_size','move','move_self',
   'pay_guts','payment_branch','retrieve','enter','enter_self','watch','ban_action','invalidate_skill',
-  'protect_numeric_decrease','phase_jump','optional','choose_modes','mill','keyword','deck_selection']);
+  'rename_before_entry','protect_numeric_decrease','phase_jump','optional','choose_modes','mill','keyword','deck_selection']);
 const FILTERS = new Set(['names','exclude_names','tags','tags_any','positions','positions_any','years','years_any',
   'role','role_any','type','skillless','play_icons_any','play_icons_exact','entry_origins','phase',
   'printed_attack','printed_attack_eq','printed_block_gte','printed_receive_gte','current_receive_gte',
   'current_block_eq','exclude_operations','from_zone','to_zone','position_has_any_other_than','entry_keyword_family']);
+// Keep only choices that can be extended to distinct names for the whole group.
+function distinctNameOptions(groups,used=[]) {
+  if(!groups.length)return [];
+  const possible=(rest,taken)=>!rest.length||rest[0].some(n=>!taken.includes(n)&&possible(rest.slice(1),[...taken,n]));
+  return groups[0].filter(n=>!used.includes(n)&&possible(groups.slice(1),[...used,n]));
+}
 class NeedsReview extends Error { constructor(message) { super(message); this.code='REQUIRES_REVIEW'; } }
 class IllegalAction extends Error { constructor(message) { super(message); this.code='ILLEGAL_ACTION'; } }
 class Unpayable extends Error {}
@@ -79,6 +85,17 @@ class Kernel {
     const e={id:this.id('e'),kind,controller:ctx.controller,source:clone(ctx.source),duration:this.duration(duration,ctx),...clone(data)};
     this.state.effects.push(e); return e;
   }
+  entryNames(id) {
+    const p=this.profile(id),names=[];
+    if(p.activation?.skill_type==='permanent_entry_name'&&(this.mode==='sandbox'||p.runtime_approved))walk(p.program,n=>{if(n.kind==='rename_before_entry')names.push(...n.choose_name);});
+    return names.length?[...new Set(names)]:[this.effectiveName(id)];
+  }
+  _prepareEntryName(id,ctx,allowed=this.entryNames(id)) {
+    if(this.profile(id).activation?.skill_type!=='permanent_entry_name')return null;
+    this._admit(this.profile(id));const entry={...ctx,source:this.reference(id),entryNames:allowed,entryName:null};
+    this._resolveSkill(this.profile(id),entry);return entry.entryName;
+  }
+  _applyEntryName(id,entry,ctx) {if(entry)this.effect('rename',{target:this.reference(id),name:entry.name},ctx,entry.duration);}
   effectiveName(id) {
     const ref=this.reference(id);
     const e=this.state.effects.findLast(e=>e.kind==='rename' && this.active(e) && same(e.target,ref) && this.current(ref));
@@ -513,6 +530,7 @@ class Kernel {
       if (n.target_scope) need(n.target_scope.membership==='snapshot_on_resolution','Target membership is not supported');
       if(n.destination)need((!n.destination.includes('choose_deck') || ['choose_deck_top_or_bottom','self.choose_deck_top_or_bottom'].includes(n.destination)) && !n.destination.endsWith('.deck_top'),'Destination mechanism not implemented');
       if(n.kind==='invalidate_skill')need(!n.selector.keyword_families && !n.selector.union_with?.keyword_families,'Keyword invalidation not implemented');
+      if(n.kind==='rename_before_entry')need(n.target==='source'&&n.character_count===1&&Array.isArray(n.choose_name)&&n.choose_name.length===2&&n.choose_name.every(x=>typeof x==='string')&&['this_turn','this_turn_or_role_exit'].includes(n.duration),'Unsupported entry-name parameters');
       if(n.kind==='keyword')need(['one_touch','doshat','feint','blockout','a_pass','two_attack','back_attack','multi_attack'].includes(n.keyword)&&Number.isInteger(n.N)&&n.N>=0&&Object.keys(n.parameters||{}).every(k=>n.keyword==='multi_attack'&&k==='affiliation')&&(n.keyword!=='multi_attack'||typeof n.parameters?.affiliation==='string'),'Keyword parameters not implemented: '+n.keyword);
       if (n.kind==='compare') {
         need(new Set(['random.result','revealed.affiliation_intersects_self_court','opponent.block_defense','self.attack.guts.count','self.court.distinct_affiliation_assignment_count','source.covered_character.tags','source.covered_character.positions','source.covered_character.effective_name','source.entry_skill_name','revealed.count','moved.count']).has(n.field)||/^(phase|current_turn_id|both\.set\.count_sum|opponent_ball\.(kind|offense)|(self|opponent)\.(hand|sets|set)\.count|(self|opponent)\.(serve|receive|toss|attack)\.(effective_name|printed_attack)|(paid|milled|retrieved|drawn)\.(count|event_count|names_are_distinct)|optional\.performed|(source|target)\.(effective_name|role|entry_origin|entry_reason|entry_turn|current_(serve|receive|block|toss|attack)))$/.test(n.field),'Fact is not implemented: '+n.field);
@@ -570,6 +588,14 @@ class Kernel {
       }
       case 'optional': { const yes=this._decide('optional',ctx,[true,false]);legal(typeof yes==='boolean','Optional decision must be boolean');ctx.bind.optional={performed:yes&&this._run(node.then,ctx)};return ctx.bind.optional.performed; }
       case 'choose_modes': { const i=this._decide('mode',ctx,node.options.map((_,i)=>i));legal(Number.isInteger(i)&&i>=0&&i<node.options.length,'Invalid mode');return this._run(node.options[i],ctx); }
+      case 'rename_before_entry': {
+        const options=(ctx.entryNames||node.choose_name).filter(name=>node.choose_name.includes(name));
+        legal(options.length>0,'No legal entry name');
+        const name=this._decide('name',ctx,options);legal(options.includes(name),'Invalid entry name');
+        const entry={name,duration:node.duration};
+        if(ctx.entryNames)ctx.entryName=entry;else this._applyEntryName(ctx.source.id,entry,ctx);
+        return true;
+      }
       case 'watch': this._registerWatch(node,ctx);return true;
       case 'ban_action': this.effect('ban',{actor:this.owner(node.actor,ctx),action:node.action,scope:node.scope},ctx,node.duration);return true;
       case 'invalidate_skill': this.effect('invalid',{actor:this.owner(node.actor,ctx),selector:node.selector},ctx,node.duration);return true;
@@ -702,7 +728,12 @@ class Kernel {
     legal(COURT.includes(dest)&&c.printed.type==='character','Invalid character destination');
     const parameter=dest.startsWith('side:')||dest==='block'?'block':dest;
     legal(c.printed.parameters[parameter]!=='dash','Dash parameter cannot enter');
-    const name=this.effectiveName(id),other=dest==='attack'?this.top(player,'toss'):dest==='toss'?this.top(player,'receive'):null;
+    const other=dest==='attack'?this.top(player,'toss'):dest==='toss'?this.top(player,'receive'):null;
+    const entryCount=parameter==='block'?(this.state.turn.blockEntries?.[player]||0)+1:1;
+    const names=this.entryNames(id).filter(name=>(!other||this.effectiveName(other)!==name)&&(parameter!=='block'||!['block','side:0','side:1'].map(z=>this.top(player,z)).filter(x=>x&&x!==id).some(x=>this.effectiveName(x)===name))&&this.permission({action:'enter_character',player,origin:origin==='skill'?'skill':'rule',role:parameter==='block'?(side?'side_blocker':'center_blocker'):dest,entryOrigin:c.zone.split('.')[1]==='hand'?'hand':this.role(id)==='guts'&&COURT.includes(c.zone.split('.')[1])?'guts':c.zone.split('.')[1],entryCount,name,printed:c.printed}).allowed);
+    if(!names.length&&skipRestricted)return null;
+    legal(names.length,'Entry restriction or No legal entry name');
+    const entryName=this._prepareEntryName(id,ctx,names),name=entryName?.name||this.effectiveName(id);
     legal(!other || this.effectiveName(other)!==name,'Same-name role entry forbidden');
     if(parameter==='block')legal(!['block','side:0','side:1'].map(z=>this.top(player,z)).filter(x=>x&&x!==id).some(x=>this.effectiveName(x)===name),'Same-name blockers forbidden');
     const count=parameter==='block'?(this.state.turn.blockEntries?.[player]||0)+1:1;
@@ -710,12 +741,11 @@ class Kernel {
       entryOrigin:c.zone.split('.')[1]==='hand'?'hand':this.role(id)==='guts'&&COURT.includes(c.zone.split('.')[1])?'guts':c.zone.split('.')[1],entryCount:count,name,printed:c.printed}).allowed;
     if(!allowed&&skipRestricted)return null;
     legal(allowed,'Entry restriction');
-    need(p.activation?.skill_type!=='permanent_entry_name','Entry-name replacement not implemented');
     if(p.activation?.skill_type==='passive')this._admit(p);
     const sourceZone=c.zone.split('.')[1], entryOrigin=COURT.includes(sourceZone)&&this.role(id)==='guts'?'guts':sourceZone;
     const covered=this.top(player,dest);c.coveredCharacter=covered?{effective_name:this.effectiveName(covered),tags:clone(this.card(covered).printed.affiliation_tags),positions:clone(this.card(covered).printed.position_tags)}:null;
     c.entrySkillName=origin==='skill'&&ctx.source?this.effectiveName(ctx.source.id):null;
-    this._move(id,player,dest,ctx,'explicit_entry');
+    this._move(id,player,dest,ctx,'explicit_entry');this._applyEntryName(id,entryName,ctx);
     c.entryOrigin=entryOrigin;c.entryReason=origin==='skill'?'skill':'rule';c.entryTurn=this.state.turn.id;
     const event={type:'character_entry',player,card:id,character:this.reference(id),role:this.role(id),origin:entryOrigin,entry_keyword_family:keywordFamily,phase:this.state.turn.phase,window:this.state.turn.id+':'+this.state.turn.phase};
     if(parameter==='block'){this.state.turn.blockEntries ||= [0,0];this.state.turn.blockEntries[player]++;}
@@ -743,6 +773,30 @@ class Kernel {
     legal(['rule','skill'].includes(reason),'Unknown entry reason');
     if(reason==='rule')legal(c.zone===c.owner+'.hand' && (side?'block':area)===this.state.turn.phase,'Normal entry requires the correct phase and hand source');
     const result=this._enter(id,c.owner,area,ctx,reason,side);this._drain();return result;}); }
+  enterBlock(ids,center) { return this._atomic(()=>{
+    const player=this.state.turn.player;
+    legal(this.state.stage==='rally'&&this.state.turn.phase==='block'&&!this.state.queue.length,'Block entry unavailable');
+    legal(Array.isArray(ids)&&ids.length>=1&&ids.length<=3&&new Set(ids).size===ids.length&&ids.includes(center),'Invalid blocker group');
+    const ordered=[center,...ids.filter(id=>id!==center)],groups=ordered.map((id,i)=>{
+      const c=this.card(id);legal(c.owner===player&&c.zone===player+'.hand'&&c.printed.type==='character'&&c.printed.parameters.block!=='dash','Invalid blocker');
+      return this.entryNames(id).filter(name=>this.permission({action:'enter_character',player,origin:'rule',entryOrigin:'hand',entryCount:(this.state.turn.blockEntries?.[player]||0)+ids.length,role:i?'side_blocker':'center_blocker',name,printed:c.printed}).allowed);
+    });
+    legal(distinctNameOptions(groups).length,'Same-name blockers forbidden or entry restriction');
+    const chosen=[],entries=[];
+    for(let i=0;i<ordered.length;i++){
+      const id=ordered[i],ctx=this._context(id,player),options=distinctNameOptions(groups.slice(i),chosen),entry=this._prepareEntryName(id,ctx,options),name=entry?.name||this.effectiveName(id);
+      legal(options.includes(name),'Invalid blocker name');chosen.push(name);entries.push(entry);
+    }
+    for(let i=0;i<ordered.length;i++){
+      const id=ordered[i],c=this.card(id),area=i?'side:'+(i-1):'block',ctx=this._context(id,player),covered=this.top(player,area);
+      c.coveredCharacter=covered?{effective_name:this.effectiveName(covered),tags:clone(this.card(covered).printed.affiliation_tags),positions:clone(this.card(covered).printed.position_tags)}:null;
+      this._move(id,player,area,ctx,'explicit_entry');this._applyEntryName(id,entries[i],ctx);c.entryOrigin='hand';c.entryReason='rule';c.entryTurn=this.state.turn.id;c.entrySkillName=null;
+      this.state.turn.blockEntries ||= [0,0];this.state.turn.blockEntries[player]++;
+    }
+    // All members and chosen names exist before any entry-trigger resolves.
+    for(const id of ordered){const event={type:'character_entry',player,card:id,character:this.reference(id),role:this.role(id),origin:'hand',phase:'block',window:this.state.turn.id+':block'};this._emit(event);this._enqueuePassive(id,event);}
+    this._drain();return ordered.map(id=>this.reference(id));
+  }); }
   registerWatch(node,controller,source=null) { return this._atomic(()=>this._registerWatch(node,this._context(source,controller))); }
   resolveProgram(program,controller,source=null,event={}) { return this._atomic(()=>{legal(this.mode==='sandbox','Raw programs are sandbox-only');this.preflight(program);const ctx=this._context(source,controller,event);this.depth++;let result;try{result=this._run(program,ctx);}finally{this.depth--;}this._drain();return result;}); }
   drawRule(player,n=1) { return this._atomic(()=>{const result=this._draw(player,n,this._context(null,player),'rule');this._drain();return result;}); }
@@ -812,6 +866,6 @@ class Kernel {
     need(['rally','loss_triggers','interval'].includes(this.state.stage),'Invalid rally stage');
     const seen=new Set();for(const [zone,ids] of Object.entries(this.state.zones))for(const id of ids){need(!seen.has(id),'Physical card appears twice');seen.add(id);const c=this.card(id);need(c.zone===zone&&c.id===id&&[0,1].includes(c.owner)&&Number.isInteger(c.incarnation)&&c.incarnation>=0&&this.profiles[c.profileId],'Card identity/zone mismatch');}need(seen.size===Object.keys(this.state.cards).length,'Card conservation failed'); }
 }
-const api={Kernel,NeedsReview,IllegalAction,capabilities:{status:'HOST_CONTROLLER_REQUIRED',nodes:[...KINDS],keywords:['one_touch','doshat','feint','blockout','a_pass','two_attack','back_attack','multi_attack'],defaultCatalogLiveCardApprovals:0}};
+const api={Kernel,distinctNameOptions,NeedsReview,IllegalAction,capabilities:{status:'HOST_CONTROLLER_REQUIRED',nodes:[...KINDS],keywords:['one_touch','doshat','feint','blockout','a_pass','two_attack','back_attack','multi_attack'],defaultCatalogLiveCardApprovals:0}};
 if(typeof module!=='undefined')module.exports=api;else root.BreakRulesCore=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

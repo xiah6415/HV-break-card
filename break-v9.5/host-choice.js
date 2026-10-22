@@ -46,6 +46,11 @@ function checkEnvelope(req, answer) {
 // 有效名：卡片可見印刷資訊的名稱；沒有時退回 label
 const effName = o => (o && o.card && (o.card.effectiveName || o.card.name)) || (o && o.label) || '';
 
+function distinctEntryNames(options) {
+  const groups=options.map(o=>o?.card?.entryNames||[effName(o)]);
+  const visit=(i,used)=>i===groups.length||groups[i].some(n=>!used.includes(n)&&visit(i+1,[...used,n]));
+  return visit(0,[]);
+}
 // ---------- value 驗證（UI 與 AI 共用）
 function checkValue(req, value) {
   const r = checkRequest(req); if (!r.ok) return r;
@@ -82,7 +87,7 @@ function checkValue(req, value) {
         if (!o) return fail('包含不能攔網的角色');
         if (seen.has(key)) return fail('同一張卡不能選兩次');
         seen.add(key);
-        if (b.distinctEffectiveNames) { const n = effName(o); if (names.has(n)) return fail('攔網不能派同名角色：' + n); names.add(n); }
+        if (b.distinctEffectiveNames && !distinctEntryNames(value.cards.slice(0,seen.size).map(v=>byVal.get(JSON.stringify(v))))) return fail('攔網不能派同名角色');
       }
       const n = value.cards.length;
       if (n < Math.max(input.min, 1)) return fail('至少要派 1 人攔網');
@@ -118,7 +123,7 @@ function toggle(req, sel, optionValue) {
   }
   if (t === 'block' && req.context.block.distinctEffectiveNames) {
     const o = req.options.find(x => JSON.stringify(x.value) === key), n = effName(o);
-    if (sel.picked.some(v => effName(req.options.find(x => JSON.stringify(x.value) === JSON.stringify(v))) === n)) return { ...sel, error: '攔網不能派同名角色：' + n };
+    if (!distinctEntryNames([...sel.picked.map(v=>req.options.find(x=>same(x.value,v))),o])) return { ...sel, error: '攔網不能派同名角色：' + n };
   }
   const picked = [...sel.picked, optionValue];
   return { ...sel, picked, center: t === 'block' && sel.center === null ? optionValue : sel.center, error: null };
@@ -175,7 +180,7 @@ function aiValue(req) {
       const b = req.context.block, max = Math.min(input.max, b.maxCount), pick = [], names = new Set();
       for (const o of options) {
         if (pick.length >= Math.max(1, input.min)) break;
-        const n = effName(o); if (b.distinctEffectiveNames && names.has(n)) continue;
+        const n = effName(o); if (b.distinctEffectiveNames && !distinctEntryNames([...pick.map(v=>options.find(x=>same(x.value,v))),o])) continue;
         names.add(n); pick.push(o.value);
       }
       if (pick.length > max) pick.length = max;

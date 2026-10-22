@@ -10,7 +10,9 @@ completed.push({id:'watch',test:require('./watch-node-tests').testWatch});
 completed.push({id:'uniform_affiliation',test:require('./uniform-node-tests').testUniformAffiliation});
 completed.push({id:'all',test:require('./all-node-tests').testAll});
 completed.push({id:'keyword',test:require('./keyword-node-tests').testKeyword});
+completed.push({id:'rename_before_entry',test:require('./rename-node-tests').testRename});
 function testCard(catalog,card){
+ if(card.profiles[0].activation.skill_type==='permanent_entry_name')return require('./rename-node-tests').testRenameCard(catalog,card);
  if(I.dependencies(card).some(k=>!['sequence','deck_selection'].includes(k)))return C.testCard(catalog,card);
  const p=card.profiles[0],deckNodes=I.nodes(p).filter(n=>n.kind==='deck_selection');
  assert(deckNodes.length,'No scenario builder for card nodes');

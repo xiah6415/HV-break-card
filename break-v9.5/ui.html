@@ -652,12 +652,12 @@ p.imp-bad { padding-left: 0; }
     if (i < 0) return;
     staged = { card: c, i }; render();
   }
-  function blkToggle(c) {
+  function blkToggle(c, addCopy = false) {
     const me = game.players[0];
-    if (blk.cards.includes(c)) { blk.cards = blk.cards.filter(x => x !== c); if (blk.center === c) blk.center = blk.cards[0] || null; return render(); }
+    if (blk.cards.includes(c) && !addCopy) { blk.cards.splice(blk.cards.indexOf(c),1); if (blk.center === c) blk.center = blk.cards[0] || null; return render(); }
     const max = pending.req.build.max;
     if (blk.cards.length >= max) return flash(`最多 ${max} 人攔網`);
-    if (blk.cards.some(x => nm(x) === nm(c))) return flash('攔網不能派同名角色');
+    if (!game.evalBlock(me,[...blk.cards,c]).legal) return flash('攔網名稱重複或已無可用卡片');
     blk.cards.push(c); if (!blk.center) blk.center = c; render();
   }
   let flashMsg = '', flashT = 0;
@@ -765,7 +765,7 @@ p.imp-bad { padding-left: 0; }
     const hint = req && !req.multi && legal.size ? '<span class="newnote">亮框的牌可以點或拖到發光的區域</span>' : nNew ? `<span class="newnote">剛抽到 ${nNew} 張（標 NEW）</span>` : '';
     return `<div class="handhead"><span>手牌 ${p.hand.length} 張</span>${hint}</div><div class="hand" style="--hn:${p.hand.length <= 6 ? p.hand.length : Math.ceil(p.hand.length / 2)}">${p.hand.map((c, i) => {
       const cls = req && req.kind === 'mulligan' ? (picked.has(i) ? 'picked' : '') : (i === stagedIdx || blkIdx.has(i)) ? 'staged' : legal.has(c) ? 'sel' : (req && legal.size ? 'dim' : '');
-      return `<div class="hc ${cls}">${isNew[i] ? '<span class="newb">NEW</span>' : ''}${blk && blk.center === c && blkIdx.has(i) ? '<span class="newb ctr">中攔</span>' : ''}<button class="cbtn" type="button" data-hand="${i}" data-card="${c}">${img(c)}</button></div>`;
+      return `<div class="hc ${cls}">${isNew[i] ? '<span class="newb">NEW</span>' : ''}${blk && blk.center === c && blkIdx.has(i) && i === p.hand.indexOf(c) ? '<span class="newb ctr">中攔</span>' : ''}<button class="cbtn" type="button" data-hand="${i}" data-card="${c}">${img(c)}</button></div>`;
     }).join('')}</div>`;
   }
   function netHTML() {
@@ -834,7 +834,7 @@ p.imp-bad { padding-left: 0; }
     }
     if (r.kind === 'block' && blk) {
       const ev = blk.cards.length ? game.evalBlock(me, blk.cards) : null, need = game.ball.off;
-      const chips = blk.cards.map(c => `<span class="bchip${c === blk.center ? ' ctr' : ''}">${c === blk.center ? '中' : '側'}・${esc(E.short(c))} ${st(c, 'blk')}${c !== blk.center ? `<button type="button" data-ctr="${c}" aria-label="設為中攔">設中攔</button>` : ''}<button type="button" data-rm="${c}" aria-label="移除">✕</button></span>`).join('');
+      const chips = blk.cards.map((c,i) => `<span class="bchip${i === blk.cards.indexOf(blk.center) ? ' ctr' : ''}">${i === blk.cards.indexOf(blk.center) ? '中' : '側'}・${esc(E.short(c))} ${st(c, 'blk')}${i !== blk.cards.indexOf(blk.center) ? `<button type="button" data-ctr="${c}" aria-label="設為中攔">設中攔</button>` : ''}<button type="button" data-rm="${c}" aria-label="移除">✕</button></span>`).join('');
       const stat = ev ? `攔 ${ev.total}${ev.tsu ? '（可選月島 +6）' : ''} vs 進攻 ${need}${ev.ok ? (ev.natsu ? '：還差 1，需打日向夏' : '：預估可攔，仍需結算技能') : '：目前不足，可先登場再發動技能'}` : `需要攔 ≥ ${need}`;
       const recs = r.options.slice(0, 3).map(o => `<button class="opt quiet rec" type="button" data-rec="${o.value}">${esc(o.label)}</button>`).join('');
       return [`組攔網：點手牌加入（第 1 張是中攔，最多 ${r.build.max} 人、不能同名）<small class="${ev && ev.ok ? 'good' : 'bad'}">${stat}</small>${fl}${chips ? `<div class="bchips">${chips}</div>` : ''}`,
@@ -976,10 +976,10 @@ p.imp-bad { padding-left: 0; }
       answer(o.value);
     }
   });
-  function onHandPick(c) {
+  function onHandPick(c, handIndex = null) {
     if (!pending) return false;
     const r = pending.req;
-    if (r.kind === 'block' && blk) { if (r.build.cands.includes(c)) { blkToggle(c); return true; } return false; }
+    if (r.kind === 'block' && blk) { if (r.build.cands.includes(c)) { const count=blk.cards.filter(x=>x===c).length,ordinal=game.players[0].hand.slice(0,handIndex==null?0:handIndex).filter(x=>x===c).length;blkToggle(c,handIndex!=null&&ordinal>=count);return true; } return false; }
     if (!legalCards().has(c)) return false;
     if (staged && staged.card === c) { cardSheet(c); return true; }
     stage(c); return true;
@@ -999,7 +999,7 @@ p.imp-bad { padding-left: 0; }
     if (b.dataset.hand != null && pending) {
       const i = +b.dataset.hand, c = b.dataset.card;
       if (pending.req.kind === 'mulligan') { picked.has(i) ? picked.delete(i) : picked.add(i); return render(); }
-      if (onHandPick(c)) return;
+      if (onHandPick(c,i)) return;
     }
     if (b.dataset.pile) { const p = game.players[+b.dataset.p]; return pileSheet(`${p.idx === 0 ? '你的' : 'AI 的'}${b.dataset.pile === 'ev' ? ' Event 區' : '棄牌區'}（最新的在前）`, (b.dataset.pile === 'ev' ? p.ev : p.drop).slice().reverse()); }
     if (b.dataset.zone) { const p = game.players[+b.dataset.p], s = p.area[b.dataset.zone]; if (!s.length) return; return pileSheet(`${p.idx === 0 ? '你的' : 'AI 的'}${E.AREA_ZH[b.dataset.zone]}區（第 1 張是角色，後面是 Guts，越後面越早放；付 Guts 時從最下面開始付）`, s.slice().reverse()); }

@@ -18,7 +18,8 @@ function forms(catalog){const result={};for(const c of catalog.cards.filter(c=>c
 function entrySupported(c){const a=c.profiles[0].activation;return reviewClear(c)&&!!a&&LIVE_ENTRIES.includes(entryKey(c))&&(!['event','active'].includes(a.skill_type)||JSON.stringify(a.source_zones)==='["hand"]');}
 function dependencies(c){return [...new Set(c.profiles.flatMap(p=>nodes(p).map(n=>n.kind)))].sort();}
 const PRIORITY=['numeric','selector','conditional','payment_branch','pay_guts','compare','draw'];
-const LIVE_ENTRIES=['event','active','passive:self_entry'];
+const BASE_ENTRIES=['event','active','passive:self_entry'];
+const LIVE_ENTRIES=[...BASE_ENTRIES,'permanent_entry_name'];
 const entryKey=c=>c.profiles[0].activation.skill_type==='passive'?'passive:'+c.profiles[0].activation.trigger?.event:c.profiles[0].activation.skill_type;
 const reviewClear=c=>c.profiles.length===1&&!c.skill_text_variant_conflict&&!c.profiles[0].flags?.length;
 function inventory(catalog,completed,released=[]){
@@ -26,10 +27,10 @@ function inventory(catalog,completed,released=[]){
  const cards=source.map(c=>({code:short(c.card_no),dependencies:dependencies(c),entry:entryKey(c),reviewClear:reviewClear(c),released:open.has(short(c.card_no))}));
  const rows=Object.entries(fs).map(([kind,shapes])=>({kind,completed:done.has(kind),parameterForms:shapes.size,dependentCards:cards.filter(c=>c.dependencies.includes(kind)).length}));
  const rest=rows.filter(r=>!['sequence','deck_selection',...PRIORITY].includes(r.kind)).map(r=>({type:'node',kind:r.kind,frequency:r.dependentCards}));
- for(const kind of [...new Set(cards.map(c=>c.entry))].filter(k=>!LIVE_ENTRIES.includes(k)))rest.push({type:'entry',kind,frequency:cards.filter(c=>c.entry===kind).length});
+ for(const kind of [...new Set(cards.map(c=>c.entry))].filter(k=>!BASE_ENTRIES.includes(k)))rest.push({type:'entry',kind,frequency:cards.filter(c=>c.entry===kind).length});
  rest.sort((a,b)=>b.frequency-a.frequency||(a.type==='entry')-(b.type==='entry')||a.kind.localeCompare(b.kind));
  const route=[...PRIORITY.map(kind=>({type:'node',kind,frequency:rows.find(r=>r.kind===kind).dependentCards})),...rest];
- const nodeSet=new Set(['sequence','deck_selection']),entrySet=new Set(LIVE_ENTRIES),path=[];let nodeStep=0;
+ const nodeSet=new Set(['sequence','deck_selection']),entrySet=new Set(BASE_ENTRIES),path=[];let nodeStep=0;
  for(const step of route){
   (step.type==='node'?nodeSet:entrySet).add(step.kind);if(step.type==='node')nodeStep++;
   const matches=cards.filter(c=>c.dependencies.every(k=>nodeSet.has(k)));

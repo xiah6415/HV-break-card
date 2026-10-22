@@ -31,9 +31,8 @@ function buildCoverage(){
    for(const flag of p.flags||[])put('review','review','flag:'+flag,'flags',flag);
    if(card.skill_text_variant_conflict)put('review','review','card_text_variants','profiles','保留卡文版本，尚未選定規範版本');
    const a=p.activation;
-   if(a?.skill_type==='permanent_entry_name')core('rename_entry','activation:permanent_entry_name','activation','登場前改名流程未接入共用核心');
-   else if(a?.skill_type==='passive'&&a.trigger?.event!=='self_entry')core('non_entry_passive','trigger:'+a.trigger?.event,'activation.trigger','核心僅核准自身登場型角色被動；其他角色監聽須新增控制器');
-   else if(!['passive','active','event'].includes(a?.skill_type))core('other','activation:'+a?.skill_type,'activation','未知或尚未接入的技能類型');
+   if(a?.skill_type==='passive'&&a.trigger?.event!=='self_entry')core('non_entry_passive','trigger:'+a.trigger?.event,'activation.trigger','核心僅核准自身登場型角色被動；其他角色監聽須新增控制器');
+   else if(!['passive','active','event','permanent_entry_name'].includes(a?.skill_type))core('other','activation:'+a?.skill_type,'activation','未知或尚未接入的技能類型');
    if(a?.skill_type==='active'&&JSON.stringify(a.source_zones)!=='["hand"]')host('triggers','active_source_zone','activation.source_zones','現有宣告入口僅處理手牌主動技能');
    try{kernel._admit(p);gate={passed:true};}catch(e){gate={passed:false,code:e.code||null,message:e.message};}
   }

@@ -82,7 +82,7 @@ const hasYear = (c, n) => library.year(c, n);
 const isK = c => hasSchool(c, K);
 const isA = c => hasSchool(c, A);
 const short = c => nm(c).split(' ')[0];
-const entryNames = c => legacySkill(c) && c === 'PR-057' ? ['日向 翔陽', '西谷 夕'] : [nm(c)];
+const entryNames = c => legacySkill(c) && c === 'PR-057' ? ['日向 翔陽', '西谷 夕'] : sharedRules.entryNames(c).length ? sharedRules.entryNames(c) : [nm(c)];
 const recvName = c => nm(c);
 const atkName = c => nm(c);
 const isHin = c => HIN.has(c);
@@ -279,22 +279,22 @@ class Game {
     const zh = { srv: '發球', blk: '攔網', rcv: '接球', tos: '舉球', atk: '攻擊' };
     this.log(`${this.cardName(p, key)}（${this.courtTargets(p).find(t => t.key === key).label}）：${zh[param]} ${amount >= 0 ? '+' : ''}${amount}`);
   }
-  legalEntryNames(p, area, c) {
+  legalEntryNames(p, area, c, options={}) {
     const other = area === 'toss' ? 'receive' : area === 'attack' ? 'toss' : null;
-    return entryNames(c).filter(name => !other || name !== this.cardName(p, other));
+    return entryNames(c).filter(name => (!other || name.normalize('NFKC').replace(/\s/g,'') !== this.cardName(p, other).normalize('NFKC').replace(/\s/g,'')) && sharedRules.entryAllowed(this,p,c,area,{...options,name}));
   }
-  canEnter(p, area, c, options={}) { return !(area==='receive'&&p.restrict.no_rcv6&&st(c,'rcv')>=6) && sharedRules.entryAllowed(this,p,c,area,options) && st(c, { serve: 'srv', block: 'blk', receive: 'rcv', toss: 'tos', attack: 'atk' }[area]) != null && this.legalEntryNames(p, area, c).length > 0; }
+  canEnter(p, area, c, options={}) { return !(area==='receive'&&p.restrict.no_rcv6&&st(c,'rcv')>=6) && st(c, { serve: 'srv', block: 'blk', receive: 'rcv', toss: 'tos', attack: 'atk' }[area]) != null && this.legalEntryNames(p, area, c, options).length > 0; }
   async enterCharacter(p, area, c, fromDrop = false) {
     sharedRules.assertReady(this);
     const old=p.top(area),coveredCharacter=old?{effective_name:this.cardName(p,area).normalize('NFKC').replace(/\s/g,''),tags:library.card(old).schoolTags,positions:library.card(old).positionTags}:null;
-    const names = this.legalEntryNames(p, area, c);
+    const names = this.legalEntryNames(p, area, c,{origin:fromDrop?'skill':'rule',entryOrigin:fromDrop?'drop':'hand'});
     if (!this.canEnter(p, area, c,{origin:fromDrop?'skill':'rule',entryOrigin:fromDrop?'drop':'hand'})) throw new Error('不能以相同名稱登場，或受到登場限制');
     let name = nm(c);
-    if (legacySkill(c) && c === 'PR-057') name = await this.ask(p, { kind: 'name', prompt: `着地上手組。：選擇登場名稱（${AREA_ZH[area]}區，本回合有效）`, ctx: { card: c, area }, options: names.map(value => ({ label: value, value })) });
+    if (entryNames(c).length>1) name = await this.ask(p, { kind: 'name', prompt: `${nm(c)}：選擇登場名稱（${AREA_ZH[area]}區，本回合有效）`, ctx: { card: c, area }, options: names.map(value => ({ label: value, value })) });
     if (!names.includes(name)) throw new Error('無效的登場名稱');
     if (fromDrop) { this.moveCode(p.drop, p.area[area], c); delete p.effects[area]; }
     else this.place(p, area, c);
-    if (legacySkill(c) && c === 'PR-057') { this.effect(p, area).name = name; this.log(`着地上手組。：本回合在${AREA_ZH[area]}區作為「${name}」`); }
+    if (entryNames(c).length>1) { this.effect(p, area).name = name; this.log(`${nm(c)}：本回合在${AREA_ZH[area]}區作為「${name}」`); }
     const activeRole={receive:'receiver',toss:'setter',attack:'attacker'}[area];
     if(activeRole){p.ts[activeRole]=null;delete p.ts[activeRole+'Ref'];}
     await sharedRules.charactersEntered(this,p,[{key:area,origin:fromDrop?'drop':'hand',reason:fromDrop?'skill':'rule',coveredCharacter}]);
@@ -470,14 +470,14 @@ class Game {
     return await this.receiveTurn(p);
   }
   blockMax(p) { const legacy=p.restrict.one_blocker?1:p.restrict.two_blockers?2:3;return [3,2,1].find(n=>n<=legacy&&sharedRules.permission(this,{action:'enter_character',player:p.idx,origin:'rule',role:'center_blocker',entryOrigin:'hand',entryCount:sharedRules.blockEntered(this,p)+n}).allowed)||0; }
-  blockCands(p) { return [...new Set(p.handC().filter(c => st(c, 'blk') != null))]; }
+  blockCands(p) { return p.handC().filter(c => st(c, 'blk') != null); }
   evalBlock(p, combo, off = this.ball.off) {
     const o = p.opp, evInHand = p.hand.some(x => !isC(x));
     let total = combo.reduce((s, c) => s + st(c, 'blk'), 0), tsu = false;
     if (combo.includes('P02-003') && o.ev.length >= 2 && evInHand) { total += 6; tsu = true; }
     const natsu = p.hand.includes('P03-096') && combo.some(x => HIN.has(x)) && !(combo.includes('P02-003') && tsu && p.hand.filter(x => !isC(x)).length < 2) ? 1 : 0;
-    const names = new Set(combo.map(nm));
-    const legal = combo.length >= 1 && combo.length <= this.blockMax(p) && names.size === combo.length && combo.every(c => p.hand.includes(c) && st(c, 'blk') != null);
+    const names = sharedRules.distinctNameOptions(combo.map((c,i)=>entryNames(c).filter(name=>sharedRules.entryAllowed(this,p,c,i?'side:'+(i-1):'block',{name,entryCount:sharedRules.blockEntered(this,p)+combo.length}))));
+    const legal = combo.length >= 1 && combo.length <= this.blockMax(p) && names.length>0 && combo.every(c => combo.filter(x=>x===c).length<=p.hand.filter(x=>x===c).length && st(c, 'blk') != null);
     return { cards: [...combo], total, tsu, natsu: total < off && natsu > 0, ok: legal && total + natsu >= off, legal, cost: combo.length * 10 + combo.reduce((s, c) => s + val(c), 0) + (total < off ? 3 : 0) };
   }
   blockCombos(p, off) {
@@ -486,7 +486,7 @@ class Game {
       if (combo.length) { const r = this.evalBlock(p, combo, off); if (r.ok) res.push(r); }
       if (combo.length >= maxn) return;
       for (let i = start; i < cs.length; i++) {
-        if (combo.some(x => nm(x) === nm(cs[i]))) continue;
+        if (!sharedRules.distinctNameOptions([...combo,cs[i]].map(entryNames)).length) continue;
         combo.push(cs[i]); rec(i + 1, combo); combo.pop();
       }
     };
@@ -503,9 +503,17 @@ class Game {
       if (!cb.legal) throw Error('請選擇合法的攔網角色組合');
       center = pick.center && cb.cards.includes(pick.center) ? pick.center : cb.cards[0];
     } else { cb = combos[pick]; if (!cb) throw Error('請選擇合法的攔網角色組合'); center = cb.cards.slice().sort((a, b) => val(b) - val(a))[0]; }
+    const ordered=cb.cards.slice(),centerIndex=ordered.indexOf(center);ordered.splice(centerIndex,1);ordered.unshift(center);
+    const chosen=[];
+    for(let i=0;i<ordered.length;i++){
+      const options=sharedRules.distinctNameOptions(ordered.slice(i).map((c,j)=>entryNames(c).filter(name=>sharedRules.entryAllowed(this,p,c,i+j?'side:'+(i+j-1):'block',{name,entryCount:sharedRules.blockEntered(this,p)+ordered.length}))),chosen);
+      const name=entryNames(ordered[i]).length>1?await this.ask(p,{kind:'name',prompt:`${nm(ordered[i])}：選擇${i?'側攔':'中攔'}登場名稱`,ctx:{card:ordered[i],area:i?'side:'+(i-1):'block'},options:options.map(value=>({value,label:value}))}):options[0];
+      if(!options.includes(name))throw Error('無效的攔網名稱');chosen.push(name);
+    }
     this.place(p, 'block', center); this.src = '月島';
-    const sides = cb.cards.filter(c => c !== center); p.ts.sides = [];
+    const sides = ordered.slice(1); p.ts.sides = [];
     for (const c of sides) this.moveCode(p.hand, p.ts.sides, c);
+    for(let i=0;i<ordered.length;i++)if(entryNames(ordered[i]).length>1)this.effect(p,i?'side:'+(i-1):'block').name=chosen[i];
     await sharedRules.charactersEntered(this,p,[{key:'block'},...sides.map((c,i)=>({key:'side:'+i}))]);
     if(p.ts.keywordJump==='draw'){delete p.ts.keywordJump;this.cleanupSides(p);return this.receiveTurn(p);}
     p.ts.blk = this.courtTargets(p).filter(t=>t.key==='block'||t.key.startsWith('side:')).reduce((n,t)=>n+this.parameter(p,t.key,'blk'),0); p.ts.blockers = cb.cards.slice();

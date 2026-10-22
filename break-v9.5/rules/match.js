@@ -1,6 +1,6 @@
 /* Isolated single-state match pilot. No legacy Game/import/projection dependency. */
 'use strict';
-const {Kernel}=require('./core');
+const {Kernel,distinctNameOptions}=require('./core');
 const runtime=require('./runtime-data.json');
 const library=require('../card-library');
 const host=require('./host-contract');
@@ -34,8 +34,8 @@ class Match {
  _zone(p,z){return this._kernel.zone(p,z);}
  _code(id){return short(this._kernel.card(id).cardNo);}
  _cards(p,role){const k=this._kernel;return this._zone(p,'hand').filter(id=>k.card(id).printed.type==='character'&&k.card(id).printed.parameters[role]!=='dash'&&this._canEnter(p,id,role));}
- _canEnter(p,id,role){const k=this._kernel,c=k.card(id),other=role==='toss'?k.top(p,'receive'):role==='attack'?k.top(p,'toss'):null;return (!other||k.effectiveName(other)!==k.effectiveName(id))&&k.permission({action:'enter_character',player:p,origin:'rule',role:role==='block'?'center_blocker':role,entryOrigin:'hand',entryCount:1,name:k.effectiveName(id),printed:c.printed}).allowed;}
- _options(values){return values.map((value,i)=>{const c=typeof value==='string'?this._kernel.state.cards[value]:null,labels={serve:'發球',receive:'接球',block:'攔網',toss:'舉球',attack:'攻擊',true:'確認／發動',false:'不發動',null:'不使用，繼續'};return {id:c?value:'option-'+i,value,label:c?c.printed.display_name||c.printed.name:labels[String(value)]||String(value),...(c?{card:{id:value,incarnation:c.incarnation,cardNo:c.cardNo,name:c.printed.display_name||c.printed.name,effectiveName:this._kernel.effectiveName(value),zone:c.zone}}:{})};});}
+ _canEnter(p,id,role){const k=this._kernel,c=k.card(id),other=role==='toss'?k.top(p,'receive'):role==='attack'?k.top(p,'toss'):null;return k.entryNames(id).some(name=>(!other||k.effectiveName(other)!==name)&&k.permission({action:'enter_character',player:p,origin:'rule',role:role==='block'?'center_blocker':role,entryOrigin:'hand',entryCount:1,name,printed:c.printed}).allowed);}
+ _options(values){return values.map((value,i)=>{const c=typeof value==='string'?this._kernel.state.cards[value]:null,labels={serve:'發球',receive:'接球',block:'攔網',toss:'舉球',attack:'攻擊',true:'確認／發動',false:'不發動',null:'不使用，繼續'};return {id:c?value:'option-'+i,value,label:c?c.printed.display_name||c.printed.name:labels[String(value)]||String(value),...(c?{card:{id:value,incarnation:c.incarnation,cardNo:c.cardNo,name:c.printed.display_name||c.printed.name,effectiveName:this._kernel.effectiveName(value),entryNames:this._kernel.entryNames(value),zone:c.zone}}:{})};});}
  _ask(kind,actor,input,values,context={},origin='game',source=null){
   const r={protocol:'break.host.v1',matchId:this._m.id,requestId:this._m.id+':'+this.epoch+':'+this._m.decisionIndex,epoch:this.epoch,revision:this._kernel.state.revision,decisionIndex:this._m.decisionIndex,actor,origin,kind,prompt:context.prompt||prompts[kind]||'請選擇合法選項',input,options:this._options(values),context,source,timing:this._kernel.state.turn.phase,canLoss:this._m.phase==='rally'&&this._kernel.state.stage==='rally'&&actor===this._kernel.state.turn.player&&!['roll','mulligan','lossConfirm'].includes(kind),canManual:false};
   const sig=signature(r);
@@ -81,24 +81,8 @@ class Match {
  _event(next){const p=this._m.actor,opts=this._playable(p);if(!opts.length){this._next(next);return;}const id=this._ask('event',p,{type:'single'},[...opts,null]);if(id===null){this._next(next);return;}if(this._kernel.card(id).printed.type==='event')this._kernel.playEvent(id);else this._kernel.useSkill(id);}
  _pick(role,kind,next){const p=this._m.actor,ids=this._cards(p,role);if(!ids.length){this._lose('沒有能'+({serve:'發球',receive:'接球',toss:'舉球',attack:'攻擊'}[role])+'的角色');return;}const id=this._ask(kind,p,{type:'single'},ids);this._kernel.enter(id,role);this._m.roleTotals[p][role]=this._param(p,role);this._next(next);}
  _blockMax(p){const k=this._kernel;return [3,2,1].find(n=>k.permission({action:'enter_character',player:p,origin:'rule',role:'center_blocker',entryOrigin:'hand',entryCount:n}).allowed)||0;}
- _blockLegal(p,answer){const k=this._kernel,ids=answer?.cards;if(!Array.isArray(ids)||!ids.length||ids.length>this._blockMax(p)||new Set(ids).size!==ids.length||!ids.includes(answer.center)||!ids.every(id=>this._cards(p,'block').includes(id)))return false;return new Set(ids.map(id=>k.effectiveName(id))).size===ids.length;}
- _enterBlock(answer){
-  const p=this._m.actor,k=this._kernel;if(!this._blockLegal(p,answer))throw Error('Invalid blockers');
-  // Normal blockers form one declared group. Validate that new group, rather
-  // than comparing its center to the old center that is about to become Guts.
-  // Emit all entries before draining, matching simultaneous normal entry.
-  k._atomic(()=>{const ids=[answer.center,...answer.cards.filter(id=>id!==answer.center)];
-   for(let i=0;i<ids.length;i++){
-    const id=ids[i],c=k.card(id),area=i?'side:'+(i-1):'block',count=(k.state.turn.blockEntries?.[p]||0)+1;
-    if(!k.permission({action:'enter_character',player:p,origin:'rule',role:i?'side_blocker':'center_blocker',entryOrigin:'hand',entryCount:count,name:k.effectiveName(id),printed:c.printed}).allowed)throw Error('Entry restriction');
-    k._move(id,p,area,k._context(id,p),'explicit_entry');c.entryOrigin='hand';c.entryReason='rule';c.entryTurn=k.state.turn.id;
-    k.state.turn.blockEntries ||= [0,0];k.state.turn.blockEntries[p]++;
-    const event={type:'character_entry',player:p,card:id,character:k.reference(id),role:k.role(id),origin:'hand',phase:'block',window:k.state.turn.id+':block'};
-    k._emit(event);k._enqueuePassive(id,event);
-   }
-   k._drain();
-  });
- }
+ _blockLegal(p,answer){const k=this._kernel,ids=answer?.cards;if(!Array.isArray(ids)||!ids.length||ids.length>this._blockMax(p)||new Set(ids).size!==ids.length||!ids.includes(answer.center)||!ids.every(id=>this._cards(p,'block').includes(id)))return false;return distinctNameOptions(ids.map(id=>k.entryNames(id))).length>0;}
+ _enterBlock(answer){if(!this._blockLegal(this._m.actor,answer))throw Error('Invalid blockers');this._kernel.enterBlock(answer.cards,answer.center);}
  _cleanupSides(p){for(const z of ['side:0','side:1'])for(const id of [...this._zone(p,z)])this._move(id,p,'drop');}
  _outgoing(){const p=this._m.actor,t=this._m.outgoingType;return {kind:t,owner:p,offense:t==='serve'?this._param(p,'serve'):t==='block'?0:this._param(p,'toss')+this._param(p,'attack')};}
  _step(){

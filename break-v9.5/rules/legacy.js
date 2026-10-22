@@ -3,7 +3,7 @@
 (function(root) {
 'use strict';
 const node=typeof module!=='undefined'&&module.exports;
-const {Kernel}=node?require('./core'):root.BreakRulesCore;
+const {Kernel,distinctNameOptions}=node?require('./core'):root.BreakRulesCore;
 const {attempt,settle}=node?require('./decisions'):root.BreakRulesDecisions;
 const identity=node?require('./identity'):root.BreakCardIdentity;
 const data=node?require('./runtime-data.json'):root.BreakRulesData;
@@ -17,6 +17,15 @@ const norm=s=>s.normalize('NFKC').replace(/\s/g,'');
 const byShort=Object.fromEntries(data.catalog.cards.map(c=>[c.card_no.replace(/^HV-?/,''),c]));
 const approved=new Set(data.approved);
 function handles(c) { const grant=library.permission(c),profile=byShort[c]?.profiles[0];return grant?.kind==='shared'&&grant.profileId===profile?.profile_id&&profile.runtime_approved===true&&!!profile.program&&approved.has(grant.profileId); }
+const displayNames=Object.fromEntries(data.catalog.cards.flatMap(c=>c.profiles.map(p=>[p.variants[0].printed.name,p.variants[0].printed.display_name])));
+function displayName(name) {return displayNames[name]||name;}
+function entryNames(code) {
+ const p=byShort[code]?.profiles[0],names=[];
+ if(handles(code)&&p.activation?.skill_type==='permanent_entry_name'){
+  const visit=n=>{if(!n||typeof n!=='object')return;if(n.kind==='rename_before_entry')names.push(...n.choose_name.map(displayName));Object.values(n).forEach(v=>{if(v&&typeof v==='object')Array.isArray(v)?v.forEach(visit):visit(v);});};visit(p.program);
+ }
+ return names;
+}
 function stored(g) {
   const s=g.sharedRulesState;
   if(s&&(s.version!==1||s.fingerprint!==data.fingerprint))throw new Error('Shared watcher data version mismatch');
@@ -56,10 +65,10 @@ function permission(g,action) {
   k.state.effects=effects.filter(e=>['ban','keyword'].includes(e.kind));return k.permission(action);
 }
 function blockEntered(g,p) {return g.turnP===p&&!p.ts.finished?(p.ts.blockEntryReceipts?.length||0):0;}
-function entryAllowed(g,p,code,area,{origin='rule',entryOrigin='hand',entryCount=null}={}) {
+function entryAllowed(g,p,code,area,{origin='rule',entryOrigin='hand',entryCount=null,name=null}={}) {
   if(entryCount===null)entryCount=area==='block'||area.startsWith('side:')?blockEntered(g,p)+1:1;
   const printed=byShort[code]?.profiles[0].variants[0].printed;
-  return !!printed&&permission(g,{action:'enter_character',player:p.idx,origin,entryOrigin,entryCount,role:area==='block'?'center_blocker':area.startsWith('side:')?'side_blocker':area,printed,name:printed.name}).allowed;
+  return !!printed&&permission(g,{action:'enter_character',player:p.idx,origin,entryOrigin,entryCount,role:area==='block'?'center_blocker':area.startsWith('side:')?'side_blocker':area,printed,name:name?norm(name):printed.name}).allowed;
 }
 function transaction(g,p,c,timing,notification=null) {
   if(g.sharedRulesPending)throw new Error('A shared settlement is already awaiting a choice');
@@ -112,7 +121,7 @@ function transaction(g,p,c,timing,notification=null) {
   const invoke=notification?kernel=>notification.outgoing?kernel.outgoing(notification.outgoing.kind,notification.outgoing.offense):kernel.notifyHostEvents(notification.events):kernel=>kernel.card(source).printed.type==='event'?kernel.playEvent(source):kernel.useSkill(source);
   function choices(req) {
     if(req.kind==='revealResult')return [[]];
-    if(req.kind==='reveal'||req.kind==='mode')return [...req.options];
+    if(req.kind==='reveal'||req.kind==='mode'||req.kind==='name')return [...req.options];
     if(req.kind==='guts')return [req.options.slice(0,req.count)];
     if(['target','payment_cards','move_cards'].includes(req.kind)) {
       const combinations=[];
@@ -173,6 +182,12 @@ function transaction(g,p,c,timing,notification=null) {
           const active=g.activeParameter(q,slot.key,old);if(active&&q.ts[active]!=null)q.ts[active]+=delta;
         }
       }
+      for(const e of state.effects.slice(base.effects.length))if(e.kind==='rename'&&e.target&&state.cards[e.target.id]?.owner===q.idx){
+        const id=e.target.id,card=state.cards[id],zone=card.zone.split('.')[1];
+        if(card.incarnation!==e.target.incarnation||!['serve','block','receive','toss','attack','side:0','side:1'].includes(zone)||state.zones[card.zone].at(-1)!==id)continue;
+        const key=zone.startsWith('side:')?'side:'+sideIds.indexOf(id):zone;
+        const fx=g.effect(q,key);fx.name=displayName(e.name);
+      }
       for(const e of state.events)if(e.type==='move'&&e.from===q.idx+'.deck'&&e.to===q.idx+'.hand')q.newCount[short[e.id]]=(q.newCount[short[e.id]]||0)+1;
       if(complete)for(const lock of state.locks)if(lock.player===q.idx) {
         q.ts.used ||= {};
@@ -202,6 +217,7 @@ function transaction(g,p,c,timing,notification=null) {
     }
     for(const e of state.effects.slice(effectCursor)) {
       if(e.kind==='numeric') {const original=slots[e.target.id],key=state.cards[e.target.id].zone.split('.')[1],slot={...original,key};g.log(`${g.cardName(g.players[slot.player],slot.key)}（${labels[slot.key]||'側攔'}區）：${labels[e.parameter]} ${e.value<0?'−':'+'}${Math.abs(e.value)}`);}
+      else if(e.kind==='rename')g.log(`登場名稱：${displayName(e.name)}（本回合角色有效期間）。`);
       else if(e.kind==='ban')g.log(`效果：${g.players[e.actor].name}下個回合，${e.action==='add_hand'?'不能用技能加入手牌':e.scope.printed_receive_gte!=null?`原始接球 ${e.scope.printed_receive_gte} 以上角色不能登場接球`:`最多 ${e.scope.max_count} 人攔網`}。`);
       else if(e.kind==='protect')g.log('登場效果：這位角色本回合的數值不會被降低。');
       else if(e.kind==='keyword')g.log(`效果：${({doshat:'ドシャット',feint:'フェイント',a_pass:'Aパス',blockout:'ブロックアウト',feint_block_ban:'下回合禁止攔網'})[e.keyword]}${e.N?' '+e.N:''}。`);
@@ -249,6 +265,7 @@ function transaction(g,p,c,timing,notification=null) {
       }
       if(['payment_cards','move_cards'].includes(req.kind)) {const id=answer[0];return {label:`${req.ordering?'依序安排：':''}${byShort[short[id]].display_name} · ${short[id]}`,card:short[id],value:id,answer};}
       if(req.kind==='guts_destination')return {label:`放到${labels[answer]||'側攔'}區的 Guts`,value:answer,answer};
+      if(req.kind==='name')return {label:displayName(answer),value:answer,answer};
       if(req.kind==='mode')return {label:req.keywordOutgoing?`回球進攻 ${answer}`:answer==='deck_top'?'其餘放回牌庫頂':'其餘放到牌庫底',value:answer,answer};
       if(req.kind==='parameter')return {label:labels[answer],value:Object.keys(params).find(key=>params[key]===answer),answer};
       if(req.kind==='move_count')return {label:answer?`移動 ${answer} 張`:'不移動',value:answer,answer};
@@ -350,6 +367,6 @@ async function outgoing(g,p,type,off){
  if(!p.ts.keywordOutgoing&&!stored(g).effects.some(e=>e.kind==='keyword'&&active(e,g)&&e.actor===p.idx&&['doshat','feint'].includes(e.keyword)))return {type,off};
  const result=await transaction(g,p,null,g.rulePhase||'atk',{events:[],outgoing:{kind:type,offense:off}}).run();p.ts.keywordResolved={type:result.kind,off:result.offense};return p.ts.keywordResolved;
 }
-const api={outgoing,sourceMoved,drawn,judgment,flushHostEvents:flushHandEvents,permission,entryAllowed,blockEntered,charactersEntered,entryPreview,protectedParameter,handles,canPlay,resolve,assertReady,handAdded,legacyEffect,beginTurn,finishTurn,loss,approvals:[...approved]};
+const api={entryNames,distinctNameOptions,outgoing,sourceMoved,drawn,judgment,flushHostEvents:flushHandEvents,permission,entryAllowed,blockEntered,charactersEntered,entryPreview,protectedParameter,handles,canPlay,resolve,assertReady,handAdded,legacyEffect,beginTurn,finishTurn,loss,approvals:[...approved]};
 if(node)module.exports=api;else root.BreakRulesLegacy=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
