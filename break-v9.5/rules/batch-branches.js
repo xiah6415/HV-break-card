@@ -45,7 +45,10 @@ function expandFixture(k,{catalog,profile,source,player,phase,focus}){
    if(n.op==='lte'){if(!['event','drop','hand'].includes(sel.zone))gap('Count negative zone '+sel.zone);while(k.pool(sel,ctx).length+offset<=n.value)add(pick(sel.filters),who,sel.zone);return;}
   }
   if(n.kind==='all_result_cards_match'&&n.result==='paid'){
-   const stack=k.zone(player,phase);if(!stack.length)gap('No paid-card fixture');moveToDeck(stack[0]);add(pick({type:'character'},null,d=>!matchesPrinted(d.p,n.filters)),player,phase,true);return;
+   const payment=nodes.slice(0,nodes.indexOf(n)).filter(x=>x.kind==='pay_guts').at(-1);
+   const areas=payment?.areas==='court'?['serve','block','receive','toss','attack','side:0','side:1']:payment?.areas==='source_area'?[phase]:payment?.areas||[phase];
+   const area=areas.find(a=>k.zone(player,a).length>1);if(!area)gap('No paid-card fixture');
+   const stack=k.zone(player,area);moveToDeck(stack[0]);add(pick({type:'character'},null,d=>!matchesPrinted(d.p,n.filters)),player,area,true);return;
   }
   if(n.kind==='equal_fields'){
    // A real earlier-turn entry remains a character; no timestamp is fabricated.

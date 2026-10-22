@@ -23,7 +23,7 @@ function testCard(catalog,card,{condition:override}={}){
   const entrySource=entryName?k.addCard(catalog.cards.find(c=>c.profiles[0].variants[0].printed.name===entryName.value).card_no,0,'event'):null;
   const before=k.snapshot(),predicates=[],oldPredicate=k._predicate;
   k._predicate=function(n,c){const value=oldPredicate.call(this,n,c);if(n===condition)predicates.push(value);return value;};
-  function invoke(){return p.activation.skill_type==='event'?k.playEvent(id):p.activation.skill_type==='active'?k.useSkill(id):entrySource&&s.key!=='condition_false'?k._atomic(()=>{const ref=k._enter(id,0,phase,k._context(entrySource,0),'skill');k._drain();return ref;}):k.enter(id,phase,{reason:entryReason});}
+  function invoke(){return p.activation.skill_type==='event'?k.playEvent(id):p.activation.skill_type==='active'?k.useSkill(id):entrySource&&!(s.key==='condition_false'&&condition===entryName)?k._atomic(()=>{const ref=k._enter(id,0,phase,k._context(entrySource,0),'skill');k._drain();return ref;}):k.enter(id,phase,{reason:entryReason});}
   let rejected=false;
   try{invoke();}catch(e){if(e.message!=='OPEN-EVENT-NO-CHANGE')throw e;rejected=true;assert.deepEqual(k.snapshot(),before);}
   const after=k.snapshot();

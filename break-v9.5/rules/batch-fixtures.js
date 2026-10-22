@@ -56,7 +56,7 @@ function seedConditions(k,{catalog,profile,source,player,phase,expanded=false}){
    let dest=zone==='event_or_drop'?'drop':zone,bottom=false,role=null;
    if(zone==='court'||zone==='block'){
     role=zone==='block'?'block':roleFor(filters,parameter);dest=role;
-    if(filters.role==='block'){dest=['block','side:0','side:1'].find(z=>!k.top(who,z));if(!dest)fail('No blocker fixture slot');}
+    if(filters.role==='block'||zone==='block'&&filters.role==='character'){dest=(zone==='block'&&who===player&&phase==='block'?['side:0','side:1','block']:['block','side:0','side:1']).find(z=>!k.top(who,z));if(!dest)fail('No blocker fixture slot');}
     if(k.top(who,dest)&&!(expanded&&filters.role&&filters.role!=='character')){
      dest=['serve','block','receive','toss','attack'].find(z=>!k.top(who,z));
      if(!dest)fail('No free court fixture slot');

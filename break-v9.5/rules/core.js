@@ -530,6 +530,7 @@ class Kernel {
       if (n.target_scope) need(n.target_scope.membership==='snapshot_on_resolution','Target membership is not supported');
       if(n.destination)need((!n.destination.includes('choose_deck') || ['choose_deck_top_or_bottom','self.choose_deck_top_or_bottom'].includes(n.destination)) && !n.destination.endsWith('.deck_top'),'Destination mechanism not implemented');
       if(n.kind==='invalidate_skill')need(!n.selector.keyword_families && !n.selector.union_with?.keyword_families,'Keyword invalidation not implemented');
+      if(n.kind==='all_result_cards_match')need(['paid','milled','revealed'].includes(n.result)&&n.require_nonempty===true,'Unsupported result-match parameters');
       if(n.kind==='rename_before_entry')need(n.target==='source'&&n.character_count===1&&Array.isArray(n.choose_name)&&n.choose_name.length===2&&n.choose_name.every(x=>typeof x==='string')&&['this_turn','this_turn_or_role_exit'].includes(n.duration),'Unsupported entry-name parameters');
       if(n.kind==='keyword')need(['one_touch','doshat','feint','blockout','a_pass','two_attack','back_attack','multi_attack'].includes(n.keyword)&&Number.isInteger(n.N)&&n.N>=0&&Object.keys(n.parameters||{}).every(k=>n.keyword==='multi_attack'&&k==='affiliation')&&(n.keyword!=='multi_attack'||typeof n.parameters?.affiliation==='string'),'Keyword parameters not implemented: '+n.keyword);
       if (n.kind==='compare') {

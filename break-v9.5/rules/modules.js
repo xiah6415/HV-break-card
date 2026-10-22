@@ -11,6 +11,7 @@ completed.push({id:'uniform_affiliation',test:require('./uniform-node-tests').te
 completed.push({id:'all',test:require('./all-node-tests').testAll});
 completed.push({id:'keyword',test:require('./keyword-node-tests').testKeyword});
 completed.push({id:'rename_before_entry',test:require('./rename-node-tests').testRename});
+completed.push({id:'all_result_cards_match',test:require('./result-match-node-tests').testResultMatch});
 function testCard(catalog,card){
  if(card.profiles[0].activation.skill_type==='permanent_entry_name')return require('./rename-node-tests').testRenameCard(catalog,card);
  if(I.dependencies(card).some(k=>!['sequence','deck_selection'].includes(k)))return C.testCard(catalog,card);
@@ -48,6 +49,7 @@ function testModules(catalog){
  for(const card of I.scope(catalog)){
   if(!eligible(card))continue;
   testCard(catalog,card);
+  if(I.dependencies(card).includes('all_result_cards_match'))require('./result-match-node-tests').testResultCard(catalog,card);
   if(I.dependencies(card).includes('all'))require('./all-node-tests').testAllCard(catalog,card);
   if(I.dependencies(card).includes('watch'))require('./watch-card-tests').testWatchCard(catalog,card);
   cards[I.short(card.card_no)]={profileId:card.profiles[0].profile_id,modules:I.dependencies(card)};
