@@ -1846,7 +1846,7 @@ function transaction(g,p,c,timing,notification=null) {
     if(!id)throw new Error('Preview requires an actual hand card');
     // Preview the base and generated watches; optional entry costs remain the player's decision.
     k._enqueuePassive=()=>{};
-    k.state.turn.phase=area;k.choose=req=>req.kind==='trigger_order'?req.options[0]:[req.options[0]];
+    k.state.turn.phase=area;k.choose=req=>['target','payment_cards','move_cards','guts','entry'].includes(req.kind)?[req.options[0]]:req.options[0];
     k.enter(id,area);
     return {value:k.parameter(id,param),protected:k._protected(k.reference(id),param,{controller:p.idx})};
   },possible:()=>possible([]),run:()=>settle({kernel:k,invoke,ask,publish,options:(req,state,answers)=>notification?choices(req):choices(req).filter(answer=>possible([...answers,{request:req,answer}])),validate:(req,answer,available)=>req.kind==='guts'?validGuts(req,answer):available.some(value=>JSON.stringify(value)===JSON.stringify(answer))})};
