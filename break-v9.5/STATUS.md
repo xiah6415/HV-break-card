@@ -4,14 +4,14 @@
 |---|---|
 | 卡片／資料組 | 541／545 |
 | 數值模式可組牌 | 541 |
-| 嚴格模式可組牌 | 525 |
+| 嚴格模式可組牌 | 528 |
 | 無技能角色 | 183 |
-| 共用腳本自動技能 | 335 |
+| 共用腳本自動技能 | 338 |
 | 舊流程技能（待遷入單一核心） | 7 |
-| 未自動化技能 | 16 |
-| 原297張池／實際累計開放 | 297／281（含此前2張回收） |
-| 已完成節點模組清單 | 38：sequence、deck_selection、numeric、selector、conditional、payment_branch、pay_guts、compare、draw、move、count_compare、retrieve、watch、uniform_affiliation、all、keyword、rename_before_entry、all_result_cards_match、move_self、mill、enter、formal_declaration_cost、ban_action、invalidate_skill、choose_modes、optional、any、equal_fields、result_count、sum_result_parameter、draw_to_hand_size、exchange、each_player_optional_draw、protect_numeric_decrease、phase_jump、enter_self、external_action、shuffle |
-| 已測參數形態／涵蓋技能卡／資料組 | 580／351／355 |
+| 未自動化技能 | 13 |
+| 原297張池／實際累計開放 | 297／284（含此前2張回收） |
+| 已完成節點模組清單 | 40：sequence、deck_selection、numeric、selector、conditional、payment_branch、pay_guts、compare、draw、move、count_compare、retrieve、watch、uniform_affiliation、all、keyword、rename_before_entry、all_result_cards_match、move_self、mill、enter、formal_declaration_cost、ban_action、invalidate_skill、choose_modes、optional、any、equal_fields、result_count、sum_result_parameter、draw_to_hand_size、exchange、each_player_optional_draw、protect_numeric_decrease、phase_jump、enter_self、external_action、shuffle、move_result、reveal_top |
+| 已測參數形態／涵蓋技能卡／資料組 | 582／351／355 |
 | numeric／selector／conditional／payment_branch／pay_guts／compare／draw 形態 | 77／152／1／1／16／97／5 |
 | move 形態／審查必測項／已修正疑義卡 | 20／14／7（疑義均已裁定；未完成模組／入口維持鎖定） |
 | P04-070 範圍裁定／開放狀態 | 本回合持續匹配，含正常及事件效果登場；已開放，來源被覆蓋或離場後保護仍持續到本回合結束 |
@@ -38,7 +38,7 @@
 | Claude 第4節入口審查 | 10張審查已整合；source_covered五張及event_played兩張已開放；P03-039依結算當下Event區選費用（含剛打出且仍在場者，屬推論）；P03-047待上限模組 |
 | 失效角色手牌技能 | 不再提供發動選項，失效Event仍可打出；seed29卡死修正 |
 | 已支援觸發入口 | 8：event、active、passive:self_entry、permanent_entry_name、passive:character_entry、passive:source_covered、passive:event_played、passive:self_entry_cover |
-| 本組測卡／每卡局面／本次新開 | 281／3以上；shuffle四張，含22組正式桌面、20完整Undo邊界、3局新核心與亂數／牌序驗證／4 |
+| 本組測卡／每卡局面／本次新開 | 284／3以上；翻牌三張，含18組正式桌面、28完整Undo邊界、3局新核心與逐步公開／回底驗證／3 |
 | 累計路徑前7節點：節點齊備／入口與資料許可 | 31／27（測試前預估） |
 | 累計路徑前10節點：節點齊備／入口與資料許可 | 96／88（測試前預估） |
 | 累計路徑前13節點：節點齊備／入口與資料許可 | 133／122（測試前預估） |
@@ -54,6 +54,7 @@
 | external_action | 動作確認：沿用ack，合法回答true；拒絕在前一層發動選項，本機Undo重演 |
 | external_result | 擲幣結果確認：沿用ack，合法回答true；結果由共用RNG產生且不可指定，Undo與預覽不重抽 |
 | shuffle 形態／依賴卡／新增開放 | 2／4／4（自己／對手、實體牌Fisher-Yates、先回牌再洗再抽、可選／所屬條件、共用亂數與Undo；0或1張不消耗亂數） |
-| 累計路徑下一步預估 | shuffle已開放281；move_result＋reveal_top合組預估281→284（+3），兩節點齊備才開放 |
+| reveal_top／move_result 形態／依賴卡／新增開放 | 1＋1／3／3（先按翻牌、公開實際卡、結果確認、同目標加值／選參數、條件與回底提示、空牌庫／失效／期限；全程不耗亂數） |
+| 累計路徑下一步預估 | 翻牌雙節點已開放284；simultaneous_entry_group預估284→286（+2），待節點與逐卡驗證 |
 | 路徑計數起點（不計入前7／10／13／20） | sequence＋deck_selection |
 | 新UI選擇形態／逐卡SHA核准／新證據檔／計時紀錄 | 0／0／0／0（沿用既有單選／數量選擇，不新增UI形態） |

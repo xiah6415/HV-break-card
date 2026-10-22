@@ -7,7 +7,7 @@ const COURT = ['serve','block','receive','toss','attack','side:0','side:1'];
 const PARAMS = ['serve','block','receive','toss','attack'];
 const KINDS = new Set(['sequence','conditional','numeric','draw','draw_to_hand_size','move','move_self',
   'pay_guts','payment_branch','formal_declaration_cost','retrieve','enter','enter_self','watch','ban_action','invalidate_skill',
-  'rename_before_entry','protect_numeric_decrease','phase_jump','shuffle','external_action','optional','choose_modes','mill','keyword','deck_selection','exchange','each_player_optional_draw']);
+  'rename_before_entry','protect_numeric_decrease','phase_jump','reveal_top','move_result','shuffle','external_action','optional','choose_modes','mill','keyword','deck_selection','exchange','each_player_optional_draw']);
 const EXTERNAL_ACTIONS={tilt_card:'將此卡傾斜',coin:'投擲 1 次硬幣',say_巣立てヒナガラス:'說出「巣立て ヒナガラス」',raise_both_hands_and_say_ただーし:'雙手舉起此牌並喊「ただーし！」',say_ジャンバル最高_and_peace_sign:'說出「ジャンバル最高!!」並比出勝利手勢'};
 const FILTERS = new Set(['names','exclude_names','tags','tags_any','positions','positions_any','years','years_any',
   'role','role_any','type','skillless','play_icons_any','play_icons_exact','entry_origins','phase',
@@ -591,6 +591,8 @@ class Kernel {
       if(n.kind==='formal_declaration_cost')need(n.must_be_complete===true&&n.performed_for_this_skill_only===true&&Array.isArray(n.steps)&&n.steps.length>0,'Unsupported declaration cost parameters');
       if(n.kind==='exchange')need(Array.isArray(n.sides)&&n.sides.length===2&&n.sides.every(x=>x&&x.kind==='selector')&&n.count_each===1&&n.count_mode==='upto'&&n.requires_both===true&&n.atomic_movement===true,'Unsupported exchange parameters');
       if(n.kind==='each_player_optional_draw')need(Number.isInteger(n.count)&&n.count>0&&n.count_mode==='exact_or_zero'&&n.chooser==='each_affected_player','Unsupported optional draw parameters');
+      if(n.kind==='reveal_top')need(n.actor==='self'&&n.count===1&&n.count_mode==='exact'&&n.bind==='revealed','Unsupported reveal top parameters');
+      if(n.kind==='move_result')need(n.result==='revealed'&&n.destination==='owner.deck_bottom'&&n.order==='chooser','Unsupported move result parameters');
       if(n.kind==='shuffle')need(['self','opponent'].includes(n.actor),'Unsupported shuffle parameters');
       if(n.kind==='external_action')need(['tilt_card','coin','say_巣立てヒナガラス','raise_both_hands_and_say_ただーし','say_ジャンバル最高_and_peace_sign'].includes(n.action)&&n.bind===(n.action==='coin'?'random':'external')&&(n.action!=='coin'||n.alternative_requires_both_consent===true),'Unsupported external action parameters');
       if(n.kind==='enter_self')need(['receive','attack','block'].includes(n.destination)&&n.as_side_blocker===(n.destination==='block')&&n.bind==='entered','Unsupported self entry parameters');
@@ -616,7 +618,7 @@ class Kernel {
   _run(node,ctx) {
     switch (node.kind) {
       case 'sequence': { let yes=false;for (const step of node.steps) yes=this._run(step,ctx)||yes;return yes; }
-      case 'conditional': return this._predicate(node.condition,ctx) ? this._run(node.then,ctx):false;
+      case 'conditional': { const matched=this._predicate(node.condition,ctx);let revealCondition=false;walk(node.condition,n=>{if(n.kind==='all_result_cards_match'&&n.result==='revealed'||n.kind==='compare'&&n.field?.startsWith('revealed.'))revealCondition=true;});if(revealCondition)this.state.publicLog.push({type:'reveal_condition',player:ctx.controller,available:!!ctx.bind.revealed?.length,matched});return matched?this._run(node.then,ctx):false; }
       case 'deck_selection': return this._deckSelection(node,ctx);
       case 'numeric': return this._numeric(node,ctx);
       case 'draw': { const player=this.owner(node.actor,ctx);let n=node.count;
@@ -704,6 +706,22 @@ class Kernel {
       case 'protect_numeric_decrease': {
         if(node.target_scope.membership==='continuous_matching'){this.effect('protect',{targets:[],ballOwner:null,parameter:node.parameter,selector:node.target},ctx,node.duration);return true;}
         const targets=this._targets(node,ctx);if(!targets.length)return false;const ball=typeof targets[0]==='string';this.effect('protect',{targets:ball?[]:targets,ballOwner:ball?(targets[0]==='self_ball'?ctx.controller:1-ctx.controller):null,parameter:node.parameter},ctx,node.duration);return true;
+      }
+      case 'reveal_top': {
+        const player=this.owner(node.actor,ctx),shown=this.zone(player,'deck').slice(-node.count).reverse();ctx.bind[node.bind]=shown;
+        if(!shown.length)return false;
+        legal(this._decide('reveal',ctx,[true],{player,visibility:'reveal',top_count:shown.length,purpose:'effect'})===true,'Confirm deck view');
+        const viewed=this._decide('revealResult',ctx,shown,{player,count:0,visibility:'reveal',purpose:'effect'});legal(Array.isArray(viewed)&&viewed.length===0,'Confirm revealed cards');
+        this.state.publicLog.push({type:'deck_view',player,count:shown.length,visibility:'reveal',cards:shown.map(id=>({id,cardNo:this.card(id).cardNo}))});return true;
+      }
+      case 'move_result': {
+        const ids=[...new Set(ctx.bind[node.result]||[])].filter(id=>this.state.cards[id]&&this.card(id).zone===this.card(id).owner+'.deck'),ordered=[];
+        while(ordered.length<ids.length){const remaining=ids.filter(id=>!ordered.includes(id));ordered.push(remaining.length===1?remaining[0]:this._selection(remaining,1,ctx,'move_cards',ctx.controller,{destination:node.destination,ordering:true})[0]);}
+        for(const id of ids){const deck=this.zone(this.card(id).owner,'deck');deck.splice(deck.indexOf(id),1);}
+        for(const id of ordered){const c=this.card(id);this.zone(c.owner,'deck').unshift(id);}
+        ctx.bind.moved=ordered;
+        for(const player of [...new Set(ordered.map(id=>this.card(id).owner))])this.state.publicLog.push({type:'revealed_returned',player,count:ordered.filter(id=>this.card(id).owner===player).length,destination:'deck_bottom'});
+        return ordered.length>0;
       }
       case 'shuffle': {
         const player=this.owner(node.actor,ctx),ids=this.zone(player,'deck');if(ids.length<2)return false;
