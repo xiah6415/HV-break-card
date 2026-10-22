@@ -15,7 +15,7 @@ function expandFixture(k,{catalog,profile,source,player,phase,focus}){
  const role=f=>f.role==='side_blocker'?'side':f.role==='center_blocker'||f.role==='block'?'block':['serve','receive','toss','attack'].includes(f.role)?f.role:'attack';
  // Cards are reserved at deck bottom before the measured checkpoint. Later
  // moves/hand notifications and entries use actual public sandbox operations.
- const followups=[];
+ const followups=[];let entryReason;
  for(const w of nodes.filter(n=>n.kind==='watch')){
   if(!['character_entry','hand_added'].includes(w.event))continue;
   const who=owner(w.actor),area=role(w.filters||{}),filters=Object.fromEntries(Object.entries(w.filters||{}).filter(([key])=>!['role','entry_origins','exclude_operations'].includes(key)));
@@ -65,6 +65,9 @@ function expandFixture(k,{catalog,profile,source,player,phase,focus}){
   if(n.field.startsWith('source.covered_character.')){const field=n.field.split('.').at(-1);replaceTop(player,phase,pick({type:'character'},phase,d=>field==='effective_name'?printed(d).name!==n.value:!(printed(d)[field==='tags'?'affiliation_tags':'position_tags']||[]).includes(n.value)));return;}
   if(n.field==='both.set.count_sum'){while(k.zone(0,'sets').length+k.zone(1,'sets').length<=n.value)add(base,player,'sets');return;}
   if(n.field==='opponent.attack.printed_attack'){replaceTop(1-player,'attack',pick({type:'character'},'attack',d=>printed(d).parameters.attack>n.value));return;}
+  if(n.field==='source.entry_origin'){moveToDeck(source);k.resolveProgram({kind:'move_self',destination:'owner.drop'},player,source);entryReason='skill';return;}
+  if(n.field==='phase'){const other=profile.activation.activation_phases.find(p=>p!==n.value);if(!other)gap('No alternate activation phase');k.advancePhase(other);return;}
+  if(n.field==='self.attack.guts.count'){add(base,player,'attack',true);return;}
   if(n.field==='opponent_ball.kind'){k.state.ball.kind=n.value==='serve'?'attack':'serve';return;}
   if(n.field==='opponent_ball.offense'){k.state.ball.offense=n.op==='lte'?n.value+1:n.value-1;return;}
   if(n.field==='retrieved.count'){const choose=k.choose;k.choose=req=>req.kind==='move_count'?0:choose(req);return;}
@@ -78,7 +81,7 @@ function expandFixture(k,{catalog,profile,source,player,phase,focus}){
   gap('Unimplemented branch fact '+n.field);
  }
  if(focus&&focus.value===false){const n=nodes.find(n=>n.node_id===focus.node_id);if(!n)gap('Unknown focus predicate');negate(n);}
- k.assertState();return {followups,branch_focus:focus||null};
+ k.assertState();return {followups,branch_focus:focus||null,...(entryReason?{entryReason}:{})};
 }
 function driveFollowups(k,plans){
  const receipts=[];

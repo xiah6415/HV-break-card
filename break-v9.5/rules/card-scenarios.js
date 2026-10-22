@@ -1,8 +1,8 @@
 /* Lightweight per-card composition checks on the persistent kernel, three cases. */
 'use strict';
 const assert=require('node:assert/strict'),{fixture}=require('./batch-smoke'),I=require('./node-inventory');
-function testCard(catalog,card){
- const p=card.profiles[0],all=I.nodes(p),condition=all.find(n=>n.kind==='conditional')?.condition,cost=all.some(n=>n.kind==='pay_guts'||n.kind==='move'&&n.classification_role==='payment');
+function testCard(catalog,card,{condition:override}={}){
+ const p=card.profiles[0],all=I.nodes(p),condition=override||all.find(n=>n.kind==='conditional')?.condition,cost=all.some(n=>n.kind==='pay_guts'||n.kind==='move'&&n.classification_role==='payment');
  const phase=p.activation.skill_type==='passive'?p.activation.trigger.destination_any[0]:p.activation.activation_phases[0];
  const variants=[{key:'positive',max:true},{key:condition?'condition_false':'decline',max:!!condition,...(condition?{focus:{node_id:condition.node_id,value:false}}:{})},{key:cost?'cost_short':'no_add',max:true}];
  for(const s of variants){

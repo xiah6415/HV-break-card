@@ -9,7 +9,7 @@ function testWatchCard(catalog,card){
   if(p.activation.skill_type==='event')k.playEvent(id);else if(p.activation.skill_type==='active')k.useSkill(id);else if(entryName){const event=k.addCard(catalog.cards.find(c=>c.profiles[0].variants[0].printed.name===entryName.value).card_no,0,'event');k._atomic(()=>{k._enter(id,0,phase,k._context(event,0),'skill');k._drain();});}else k.enter(id,phase,{reason:entryReason});
   const effect=k.state.effects.find(e=>e.kind==='watch'&&e.then.node_id===w.then.node_id);assert(effect,'Positive card must register watch '+card.card_no);
   // Generated effects remain valid after the declaring card has left play.
-  k._atomic(()=>k._move(id,0,'drop',k._context(id,0)));
+  if(w.event!=='source_moved')k._atomic(()=>k._move(id,0,'drop',k._context(id,0)));
   if(w.duration==='next_opponent_turn'){k.endTurn();k.beginTurn(1);}
   if(expired){k.endTurn();k.beginTurn(1-k.state.turn.player);}
   const player=expired?k.state.turn.player:effect.actor;
@@ -25,8 +25,9 @@ function testWatchCard(catalog,card){
   }else if(w.event==='hand_added'){
    target=k.addCard('HV-D01-009',player,'drop');invoke=()=>k.resolveProgram({kind:'move_self',destination:'owner.hand'},player,target);
   }else if(w.event==='loss'){
-   const move=I.nodes({program:w.then}).find(n=>n.kind==='move'),def=catalog.cards.find(c=>matchesPrinted(c.profiles[0],move.pool.filters));target=k.addCard(def.card_no,0,'hand');invoke=()=>k.loss(player);
-  }else assert.fail('Missing released-card follow-up '+w.event);
+   for(const move of I.nodes({program:w.then}).filter(n=>['move','retrieve'].includes(n.kind))){const def=catalog.cards.find(c=>matchesPrinted(c.profiles[0],move.pool.filters));target=k.addCard(def.card_no,0,move.pool.zone);}invoke=()=>k.loss(player);
+  }else if(w.event==='source_moved'){target=id;invoke=()=>k.resolveProgram({kind:'move_self',destination:'owner.drop'},0,id);}
+  else assert.fail('Missing released-card follow-up '+w.event);
   const before=k.snapshot();invoke();const after=k.snapshot(),fired=after.events.slice(before.events.length).filter(e=>e.type==='resolve_trigger'&&e.generated);
   assert.equal(fired.length,expired?0:1,card.card_no+' '+w.event+' expiry='+expired);
   if(!expired){
@@ -35,7 +36,8 @@ function testWatchCard(catalog,card){
    for(const n of nums){const param=n.parameter==='chosen'?after.effects.findLast(e=>e.kind==='numeric'&&e.target.id===target).parameter:n.parameter;expected.set(param,n.operation==='set'?n.value:(expected.get(param)??k.card(target).printed.parameters[param])+n.value);}
    for(const [param,value]of expected)assert.equal(k.parameter(target,param),value,card.card_no+' exact generated numeric');
    if(w.event==='hand_added')assert.equal(k.zone(0,'hand').length,before.zones['0.hand'].length+1);
-   if(w.event==='loss')assert.equal(k.zone(0,'hand').length,before.zones['0.hand'].length-1);
+   if(w.event==='source_moved')assert.equal(k.zone(0,'hand').length,before.zones['0.hand'].length+I.nodes({program:w.then}).filter(n=>n.kind==='draw').reduce((sum,n)=>sum+n.count,0));
+   if(w.event==='loss'){const delta=I.nodes({program:w.then}).filter(n=>['move','retrieve'].includes(n.kind)).reduce((sum,n)=>sum+(n.destination.endsWith('.hand')?n.count:n.pool.zone==='hand'?-n.count:0),0);assert.equal(k.zone(0,'hand').length,before.zones['0.hand'].length+delta);}
    if(w.remaining_uses===1)assert.equal(k.state.effects.find(e=>e.id===effect.id).remaining,0);
   }
   k.assertState();k.restore(before);invoke();assert.deepEqual(k.snapshot(),after,'Generated card effect Undo/replay '+card.card_no);

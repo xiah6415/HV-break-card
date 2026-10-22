@@ -114,7 +114,7 @@ function seedConditions(k,{catalog,profile,source,player,phase,expanded=false}){
   }
  }
  if(expanded&&targetName)for(const n of nodes.filter(n=>n.kind==='numeric'&&n.target?.kind==='selector'))ensure({...n.target,filters:{...n.target.filters,names:[targetName]}},1);
- if(expanded){const covered=nodes.find(n=>n.kind==='compare'&&n.field.startsWith('source.covered_character.'));if(covered){const key=covered.field.split('.').at(-1),filters={effective_name:'names',tags:'tags',positions:'positions'};add(pick({[filters[key]]:[covered.value]},{parameter:phase}),player,phase);}}
+ if(expanded){const covered=nodes.filter(n=>n.kind==='compare'&&n.field.startsWith('source.covered_character.'));if(covered.length){const keys={effective_name:'names',tags:'tags',positions:'positions'},filters={};for(const n of covered){const key=keys[n.field.split('.').at(-1)];(filters[key]??=[]).push(n.value);}add(pick(filters,{parameter:phase}),player,phase);}}
  if(ownUniform&&!k.court(player).length)add(pick({type:'character'},{parameter:'attack',tag}),player,'attack');
  // Keep source and required cost cards; adjust hand counts at the declaration checkpoint.
  for(const who of [0,1])for(const zone of ['hand','deck']){

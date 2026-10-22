@@ -5,7 +5,7 @@ let cases=0;
 (async()=>{
  for(const code of codes){
   const card=catalog.cards.find(c=>I.short(c.card_no)===code),p=card.profiles[0],watches=I.nodes(p).filter(n=>n.kind==='watch');
-  for(const w of watches)for(const expired of [false,true]){
+  for(const w of watches)for(const expired of [false,true])for(const historical of w.event==='source_moved'?[false,true]:[false]){
    const phase=p.activation.skill_type==='passive'?p.activation.trigger.destination_any[0]:p.activation.activation_phases[0],{k,id,entryReason='rule'}=fixture(card,p,phase,{rich:true,conditioned:true,expanded:true,max:true,key:'positive'},0,catalog);
    const player=w.actor==='opponent'?1:0;let area,def,target,second;
    if(w.event==='character_entry'){
@@ -14,7 +14,8 @@ let cases=0;
     def=catalog.cards.find(c=>{const pr=c.profiles[0],printed=pr.variants[0].printed;return !pr.program&&matchesPrinted(pr,{type:'character',...Object.fromEntries(Object.entries(f).filter(([key])=>!['role','entry_origins'].includes(key)))})&&printed.parameters[area.startsWith('side')?'block':area]!=='dash'&&(!other||k.effectiveName(other)!==printed.name)&&!blockers.some(x=>k.effectiveName(x)===printed.name)&&(!area.startsWith('side')||k.top(player,'block')||c.card_no!=='HV-D01-009');});
     assert(def,code);target=k.addCard(def.card_no,player,'hand');if(w.remaining_uses===1)second=k.addCard(def.card_no,player,'hand');if(area.startsWith('side')&&!k.top(player,'block'))k.addCard('HV-D01-009',player,'block');
    }else if(w.event==='hand_added'){def=catalog.cards.find(c=>c.card_no==='HV-D01-009');target=k.addCard(def.card_no,player,'drop');}
-   else {assert.equal(w.event,'loss');const move=I.nodes({program:w.then}).find(n=>n.kind==='move');def=catalog.cards.find(c=>!c.profiles[0].program&&matchesPrinted(c.profiles[0],move.pool.filters));target=k.addCard(def.card_no,0,'hand');}
+   else if(w.event==='source_moved'){def=card;target=id;}
+   else {assert.equal(w.event,'loss');for(const move of I.nodes({program:w.then}).filter(n=>['move','retrieve'].includes(n.kind))){def=catalog.cards.find(c=>!c.profiles[0].program&&matchesPrinted(c.profiles[0],move.pool.filters));target=k.addCard(def.card_no,0,move.pool.zone);}}
    const before=k.snapshot(),agent={wantsAck:true,async choose(g,p,r){if(r.kind==='skill')return true;if(r.kind==='guts'||r.kind==='gutsCourt')return r.options.slice(0,r.need).map(o=>o.value);return r.options.find(o=>o.label?.includes('其餘放到牌庫底'))?.value??r.options[0].value;}};
    const g=new E.Game({mode:'strict',seed:7,decks:['k1014','seijoh'],agents:[agent,agent]});
    for(const q of g.players){for(const [host,z]of Object.entries({hand:'hand',deck:'deck',drop:'drop',ev:'event',sets:'sets'}))q[host]=before.zones[q.idx+'.'+z].map(id=>I.short(before.cards[id].cardNo));for(const z of roles)q.area[z]=before.zones[q.idx+'.'+z].map(id=>I.short(before.cards[id].cardNo));}
@@ -25,7 +26,7 @@ let cases=0;
     else{k.enter(id,phase,{reason:entryReason});await g.enterCharacter(g.players[0],phase,code);}
    }
    else{p.activation.skill_type==='event'?k.playEvent(id):k.useSkill(id);await g.resolve(g.players[0],code,g.rulePhase);}
-   k._atomic(()=>k._move(id,0,'drop',k._context(id,0)));const owner=g.players[0];g.moveCode(p.activation.skill_type==='event'?owner.ev:owner.area[phase],owner.drop,code);
+   const owner=g.players[0];if(w.event!=='source_moved'){k._atomic(()=>k._move(id,0,'drop',k._context(id,0)));g.moveCode(p.activation.skill_type==='event'?owner.ev:owner.area[phase],owner.drop,code);}
    if(w.duration==='next_opponent_turn'){k.endTurn();k.beginTurn(1);g.finishTurn(owner);g.beginTurn(g.players[1]);}
    if(expired)for(let i=0;i<2;i++){const old=g.turnP;k.endTurn();k.beginTurn(1-k.state.turn.player);g.finishTurn(old);g.beginTurn(g.players[k.state.turn.player]);}
    const q=g.players[player],followCode=I.short(def.card_no);
@@ -35,6 +36,7 @@ let cases=0;
     if(area.startsWith('side')){g.moveCode(q.hand,q.ts.sides ||= [],followCode);await B.charactersEntered(g,q,[{key:'side:0',origin:'hand',reason:'rule'}]);}else await g.enterCharacter(q,area,followCode);
    if(second&&!expired){k.enter(second,'block',{side:true});g.moveCode(q.hand,q.ts.sides,followCode);await B.charactersEntered(g,q,[{key:'side:0',origin:'hand',reason:'rule'}]);assert.equal(q.ts.sides.length,1,'One-use watch must keep the second side blocker');}
    }else if(w.event==='hand_added'){k.resolveProgram({kind:'move_self',destination:'owner.hand'},player,target);await g.sadd(q,followCode,q.drop);}
+   else if(w.event==='source_moved'){const steps=[{kind:'move_self',destination:'owner.drop'},...(historical?[{kind:'move_self',destination:'owner.hand'}]:[])];k.resolveProgram({kind:'sequence',steps},0,id);await B.legacyEffect(g,async()=>{g.moveCode(owner.ev,owner.drop,code);if(historical)g.moveCode(owner.drop,owner.hand,code);});}
    else{k.loss(player);await B.judgment(g,q,'loss');}
    for(const q of g.players){
     for(const [host,z]of Object.entries({hand:'hand',deck:'deck',drop:'drop',ev:'event',sets:'sets'}))assert.deepEqual(q[host],k.zone(q.idx,z).map(id=>I.short(k.card(id).cardNo)),code+' '+w.event+' expiry='+expired+' '+host);
@@ -44,7 +46,7 @@ let cases=0;
    g.sharedRulesState=JSON.parse(JSON.stringify(g.sharedRulesState));B.assertReady(g);cases++;
   }
  }
- assert.equal(cases,36);
+ assert.equal(cases,48);
  const g=new E.Game({seed:7,decks:['k1014','seijoh'],agents:[E.AI,E.AI]}),p=g.players[0];g.beginTurn(p);
  const state=g.cardSnapshot(),id=state.zones['0.deck'].at(-1);g.moveCard(p.deck,p.ev,p.deck.length-1);
  const base={kind:'watch',actor:0,source:{id,incarnation:0},duration:{kind:'this_turn',turn:g.turnNo}};

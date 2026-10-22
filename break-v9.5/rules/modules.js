@@ -8,6 +8,7 @@ completed.push({id:'count_compare',test:require('./count-node-tests').testCountC
 completed.push({id:'retrieve',test:require('./retrieve-node-tests').testRetrieve});
 completed.push({id:'watch',test:require('./watch-node-tests').testWatch});
 completed.push({id:'uniform_affiliation',test:require('./uniform-node-tests').testUniformAffiliation});
+completed.push({id:'all',test:require('./all-node-tests').testAll});
 function testCard(catalog,card){
  if(I.dependencies(card).some(k=>!['sequence','deck_selection'].includes(k)))return C.testCard(catalog,card);
  const p=card.profiles[0],deckNodes=I.nodes(p).filter(n=>n.kind==='deck_selection');
@@ -44,6 +45,7 @@ function testModules(catalog){
  for(const card of I.scope(catalog)){
   if(!eligible(card))continue;
   testCard(catalog,card);
+  if(I.dependencies(card).includes('all'))require('./all-node-tests').testAllCard(catalog,card);
   if(I.dependencies(card).includes('watch'))require('./watch-card-tests').testWatchCard(catalog,card);
   cards[I.short(card.card_no)]={profileId:card.profiles[0].profile_id,modules:I.dependencies(card)};
  }
