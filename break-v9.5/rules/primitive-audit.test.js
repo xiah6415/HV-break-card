@@ -9,10 +9,10 @@ const before=hashes(),a=buildAudit(),nos=a.cards.map(c=>c.card_no),card=no=>a.ca
 // Independent scope by source authority, including the non-HV- spelling of BP.
 const short=no=>no.startsWith('HVBP-')?no.slice(2):no.startsWith('HV-')?no.slice(3):no;
 const expected=catalog.cards.filter(c=>authority.cards[short(c.card_no)].kind==='unapproved');
-assert.deepEqual(nos,expected.map(c=>c.card_no));assert.equal(a.totals.cards,6);assert.equal(a.totals.profiles,10);
-assert.equal(a.totals.scripted_cards,6);assert.equal(new Set(nos).size,6);
-assert.deepEqual([a.totals.batch_candidate,a.totals.host_gap,a.totals.core_gap,a.totals.review],[1,0,1,4]);
-assert.equal(a.totals.interpreter_action_kinds,35);assert.equal(a.totals.primitive_families,16);
+assert.deepEqual(nos,expected.map(c=>c.card_no));assert.equal(a.totals.cards,5);assert.equal(a.totals.profiles,9);
+assert.equal(a.totals.scripted_cards,5);assert.equal(new Set(nos).size,5);
+assert.deepEqual([a.totals.batch_candidate,a.totals.host_gap,a.totals.core_gap,a.totals.review],[1,0,0,4]);
+assert.equal(a.totals.interpreter_action_kinds,36);assert.equal(a.totals.primitive_families,16);
 assert.equal(authority.cards['BP-009'].kind,'shared');assert(!card('HV-PR-022'));assert(!card('HV-P01-006'));assert(!card('HV-P01-015'));
 const {profileHash}=require('./batch-index');
 for(const c of a.cards){const source=expected.find(s=>s.card_no===c.card_no);assert.equal(c.profiles.length,source.profiles.length);
@@ -46,4 +46,4 @@ assert.throws(()=>gapFor({layer:'core',key:'preflight:Unsupported mechanism futu
 assert.equal(a.policy.admissions_changed,0);assert.equal(a.policy.game_changed,false);
 assert(markdown(a).includes('1張沒有已知'));assert(!cardMarkdown(a).includes('P04-021'));
 assert.deepEqual(buildAudit(),a);assert.deepEqual(hashes(),before);
-console.log('primitive-audit: 6-card authority scope, 10 exact source scripts, 16 families, 35 interpreter actions, completed constraint regression, overlap/unlock counts, variants and non-mutation passed');
+console.log('primitive-audit: 5-card authority scope, 9 exact source scripts, 16 families, 36 interpreter actions, completed constraint regression, overlap/unlock counts, variants and non-mutation passed');

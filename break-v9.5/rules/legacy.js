@@ -263,7 +263,7 @@ function transaction(g,p,c,timing,notification=null) {
     }
     if(state.ball&&state.ball.offense!==ballOff){g.log(`來球進攻 ${state.ball.offense-ballOff<0?'−':'+'}${Math.abs(state.ball.offense-ballOff)} → ${state.ball.offense}`);ballOff=state.ball.offense;}
     for(const entry of state.publicLog.slice(publicLogCursor)){
-      if(entry.type==='reveal_condition')g.log(entry.available?entry.matched?'公開牌符合追加效果條件。':'公開牌未符合追加效果條件；仍會放回牌庫底。':'牌庫沒有可公開的牌，略過公開牌條件。');
+      if(entry.type==='reveal_condition')g.log(entry.declined?'本次選擇不翻牌，不追加抽牌。':entry.purpose==='retrieve'?(entry.available?entry.matched?'公開牌是Event，依效果再抽1張。':'公開牌不是Event，不追加抽牌。':'牌庫沒有可公開的牌，略過公開牌條件。'):entry.available?entry.matched?'公開牌符合追加效果條件。':'公開牌未符合追加效果條件；仍會放回牌庫底。':'牌庫沒有可公開的牌，略過公開牌條件。');
       if(entry.type==='revealed_returned')g.log(`公開的 ${entry.count} 張牌已放回${g.players[entry.player].name}的牌庫底。`);
       if(entry.type==='deck_shuffled')g.log(`${g.players[entry.player].name} 洗牌（${entry.count} 張）。`);
       if(entry.type==='coin_result')g.log(`${g.players[entry.player].name} 擲硬幣：${entry.result==='heads'?'正面':'反面'}`);
@@ -292,7 +292,7 @@ function transaction(g,p,c,timing,notification=null) {
     }
     if(req.kind==='reveal'||req.kind==='revealResult'){
       const options=req.kind==='reveal'?[{value:true,label:`查看牌庫頂 ${req.top_count} 張`}]:req.options.map(id=>({value:id,card:short[id],label:byShort[short[id]].display_name+' · 確認後繼續'}));
-      const prompt=req.kind==='reveal'?`請點擊${req.purpose==='effect'?'翻開':'查看'}牌庫頂 ${req.top_count} 張`:req.purpose==='effect'?'公開的卡片：確認後依卡片條件結算，再放回牌庫底（點卡片繼續）':`${req.visibility==='look'?'查看':'翻開'}的卡片${req.eligible_count?'：確認後選擇要加入手牌的牌':'：沒有符合條件的牌，確認後安排回牌庫'}（點任一卡片繼續）`;
+      const prompt=req.kind==='reveal'?`請點擊${req.purpose==='effect'?'翻開':'查看'}牌庫頂 ${req.top_count} 張`:req.purpose==='effect'?'公開的卡片：確認後依卡片條件結算，再放回牌庫底（點卡片繼續）':req.purpose==='retrieve'?'翻開的卡片：符合條件時加入手牌，未符合則直接放回牌庫底（點卡片確認）':`${req.visibility==='look'?'查看':'翻開'}的卡片${req.eligible_count?'：確認後選擇要加入手牌的牌':'：沒有符合條件的牌，確認後安排回牌庫'}（點任一卡片繼續）`;
       for(;;){const answer=await g.ask(owner,{kind:'rulesChoice',prompt,timing,options});if(options.some(o=>o.value===answer))return req.kind==='reveal'?true:[];}
     }
     if(req.kind==='guts') {

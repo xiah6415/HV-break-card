@@ -3,7 +3,7 @@ const assert=require('node:assert/strict'),E=require('./engine'),D=require('./de
 const locked=L.search('','locked'),chars=locked.filter(c=>c.kind==='C'&&c.stats.some(n=>n!==null));
 function setup(mode='numeric',choose=async(g,p,r)=>r.kind==='event'?null:r.options[0].value){const g=new E.Game({mode,seed:7,decks:['k1014','seijoh'],agents:[{choose,wantsAck:true},E.AI]});for(const p of g.players){for(const z of ['hand','deck','drop','sets','ev'])p[z]=[];for(const a in p.area)p.area[a]=[];}g.beginTurn(g.players[0]);return [g,g.players[0]];}
 (async()=>{
- assert.equal(Object.keys(E.DEF).length,541);assert.equal(R.catalog.cards.length,541);assert.equal(R.approved.length,345);assert.equal(R.catalog.cards.flatMap(c=>c.profiles).filter(p=>p.program).length,345);
+ assert.equal(Object.keys(E.DEF).length,541);assert.equal(R.catalog.cards.length,541);assert.equal(R.approved.length,346);assert.equal(R.catalog.cards.flatMap(c=>c.profiles).filter(p=>p.program).length,346);
  for(const c of locked){const cards=c.kind==='C'?{[c.code]:40}:{[c.code]:8,'P01-004':32};const payload={cards};assert.throws(()=>D.parseDeck(payload,E.DEF),/尚未開放/);assert(D.inspectDeck(payload,E.DEF,{mode:'numeric'}).ok);assert(D.parseDeck(payload,E.DEF,{mode:'numeric'}));assert.equal(R.catalog.cards.find(x=>x.card_no===c.number).profiles[0].program,null);}
  const pool=[...new Set([...chars.map(c=>c.code),...L.search('','playable').filter(c=>c.kind==='C').map(c=>c.code)])].slice(0,Math.max(10,chars.length));
  const sample={name:'數值模式新卡',cards:Object.fromEntries(pool.slice(0,10).map(code=>[code,4]))};E.DECKS.numeric=sample;assert.throws(()=>new E.Game({decks:['numeric','seijoh'],agents:[E.AI,E.AI]}),/尚未開放/);
@@ -19,7 +19,7 @@ function setup(mode='numeric',choose=async(g,p,r)=>r.kind==='event'?null:r.optio
  const [g,p]=setup('strict');await assert.rejects(g.manualAction(p,{kind:'draw'}),/不能/);
  }
  {
- const c=locked.find(c=>c.kind==='E'),phase={serve:'srv',draw:'drw',receive:'rcv',block:'blk',toss:'tos',attack:'atk'}[c.activationPhases[0]];const [g,p]=setup();p.hand=[c.code];assert(g.playable(p,phase).some(o=>o.card===c.code));assert(!g.playable(p,'srv').some(o=>o.card===c.code)||c.activationPhases.includes('serve'));await g.resolve(p,c.code,phase);assert.deepEqual(p.ev,[c.code]);assert.deepEqual(p.effects,{});assert.equal(p.hand.length,0);
+ const c=locked.find(c=>c.kind==='E');if(c){const phase={serve:'srv',draw:'drw',receive:'rcv',block:'blk',toss:'tos',attack:'atk'}[c.activationPhases[0]];const [g,p]=setup();p.hand=[c.code];assert(g.playable(p,phase).some(o=>o.card===c.code));assert(!g.playable(p,'srv').some(o=>o.card===c.code)||c.activationPhases.includes('serve'));await g.resolve(p,c.code,phase);assert.deepEqual(p.ev,[c.code]);assert.deepEqual(p.effects,{});assert.equal(p.hand.length,0);}else assert(locked.every(c=>c.kind==='C'),'No numeric-only Event remains after reveal retrieval is released');
  }
  {
  let n=0;const [g,p]=setup('numeric',async(g,p,r)=>n++===0?{__manual:{kind:'adjust',key:'serve',param:'srv',ref:g.roleReference(p,'serve'),delta:1}}:true);p.area.serve=['P03-004'];const out=await g.confirmTurnEnd(p,{type:'serve',off:2});assert.equal(out.off,3);
@@ -33,5 +33,5 @@ function setup(mode='numeric',choose=async(g,p,r)=>r.kind==='event'?null:r.optio
  {
  const [g,p]=setup();p.area.receive=['PR-057'];const ref=g.roleReference(p,'receive');await assert.rejects(g.manualAction(p,{kind:'adjust',key:'receive',param:'srv',ref,delta:1}),/不能調整/);g.sharedRulesPending={};await assert.rejects(g.manualAction(p,{kind:'draw'}),/不能/);
  }
- delete E.DECKS.numeric;console.log(JSON.stringify({passed:true,strict:535,numeric:541,skillApprovals:345,lockedChecked:locked.length,realGames:games,lockedCharactersUsed:chars.length,manualFiveParameters:true,manualResourcesAndBall:true}));
+ delete E.DECKS.numeric;console.log(JSON.stringify({passed:true,strict:536,numeric:541,skillApprovals:346,lockedChecked:locked.length,realGames:games,lockedCharactersUsed:chars.length,manualFiveParameters:true,manualResourcesAndBall:true}));
 })().catch(e=>{console.error(e);process.exitCode=1;});

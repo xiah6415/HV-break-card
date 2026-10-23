@@ -7,7 +7,7 @@ const COURT = ['serve','block','receive','toss','attack','side:0','side:1'];
 const PARAMS = ['serve','block','receive','toss','attack'];
 const KINDS = new Set(['sequence','conditional','numeric','draw','draw_to_hand_size','move','move_self',
   'pay_guts','payment_branch','formal_declaration_cost','retrieve','retrieve_slots','enter','enter_self','simultaneous_entry_group','cover_source_with_guts','force_judgment_failure','parameter_absent','watch','ban_action','invalidate_skill',
-  'rename_before_entry','protect_numeric_decrease','phase_jump','reveal_top','move_result','shuffle','external_action','optional','choose_modes','mill','keyword','deck_selection','exchange','each_player_optional_draw']);
+  'rename_before_entry','protect_numeric_decrease','phase_jump','reveal_top','move_result','shuffle','external_action','optional','choose_modes','mill','keyword','deck_selection','reveal_and_retrieve','exchange','each_player_optional_draw']);
 const EXTERNAL_ACTIONS={tilt_card:'將此卡傾斜',coin:'投擲 1 次硬幣',say_巣立てヒナガラス:'說出「巣立て ヒナガラス」',raise_both_hands_and_say_ただーし:'雙手舉起此牌並喊「ただーし！」',say_ジャンバル最高_and_peace_sign:'說出「ジャンバル最高!!」並比出勝利手勢'};
 const FILTERS = new Set(['names','exclude_names','tags','tags_any','positions','positions_any','years','years_any',
   'role','role_any','type','skillless','play_icons_any','play_icons_exact','entry_origins','phase',
@@ -412,15 +412,15 @@ class Kernel {
     if (ids.length) this.state.publicLog.push({type:'draw',player,count:ids.length});
     return ids;
   }
-  _deckSelection(node,ctx) {
+  _deckSelection(node,ctx,{initiated=false,automaticSingle=false}={}) {
     const player=this.owner(node.actor,ctx),deck=this.zone(player,'deck');
     need(['look','reveal'].includes(node.visibility)&&Number.isInteger(node.top_count),'Unsupported deck view');
     const shown=deck.slice(-node.top_count).reverse();
     ctx.bind[node.bind]=[...shown];ctx.bind[node.selection.bind]=[];
     if(!shown.length)return false;
     // The first request contains no hidden cards: the player initiates the flip.
-    legal(this._decide('reveal',ctx,[true],{player,visibility:node.visibility,top_count:shown.length})===true,'Confirm deck view');
-    const viewed=this._decide('revealResult',ctx,shown,{player,count:0,visibility:node.visibility,eligible_count:shown.filter(id=>this.matches(id,node.selection.filters,ctx)).length});
+    if(!initiated)legal(this._decide('reveal',ctx,[true],{player,visibility:node.visibility,top_count:shown.length})===true,'Confirm deck view');
+    const viewed=this._decide('revealResult',ctx,shown,{player,count:0,visibility:node.visibility,eligible_count:shown.filter(id=>this.matches(id,node.selection.filters,ctx)).length,...(ctx.bind.revealPurpose?{purpose:ctx.bind.revealPurpose}:{})});
     legal(Array.isArray(viewed)&&viewed.length===0,'Confirm revealed cards');
     const log={type:'deck_view',player,count:shown.length,visibility:node.visibility};
     if(node.visibility==='reveal')log.cards=shown.map(id=>({id,cardNo:this.card(id).cardNo}));
@@ -437,7 +437,7 @@ class Kernel {
       }
       const chosen=[];
       for(let i=0;i<n;i++){
-        const id=this._selection(options.filter(id=>!chosen.includes(id)),1,ctx,'move_cards',player,{destination:node.actor+'.hand'})[0];
+        const id=automaticSingle&&options.length===1?options[0]:this._selection(options.filter(id=>!chosen.includes(id)),1,ctx,'move_cards',player,{destination:node.actor+'.hand'})[0];
         chosen.push(id);
       }
       for(const id of chosen){
@@ -456,7 +456,7 @@ class Kernel {
       legal(['deck_top','deck_bottom'].includes(destination),'Invalid remainder destination');
     }
     need(['deck_top','deck_bottom','choose_deck_top_or_bottom'].includes(destination)&&node.remainder.order==='chooser','Unsupported remainder placement');
-    const ordered=[];
+    const ordered=automaticSingle&&remaining.length===1?[...remaining]:[];
     while(ordered.length<remaining.length){
       const options=remaining.filter(id=>!ordered.includes(id));
       ordered.push(this._selection(options,1,ctx,'move_cards',player,{destination:node.actor+'.'+destination,ordering:true})[0]);
@@ -602,6 +602,7 @@ class Kernel {
       if(n.kind==='each_player_optional_draw')need(Number.isInteger(n.count)&&n.count>0&&n.count_mode==='exact_or_zero'&&n.chooser==='each_affected_player','Unsupported optional draw parameters');
       if(n.kind==='reveal_top')need(n.actor==='self'&&n.count===1&&n.count_mode==='exact'&&n.bind==='revealed','Unsupported reveal top parameters');
       if(n.kind==='move_result')need(n.result==='revealed'&&n.destination==='owner.deck_bottom'&&n.order==='chooser','Unsupported move result parameters');
+      if(n.kind==='reveal_and_retrieve')need(n.top_count===1&&n.count_mode==='upto'&&n.bind==='revealed'&&n.retrieved_bind==='retrieved'&&n.remainder==='deck_bottom'&&n.filters&&typeof n.filters==='object','Unsupported reveal retrieval parameters');
       if(n.kind==='retrieve_slots')need(n.destination==='self.hand'&&n.distinct_instances===true&&n.bind==='retrieved'&&Array.isArray(n.slots)&&n.slots.length>0&&n.slots.every(s=>s.kind==='retrieve'&&s.destination===n.destination),'Unsupported retrieve slots parameters');
       if(n.kind==='printed_parameter')need(n.of==='$target'&&PARAMS.includes(n.parameter),'Unsupported printed parameter expression');
       if(n.kind==='parameter_absent')validateAbsent(n);
@@ -633,8 +634,15 @@ class Kernel {
   _run(node,ctx) {
     switch (node.kind) {
       case 'sequence': { let yes=false;for (const step of node.steps) yes=this._run(step,ctx)||yes;return yes; }
-      case 'conditional': { const matched=this._predicate(node.condition,ctx);let revealCondition=false;walk(node.condition,n=>{if(n.kind==='all_result_cards_match'&&n.result==='revealed'||n.kind==='compare'&&n.field?.startsWith('revealed.'))revealCondition=true;});if(revealCondition)this.state.publicLog.push({type:'reveal_condition',player:ctx.controller,available:!!ctx.bind.revealed?.length,matched});return matched?this._run(node.then,ctx):false; }
+      case 'conditional': { const matched=this._predicate(node.condition,ctx);let revealCondition=false;walk(node.condition,n=>{if(n.kind==='all_result_cards_match'&&n.result==='revealed'||n.kind==='compare'&&n.field?.startsWith('revealed.'))revealCondition=true;});if(revealCondition)this.state.publicLog.push({type:'reveal_condition',player:ctx.controller,available:!!ctx.bind.revealed?.length,matched,...(ctx.bind.revealPurpose?{purpose:ctx.bind.revealPurpose}:{}),...(ctx.bind.revealDeclined?{declined:true}:{})});return matched?this._run(node.then,ctx):false; }
       case 'deck_selection': return this._deckSelection(node,ctx);
+      case 'reveal_and_retrieve': {
+        ctx.bind[node.bind]=[];ctx.bind[node.retrieved_bind]=[];ctx.bind.revealPurpose='retrieve';ctx.bind.revealDeclined=false;
+        if(!this.zone(ctx.controller,'deck').length)return false;
+        const yes=this._decide('optional',ctx,[false,true],{effectDescription:'翻開牌庫頂1張：青葉城西加入手牌，其他牌放回牌庫底'});legal(typeof yes==='boolean','Reveal choice must be boolean');
+        if(!yes){ctx.bind.revealDeclined=true;return false;}
+        return this._deckSelection({actor:'self',visibility:'reveal',top_count:1,bind:node.bind,selection:{count:1,count_mode:'exact',filters:node.filters,bind:node.retrieved_bind},remainder:{destination:node.remainder,order:'chooser'}},ctx,{initiated:true,automaticSingle:true});
+      }
       case 'numeric': return this._numeric(node,ctx);
       case 'draw': { const player=this.owner(node.actor,ctx);let n=node.count;
         if(!this._handAllowed(player,ctx)){ctx.bind.drawn=[];return false;}

@@ -1,0 +1,2 @@
+'use strict';
+const assert=require('node:assert/strict'),T=require('./reveal-retrieve-tests'),catalog=require('./data/cards.json');assert.equal(T.testRevealRetrieve(catalog),1);T.testCard(catalog,catalog.cards.find(c=>c.card_no==='HV-D04-013'));console.log('reveal retrieval: choose zero/one before flipping, visible confirmation, mandatory matching retrieval, automatic nonmatch bottom, any-school Event draws afterward, empty/invalid/ban and replay passed');
