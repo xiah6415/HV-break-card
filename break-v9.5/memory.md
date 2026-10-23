@@ -1267,3 +1267,4 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 計畫：完成force_judgment_failure與P02-039，依QA1310–1311在下個對手回合攔網成功／失敗判定時才檢查防禦6以下；接核心、正式控制器與新核心對局，保留One Touch先跳轉與玩家Loss確認，測6／7邊界、事件後數值、條件／失效／期限、AI組攔與本機Undo，完成後開放部署。
 - 結果：force_judgment_failure一形態完成，新增P02-039；43節點585形態、8入口，嚴格532／數值541／共用342＋舊7／未自動化9，原297池288。核心／正式控制器／新核心於攔網Event後才檢查6以下失敗；One Touch先跳轉，保留Loss確認。AI拒絕已知失敗組合，仍會用日向夏把6補到7。
 - 測試：288卡各3以上局面、QA1310–1311、10組實際blockTurn（含6／7、Event後重算與真實One Touch）、10完整Undo邊界、3局新核心（實際發生必失敗Loss確認）通過；build／pilot、134套回歸0失敗、fuzz3000、6×300、qa-play15（1500局0例外／卡死，18筆合法負值）通過；AI邊界補正後重跑最終全套，無新UI形態。下一批parameter_absent預估288→289。
+- 部署：4af7c56已推送、Pages built／無錯誤；公開index、牌庫、規則、pilot、STATUS與二口圖皆HTTP200且SHA256與本機一致，532嚴格／541數值與剩餘9張維持鎖定核對通過。https://xiah6415.github.io/HV-break-card/break-v9.5/?v=4af7c56-release 。
