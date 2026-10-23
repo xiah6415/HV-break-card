@@ -72,7 +72,7 @@ P('P02-020',PAY(G(3),NUM('attack',3),IF(C('source.entry_skill_name','eq','どん
 P('P02-021',IF(HAND(2),NUM('attack',2)))
 P('P02-024',PAY([DISC(),G(3)],NUM('receive',1),RET(SEL('event',tags=['稲荷崎']))))
 P('P02-025',PAY(G(2),DRAW(),DISC()))
-P('P02-027',IF(DN('稲荷崎',6),PAY(EXTERNAL('tilt_card'),NUM('attack',2),dict(kind='parameter_absent',target='opponent.center_blocker',parameter='block',duration='next_opponent_turn'))))
+P('P02-027',IF(DN('稲荷崎',6),PAY(EXTERNAL('tilt_card'),NUM('attack',2),dict(kind='parameter_absent',target=SEL(actor='opponent',role='center_blocker'),target_scope=dict(mode='all',binding='all_matches',membership='continuous_matching'),parameter='block',duration='next_opponent_turn'))))
 P('P02-029',PAY(G(3),IF(DN('稲荷崎',6),NUM('attack',3),INVALID(roles=['receive']))))
 P('P02-031',PAY(G(1),IF(PAID(names=['理石 平介']),NUM('serve',6),BAN('enter_character',role='toss',positions=['S']))))
 P('P02-035',NUM('receive',2,SEL(role='character',tags=['稲荷崎'])),note='資料庫技能所屬稲荷埼依官方QA1299修正為稲荷崎；不建立全域模糊標籤別名')

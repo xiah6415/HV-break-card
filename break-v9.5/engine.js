@@ -263,7 +263,9 @@ class Game {
     if ((key === 'block' || key.startsWith('side:')) && param === 'blk' && p.ts.blockers) return 'blk';
     return null;
   }
+  parameterAbsent(p,key,param) { return sharedRules.parameterAbsent(this,p,key,param); }
   parameter(p, key, param) {
+    if(this.parameterAbsent(p,key,param))return null;
     const card = this.courtTargets(p).find(t => t.key === key)?.card;
     if (!card || st(card, param) == null) return null;
     const active = this.activeParameter(p, key, param);
@@ -473,14 +475,15 @@ class Game {
   }
   blockMax(p) { const legacy=p.restrict.one_blocker?1:p.restrict.two_blockers?2:3;return [3,2,1].find(n=>n<=legacy&&sharedRules.blockGroupAllowed(this,p,n))||0; }
   blockCands(p) { return p.handC().filter(c => st(c, 'blk') != null); }
-  evalBlock(p, combo, off = this.ball.off) {
+  evalBlock(p, combo, off = this.ball.off, center = null) {
     const o = p.opp, evInHand = p.hand.some(x => !isC(x));
-    let total = combo.reduce((s, c) => s + st(c, 'blk'), 0), tsu = false;
-    if (combo.includes('P02-003') && o.ev.length >= 2 && evInHand) { total += 6; tsu = true; }
-    const natsu = p.hand.includes('P03-096') && combo.some(x => HIN.has(x)) && !(combo.includes('P02-003') && tsu && p.hand.filter(x => !isC(x)).length < 2) ? 1 : 0;
+    center ||= combo.slice().sort((a,b)=>val(b)-val(a))[0];const centerAbsent=this.parameterAbsent(p,'block','blk');
+    let total = combo.reduce((s, c) => s + (centerAbsent&&c===center?0:st(c, 'blk')), 0), tsu = false;
+    if (combo.includes('P02-003') && !(centerAbsent&&center==='P02-003') && o.ev.length >= 2 && evInHand) { total += 6; tsu = true; }
+    const natsu = p.hand.includes('P03-096') && combo.some(x => HIN.has(x)&&!(centerAbsent&&x===center)) && !(combo.includes('P02-003') && tsu && p.hand.filter(x => !isC(x)).length < 2) ? 1 : 0;
     const names = sharedRules.distinctNameOptions(combo.map((c,i)=>entryNames(c).filter(name=>sharedRules.entryAllowed(this,p,c,i?'side:'+(i-1):'block',{name,entryCount:sharedRules.blockEntered(this,p)+combo.length}))));
     const legal = combo.length >= 1 && combo.length <= this.blockMax(p) && names.length>0 && combo.every(c => combo.filter(x=>x===c).length<=p.hand.filter(x=>x===c).length && st(c, 'blk') != null);
-    return { cards: [...combo], total, tsu, natsu: (total < off || sharedRules.judgmentFails(this,p,'block',total)) && natsu > 0, ok: legal && total + natsu >= off && !sharedRules.judgmentFails(this,p,'block',total+natsu), legal, cost: combo.length * 10 + combo.reduce((s, c) => s + val(c), 0) + (total < off ? 3 : 0) };
+    return { cards: [...combo], total, tsu, centerAbsent, natsu: (total < off || sharedRules.judgmentFails(this,p,'block',total)) && natsu > 0, ok: legal && total + natsu >= off && !sharedRules.judgmentFails(this,p,'block',total+natsu), legal, cost: combo.length * 10 + combo.reduce((s, c) => s + val(c), 0) + (total < off ? 3 : 0) };
   }
   blockCombos(p, off) {
     const maxn = this.blockMax(p), cs = this.blockCands(p), res = [];

@@ -10,7 +10,6 @@ const coin={kind:'external_action',action:'coin',bind:'random',alternative_requi
  k.restore(before);let n=0;k.choose=()=>++n===1?true:'tails';assert.throws(()=>invoke(k),/Confirm coin result/);assert.deepEqual(k.snapshot(),before);
  const saved=k.snapshot();assert(k._paymentAvailable({kind:'sequence',steps:[coin]},k._context(id,0)));assert.deepEqual(k.snapshot(),saved,'Cost preview cannot consume a real flip');
 }
-// Module also completes the tilt action, while its dependent parameter-absence
-// node stays locked. It grants no automatic ability to the incomplete card.
-assert(!require('./modules').eligible(catalog.cards.find(c=>c.card_no==='HV-P02-027')));
+// Tilt alone cannot admit this card; the completed absence module is required.
+const M=require('./modules'),tilt=catalog.cards.find(c=>c.card_no==='HV-P02-027');assert(M.eligible(tilt));assert(!M.eligible(tilt,M.completed.filter(m=>m.id!=='parameter_absent').map(m=>m.id)));
 console.log('external action: five forms, four cards, fair heads/tails, partial deck, separate draw choices, optional cheer, payment/preview/replay/invalid-result rollback passed');

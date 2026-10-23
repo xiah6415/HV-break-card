@@ -1,10 +1,10 @@
 {
   "status": "CONTRACT_AND_SCOPED_REFERENCE_CHECKS_NOT_GAME_SIMULATION",
-  "passed": 66,
+  "passed": 67,
   "failed": 0,
   "structure_counts": {
     "profiles": 545,
-    "nodes": 3137,
+    "nodes": 3138,
     "known_node_kinds": 48
   },
   "checks": [
@@ -141,6 +141,10 @@
       "passed": true
     },
     {
+      "title": "P02-027依QA1289持續匹配中攔，不綁住上一回合實體，其餘效果不變",
+      "passed": true
+    },
+    {
       "title": "P02-004僅補對手選擇權，不改移牌／監聽效果",
       "passed": true
     },
@@ -273,7 +277,7 @@
       "passed": true
     }
   ],
-  "mapping_sha256": "d0c0bebbcba6b926c5eeb8bc09063809f2b92af44cd6f4908e64e2f81d9a24bb",
+  "mapping_sha256": "55ba2977bd39a58d4e765a919f783a92c768b2d1f03fe0ec7cfb22f8ba7470c8",
   "limitations": [
     "Candidate ID pools are prefiltered; this suite does not implement every card filter",
     "No state movement, trigger queue, expiry, undo or multiplayer integration",

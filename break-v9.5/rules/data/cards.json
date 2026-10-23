@@ -37,7 +37,7 @@
       "deck_selection": 16,
       "watch": 44,
       "count_compare": 52,
-      "selector": 336,
+      "selector": 337,
       "keyword": 33,
       "reveal_top": 3,
       "all_result_cards_match": 21,
@@ -20678,14 +20678,26 @@
                           },
                           {
                             "kind": "parameter_absent",
-                            "target": "opponent.center_blocker",
+                            "target": {
+                              "kind": "selector",
+                              "actor": "opponent",
+                              "zone": "court",
+                              "filters": {
+                                "role": "center_blocker"
+                              },
+                              "node_id": "program.steps[0].then.steps[0].then.steps[1].target",
+                              "shared_rule_ids": [
+                                "target.explicit_selector",
+                                "zone.not_guts"
+                              ]
+                            },
+                            "target_scope": {
+                              "mode": "all",
+                              "binding": "all_matches",
+                              "membership": "continuous_matching"
+                            },
                             "parameter": "block",
                             "duration": "next_opponent_turn",
-                            "target_scope": {
-                              "mode": "single",
-                              "binding": "reference",
-                              "membership": "snapshot_on_resolution"
-                            },
                             "node_id": "program.steps[0].then.steps[0].then.steps[1]",
                             "shared_rule_ids": [
                               "numeric.absent"
@@ -20745,7 +20757,8 @@
             "numeric.absent",
             "numeric.accumulate",
             "numeric.negative",
-            "target.explicit_selector"
+            "target.explicit_selector",
+            "zone.not_guts"
           ],
           "official_qa_ids_for_trace_only": [
             "1287",
@@ -95382,7 +95395,7 @@
     "status": "STRICT_PROGRAM_CONTRACT_PASSED_NOT_GAME_VALIDATED",
     "schema_artifact": "BREAK-card-program-schema.json",
     "profiles": 545,
-    "nodes": 3137,
+    "nodes": 3138,
     "known_node_kinds": 48
   },
   "validation": {

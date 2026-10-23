@@ -3,7 +3,7 @@
 (function(root) {
 'use strict';
 const node=typeof module!=='undefined'&&module.exports;
-const {Kernel,distinctNameOptions,validateBan,validateInvalid,validateProtection,validateJudgment}=node?require('./core'):root.BreakRulesCore;
+const {Kernel,distinctNameOptions,validateBan,validateInvalid,validateProtection,validateJudgment,validateAbsent}=node?require('./core'):root.BreakRulesCore;
 const {attempt,settle}=node?require('./decisions'):root.BreakRulesDecisions;
 const identity=node?require('./identity'):root.BreakCardIdentity;
 const data=node?require('./runtime-data.json'):root.BreakRulesData;
@@ -34,8 +34,9 @@ function stored(g) {
 const watchSignatures=new Set();
 function signature(e) { return JSON.stringify([e.event,typeof e.duration==='string'?e.duration:e.duration.kind,e.filters||{},e.then,e.remaining_uses??e.remaining??null]); }
 (function walk(n){if(!n||typeof n!=='object')return;if(n.kind==='watch')watchSignatures.add(signature(n));for(const v of Object.values(n))if(v&&typeof v==='object')walk(v);})(data.catalog);
-function persistent(e) { return ['watch','protect','ban','invalid','keyword','judgment_failure'].includes(e.kind); }
+function persistent(e) { return ['watch','protect','ban','invalid','keyword','judgment_failure','absent'].includes(e.kind); }
 function admitEffect(e) {
+  if(e.kind==='absent'&&[0,1].includes(e.actor)&&e.actor===1-e.controller){try{validateAbsent({parameter:e.parameter,duration:e.duration.kind,target_scope:{mode:'all',binding:'all_matches',membership:'continuous_matching'},target:{kind:'selector',actor:'opponent',zone:'court',filters:{role:e.role}}});return;}catch(_){}}
   if(e.kind==='judgment_failure'&&[0,1].includes(e.actor)&&e.actor===1-e.controller){try{validateJudgment({actor:'opponent',judge:e.judge,condition:e.condition,duration:e.duration.kind});return;}catch(_){}}
   if(e.kind==='keyword'&&['doshat','feint','blockout','a_pass','feint_block_ban'].includes(e.keyword)&&Number.isInteger(e.N)&&e.N>=0&&[0,1].includes(e.actor)&&['this_turn','next_opponent_turn'].includes(e.duration.kind))return;
   if(e.kind==='ban'&&[0,1].includes(e.actor)){try{validateBan({action:e.action,actor:'self',scope:e.scope,duration:e.duration.kind});return;}catch(_){}}
@@ -253,6 +254,7 @@ function transaction(g,p,c,timing,notification=null) {
         const text=e.action==='play_event'?`不能使用具有 ${(s.play_icons_any||[]).map(p=>labels[p]||'抽牌').join('／')} 圖示的Event`:e.action==='add_hand'?(s.origins?.length===1&&s.origins[0]==='skill'?'不能以技能加入手牌':'抽牌階段不能抽牌或加入手牌'):s.max_count!=null?`${s.entry_origins?.includes('hand')?'從手牌':''}最多登場 ${s.max_count} 人攔網`:`${s.names?.map(displayName).join('／')||s.positions?.join('／')||`原始接球 ${s.printed_receive_gte} 以上角色`}${s.entry_origins?.includes('hand')?'不能從手牌':'不能'}登場${role}`;
         g.log(`效果：${g.players[e.actor].name}${period}，${text}。`);
       }
+      else if(e.kind==='absent')g.log(`${g.players[e.actor].name}下個回合，中攔的攔網參數視為不存在，不計入攔網防禦；其他技能仍可使用。`);
       else if(e.kind==='judgment_failure')g.log(`${g.players[e.actor].name}下個回合，攔網判定時防禦 ${e.condition.value} 以下會攔網失敗。`);
       else if(e.kind==='invalid')g.log(`效果：${g.players[e.actor].name}${e.duration.kind==='next_opponent_turn'?'下個回合':'本回合'}，符合角色／名稱／圖示／關鍵字條件的技能失效；已結算效果保留。`);
       else if(e.kind==='protect')g.log(e.selector?'本回合符合所屬的場上角色與之後登場角色受到防降保護。':e.ballOwner!==null?'下個對方回合，這個來球的進攻值受到防降保護。':'這位角色的指定參數受到防降保護。');
@@ -381,9 +383,11 @@ function protectedParameter(g,p,key,param) {
   const ref=g.roleReference(p,key);
   return !!ref&&stored(g).effects.some(e=>e.kind==='protect'&&active(e,g)&&(e.parameter==='all'||e.parameter===params[param])&&(e.selector?((e.selector.actor==='opponent'?1-e.controller:e.controller)===p.idx&&g.courtTargets(p).some(t=>t.key===key&&(e.selector.filters.tags||[]).every(tag=>library.card(t.card).schoolTags.includes(tag)))):e.targets.some(r=>g.sameReference(r,ref))));
 }
+function parameterAbsent(g,p,key,param) { return key==='block'&&param==='blk'&&stored(g).effects.some(e=>e.kind==='absent'&&active(e,g)&&e.actor===p.idx&&e.role==='center_blocker'&&e.parameter==='block'); }
 function judgmentFails(g,p,judge,defense) { return stored(g).effects.some(e=>e.kind==='judgment_failure'&&active(e,g)&&e.actor===p.idx&&e.judge===judge&&defense<=e.condition.value); }
 function protectedBall(g,owner) {return stored(g).effects.some(e=>e.kind==='protect'&&active(e,g)&&e.ballOwner===owner&&['all','offense'].includes(e.parameter));}
 function entryPreview(g,p,code,area,param) {
+  if(parameterAbsent(g,p,area,Object.keys(params).find(k=>params[k]===param)))return {value:'dash',protected:false};
   const covering=!!p.top(area)&&handles(p.top(area))&&byShort[p.top(area)].profiles[0].activation.trigger?.event==='source_covered';
   if(!covering&&!stored(g).effects.some(e=>active(e,g)&&(e.kind==='watch'&&e.event==='character_entry'&&e.actor===p.idx||e.kind==='protect'&&e.selector&&(e.selector.actor==='opponent'?1-e.controller:e.controller)===p.idx)))return {value:byShort[code].profiles[0].variants[0].printed.parameters[params[param]],protected:false};
   return transaction(g,p,null,g.rulePhase||'drw',{events:[]}).entryPreview(code,area,params[param]);
@@ -439,6 +443,6 @@ async function outgoing(g,p,type,off){
  if(!p.ts.keywordOutgoing&&!stored(g).effects.some(e=>e.kind==='keyword'&&active(e,g)&&e.actor===p.idx&&['doshat','feint'].includes(e.keyword)))return {type,off};
  const result=await transaction(g,p,null,g.rulePhase||'atk',{events:[],outgoing:{kind:type,offense:off}}).run();p.ts.keywordResolved={type:result.kind,off:result.offense};return p.ts.keywordResolved;
 }
-const api={judgmentFails,eventPlayStarted,eventPlayed,protectedBall,skillAllowed,blockGroupAllowed,endDrawPhase,eventAllowed,entryNames,distinctNameOptions,outgoing,sourceMoved,drawn,judgment,flushHostEvents:flushHandEvents,permission,entryAllowed,blockEntered,charactersEntered,entryPreview,protectedParameter,handles,canPlay,resolve,assertReady,handAdded,legacyEffect,beginTurn,finishTurn,loss,approvals:[...approved]};
+const api={parameterAbsent,judgmentFails,eventPlayStarted,eventPlayed,protectedBall,skillAllowed,blockGroupAllowed,endDrawPhase,eventAllowed,entryNames,distinctNameOptions,outgoing,sourceMoved,drawn,judgment,flushHostEvents:flushHandEvents,permission,entryAllowed,blockEntered,charactersEntered,entryPreview,protectedParameter,handles,canPlay,resolve,assertReady,handAdded,legacyEffect,beginTurn,finishTurn,loss,approvals:[...approved]};
 if(node)module.exports=api;else root.BreakRulesLegacy=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

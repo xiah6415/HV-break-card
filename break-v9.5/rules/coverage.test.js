@@ -7,7 +7,7 @@ const hashes=()=>files.map(p=>crypto.createHash('sha256').update(fs.readFileSync
 const before=hashes(),r=buildCoverage(),card=no=>r.cards.find(c=>c.card_no==='HV-'+no),profile=no=>r.profiles.find(p=>p.card_no==='HV-'+no);
 assert.equal(r.totals.cards,541);assert.equal(r.totals.profiles,545);assert.equal(r.totals.skill_cards,358);
 assert.equal(Object.values(r.card_categories).reduce((a,b)=>a+b),541);assert.equal(Object.values(r.profile_categories).reduce((a,b)=>a+b),545);assert.equal(new Set(r.cards.map(c=>c.card_no)).size,541);assert.equal(new Set(r.profiles.map(p=>p.profile_id)).size,545);
-assert.equal(r.card_categories.no_skill,183);assert.equal(r.card_categories.approved,342);assert.equal(r.profiles.filter(p=>p.live_approved).length,342);assert(r.profiles.filter(p=>p.live_approved).every(p=>p.reasons.length===0));assert(catalog.cards.flatMap(c=>c.profiles).every(p=>p.runtime_approved===false));
+assert.equal(r.card_categories.no_skill,183);assert.equal(r.card_categories.approved,343);assert.equal(r.profiles.filter(p=>p.live_approved).length,343);assert(r.profiles.filter(p=>p.live_approved).every(p=>p.reasons.length===0));assert(catalog.cards.flatMap(c=>c.profiles).every(p=>p.runtime_approved===false));
 // Regression anchors: syntax admission cannot stand in for host integration.
 const kernel=new Kernel({catalog,ruleIds:rules.rules.map(x=>x.id),fingerprint:'coverage-regression',mode:'sandbox'}),p087=catalog.cards.find(c=>c.card_no==='HV-P03-087').profiles[0];
 assert.doesNotThrow(()=>kernel.preflight(p087.program));assert.equal(card('P03-087').category,'reuse_candidate');assert(!profile('P03-087').reasons.some(x=>x.key.startsWith('guts_areas:')));

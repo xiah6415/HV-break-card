@@ -89,7 +89,10 @@ def semantic_body(value):
     return value
 check('除已審查資料補正外，其餘卡片效果內容保持一致',all(
     semantic_body(p['program'])==semantic_body(old_profiles[p['profile_id']]['program'])
-    for c in data['cards'] if c['card_no'] not in ['HV-P02-004','HV-PR-081','HV-P04-070','HV-P01-003','HV-P02-077','HV-P02-078','HV-P03-077','HV-P02-064','HV-P04-072'] for p in c['profiles']))
+    for c in data['cards'] if c['card_no'] not in ['HV-P02-027','HV-P02-004','HV-PR-081','HV-P04-070','HV-P01-003','HV-P02-077','HV-P02-078','HV-P03-077','HV-P02-064','HV-P04-072'] for p in c['profiles']))
+expected027=semantic_body(old_profiles[profile('P02-027')['profile_id']]['program'])
+next(n for _,n in walk(expected027) if n.get('kind')=='parameter_absent')['target']=dict(kind='selector',actor='opponent',zone='court',filters=dict(role='center_blocker'))
+check('P02-027依QA1289持續匹配中攔，不綁住上一回合實體，其餘效果不變',semantic_body(profile('P02-027')['program'])==expected027 and find('P02-027','parameter_absent')['target_scope']==dict(mode='all',binding='all_matches',membership='continuous_matching'))
 expected004=semantic_body(old_profiles[profile('P02-004')['profile_id']]['program'])
 expected004['steps'][0]['then']['steps'][0]['actor']='opponent'
 check('P02-004僅補對手選擇權，不改移牌／監聽效果',semantic_body(profile('P02-004')['program'])==expected004)

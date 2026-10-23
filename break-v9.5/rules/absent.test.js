@@ -1,0 +1,2 @@
+'use strict';
+const assert=require('node:assert/strict'),T=require('./absent-tests'),catalog=require('./data/cards.json');assert.equal(T.testAbsent(catalog),1);T.testCard(catalog,catalog.cards.find(c=>c.card_no==='HV-P02-027'));console.log('parameter absence: future/replacement center, side/Guts unaffected, no numeric target or sum, distinct character costs, invalidation/decline, expiry and replay passed');
