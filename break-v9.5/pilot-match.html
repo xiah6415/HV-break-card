@@ -1,15 +1,15 @@
 <!doctype html><html lang="zh-Hant"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>BREAK 新核心試點</title><style>
-*{box-sizing:border-box}body{margin:0;background:#eef4f2;color:#122326;font-family:system-ui}main{max-width:900px;margin:auto;padding:14px;display:grid;gap:12px;min-width:0}h1{font-size:21px;margin:0}p{margin:4px 0;overflow-wrap:anywhere}section{background:white;border-radius:12px;padding:12px;min-width:0}button{font:inherit;padding:9px;border-radius:9px;border:1px solid #baccca;cursor:pointer}nav{display:flex;gap:8px;flex-wrap:wrap}.courts{display:grid;grid-template-columns:1fr 1fr;gap:8px}.court{font-size:13px;min-width:0;overflow-wrap:anywhere}#error{color:#a52424}#history{font-size:12px}#choice{min-width:0}@media(max-width:420px){main{padding:9px}.courts{grid-template-columns:1fr}}
+*{box-sizing:border-box}body{margin:0;background:#eef4f2;color:#122326;font-family:system-ui}main{max-width:900px;margin:auto;padding:14px;display:grid;gap:12px;min-width:0}h1{font-size:21px;margin:0}p{margin:4px 0;overflow-wrap:anywhere}section{background:white;border-radius:12px;padding:12px;min-width:0}select{font:inherit;max-width:100%;padding:8px}#manualControls{display:flex;flex-wrap:wrap;gap:8px;align-items:end}#manualControls label{display:grid;gap:4px;min-width:0;max-width:100%}button{font:inherit;padding:9px;border-radius:9px;border:1px solid #baccca;cursor:pointer}nav{display:flex;gap:8px;flex-wrap:wrap}.courts{display:grid;grid-template-columns:1fr 1fr;gap:8px}.court{font-size:13px;min-width:0;overflow-wrap:anywhere}#error{color:#a52424}#history{font-size:12px}#choice{min-width:0}@media(max-width:420px){main{padding:9px}.courts{grid-template-columns:1fr}}
 </style><main><h1>BREAK 新核心試點</h1><p>開發驗收頁：限定試點牌組，與正式對練台分開。雙方可在同一畫面作答。</p>
-<nav><button id="restart">重新開始</button><button id="ai">AI 作答一次</button><button id="auto">AI 跑完整局</button></nav>
+<nav><label>模式 <select id="mode"><option value="strict">嚴格</option><option value="numeric">數值</option></select></label><button id="undo" disabled>Undo</button><button id="restart">重新開始</button><button id="ai">AI 作答一次</button><button id="auto">AI 跑完整局</button></nav>
 <section><strong id="status"></strong><p id="history"></p><div class="courts" id="courts"></div></section>
-<section id="choice"></section><p id="error" role="alert"></p></main>
+<section id="manual" hidden><strong>手動調整</strong><div id="manualControls"></div></section><section id="choice"></section><p id="error" role="alert"></p></main>
 <script src="pilot-runtime.js"></script><script src="host-choice.js"></script><script src="choice-ui.js"></script><script>
 'use strict';
-const {Match}=BreakMatchPilot,H=BreakHostChoice,U=BreakChoiceUI,$=id=>document.getElementById(id);
+const {Match,LocalSession}=BreakMatchPilot,H=BreakHostChoice,U=BreakChoiceUI,$=id=>document.getElementById(id);
 const deck=[...['D01-009','D02-005','D04-006','D03-007'].flatMap(c=>Array(8).fill(c)),...Array(4).fill('D01-007'),...Array(4).fill('D01-011')];
-let match,widget,running=false,steps=0,losses=0,gameNo=0;
+let match,session,widget,running=false,steps=0,losses=0,gameNo=0;
 const request=()=>match.view(0).request||match.view(1).request;
 const image=no=>'img/'+no.replace(/^HV-?/,'')+'.webp';
 function render(){
@@ -19,11 +19,27 @@ function render(){
  $('courts').replaceChildren(...v.players.map((p,i)=>{const div=document.createElement('div');div.className='court';div.textContent=`玩家 ${i+1}｜手牌 ${Array.isArray(p.hand)?p.hand.length:p.hand.count}｜牌庫 ${p.deck.count}｜剩餘局點 ${p.sets.count}｜`+p.court.map(c=>`${c.role}：${c.name}`).join('／');return div;}));
  if(r)widget=U.render($('choice'),r,{imgSrc:image,onAnswer:answer=>submit({kind:'answer',answer}),onLoss:()=>submit({kind:'loss',matchId:r.matchId,requestId:r.requestId,epoch:r.epoch,actor:r.actor})});
  else $('choice').textContent='完整對局已完成';
+ $('undo').disabled=!session.status().enabled;renderManual(r,v);
  $('ai').disabled=!r;$('auto').disabled=!r||running;
 }
-function submit(command){try{match.command(command);steps++;if(command.kind==='loss')losses++;$('error').textContent='';render();}catch(e){$('error').textContent=e.message;throw e;}}
+function renderManual(r,v){
+ $('manual').hidden=!r?.canManual;$('manualControls').replaceChildren();if(!r?.canManual)return;
+ const box=$('manualControls'),targets=v.players.flatMap((p,player)=>p.court.map(c=>({...c,player}))),send=action=>submit({kind:'manual',matchId:r.matchId,requestId:r.requestId,epoch:r.epoch,actor:r.actor,action});
+ const select=(id,label,options)=>{const l=document.createElement('label'),s=document.createElement('select');s.id=id;l.append(document.createTextNode(label),s);for(const [value,text]of options){const o=document.createElement('option');o.value=value;o.textContent=text;s.append(o);}box.append(l);return s;};
+ const button=(id,label,action)=>{const b=document.createElement('button');b.id=id;b.textContent=label;b.onclick=action;box.append(b);return b;};
+ const target=select('manualTarget','數值對象',targets.map((t,i)=>[String(i),'玩家 '+(t.player+1)+' '+t.role+' '+t.name]).concat(v.ball?.owner===1-r.actor?[['ball','來球總值']]:[])),parameter=select('manualParameter','數值',[['serve','發球'],['block','攔網'],['receive','接球'],['toss','舉球'],['attack','攻擊']]);
+ const adjust=delta=>{const t=targets[+target.value];send(target.value==='ball'?{kind:'ball',delta}:{kind:'adjust',player:t.player,ref:{id:t.id,incarnation:t.incarnation},parameter:parameter.value,delta});};
+ const minus=button('manualMinus','−1',()=>adjust(-1)),plus=button('manualPlus','＋1',()=>adjust(1));
+ const refresh=()=>{const t=targets[+target.value],ball=target.value==='ball';for(const o of parameter.options)o.disabled=ball||!t||t.parameters[o.value]==='dash';if(parameter.selectedOptions[0]?.disabled)parameter.value=[...parameter.options].find(o=>!o.disabled)?.value||'';parameter.disabled=ball;minus.disabled=plus.disabled=!ball&&(!t||!parameter.value);};target.onchange=refresh;refresh();
+ const player=select('manualPlayer','抽／棄牌對象',[[String(r.actor),'自己'],[String(1-r.actor),'對方（由對方選棄牌）']]),hand=select('manualHand','自己的手牌',v.players[r.actor].hand.map(c=>[c.id,c.cardNo]));
+ const draw=button('manualDraw','抽1張',()=>send({kind:'draw',player:+player.value})),discard=button('manualDiscard','棄1張',()=>{const p=+player.value,c=v.players[r.actor].hand.find(c=>c.id===hand.value);send({kind:'discard',player:p,...(p===r.actor?{ref:{id:c.id,incarnation:c.incarnation}}:{})});});
+ const refreshCards=()=>{const p=+player.value;draw.disabled=!v.players[p].deck.count;discard.disabled=!(Array.isArray(v.players[p].hand)?v.players[p].hand.length:v.players[p].hand.count);hand.disabled=p!==r.actor;};player.onchange=refreshCards;refreshCards();
+}
+function submit(command){try{if(command.kind==='manual')running=false;session.command(command);steps++;if(command.kind==='loss')losses++;$('error').textContent='';render();}catch(e){$('error').textContent=e.message;throw e;}}
 function ai(){const r=request();if(r)submit({kind:'answer',answer:H.aiAnswer(r)});}
-function restart(){running=false;steps=0;losses=0;match=new Match({id:'browser-pilot-'+(++gameNo),seed:7,decks:[deck,deck]});render();}
+function restart(){running=false;steps=0;losses=0;session=new LocalSession({id:'browser-pilot-'+(++gameNo),seed:7,decks:[deck,deck],mode:$('mode').value});match=session.match;render();}
+$('mode').onchange=restart;$('undo').onclick=()=>{running=false;if(session.undo()){steps=match.snapshot().match.decisionIndex;losses=match.snapshot().match.history.filter(e=>e.kind==='loss').length;render();}};
 $('restart').onclick=restart;$('ai').onclick=ai;$('auto').onclick=async()=>{running=true;try{for(let i=0;request()&&i<2000&&running;i++){ai();await new Promise(r=>setTimeout(r,0));}}finally{running=false;render();}};
+const requestedMode=new URLSearchParams(location.search).get('mode');if(['strict','numeric'].includes(requestedMode))$('mode').value=requestedMode;
 window.pilot={get match(){return match;},request,ai,submit,restart,get steps(){return steps;},get losses(){return losses;}};restart();
 </script></html>

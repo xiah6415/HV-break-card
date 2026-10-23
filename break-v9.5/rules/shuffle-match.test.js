@@ -7,6 +7,6 @@ for(const seed of [7,11,19]){
   let a=H.aiAnswer(r);if(r.kind==='event'){const v=r.options.find(o=>o.value!==null);if(v)a=H.makeAnswer(r,v.value);}if(['serve','setter'].includes(r.kind)){const o=r.options.find(o=>o.card?.cardNo==='HV-'+(r.kind==='serve'?'P01-034':'PR-024'));if(o)a=H.makeAnswer(r,o.value);}
   assert(H.validate(r,a).ok);m.dispatch(a);
  }
- assert.equal(m.snapshot().match.phase,'finished');const n=k.state.publicLog.filter(e=>e.type==='deck_shuffled').length;shuffles+=n;console.log('shuffle match seed '+seed+': '+steps+' decisions / '+n+' actual shuffles / RNG '+k.state.match.rng.calls+' / complete game passed');
+ assert.equal(m.snapshot().match.phase,'finished');const n=k.state.publicLog.filter(e=>e.type==='deck_shuffled').length;shuffles+=n;console.log('shuffle match seed '+seed+': '+steps+' decisions / '+n+' actual shuffles / RNG '+k.state.rng.calls+' / complete game passed');
 }
 assert(shuffles>0,'Full matches must exercise real shuffle execution');

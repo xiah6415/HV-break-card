@@ -9,17 +9,18 @@ const identity=cards=>JSON.stringify(Object.values(cards||{}).map(c=>[c.id,c.own
 const full=c=>library.card(c).number;
 const short=c=>c.replace(/^HV-?/,'');
 const prompts={firstService:'擲骰勝者：選擇先發或先接',roll:'確認首球發球方，開始調度',mulligan:'選擇要放回重抽的手牌',serve:'選擇發球角色',defend:'選擇接球或攔網',block:'選擇攔網角色與中攔',ack:'抽牌階段：確認抽1張',receiver:'選擇接球角色',setter:'選擇舉球角色',attacker:'選擇攻擊角色',event:'選擇要使用的卡片，或繼續',turnEnd:'確認結束回合；交棒前仍可喊Loss',lossConfirm:'本球無法繼續，請確認喊Loss',target:'選擇效果對象',activate_payment:'是否支付費用發動效果？',payment_cards:'選擇用來支付費用的牌',move_cards:'選擇要移動的牌',guts:'選擇要支付的Guts',parameter:'選擇要調整的數值'};
-const CORE_VERSION='break.match.pilot.1';
+const CORE_VERSION='break.match.local.2';
 const signature=r=>JSON.stringify({actor:r.actor,origin:r.origin,kind:r.kind,input:r.input,options:r.options,context:r.context,source:r.source,canLoss:r.canLoss,canManual:r.canManual});
 class Boundary extends Error {constructor(request,state){super('Decision boundary');this.request=request;this.state=state;}}
 class Match {
  constructor({id='pilot',seed=1,decks,mode='strict',wantsAck=[true,true]}={}) {
-  if(mode!=='strict')throw Error('PILOT_UNSUPPORTED_MODE');
+  if(!['strict','numeric'].includes(mode))throw Error('UNSUPPORTED_MODE');
   if(!Array.isArray(decks)||decks.length!==2)throw Error('Two decks required');
   for(const deck of decks){if(deck.length!==40)throw Error('Deck requires 40 cards');if(deck.filter(c=>library.card(c)?.kind==='E').length>8)throw Error('At most 8 Events');for(const c of deck){const grant=library.permission(c);if(!['basic','shared'].includes(grant?.kind))throw Error('PILOT_UNSUPPORTED_SKILL: '+c);}}
   this._kernel=new Kernel({catalog:runtime.catalog,ruleIds:runtime.ruleIds,fingerprint:runtime.fingerprint,mode:'live',practiceDrawBeforeReceive:true});
+  this._kernel.state.rng={algorithm:'mulberry32-v1',word:seed>>>0,calls:0};
   this.epoch=1;
-  this._kernel.state.match={contractVersion:'break.state.v1',hostVersion:'break.host.v1',id,mode,rulesVersion:runtime.fingerprint,catalogFingerprint:runtime.fingerprint,phase:'setup',seed:seed>>>0,rng:{algorithm:'mulberry32-v1',word:seed>>>0,calls:0},pc:'firstService',rally:0,turnNo:0,server:null,firstServer:null,dice:null,diceWinner:null,firstServiceChoice:null,loser:null,lossReason:null,winner:null,outgoing:null,roleTotals:[{},{}],pending:null,decisionIndex:0,history:[],notices:[],continuation:null,wantsAck:[...wantsAck],setupIndex:0};
+  this._kernel.state.match={contractVersion:'break.state.v1',hostVersion:'break.host.v1',id,mode,rulesVersion:runtime.fingerprint,catalogFingerprint:runtime.fingerprint,phase:'setup',seed:seed>>>0,pc:'firstService',rally:0,turnNo:0,server:null,firstServer:null,dice:null,diceWinner:null,firstServiceChoice:null,loser:null,lossReason:null,winner:null,outgoing:null,roleTotals:[{},{}],pending:null,decisionIndex:0,history:[],notices:[],continuation:null,wantsAck:[...wantsAck],setupIndex:0};
   this._m.coreVersion=CORE_VERSION;
   // Same shuffle/dice consumption as old Game; IDs assigned after initial shuffle.
   for(let p=0;p<2;p++){const cards=decks[p].map(c=>library.requirePlayable(c,mode));this._shuffleArray(cards);for(const c of cards)this._kernel.addCard(full(c),p,'deck');}
@@ -29,7 +30,7 @@ class Match {
   this._pump();
  }
  get _m(){return this._kernel.state.match;}
- _random(){const r=this._m.rng;r.word=(r.word+0x6D2B79F5)>>>0;r.calls++;let t=r.word;t=Math.imul(t^t>>>15,1|t);t=t+Math.imul(t^t>>>7,61|t)^t;return ((t^t>>>14)>>>0)/4294967296;}
+ _random(){return this._kernel._random();}
  _shuffleArray(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(this._random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}}
  _zone(p,z){return this._kernel.zone(p,z);}
  _code(id){return short(this._kernel.card(id).cardNo);}
@@ -38,6 +39,7 @@ class Match {
  _options(values){return values.map((value,i)=>{const c=typeof value==='string'?this._kernel.state.cards[value]:null,labels={serve:'發球',receive:'接球',block:'攔網',toss:'舉球',attack:'攻擊',true:'確認／發動',false:'不發動',null:'不使用，繼續'};return {id:c?value:'option-'+i,value,label:c?c.printed.display_name||c.printed.name:labels[String(value)]||String(value),...(c?{card:{id:value,incarnation:c.incarnation,cardNo:c.cardNo,name:c.printed.display_name||c.printed.name,effectiveName:this._kernel.effectiveName(value),entryNames:this._kernel.entryNames(value),zone:c.zone}}:{})};});}
  _ask(kind,actor,input,values,context={},origin='game',source=null){
   const r={protocol:'break.host.v1',matchId:this._m.id,requestId:this._m.id+':'+this.epoch+':'+this._m.decisionIndex,epoch:this.epoch,revision:this._kernel.state.revision,decisionIndex:this._m.decisionIndex,actor,origin,kind,prompt:context.prompt||prompts[kind]||'請選擇合法選項',input,options:this._options(values).map(o=>context.modeLabels?{...o,label:context.modeLabels[o.value]}:o),context,source,timing:this._kernel.state.turn.phase,canLoss:this._m.phase==='rally'&&this._kernel.state.stage==='rally'&&actor===this._kernel.state.turn.player&&!['roll','mulligan','lossConfirm'].includes(kind),canManual:false};
+  r.canManual=this._m.mode==='numeric'&&origin==='game'&&r.canLoss&&this._m.pc!=='manualApply';
   const sig=signature(r);
   if(this._cursor<this._answers.length){const a=this._answers[this._cursor++];if(a.signature!==sig)throw Error('Replay decision diverged: '+kind);return copy(a.value);}
   // A suspended choice is a transaction boundary, not a public mid-operation
@@ -67,9 +69,10 @@ class Match {
  }
  _next(pc){this._m.pc=pc;}
  _move(id,p,z){this._kernel._atomic(()=>this._kernel._move(id,p,z,this._kernel._context(id,p),'rule'));}
- _setPhase(phase){this._kernel.advancePhase(phase);}
+ _setPhase(phase){if(this._kernel.state.turn.phase!==phase||this._kernel.state.turn.step!=='free')this._kernel.advancePhase(phase);}
  _notice(type,payload){this._m.notices.push({type,rally:this._m.rally,...payload});}
  _begin(p,phase){
+  delete this._m.outgoingResolution;
   if(!this._m.turnNo){this._kernel.state.turn={id:1,player:p,phase,step:'free'};}
   else {this._kernel.state.stage='rally';this._kernel.state.turn.step='cleaned';this._kernel.beginTurn(p,phase);}
   this._m.turnNo=this._kernel.state.turn.id;this._m.actor=p;this._m.roleTotals[p]={};
@@ -78,16 +81,34 @@ class Match {
  _param(p,area){const id=this._kernel.top(p,area);return id?this._kernel.parameter(id,area):0;}
  _probe(fn){const saved=this._kernel.snapshot(),choose=this._kernel.choose;this._kernel.choose=r=>r.count!=null?r.options.slice(0,r.count):r.options.includes(true)?true:r.options.length&&r.options.every(Number.isInteger)?Math.max(...r.options):r.options[0];try{return fn();}catch(e){if(e.code==='ILLEGAL_ACTION'||e.code==='REQUIRES_REVIEW'&&e.message==='OPEN-EVENT-NO-CHANGE')return false;throw e;}finally{this._kernel.restore(saved);this._kernel.choose=choose;}}
  _playable(p){const k=this._kernel,phase=k.state.turn.phase;return this._zone(p,'hand').filter(id=>{const pr=k.profile(id),a=pr.activation;if(!pr.runtime_approved||!['event','active'].includes(a?.skill_type))return false;if(a.skill_type==='active'&&pr.limit&&k.state.locks.some(l=>l.player===p&&l.turn===k.state.turn.id&&l.name===k.effectiveName(id)))return false;if(!a.activation_phases.includes(phase)&&!(phase==='receive'&&pr.practice_override?.extra_window==='before_receive_judgment'))return false;const result=this._probe(()=>k.card(id).printed.type==='event'?k.playEvent(id):k.useSkill(id));return !!result&&(result.performed||result.invalid);});}
- _event(next){const p=this._m.actor,opts=this._playable(p);if(!opts.length){this._next(next);return;}const id=this._ask('event',p,{type:'single'},[...opts,null]);if(id===null){this._next(next);return;}if(this._kernel.card(id).printed.type==='event')this._kernel.playEvent(id);else this._kernel.useSkill(id);}
+ _event(next){const p=this._m.actor,opts=this._playable(p);if(!opts.length&&this._m.mode!=='numeric'){this._next(next);return;}const id=this._ask('event',p,{type:'single'},[...opts,null]);if(id===null){this._next(next);return;}if(this._kernel.card(id).printed.type==='event')this._kernel.playEvent(id);else this._kernel.useSkill(id);}
  _pick(role,kind,next){const p=this._m.actor,ids=this._cards(p,role);if(!ids.length){this._lose('沒有能'+({serve:'發球',receive:'接球',toss:'舉球',attack:'攻擊'}[role])+'的角色');return;}const id=this._ask(kind,p,{type:'single'},ids);this._kernel.enter(id,role);this._m.roleTotals[p][role]=this._param(p,role);this._next(next);}
  _blockMax(p){const k=this._kernel;return [3,2,1].find(n=>k.permission({action:'enter_character',player:p,origin:'rule',role:'center_blocker',entryOrigin:'hand',entryCount:(k.state.turn.blockEntries?.[p]||0)+n,entryCounts:k._entryCounts(p,'hand',n),name:'',printed:{position_tags:[],parameters:{receive:'dash'}}}).allowed)||0;}
  _blockLegal(p,answer){const k=this._kernel,ids=answer?.cards;if(!Array.isArray(ids)||!ids.length||ids.length>this._blockMax(p)||new Set(ids).size!==ids.length||!ids.includes(answer.center)||!ids.every(id=>this._cards(p,'block').includes(id)))return false;return distinctNameOptions(ids.map(id=>k.entryNames(id))).length>0;}
  _enterBlock(answer){if(!this._blockLegal(this._m.actor,answer))throw Error('Invalid blockers');this._kernel.enterBlock(answer.cards,answer.center);}
  _cleanupSides(p){for(const z of ['side:0','side:1'])for(const id of [...this._zone(p,z)])this._move(id,p,'drop');}
  _outgoing(){const p=this._m.actor,t=this._m.outgoingType;return {kind:t,owner:p,offense:t==='serve'?this._param(p,'serve'):t==='block'?0:this._param(p,'toss')+this._param(p,'attack')};}
+ _resolvedOutgoing(){
+  const k=this._kernel,base=this._outgoing(),override=k.state.keywordOutgoing,activeOverride=override?.turn===k.state.turn.id&&override.player===this._m.actor?override:null,kind=activeOverride?.kind||base.kind;
+  const effects=k.state.effects.filter(e=>e.kind==='keyword'&&e.actor===this._m.actor&&k.active(e)&&e.keyword===(kind==='block'?'doshat':kind==='attack'?'feint':null)),signature=JSON.stringify([k.state.turn.id,kind,activeOverride,effects.map(e=>e.id).sort()]);
+  if(this._m.outgoingResolution?.signature!==signature)this._m.outgoingResolution={signature,fixed:!!activeOverride||effects.length>0,value:{...base,...k.outgoing(base.kind,base.offense)}};
+  return this._m.outgoingResolution.fixed?copy(this._m.outgoingResolution.value):base;
+ }
+
  _step(){
   const p=this._m.actor,k=this._kernel;
   switch(this._m.pc){
+   case 'manualApply': {
+    const action=this._m.manualAction,actor=this._m.actor,player=action.player??actor;
+    if(action.kind==='discard'&&player!==actor&&!action.ref){const id=this._ask('discard',player,{type:'single'},[...this._zone(player,'hand')],{prompt:'手動調整：請自行選1張手牌棄掉'});action.ref={id,incarnation:k.card(id).incarnation};}
+    k._atomic(()=>{const ctx=k._context(null,actor);
+     if(action.kind==='draw')k._draw(player,1,ctx,'rule');
+     else if(action.kind==='discard')k._move(action.ref.id,player,'drop',ctx,'manual');
+     else{const node={kind:'numeric',operation:'add',parameter:action.kind==='ball'?'offense':action.parameter,value:action.delta,target:action.kind==='ball'?'opponent_ball':'$target',target_scope:{mode:'single',binding:'reference',membership:'snapshot_on_resolution'},duration:'current_turn_cleanup_or_role_exit'};if(action.ref)ctx.bind.target=action.ref;k._numeric(node,ctx);}
+     k._drain();k.state.publicLog.push({type:'manual',actor,action:copy(action)});
+    });
+    const pc=this._m.manualReturnPc;delete this._m.manualAction;delete this._m.manualReturnPc;this._next(pc);break;
+   }
    case 'firstService': {const w=this._m.diceWinner,c=this._ask('firstService',w,{type:'single'},['serve','receive'],{dice:this._m.dice,winner:w});this._m.firstServiceChoice=c;this._m.server=this._m.firstServer=c==='serve'?w:1-w;this._m.rollIndex=0;this._next('roll');break;}
    case 'roll': {const i=this._m.rollIndex;if(i<2){if(this._m.wantsAck[i])this._ask('roll',i,{type:'ack'},[true],{dice:this._m.dice,winner:this._m.diceWinner,choice:this._m.firstServiceChoice,server:this._m.server});this._m.rollIndex++;}else this._next('setupDraw');break;}
    case 'setupDraw': {const q=this._m.setupIndex===0?this._m.server:1-this._m.server;k.drawRule(q,6);this._m.setupPlayer=q;this._next('mulligan');break;}
@@ -112,7 +133,7 @@ class Match {
    case 'attack': this._setPhase('attack');this._pick('attack','attacker','attackEvent');break;
    case 'attackEvent': this._event('attackDone');break;
    case 'attackDone': this._m.roleTotals[p].toss=this._param(p,'toss');this._m.roleTotals[p].attack=this._param(p,'attack');this._m.outgoingType='attack';this._next('turnEnd');break;
-   case 'turnEnd': {const base=this._outgoing(),out={...base,...k.outgoing(base.kind,base.offense)};if(this._m.wantsAck[p])this._ask('turnEnd',p,{type:'ack'},[true],{outgoing:copy(out)});this._m.outgoing=copy(out);k.endTurn();k.state.ball=out;this._next('defendStart');break;}
+   case 'turnEnd': {const out=this._resolvedOutgoing();if(this._m.wantsAck[p])this._ask('turnEnd',p,{type:'ack'},[true],{outgoing:copy(out)});this._m.outgoing=copy(out);k.endTurn();k.state.ball=out;this._next('defendStart');break;}
    case 'lossConfirm': this._ask('lossConfirm',p,{type:'ack'},[true],{reason:this._m.lossReason});this._next('lossResolve');break;
    case 'lossResolve': {this._cleanupSides(p);k.loss(p,{voluntary:false});k.finishLoss();this._m.phase='loss';this._notice('loss',{player:p,reason:this._m.lossReason,winner:1-p,final:!this._zone(p,'sets').length});if(!this._zone(p,'sets').length){this._m.winner=1-p;this._m.phase='finished';this._next('done');}else this._next('interval');break;}
    case 'interval': {this._m.phase='interval';for(let q=0;q<2;q++)k.drawRule(q,Math.max(0,6-this._zone(q,'hand').length));this._move(k.top(p,'sets'),p,'hand');this._m.server=1-p;this._next('rallyStart');break;}
@@ -122,24 +143,40 @@ class Match {
  request(actor){if(!this._m.pending||this._m.pending.actor!==actor)return null;return copy(this._m.pending);}
  command(command){
   if(command?.kind==='answer')return this.dispatch(command.answer);
+  if(command?.kind==='manual'){if(this._m.mode!=='numeric')throw Error('UNSUPPORTED_COMMAND');return this._manual(command);}
   if(command?.kind!=='loss')throw Error('UNSUPPORTED_COMMAND');
   const r=this._m.pending;
   if(!r||!r.canLoss||command.matchId!==r.matchId||command.requestId!==r.requestId||command.epoch!==this.epoch||command.actor!==r.actor)throw Error('INVALID_OR_STALE_COMMAND');
-  const baseline=this.snapshot();
+  const baseline=this._kernel.snapshot();
   try{
    this._m.history.push({kind:'loss',actor:r.actor,origin:'game',signature:signature(r),value:{loss:true}});this._m.decisionIndex++;
-   this._m.loser=r.actor;this._m.lossReason='主動 Loss（放棄這球）';this._m.pending=null;this._m.continuation=null;this._next('lossResolve');this._pump();return this.view(r.actor);
+   delete this._m.manualAction;delete this._m.manualReturnPc;this._m.loser=r.actor;this._m.lossReason='主動 Loss（放棄這球）';this._m.pending=null;this._m.continuation=null;this._next('lossResolve');this._pump();return this.view(r.actor);
   }catch(e){this._kernel.restore(baseline);throw e;}
  }
+ _manual(command){
+  const r=this._m.pending,k=this._kernel,action=copy(command.action??null);
+  if(!r||!r.canManual||command.matchId!==r.matchId||command.requestId!==r.requestId||command.epoch!==this.epoch||command.actor!==r.actor)throw Error('INVALID_OR_STALE_COMMAND');
+  const player=action?.player??r.actor;
+  if(![0,1].includes(player)||!action||!['draw','discard','adjust','ball'].includes(action.kind))throw Error('INVALID_MANUAL_ACTION');
+  const ref=action.ref,c=ref&&k.state.cards[ref.id];
+  if(['adjust','ball'].includes(action.kind)&&![1,-1].includes(action.delta))throw Error('INVALID_MANUAL_DELTA');
+  if(action.kind==='adjust'&&(!c||c.incarnation!==ref.incarnation||c.owner!==player||!['serve','receive','toss','attack','center_blocker','side_blocker'].includes(k.role(ref.id))||!['serve','block','receive','toss','attack'].includes(action.parameter)||k.parameter(ref.id,action.parameter)==='dash'))throw Error('INVALID_MANUAL_TARGET');
+  if(action.kind==='ball'&&(!k.state.ball||k.state.ball.owner!==1-r.actor))throw Error('INVALID_MANUAL_BALL');
+  if(action.kind==='draw'&&!this._zone(player,'deck').length)throw Error('EMPTY_DECK');
+  if(action.kind==='discard'&&(!this._zone(player,'hand').length||player===r.actor&&!ref||ref&&(!c||c.incarnation!==ref.incarnation||c.zone!==player+'.hand')))throw Error('INVALID_MANUAL_CARD');
+  if(action.kind==='discard'&&player!==r.actor&&ref)throw Error('AFFECTED_PLAYER_MUST_CHOOSE');
+  const saved=k.snapshot();
+  try{this._m.history.push({kind:'manual',actor:r.actor,origin:'manual',signature:signature(r),value:copy(action)});this._m.decisionIndex++;this._m.manualAction=action;this._m.manualReturnPc=this._m.pc;this._m.pending=null;this._m.continuation=null;this._next('manualApply');this._pump();return this.view(r.actor);}catch(e){k.restore(saved);throw e;}
+ }
  dispatch(answer){const r=this._m.pending;if(!host.validateAnswer(r,answer)||answer.epoch!==this.epoch||r.input.type==='block'&&!this._blockLegal(r.actor,answer.value))throw Error('INVALID_OR_STALE_ANSWER');const baseline=this._kernel.snapshot();try{const a={signature:signature(r),value:copy(answer.value)};this._m.history.push({kind:r.kind,actor:r.actor,origin:r.origin,...a});this._m.decisionIndex++;this._m.continuation.answers.push(a);this._m.pending=null;this._pump();return this.view(answer.actor);}catch(e){this._kernel.restore(baseline);throw e;}}
- snapshot(){return this._kernel.snapshot();}
+ snapshot(){const s=this._kernel.snapshot();s.match.rng=copy(s.rng);return s;}
  restore(snapshot){
   const m=snapshot?.match;
   if(m?.id!==this._m.id||m?.contractVersion!=='break.state.v1'||m.hostVersion!=='break.host.v1'||m.coreVersion!==CORE_VERSION||m.mode!==this._m.mode||m.seed!==this._m.seed||m.catalogFingerprint!==runtime.fingerprint||m.rulesVersion!==runtime.fingerprint)throw Error('Snapshot match/contract mismatch');
   if(identity(snapshot.cards)!==this._identity)throw Error('Snapshot physical identity mismatch');
-  if(!m.rng||m.rng.algorithm!=='mulberry32-v1'||!Number.isSafeInteger(m.rng.calls)||m.rng.calls<0||m.rng.word!==((m.seed>>>0)+Math.imul(m.rng.calls,0x6D2B79F5)>>>0)||m.decisionIndex!==m.history?.length||!['setup','rally','loss','interval','finished'].includes(m.phase)||m.pending&&!host.validateRequest(m.pending))throw Error('Invalid match checkpoint');
-  this._kernel.restore(snapshot);this.epoch++;if(this._m.pending){this._m.pending.epoch=this.epoch;this._m.pending.requestId=this._m.id+':'+this.epoch+':'+this._m.decisionIndex;}return this;
+  if(!m.rng||!snapshot.rng||['algorithm','word','calls'].some(key=>m.rng[key]!==snapshot.rng[key])||m.rng.algorithm!=='mulberry32-v1'||!Number.isSafeInteger(m.rng.calls)||m.rng.calls<0||m.rng.word!==((m.seed>>>0)+Math.imul(m.rng.calls,0x6D2B79F5)>>>0)||m.decisionIndex!==m.history?.length||!['setup','rally','loss','interval','finished'].includes(m.phase)||m.pending&&!host.validateRequest(m.pending))throw Error('Invalid match checkpoint');
+  const state=copy(snapshot);delete state.match.rng;this._kernel.restore(state);this.epoch++;if(this._m.pending){this._m.pending.epoch=this.epoch;this._m.pending.requestId=this._m.id+':'+this.epoch+':'+this._m.decisionIndex;}return this;
  }
- view(actor){if(![0,1].includes(actor))throw Error('Unknown viewer');return {...this._kernel.view(actor),match:{id:this._m.id,phase:this._m.phase,rally:this._m.rally,server:this._m.server,winner:this._m.winner,dice:copy(this._m.dice),decisionIndex:this._m.decisionIndex},request:this.request(actor)};}
+ view(actor){if(![0,1].includes(actor))throw Error('Unknown viewer');const view=this._kernel.view(actor);for(const p of view.players)for(const c of [...(Array.isArray(p.hand)?p.hand:[]),...p.court])c.incarnation=this._kernel.card(c.id).incarnation;return {...view,match:{id:this._m.id,mode:this._m.mode,phase:this._m.phase,rally:this._m.rally,server:this._m.server,winner:this._m.winner,dice:copy(this._m.dice),decisionIndex:this._m.decisionIndex},request:this.request(actor)};}
 }
 module.exports={Match,signature};

@@ -7,6 +7,6 @@ for(const seed of [7,11,19]){
   let a=H.aiAnswer(r);if(r.kind==='event'){const v=r.options.find(o=>o.value!==null);if(v)a=H.makeAnswer(r,v.value);}if(r.kind==='defend'&&r.options.some(o=>o.value==='block'))a=H.makeAnswer(r,'block');if(['attacker','block'].includes(r.kind)){const o=r.options.find(o=>o.card?.cardNo==='HV-'+(r.kind==='block'?'P02-048':'PR-037'));if(o)a=H.makeAnswer(r,r.kind==='block'?{cards:[o.value],center:o.value}:o.value);}
   assert(H.validate(r,a).ok);m.dispatch(a);
  }
- assert.equal(m.snapshot().match.phase,'finished');console.log('external match seed '+seed+': '+steps+' decisions / RNG '+k.state.match.rng.calls+' / full local match passed');
+ assert.equal(m.snapshot().match.phase,'finished');console.log('external match seed '+seed+': '+steps+' decisions / RNG '+k.state.rng.calls+' / full local match passed');
 }
 assert(actions>0&&flips>0,'Full matches must actually exercise physical confirmations and flips');
