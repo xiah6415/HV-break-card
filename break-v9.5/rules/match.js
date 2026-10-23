@@ -1,4 +1,4 @@
-/* Isolated single-state match pilot. No legacy Game/import/projection dependency. */
+/* Single-state match core. No legacy Game/import/projection dependency. */
 'use strict';
 const {Kernel,distinctNameOptions}=require('./core');
 const runtime=require('./runtime-data.json');
@@ -80,7 +80,7 @@ class Match {
  _lose(reason){this._m.loser=this._m.actor;this._m.lossReason=reason;this._next(this._m.wantsAck[this._m.actor]?'lossConfirm':'lossResolve');}
  _param(p,area){const id=this._kernel.top(p,area);return id?this._kernel.parameter(id,area):0;}
  _probe(fn){const saved=this._kernel.snapshot(),choose=this._kernel.choose;this._kernel.choose=r=>r.count!=null?r.options.slice(0,r.count):r.options.includes(true)?true:r.options.length&&r.options.every(Number.isInteger)?Math.max(...r.options):r.options[0];try{return fn();}catch(e){if(e.code==='ILLEGAL_ACTION'||e.code==='REQUIRES_REVIEW'&&e.message==='OPEN-EVENT-NO-CHANGE')return false;throw e;}finally{this._kernel.restore(saved);this._kernel.choose=choose;}}
- _playable(p){const k=this._kernel,phase=k.state.turn.phase;return this._zone(p,'hand').filter(id=>{const pr=k.profile(id),a=pr.activation;if(!pr.runtime_approved||!['event','active'].includes(a?.skill_type))return false;if(a.skill_type==='active'&&pr.limit&&k.state.locks.some(l=>l.player===p&&l.turn===k.state.turn.id&&l.name===k.effectiveName(id)))return false;if(!a.activation_phases.includes(phase)&&!(phase==='receive'&&pr.practice_override?.extra_window==='before_receive_judgment'))return false;const result=this._probe(()=>k.card(id).printed.type==='event'?k.playEvent(id):k.useSkill(id));return !!result&&(result.performed||result.invalid);});}
+ _playable(p){const k=this._kernel,phase=k.state.turn.phase;return this._zone(p,'hand').filter(id=>{const pr=k.profile(id),a=pr.activation;if(!pr.runtime_approved||!['event','active'].includes(a?.skill_type))return false;if(a.skill_type==='active'&&pr.limit&&k.state.locks.some(l=>l.player===p&&l.turn===k.state.turn.id&&l.name===k.effectiveName(id)))return false;if(!a.activation_phases.includes(phase)&&!(phase==='receive'&&pr.practice_override?.extra_window==='before_receive_judgment'))return false;const result=this._probe(()=>k.card(id).printed.type==='event'?k.playEvent(id):k.useSkill(id));return !!result&&(result.performed||result.invalid&&k.card(id).printed.type==='event');});}
  _event(next){const p=this._m.actor,opts=this._playable(p);if(!opts.length&&this._m.mode!=='numeric'){this._next(next);return;}const id=this._ask('event',p,{type:'single'},[...opts,null]);if(id===null){this._next(next);return;}if(this._kernel.card(id).printed.type==='event')this._kernel.playEvent(id);else this._kernel.useSkill(id);}
  _pick(role,kind,next){const p=this._m.actor,ids=this._cards(p,role);if(!ids.length){this._lose('沒有能'+({serve:'發球',receive:'接球',toss:'舉球',attack:'攻擊'}[role])+'的角色');return;}const id=this._ask(kind,p,{type:'single'},ids);this._kernel.enter(id,role);this._m.roleTotals[p][role]=this._param(p,role);this._next(next);}
  _blockMax(p){const k=this._kernel;return [3,2,1].find(n=>k.permission({action:'enter_character',player:p,origin:'rule',role:'center_blocker',entryOrigin:'hand',entryCount:(k.state.turn.blockEntries?.[p]||0)+n,entryCounts:k._entryCounts(p,'hand',n),name:'',printed:{position_tags:[],parameters:{receive:'dash'}}}).allowed)||0;}
@@ -117,7 +117,7 @@ class Match {
    case 'serve': this._pick('serve','serve','serveEvent');break;
    case 'serveEvent': this._event('serveDone');break;
    case 'serveDone': this._m.outgoingType='serve';this._next('turnEnd');break;
-   case 'defendStart': {const q=1-k.state.ball.owner;this._begin(q,'draw');this._notice('turn',{player:q,ball:copy(k.state.ball)});this._next('defend');break;}
+   case 'defendStart': {const q=1-k.state.ball.owner;this._begin(q,'draw');this._notice('turn',{player:q,ball:copy(k.state.ball),...(this._m.outgoingDetails||{})});this._next('defend');break;}
    case 'defend': {if(k.state.ball.kind==='attack'&&this._cards(p,'block').length&&this._blockMax(p)){const c=this._ask('defend',p,{type:'single'},['receive','block'],{ball:copy(k.state.ball)});this._next(c==='block'?'block':'drawAck');}else this._next('drawAck');break;}
    case 'block': {this._setPhase('block');const ids=this._cards(p,'block'),a=this._ask('block',p,{type:'block',min:1,max:Math.min(ids.length,this._blockMax(p))},ids,{block:{maxCount:this._blockMax(p),distinctEffectiveNames:true,centerRequired:true},ball:copy(k.state.ball)});this._enterBlock(a);this._next('blockEvent');break;}
    case 'blockEvent': this._event('blockJudge');break;
@@ -133,7 +133,7 @@ class Match {
    case 'attack': this._setPhase('attack');this._pick('attack','attacker','attackEvent');break;
    case 'attackEvent': this._event('attackDone');break;
    case 'attackDone': this._m.roleTotals[p].toss=this._param(p,'toss');this._m.roleTotals[p].attack=this._param(p,'attack');this._m.outgoingType='attack';this._next('turnEnd');break;
-   case 'turnEnd': {const out=this._resolvedOutgoing();if(this._m.wantsAck[p])this._ask('turnEnd',p,{type:'ack'},[true],{outgoing:copy(out)});this._m.outgoing=copy(out);k.endTurn();k.state.ball=out;this._next('defendStart');break;}
+   case 'turnEnd': {const out=this._resolvedOutgoing();if(this._m.wantsAck[p])this._ask('turnEnd',p,{type:'ack'},[true],{outgoing:copy(out)});this._m.outgoing=copy(out);const parts={toss:this._param(p,'toss'),attack:this._param(p,'attack')};this._m.outgoingDetails=out.kind==='attack'&&Number.isInteger(parts.toss)&&Number.isInteger(parts.attack)&&parts.toss+parts.attack===out.offense?parts:null;k.endTurn();k.state.ball=out;this._next('defendStart');break;}
    case 'lossConfirm': this._ask('lossConfirm',p,{type:'ack'},[true],{reason:this._m.lossReason});this._next('lossResolve');break;
    case 'lossResolve': {this._cleanupSides(p);k.loss(p,{voluntary:false});k.finishLoss();this._m.phase='loss';this._notice('loss',{player:p,reason:this._m.lossReason,winner:1-p,final:!this._zone(p,'sets').length});if(!this._zone(p,'sets').length){this._m.winner=1-p;this._m.phase='finished';this._next('done');}else this._next('interval');break;}
    case 'interval': {this._m.phase='interval';for(let q=0;q<2;q++)k.drawRule(q,Math.max(0,6-this._zone(q,'hand').length));this._move(k.top(p,'sets'),p,'hand');this._m.server=1-p;this._next('rallyStart');break;}
@@ -177,6 +177,6 @@ class Match {
   if(!m.rng||!snapshot.rng||['algorithm','word','calls'].some(key=>m.rng[key]!==snapshot.rng[key])||m.rng.algorithm!=='mulberry32-v1'||!Number.isSafeInteger(m.rng.calls)||m.rng.calls<0||m.rng.word!==((m.seed>>>0)+Math.imul(m.rng.calls,0x6D2B79F5)>>>0)||m.decisionIndex!==m.history?.length||!['setup','rally','loss','interval','finished'].includes(m.phase)||m.pending&&!host.validateRequest(m.pending))throw Error('Invalid match checkpoint');
   const state=copy(snapshot);delete state.match.rng;this._kernel.restore(state);this.epoch++;if(this._m.pending){this._m.pending.epoch=this.epoch;this._m.pending.requestId=this._m.id+':'+this.epoch+':'+this._m.decisionIndex;}return this;
  }
- view(actor){if(![0,1].includes(actor))throw Error('Unknown viewer');const view=this._kernel.view(actor);for(const p of view.players)for(const c of [...(Array.isArray(p.hand)?p.hand:[]),...p.court])c.incarnation=this._kernel.card(c.id).incarnation;return {...view,match:{id:this._m.id,mode:this._m.mode,phase:this._m.phase,rally:this._m.rally,server:this._m.server,winner:this._m.winner,dice:copy(this._m.dice),decisionIndex:this._m.decisionIndex},request:this.request(actor)};}
+ view(actor){if(![0,1].includes(actor))throw Error('Unknown viewer');const view=this._kernel.view(actor);for(const p of view.players)for(const c of [...(Array.isArray(p.hand)?p.hand:[]),...p.court])c.incarnation=this._kernel.card(c.id).incarnation;return {...view,match:{id:this._m.id,mode:this._m.mode,phase:this._m.phase,rally:this._m.rally,server:this._m.server,winner:this._m.winner,dice:copy(this._m.dice),decisionIndex:this._m.decisionIndex,notices:copy(this._m.notices)},request:this.request(actor)};}
 }
 module.exports={Match,signature};

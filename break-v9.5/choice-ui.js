@@ -5,8 +5,8 @@
 'use strict';
 const H = root.BreakHostChoice || (typeof require !== 'undefined' ? require('./host-choice') : null);
 const CSS = `
-.hc{display:grid;gap:10px;min-width:0;font:inherit;color:var(--ink,#122326)}
-.hc *{box-sizing:border-box}
+.hc[data-kind]{display:grid;gap:10px;min-width:0;font:inherit;color:var(--ink,#122326)}
+.hc[data-kind] *{box-sizing:border-box}
 .hc-head{display:flex;gap:10px;align-items:flex-start;min-width:0}
 .hc-head .hc-src{flex:0 0 44px;width:44px}
 .hc-q{font-weight:700;font-size:15px;line-height:1.4;min-width:0;overflow-wrap:anywhere}
@@ -17,6 +17,7 @@ const CSS = `
 .hc-card{position:relative;border:0;padding:0;background:none;cursor:pointer;display:grid;gap:3px;min-width:0;text-align:center;color:inherit;font:inherit;border-radius:7px}
 .hc-card img,.hc-src img,.hc-rev img{display:block;width:100%;aspect-ratio:300/419;object-fit:cover;border-radius:6px;background:var(--sunk,#d9e4e3)}
 .hc-card span.hc-nm{font-size:11px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hc-zone{font-size:10px;color:var(--muted,#566b6e)}
 .hc-card.on img{box-shadow:0 0 0 3px var(--court,#d96a1f)}
 .hc-card[aria-pressed="false"] img{opacity:.92}
 .hc-card .hc-badge{position:absolute;top:-6px;right:-4px;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:var(--court,#d96a1f);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center}
@@ -65,7 +66,9 @@ function render(rootEl, request, opts = {}) {
         else if (on && t === 'block') badge = `<span class="hc-badge${key(sel.center) === key(o.value) ? ' ctr' : ''}">${key(sel.center) === key(o.value) ? '中' : '側'}</span>`;
         else if (on) badge = '<span class="hc-badge">✓</span>';
         const c = o.card || { cardNo: '', name: o.label };
-        return `<button type="button" class="hc-card${on ? ' on' : ''}" aria-pressed="${on}" data-hc-v="${esc(key(o.value))}">${c.cardNo ? cardImg(c) : ''}<span class="hc-nm">${esc(o.label)}</span>${badge}</button>`;
+        const parts=String(c.zone||'').split('.'),zone=parts.length===2?parts[1]:parts[0],labels={hand:'手牌',deck:'牌庫',drop:'棄牌',event:'Event',serve:'發球',block:'中攔',receive:'接球',toss:'舉球',attack:'攻擊','side:0':'側攔','side:1':'側攔'};
+        const location=labels[zone]?(parts.length===2?(+parts[0]===request.actor?'我方 ':'對方 '):'')+labels[zone]:'';
+        return `<button type="button" class="hc-card${on ? ' on' : ''}" aria-pressed="${on}" data-hc-v="${esc(key(o.value))}">${c.cardNo ? cardImg(c) : ''}<span class="hc-nm">${esc(o.label)}</span>${location?`<small class="hc-zone">${esc(location)}</small>`:''}${badge}</button>`;
       }).join('')}</div>`;
     }
     return `<div class="hc-opts" role="group">${request.options.map(o => `<button type="button" class="hc-opt${t === 'number' ? ' num' : ''}${sel.value !== undefined && key(sel.value) === key(o.value) ? ' on' : ''}" aria-pressed="${sel.value !== undefined && key(sel.value) === key(o.value)}" data-hc-v="${esc(key(o.value))}">${esc(o.label)}</button>`).join('')}</div>`;
@@ -92,18 +95,19 @@ function render(rootEl, request, opts = {}) {
       <div class="hc-head">${src}<div class="hc-q">${esc(request.prompt)}${prog ? `<small class="hc-prog">${esc(prog)}</small>` : ''}</div></div>
       ${ctx()}${body()}${chips()}
       <div class="hc-err" role="alert">${esc(sel.error || '')}</div>
-      <div class="hc-bar"><button type="button" class="hc-go" data-hc-act="go" ${ok ? '' : 'disabled'}>${GO_LABEL[t]}</button>${(t === 'cards' || t === 'block') && sel.picked.length ? '<button type="button" class="hc-quiet" data-hc-act="clear">清除</button>' : ''}${loss}</div></div>`;
+      <div class="hc-bar"><button type="button" class="hc-go" data-hc-act="go" ${ok ? '' : 'disabled'}>${esc(opts.goLabel || GO_LABEL[t])}</button>${(t === 'cards' || t === 'block') && sel.picked.length ? '<button type="button" class="hc-quiet" data-hc-act="clear">清除</button>' : ''}${loss}</div></div>`;
   }
+  function choose(value) { if (done) return; sel = H.toggle(request, sel, value); draw(); opts.onSelection && opts.onSelection(sel); }
   function onClick(e) {
     if (done) return;
     const b = e.target.closest('button'); if (!b || !rootEl.contains(b)) return;
     const d = b.dataset;
     if (d.hcSrc) { opts.onCard && opts.onCard(request.source); return; }
-    if (d.hcRm) { sel = H.toggle(request, sel, JSON.parse(d.hcRm)); return draw(); }
+    if (d.hcRm) { sel = H.toggle(request, sel, JSON.parse(d.hcRm)); draw(); opts.onSelection && opts.onSelection(sel); return; }
     if (d.hcCtr) { sel = H.setCenter(request, sel, JSON.parse(d.hcCtr)); return draw(); }
-    if (d.hcV !== undefined) { sel = H.toggle(request, sel, JSON.parse(d.hcV)); return draw(); }
+    if (d.hcV !== undefined) return choose(JSON.parse(d.hcV));
     switch (d.hcAct) {
-      case 'clear': sel = H.createSelection(request); return draw();
+      case 'clear': sel = H.createSelection(request); draw(); opts.onSelection && opts.onSelection(sel); return;
       case 'loss': lossArm = true; return draw();
       case 'lossno': lossArm = false; return draw();
       case 'lossyes': done = true; opts.onLoss && opts.onLoss(); return;
@@ -116,7 +120,7 @@ function render(rootEl, request, opts = {}) {
   }
   rootEl.addEventListener('click', onClick);
   draw();
-  return { destroy() { rootEl.removeEventListener('click', onClick); rootEl.innerHTML = ''; }, get selection() { return sel; } };
+  return { destroy() { rootEl.removeEventListener('click', onClick); rootEl.innerHTML = ''; }, select: choose, get selection() { return sel; } };
 }
 const api = { render, CSS };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.BreakChoiceUI = api;

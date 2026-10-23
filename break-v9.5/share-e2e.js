@@ -1,11 +1,11 @@
 'use strict';
-// 查卡網站分享連結匯入（Claude 2026-10-20）：貼連結預覽、鎖定卡清單、匯入我方／AI、?deck= 自動帶入、實際開局
+// 查卡網站分享連結匯入（Claude 2026-10-20）：貼連結預覽、未知卡清單、匯入我方／AI、?deck= 自動帶入、實際開局
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=require('node:assert/strict'),path=require('node:path'),{pathToFileURL}=require('node:url');
 const DT=require('./deck-tools'),CL=require('./card-library'),{DECKS}=require('./engine');
 const imageOf=c=>CL.card(c).versions[0].images[0];
 const okCode=DT.LZString.compressToEncodedURIComponent(JSON.stringify({n:'分享烏野',c:Object.entries(DECKS.quick.cards).map(([c,n])=>[imageOf(c),n])}));
-const lockedCard=Object.values(CL.data.cards).find(c=>!c.playable&&c.kind==='C');
-const badCode=DT.LZString.compressToEncodedURIComponent(JSON.stringify({n:'含鎖定',c:[[imageOf(lockedCard.code),4],['P01-002',36]]}));
+const unknownCard='UNKNOWN-IMPORT-CARD';
+const badCode=DT.LZString.compressToEncodedURIComponent(JSON.stringify({n:'含未收錄卡',c:[[unknownCard,4],['P01-002',36]]}));
 const site='https://weilun2022.github.io/haikyu-cards/?deck=';
 (async()=>{
  const browser=await chromium.launch({executablePath:process.env.PLAYWRIGHT_EXECUTABLE||undefined});
@@ -14,9 +14,9 @@ const site='https://weilun2022.github.io/haikyu-cards/?deck=';
   page.on('pageerror',e=>errors.push(e.message));
   const url=pathToFileURL(path.resolve('index.html')).href;
   await page.goto(url,{waitUntil:'domcontentloaded'});await page.evaluate(()=>localStorage.clear());await page.reload({waitUntil:'domcontentloaded'});await page.selectOption('#gameMode','strict');
-  // 鎖定卡：列出名稱與張數，不給匯入
+  // 全庫已開放；未知卡仍須列出原編號與張數，不給匯入
   await page.click('#editDeck');await page.fill('#shareURL',site+badCode);await page.click('#shareGo');
-  const bad=await page.textContent('#sharePreview');assert.match(bad,/尚未開放對戰的技能卡 4 張/);assert.ok(bad.includes(lockedCard.name));
+  const bad=await page.textContent('#sharePreview');assert.match(bad,/尚未收錄/);assert.ok(bad.includes(unknownCard));
   assert.equal(await page.locator('#shareSave').count(),0);
   // 正常：匯入我方
   await page.fill('#shareURL',site+okCode.replace(/\+/g,' '));await page.click('#shareGo');
@@ -35,7 +35,7 @@ const site='https://weilun2022.github.io/haikyu-cards/?deck=';
   await page.click('[data-close]');
   // 用匯入的牌組實際開局
   await page.selectOption('#speed','200').catch(()=>{});await page.click('#startBtn');
-  await page.waitForFunction(()=>document.getElementById('dockQ').textContent.length>0);
+  await page.waitForFunction(()=>document.querySelector('#dockOpts [data-hc-act="go"]'));assert.equal(await page.evaluate(()=>!!window.BreakRulesLegacy),false);
   assert.deepEqual(errors,[]);
   console.log('share-e2e',width,'ok');await page.close();
  }}finally{await browser.close();}
