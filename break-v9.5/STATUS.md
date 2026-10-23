@@ -4,16 +4,16 @@
 |---|---|
 | 卡片／資料組 | 541／545 |
 | 數值模式可組牌 | 541 |
-| 嚴格模式可組牌 | 537 |
+| 嚴格模式可組牌 | 541 |
 | 無技能角色 | 183 |
-| 共用腳本自動技能 | 347 |
+| 共用腳本自動技能 | 351 |
 | 舊流程技能（待遷入單一核心） | 7 |
-| 未自動化技能 | 4 |
-| 原297張池／實際累計開放 | 297／293（含此前2張回收） |
+| 未自動化技能 | 0 |
+| 原297張池／實際累計開放 | 297／297（含此前2張回收） |
 | 已完成節點模組清單 | 48：sequence、deck_selection、numeric、selector、conditional、payment_branch、pay_guts、compare、draw、move、count_compare、retrieve、watch、uniform_affiliation、all、keyword、rename_before_entry、all_result_cards_match、move_self、mill、enter、formal_declaration_cost、ban_action、invalidate_skill、choose_modes、optional、any、equal_fields、result_count、sum_result_parameter、draw_to_hand_size、exchange、each_player_optional_draw、protect_numeric_decrease、phase_jump、enter_self、external_action、shuffle、move_result、reveal_top、simultaneous_entry_group、cover_source_with_guts、force_judgment_failure、parameter_absent、printed_parameter、retrieve_slots、reveal_and_retrieve、source_skill_maximum |
 | 已測參數形態／涵蓋技能卡／資料組 | 591／351／355 |
 | numeric／selector／conditional／payment_branch／pay_guts／compare／draw 形態 | 77／153／1／1／16／97／5 |
-| move 形態／審查必測項／已修正疑義卡 | 20／14／7（疑義均已裁定；未完成模組／入口維持鎖定） |
+| move 形態／審查必測項／已修正疑義卡 | 20／14／7（疑義均已裁定並開放） |
 | P04-070 範圍裁定／開放狀態 | 本回合持續匹配，含正常及事件效果登場；已開放，來源被覆蓋或離場後保護仍持續到本回合結束 |
 | count_compare 形態／依賴技能卡 | 13／45 |
 | retrieve 形態／依賴技能卡／分組約束 | 7／40／同區、不同名、共同所屬 |
@@ -21,7 +21,7 @@
 | uniform_affiliation 形態／依賴技能卡／新增開放 | 18／33／9 |
 | all 形態／依賴技能卡／新增開放 | 1／34／12（子條件逐項反例與短路） |
 | keyword 形態／依賴技能卡／新增開放 | 15／31／21（8種效果；未支援入口維持鎖定） |
-| rename_before_entry 形態／依賴技能卡／新增開放 | 25／28／25（3張卡文版本疑義維持鎖定） |
+| rename_before_entry 形態／依賴技能卡／新增開放 | 25／28／28（含3張已裁定同效印刷版本） |
 | all_result_cards_match 形態／依賴技能卡／新增開放 | 18／21／8（付款、棄牌庫、翻牌結果；空結果不成立） |
 | move_self 形態／依賴技能卡／新增開放 | 6／20／1（棄牌、Event放置、牌底、回手） |
 | 角色登場監聽形態／依賴卡／新增開放 | 17／18／8（來源於登場當下判定；143個入口局面） |
@@ -38,12 +38,12 @@
 | Claude 第4節入口審查 | 10張審查已整合；source_covered五張及event_played兩張已開放；P03-039依結算當下Event區選費用（含剛打出且仍在場者，屬推論）；P03-047本技能上限已完成 |
 | 失效角色手牌技能 | 不再提供發動選項，失效Event仍可打出；seed29卡死修正 |
 | 已支援觸發入口 | 8：event、active、passive:self_entry、permanent_entry_name、passive:character_entry、passive:source_covered、passive:event_played、passive:self_entry_cover |
-| 本組測卡／每卡局面／本次新開 | 293／3以上；本技能上限一張、5組各4 Event正式對照、16個跨Event數值快取Undo與3局新核心／1 |
+| 本組測卡／每卡局面／本次新開 | 297／3以上；同效印刷版本4張、8資料組逐一驗證，改名與宣告費用本機Undo／4 |
 | 累計路徑前7節點：節點齊備／入口與資料許可 | 31／27（測試前預估） |
 | 累計路徑前10節點：節點齊備／入口與資料許可 | 96／88（測試前預估） |
 | 累計路徑前13節點：節點齊備／入口與資料許可 | 133／122（測試前預估） |
-| 累計路徑前20節點：節點齊備／入口與資料許可 | 225／213（測試前預估，含路徑中入口完成） |
-| 累計路徑入口步驟：permanent_entry_name／passive:character_entry | 第15節點後168／第17節點後185（測試前預估） |
+| 累計路徑前20節點：節點齊備／入口與資料許可 | 225／217（測試前預估，含路徑中入口完成） |
+| 累計路徑入口步驟：permanent_entry_name／passive:character_entry | 第15節點後171／第17節點後188（測試前預估） |
 | 後續入口步驟 | 本輪指定的source_covered／event_played／self_entry_cover均已完成 |
 | source_covered 形態／新增開放 | 5／5（被蓋前位置與新角色有效名／所屬；玩家排序、Guts來源失效免疫、離場後保留、費用與期限） |
 | event_played 形態／新增開放 | 3／2（Event本身結算後、手牌打出／效果放置分開、階段／名稱／所屬／來源角色、重複出牌；P03-047本技能上限已完成） |
@@ -55,7 +55,7 @@
 | external_result | 擲幣結果確認：沿用ack，合法回答true；結果由共用RNG產生且不可指定，Undo與預覽不重抽 |
 | shuffle 形態／依賴卡／新增開放 | 2／4／4（自己／對手、實體牌Fisher-Yates、先回牌再洗再抽、可選／所屬條件、共用亂數與Undo；0或1張不消耗亂數） |
 | reveal_top／move_result 形態／依賴卡／新增開放 | 1＋1／3／3（先按翻牌、公開實際卡、結果確認、同目標加值／選參數、條件與回底提示、空牌庫／失效／期限；全程不耗亂數） |
-| 累計路徑下一步預估 | 48節點與8入口全完成，原池293／297；清理四張已裁定同效卡文的舊鎖定旗標，預估293→297（+4），逐資料組情境驗證後開放 |
+| 累計路徑下一步預估 | 48節點與8入口全完成，原池297／297；全庫技能接通收尾，後續為正式流程全面切換單一核心及7張舊流程遷移；多人與AI強化延後 |
 | 路徑計數起點（不計入前7／10／13／20） | sequence＋deck_selection |
 | 新UI選擇形態／逐卡SHA核准／新證據檔／計時紀錄 | 0／0／0／0（沿用既有單選／數量選擇，不新增UI形態） |
 | simultaneous_entry_group 形態／依賴卡／檢查點 | 1／2；整組在場後檢查登場觸發，原技能完成後玩家選順序（QA1368–1371／1901–1902） |
@@ -66,3 +66,4 @@
 | retrieve_slots 形態／依賴卡／實際數量 | 1／1；各槽獨立至多一張，排除重複實體，實際回收3張才棄1，可棄原手牌或回收牌；加手觸發在原效果完成後結算（QA1373） |
 | reveal_and_retrieve 形態／依賴卡／順序 | 1／1；先選翻0或1張，再顯示實際卡；青葉城西必回收，其他直接回底，公開Event不論所屬在此之後抽1；拒絕翻牌與空庫提示分開（QA1849–1850） |
 | source_skill_maximum 形態／依賴卡／範圍 | 1／1；僅限制本技能當次加值到3，其他來源可更高且不被歸低；攻擊階段手牌Event完成後判定舉球來源，逐次更新快取、拒絕重複通知 |
+| 已裁定同效印刷版本 | 4張／8資料組；保留原始兩版卡文，三張改名統一this_turn，P04-072僅限角色；共用執行權限351卡／355資料組 |

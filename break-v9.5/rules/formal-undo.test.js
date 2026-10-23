@@ -12,4 +12,4 @@ async function check(code){
  for(let i=0;i<=history.length;i++){session.start(history.slice(0,i));await tick();const current=queue.shift();assert(current);assert.deepEqual(current.state,points[i].state,'Full formal-cost / effect choice Undo '+code+' '+i);stale.resolve(answer(stale.req));await tick();assert.deepEqual(snapshot(session.game),current.state,'Stale reply cannot pay or execute a restored declaration');stale=current;}
  assert.deepEqual(errors,[]);session.stop();console.log('formal Undo '+code+': '+points.length+' complete choice boundaries, physical cards, paid cost, effect state and stale replies passed');
 }
-(async()=>{for(const c of ['P01-031','P03-014','PR-082'])await check(c);})().catch(e=>{console.error(e);process.exitCode=1;});
+(async()=>{for(const c of ['P01-031','P03-014','PR-082','P04-072'])await check(c);})().catch(e=>{console.error(e);process.exitCode=1;});

@@ -78,6 +78,7 @@ for c in source:
         same_text[fingerprint].append(json.dumps(p['program'],ensure_ascii=False,sort_keys=True))
 check('相同卡文跨卡號引用同一效果結構',all(len(set(v))==1 for v in same_text.values()))
 check('四個官方卡文差異保留各自版本',{c['card_no'] for c in cards.values() if c['skill_text_variant_conflict']}=={'HV-P02-077','HV-P02-078','HV-P03-077','HV-P04-072'})
+check('既定裁定四卡保留兩版原文、移除舊旗標但不核准runtime',all(len(cards['HV-'+code]['profiles'])==2 and cards['HV-'+code].get('skill_text_variant_resolution') and all('OFFICIAL_TEXT_VARIANTS_PRESERVED' not in p['flags'] and not p['runtime_approved'] for p in cards['HV-'+code]['profiles']) for code in ['P02-077','P02-078','P03-077','P04-072']))
 check('P04-072兩版依卡文審查統一角色卡目標',all(p['program']['steps'][1]['pool']['filters']['type']=='character' for p in cards['HV-P04-072']['profiles']))
 check('三張改名卡兩版統一本回合',all(p['program']['steps'][0]['duration']=='this_turn' for code in ['P02-077','P02-078','P03-077'] for p in cards['HV-'+code]['profiles']))
 check('P02-035所屬校正有官方問答依據',prof('P02-035')['source_corrections'][0]['basis_qa']=='1299','1299')

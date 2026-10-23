@@ -1,6 +1,6 @@
 {
   "status": "DATA_MAPPING_CHECKS_NOT_FULL_GAME_SIMULATION",
-  "passed": 80,
+  "passed": 81,
   "failed": 0,
   "cards": 541,
   "skill_profiles": 362,
@@ -178,6 +178,11 @@
     },
     {
       "title": "四個官方卡文差異保留各自版本",
+      "passed": true,
+      "qa_id": null
+    },
+    {
+      "title": "既定裁定四卡保留兩版原文、移除舊旗標但不核准runtime",
       "passed": true,
       "qa_id": null
     },

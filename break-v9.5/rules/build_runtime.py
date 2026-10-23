@@ -23,7 +23,10 @@ def runtime_data():
         card = copy.deepcopy(original)
         profile = card['profiles'][0]
         if authority['cards'][short(card['card_no'])]['kind'] == 'shared':
-            profile['runtime_approved'] = True
+            ids=authority['cards'][short(card['card_no'])].get('profileIds', [profile['profile_id']])
+            for variant_profile in card['profiles']:
+                assert variant_profile['profile_id'] in ids, 'Unverified printed profile'
+                variant_profile['runtime_approved'] = True
         else:
             # Printed identity is available; no other first-pass skill is executable.
             profile = {'profile_id': profile['profile_id'], 'variants': profile['variants'], 'program': None,
@@ -32,7 +35,7 @@ def runtime_data():
             card['profiles'] = [profile]
         cards.append(card)
     result = {'catalog': {'cards': cards}, 'authority': authority,
-              'approved': [p['profileId'] for p in authority['cards'].values() if p['kind'] == 'shared'],
+              'approved': [pid for p in authority['cards'].values() if p['kind'] == 'shared' for pid in p.get('profileIds', [p['profileId']])],
               'ruleIds': [r['id'] for r in json.loads((root / 'data/shared-rules.json').read_text())['rules']]}
     result['fingerprint'] = hashlib.sha256(json.dumps(result, sort_keys=True).encode()).hexdigest()
     return result

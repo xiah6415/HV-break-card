@@ -21,7 +21,11 @@ const PRIORITY=['numeric','selector','conditional','payment_branch','pay_guts','
 const BASE_ENTRIES=['event','active','passive:self_entry'];
 const LIVE_ENTRIES=[...BASE_ENTRIES,'permanent_entry_name','passive:character_entry','passive:source_covered','passive:event_played','passive:self_entry_cover'];
 const entryKey=c=>c.profiles[0].activation.skill_type==='passive'?'passive:'+c.profiles[0].activation.trigger?.event:c.profiles[0].activation.skill_type;
-const reviewClear=c=>c.profiles.length===1&&!c.skill_text_variant_conflict&&!c.profiles[0].flags?.length;
+function profileMechanics(p){return clean({program:p.program,activation:p.activation,formal_cost:p.formal_cost,limit:p.limit,practice_override:p.practice_override??null,printed:[...new Set(p.variants.map(v=>JSON.stringify(clean(v.printed))))].sort()});}
+function equivalentProfiles(c){const first=JSON.stringify(profileMechanics(c.profiles[0]));return c.profiles.every(p=>JSON.stringify(profileMechanics(p))===first);}
+// Variant consistency is separate from node admission: only already-resolved
+// text differences can pass, then every preserved profile is scenario-tested.
+const reviewClear=c=>c.profiles.every(p=>!p.flags?.length)&&(c.profiles.length===1?!c.skill_text_variant_conflict:!!c.skill_text_variant_resolution&&equivalentProfiles(c));
 function inventory(catalog,completed,released=[]){
  const fs=forms(catalog),done=new Set(completed),open=new Set(released),source=scope(catalog);
  const cards=source.map(c=>({code:short(c.card_no),dependencies:dependencies(c),entry:entryKey(c),reviewClear:reviewClear(c),released:open.has(short(c.card_no))}));
@@ -41,5 +45,5 @@ function inventory(catalog,completed,released=[]){
  if(pending){const ready=new Set(done),entries=new Set(LIVE_ENTRIES);(pending.type==='node'?ready:entries).add(pending.kind);next={...pending,routeEntryReady:pending.entryReady,entryReady:cards.filter(c=>c.reviewClear&&entries.has(c.entry)&&c.dependencies.every(k=>ready.has(k))).length};}
  return {scope:cards.length,kinds:rows.length,completed:[...completed],completedEntries:LIVE_ENTRIES,rows,path,next,cards};
 }
-module.exports={short,walk,nodes,scope,forms,parameters,clean,entrySupported,dependencies,inventory,entryKey,PRIORITY,LIVE_ENTRIES};
+module.exports={short,walk,nodes,scope,forms,parameters,clean,entrySupported,dependencies,inventory,entryKey,PRIORITY,LIVE_ENTRIES,reviewClear,equivalentProfiles,profileMechanics};
 if(require.main===module){const r=inventory(require('./data/cards.json'),require('./modules').completed.map(m=>m.id),Object.keys(require('./runtime-data.json').authority.cards).filter(c=>require('./runtime-data.json').authority.cards[c].kind==='shared'));console.log(JSON.stringify({scope:r.scope,kinds:r.kinds,completed:r.completed,path:r.path,next:r.next},null,2));}

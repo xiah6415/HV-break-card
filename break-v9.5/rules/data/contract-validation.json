@@ -277,7 +277,7 @@
       "passed": true
     }
   ],
-  "mapping_sha256": "55ba2977bd39a58d4e765a919f783a92c768b2d1f03fe0ec7cfb22f8ba7470c8",
+  "mapping_sha256": "7413e1e0053316f454604961cb53d4dd3ac39ba74bb4006e090afc6f3585b5e4",
   "limitations": [
     "Candidate ID pools are prefiltered; this suite does not implement every card filter",
     "No state movement, trigger queue, expiry, undo or multiplayer integration",

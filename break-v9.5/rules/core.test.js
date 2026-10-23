@@ -46,7 +46,8 @@ test('Unresolved continuous protection scope cannot execute',()=>{
  const bad={kind:'protect_numeric_decrease',parameter:'all',duration:'this_turn',target:'source',target_scope:{mode:'all',binding:'all_matches',membership:'unresolved'}};assert.throws(()=>g.preflight(bad),NeedsReview);
 });
 test('An unresolved printed version cannot execute',()=>{
- const g=game('receive');const id=add(g,'P04-072');unchangedAfter(g,()=>g.playEvent(id),NeedsReview);
+ const unresolved=copy(catalog);unresolved.cards.find(c=>c.card_no==='HV-P04-072').profiles.forEach(p=>p.flags.push('OFFICIAL_TEXT_VARIANTS_PRESERVED'));
+ const g=new Kernel({catalog:unresolved,ruleIds:rules.rules.map(r=>r.id),fingerprint,mode:'sandbox',choose:decisions});g.state.turn.phase='receive';const id=add(g,'P04-072');unchangedAfter(g,()=>g.useSkill(id),NeedsReview);
 });
 
 // Official restriction layers and exact origin/phase matching.

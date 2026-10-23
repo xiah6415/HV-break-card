@@ -37,6 +37,11 @@ completed.push({id:'retrieve_slots',test:require('./slot-tests').testSlots});
 completed.push({id:'reveal_and_retrieve',test:require('./reveal-retrieve-tests').testRevealRetrieve});
 completed.push({id:'source_skill_maximum',test:require('./maximum-tests').testMaximum});
 function testCard(catalog,card){
+ if(card.profiles.length===1)return testSingleCard(catalog,card);
+ assert(I.equivalentProfiles(card),'Different printed mechanics cannot share execution');
+ for(const p of card.profiles){const variantCatalog=structuredClone(catalog),variant=variantCatalog.cards.find(c=>c.card_no===card.card_no);variant.profiles=[structuredClone(p)];variant.skill_text_variant_conflict=false;testSingleCard(variantCatalog,variant);}
+}
+function testSingleCard(catalog,card){
  if(I.dependencies(card).includes('source_skill_maximum'))return require('./maximum-tests').testCard(catalog,card);
  if(I.dependencies(card).includes('reveal_and_retrieve'))return require('./reveal-retrieve-tests').testCard(catalog,card);
  if(I.dependencies(card).includes('retrieve_slots'))return require('./slot-tests').testCard(catalog,card);
@@ -95,16 +100,16 @@ function testModules(catalog){
  for(const card of I.scope(catalog)){
   if(!eligible(card))continue;
   testCard(catalog,card);
-  if(I.dependencies(card).some(k=>['source_skill_maximum','reveal_and_retrieve','retrieve_slots','printed_parameter','parameter_absent','force_judgment_failure','cover_source_with_guts','simultaneous_entry_group','phase_jump','enter_self','external_action','shuffle','reveal_top'].includes(k))||['source_covered','event_played','self_entry_cover'].includes(card.profiles[0].activation.trigger?.event)){cards[I.short(card.card_no)]={profileId:card.profiles[0].profile_id,modules:I.dependencies(card)};continue;}
+  if(I.dependencies(card).some(k=>['source_skill_maximum','reveal_and_retrieve','retrieve_slots','printed_parameter','parameter_absent','force_judgment_failure','cover_source_with_guts','simultaneous_entry_group','phase_jump','enter_self','external_action','shuffle','reveal_top'].includes(k))||['source_covered','event_played','self_entry_cover'].includes(card.profiles[0].activation.trigger?.event)){cards[I.short(card.card_no)]={profileId:card.profiles[0].profile_id,...(card.profiles.length>1?{profileIds:card.profiles.map(p=>p.profile_id)}:{}),modules:I.dependencies(card)};continue;}
   if(I.dependencies(card).includes('protect_numeric_decrease'))require('./protect-node-tests').testProtectCard(catalog,card);
   if(I.dependencies(card).includes('invalidate_skill'))require('./invalid-node-tests').testInvalidCard(catalog,card);
   if(I.dependencies(card).includes('ban_action'))require('./ban-node-tests').testBanCard(catalog,card);
   if(I.dependencies(card).includes('enter'))require('./enter-node-tests').testEffectCard(catalog,card);
-  if(card.profiles[0].activation.trigger?.event==='character_entry'){cards[I.short(card.card_no)]={profileId:card.profiles[0].profile_id,modules:I.dependencies(card)};continue;}
+  if(card.profiles[0].activation.trigger?.event==='character_entry'){cards[I.short(card.card_no)]={profileId:card.profiles[0].profile_id,...(card.profiles.length>1?{profileIds:card.profiles.map(p=>p.profile_id)}:{}),modules:I.dependencies(card)};continue;}
   if(I.dependencies(card).includes('all_result_cards_match'))require('./result-match-node-tests').testResultCard(catalog,card);
   if(I.dependencies(card).includes('all'))require('./all-node-tests').testAllCard(catalog,card);
   if(I.dependencies(card).includes('watch'))require('./watch-card-tests').testWatchCard(catalog,card);
-  cards[I.short(card.card_no)]={profileId:card.profiles[0].profile_id,modules:I.dependencies(card)};
+  cards[I.short(card.card_no)]={profileId:card.profiles[0].profile_id,...(card.profiles.length>1?{profileIds:card.profiles.map(p=>p.profile_id)}:{}),modules:I.dependencies(card)};
  }
  require('./script-review-tests').testReview(catalog);
  return {cards,modules};

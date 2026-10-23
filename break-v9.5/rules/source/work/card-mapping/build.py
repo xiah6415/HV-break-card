@@ -234,6 +234,21 @@ def rename(text,number):
                     duration='this_turn' if number in ['HV-P02-077','HV-P02-078','HV-P03-077'] else ('this_turn_or_role_exit' if 'そのターン終了時' in text else 'unspecified_in_this_print'),
                     character_count=1))
 
+# These text corrections were already adopted in SCRIPT-REVIEW section 2.
+# Equivalence is a consistency check, never a substitute for a ruling or tests.
+TEXT_RESOLUTIONS={
+ 'HV-P02-077':dict(ruling='rename_until_turn_end',basis='accepted SCRIPT-REVIEW section 2 / general end-phase rule'),
+ 'HV-P02-078':dict(ruling='rename_until_turn_end',basis='accepted SCRIPT-REVIEW section 2 / general end-phase rule'),
+ 'HV-P03-077':dict(ruling='rename_until_turn_end',basis='accepted SCRIPT-REVIEW section 2 / general end-phase rule'),
+ 'HV-P04-072':dict(ruling='character_cards_only',basis='official QA1911 / accepted SCRIPT-REVIEW section 2'),
+}
+def rule_body(value):
+    if isinstance(value,dict): return {k:rule_body(v) for k,v in value.items() if k not in ['node_id','shared_rule_ids','category_tags','classification_role','polarity']}
+    if isinstance(value,list): return [rule_body(v) for v in value]
+    return value
+def mechanics(p):
+    return json.dumps(rule_body(dict(program=p['program'],activation=p['activation'],formal_cost=p['formal_cost'],limit=p['limit'],practice_override=p['practice_override'],printed=sorted({json.dumps(v['printed'],ensure_ascii=False,sort_keys=True) for v in p['variants']}))),ensure_ascii=False,sort_keys=True)
+
 by_number=collections.defaultdict(list)
 for c in source['cards']: by_number[c['card_no']].append(c)
 cards=[];anomalies=[];profile_counts=collections.Counter();node_counts=collections.Counter()
@@ -298,6 +313,9 @@ for number,records in by_number.items():
                                          image_url='https://www.takaratomy.co.jp/products/haikyuvobacabreak/cardlist/card/HV-PR-013-P.webp',
                                          image_sha256=hashlib.sha256((WORK/'official-PR-013-P.webp').read_bytes()).hexdigest())]
         profiles.append(p);profile_counts[status]+=1
+    resolution=TEXT_RESOLUTIONS.get(number) if len(profiles)>1 and len({mechanics(p) for p in profiles})==1 else None
+    if resolution:
+        for p in profiles:p['flags']=[f for f in p['flags'] if f!='OFFICIAL_TEXT_VARIANTS_PRESERVED']
     raw_bases={json.dumps({k:c[k] for k in ['name','category','affiliation','position','srv','blk','rcv','tos','atk']},ensure_ascii=False,sort_keys=True) for c in records}
     normalized_bases={json.dumps(printed(c),ensure_ascii=False,sort_keys=True) for c in records}
     if len(raw_bases)>1:
@@ -305,9 +323,9 @@ for number,records in by_number.items():
                               handling='原欄位保留；本批位置重複附在所屬文字者標準化後相同' if len(normalized_bases)==1 else '真正身分差異須依版本處理'))
     if len(skill_groups)>1:
         anomalies.append(dict(kind='OFFICIAL_SKILL_TEXT_VARIANTS',card_no=number,profile_ids=[p['profile_id'] for p in profiles],
-                              handling='保留各版本，不選定單一規範文字；相同效果結構也不等於已裁定印刷差異'))
+                              handling='沿用已採納裁定，保留各版原文；執行開放仍需逐資料組情境測試' if resolution else '保留各版本，不選定單一規範文字；相同效果結構也不等於已裁定印刷差異'))
     cards.append(dict(card_no=number,display_name=records[0]['name'],type=records[0]['category'].lower(),profiles=profiles,
-                      record_count=len(records),skill_text_variant_conflict=len(skill_groups)>1))
+                      record_count=len(records),skill_text_variant_conflict=len(skill_groups)>1,**({'skill_text_variant_resolution':resolution} if resolution else {})))
 
 assert all_used_programs==set(PROGRAMS),set(PROGRAMS)-all_used_programs
 assert len(cards)==541 and len(all_variant_ids)==713

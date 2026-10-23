@@ -18,7 +18,7 @@ function groupFor(n,message){const k=n?.kind;if(k==='rename_before_entry'||messa
 function buildCoverage(){
  const catalog=read('data/cards.json'),rules=read('data/shared-rules.json'),approvals=read('approvals.json'),runtime=read('runtime-data.json');
  const before=digest({catalog,approvals,runtime}),admitted=new Set(runtime.approved),runtimeCards=new Set(runtime.catalog.cards.map(c=>c.card_no));
- if(JSON.stringify([...admitted].sort())!==JSON.stringify(Object.values(runtime.authority.cards).filter(p=>p.kind==='shared').map(p=>p.profileId).sort()))throw Error('Runtime release set differs from authority');
+ if(JSON.stringify([...admitted].sort())!==JSON.stringify(Object.values(runtime.authority.cards).filter(p=>p.kind==='shared').flatMap(p=>p.profileIds||[p.profileId]).sort()))throw Error('Runtime release set differs from authority');
  for(const id of admitted){const original=catalog.cards.flatMap(c=>c.profiles).find(p=>p.profile_id===id),live=runtime.catalog.cards.flatMap(c=>c.profiles).find(p=>p.profile_id===id);if(!original||!live?.runtime_approved)throw Error('Missing approved profile '+id);if(JSON.stringify(stable(original))!==JSON.stringify(stable({...live,runtime_approved:original.runtime_approved})))throw Error('Approved data differs: '+id);}
  const kernel=new Kernel({catalog,ruleIds:rules.rules.map(r=>r.id),fingerprint:hash('data/cards.json'),mode:'sandbox'});
  const profiles=[],mechanisms=new Map();
@@ -29,7 +29,7 @@ function buildCoverage(){
   const roots=[['program',p.program],...((p.formal_cost?.steps||[]).map((n,i)=>['formal_cost.steps['+i+']',n]))];
   if(p.program){
    for(const flag of p.flags||[])put('review','review','flag:'+flag,'flags',flag);
-   if(card.skill_text_variant_conflict)put('review','review','card_text_variants','profiles','保留卡文版本，尚未選定規範版本');
+   if(card.skill_text_variant_conflict&&!require('./node-inventory').reviewClear(card))put('review','review','card_text_variants','profiles','保留卡文版本，尚未選定規範版本');
    const a=p.activation;
    if(a?.skill_type==='passive'&&!['self_entry','character_entry','source_covered','event_played','self_entry_cover'].includes(a.trigger?.event))core('non_entry_passive','trigger:'+a.trigger?.event,'activation.trigger','核心已接自身登場與角色登場監聽；其他被動觸發入口尚待接入');
    else if(!['passive','active','event','permanent_entry_name'].includes(a?.skill_type))core('other','activation:'+a?.skill_type,'activation','未知或尚未接入的技能類型');

@@ -36,13 +36,19 @@ console.log('deck-tools: all tests passed');
   // 自家 encodeShare 往返
   assert.deepEqual(DT.parseShare(DT.encodeShare(deck), DEF).cards, deck.cards);
   // inspect：一次列出鎖定卡、張數
-  const locked = Object.values(CL.data.cards).filter(c => !c.playable && c.kind === 'C').slice(0, 2);
+  // All real cards are now open; simulate unresolved browse metadata so the
+  // inspector's locked-card/count diagnostics remain tested without a live lock.
+  const locked = ['P02-077','P04-072'].map(code=>CL.card(code));
+  const originalPlayable=locked.map(c=>c.playable);
+  try {
+  locked.forEach(c=>c.playable=false);
   const bad = { n: 'x', c: [[imageOf(locked[0].code), 3], [locked[1].code, 2], ['P01-002', 30], ['NOPE-999', 1]] };
   const r = DT.inspectDeck(DT.decodeShare(LZ.compressToEncodedURIComponent(JSON.stringify(bad))), DEF);
   assert.equal(r.ok, false);
   assert.deepEqual(r.locked.map(l => [l.code, l.count]), [[locked[0].code, 3], [locked[1].code, 2]]);
   assert.equal(r.unknown.length, 1); assert.equal(r.total, 36);
   assert.ok(r.problems.some(p => /40 張/.test(p)) && r.problems.some(p => /尚未開放/.test(p)));
+  } finally {locked.forEach((c,i)=>c.playable=originalPlayable[i]);}
   assert.equal(DT.inspectDeck(payload, DEF).ok, true);
   // 壞輸入
   assert.throws(() => DT.decodeShare(''), /請貼上/);

@@ -49,6 +49,7 @@ def build_authority(catalog=None, approvals=None, legacy=None):
     release = json.loads(process.stdout)
     for code, record in release['cards'].items():
         assert code in by_code and record['profileId'] in by_id, 'Unknown module card'
+        assert record.get('profileIds', [record['profileId']]) == [p['profile_id'] for p in by_code[code]['profiles']], 'Every preserved profile must pass module card tests'
         assert code not in grants or grants[code]['kind'] == 'shared', 'Module conflicts with legacy controller'
         grants[code] = dict(kind='shared', **record)
     cards = {}

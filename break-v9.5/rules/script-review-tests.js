@@ -62,8 +62,7 @@ function testReview(catalog){
   const k=F.game(catalog),covered=k.addCard('HV-PR-057',0,'attack'),expected=profile(code).activation.trigger.filters.covered_names[0];rename(k,covered,expected);
   const next=plain(k,0,'hand');k.state.turn.phase='attack';k.enter(next,'attack');assert.equal(k.card(next).coveredCharacter.effective_name,expected);assert(I.entrySupported(card(code)));
  }
- // Six resolved doubts: both printed versions have identical semantics, but
- // their not-yet-supported trigger families remain locked.
+ // Resolved printed differences keep identical semantics and their raw text.
  for(const code of ['P02-077','P02-078','P03-077'])for(const p of card(code).profiles)assert.equal(p.program.steps[0].duration,'this_turn');
  for(const stock of [0,1,2]){const k=F.game(catalog),source=k.addCard('HV-P02-064',0,'attack');for(let i=0;i<stock;i++)plain(k,0,'hand');k.resolveProgram(profile('P02-064').program,0,source);assert.equal(k.state.decisions.some(d=>d.request.kind==='optional'),stock===2);assert.equal(k.zone(0,'drop').length,stock===2?2:0);if(stock<2)for(const p of ['serve','block','receive','toss','attack'])if(k.card(source).printed.parameters[p]!=='dash')assert.equal(k.parameter(source,p),0);}
  for(const current of [2,3,5]){const k=F.game(catalog),source=k.addCard('HV-P03-047',0,'toss'),ctx=k._context(source,0);k.card(source).printed.parameters.toss=2;if(current>2)k.effect('numeric',{target:k.reference(source),parameter:'toss',operation:'add',value:current-2},k._context(null,0));k.resolveProgram(profile('P03-047').program,0,source);assert.equal(k.parameter(source,'toss'),current===2?3:current);k.effect('numeric',{target:k.reference(source),parameter:'toss',operation:'add',value:3},k._context(null,0));assert.equal(k.parameter(source,'toss'),(current===2?3:current)+3);}

@@ -28939,9 +28939,7 @@
               ]
             }
           ],
-          "flags": [
-            "OFFICIAL_TEXT_VARIANTS_PRESERVED"
-          ],
+          "flags": [],
           "practice_override": null
         },
         {
@@ -29051,14 +29049,16 @@
               ]
             }
           ],
-          "flags": [
-            "OFFICIAL_TEXT_VARIANTS_PRESERVED"
-          ],
+          "flags": [],
           "practice_override": null
         }
       ],
       "record_count": 3,
-      "skill_text_variant_conflict": true
+      "skill_text_variant_conflict": true,
+      "skill_text_variant_resolution": {
+        "ruling": "rename_until_turn_end",
+        "basis": "accepted SCRIPT-REVIEW section 2 / general end-phase rule"
+      }
     },
     {
       "card_no": "HV-P02-078",
@@ -29174,9 +29174,7 @@
               ]
             }
           ],
-          "flags": [
-            "OFFICIAL_TEXT_VARIANTS_PRESERVED"
-          ],
+          "flags": [],
           "practice_override": null
         },
         {
@@ -29288,14 +29286,16 @@
               ]
             }
           ],
-          "flags": [
-            "OFFICIAL_TEXT_VARIANTS_PRESERVED"
-          ],
+          "flags": [],
           "practice_override": null
         }
       ],
       "record_count": 2,
-      "skill_text_variant_conflict": true
+      "skill_text_variant_conflict": true,
+      "skill_text_variant_resolution": {
+        "ruling": "rename_until_turn_end",
+        "basis": "accepted SCRIPT-REVIEW section 2 / general end-phase rule"
+      }
     },
     {
       "card_no": "HV-P02-079",
@@ -47920,9 +47920,7 @@
               ]
             }
           ],
-          "flags": [
-            "OFFICIAL_TEXT_VARIANTS_PRESERVED"
-          ],
+          "flags": [],
           "practice_override": null
         },
         {
@@ -48032,14 +48030,16 @@
               ]
             }
           ],
-          "flags": [
-            "OFFICIAL_TEXT_VARIANTS_PRESERVED"
-          ],
+          "flags": [],
           "practice_override": null
         }
       ],
       "record_count": 2,
-      "skill_text_variant_conflict": true
+      "skill_text_variant_conflict": true,
+      "skill_text_variant_resolution": {
+        "ruling": "rename_until_turn_end",
+        "basis": "accepted SCRIPT-REVIEW section 2 / general end-phase rule"
+      }
     },
     {
       "card_no": "HV-P03-078",
@@ -67812,9 +67812,7 @@
               ]
             }
           ],
-          "flags": [
-            "OFFICIAL_TEXT_VARIANTS_PRESERVED"
-          ],
+          "flags": [],
           "practice_override": null
         },
         {
@@ -68015,14 +68013,16 @@
               ]
             }
           ],
-          "flags": [
-            "OFFICIAL_TEXT_VARIANTS_PRESERVED"
-          ],
+          "flags": [],
           "practice_override": null
         }
       ],
       "record_count": 3,
-      "skill_text_variant_conflict": true
+      "skill_text_variant_conflict": true,
+      "skill_text_variant_resolution": {
+        "ruling": "character_cards_only",
+        "basis": "official QA1911 / accepted SCRIPT-REVIEW section 2"
+      }
     },
     {
       "card_no": "HV-P04-073",
@@ -95198,7 +95198,7 @@
         "HV-P02-077:8fdb20fa6b94618d",
         "HV-P02-077:ac1a2095e885b16c"
       ],
-      "handling": "保留各版本，不選定單一規範文字；相同效果結構也不等於已裁定印刷差異"
+      "handling": "沿用已採納裁定，保留各版原文；執行開放仍需逐資料組情境測試"
     },
     {
       "kind": "OFFICIAL_SKILL_TEXT_VARIANTS",
@@ -95207,7 +95207,7 @@
         "HV-P02-078:fd37ca12b9623ff9",
         "HV-P02-078:38177ee2a9a96711"
       ],
-      "handling": "保留各版本，不選定單一規範文字；相同效果結構也不等於已裁定印刷差異"
+      "handling": "沿用已採納裁定，保留各版原文；執行開放仍需逐資料組情境測試"
     },
     {
       "kind": "DERIVED_AFFILIATION_TAG_MISMATCH",
@@ -95250,7 +95250,7 @@
         "HV-P03-077:f19e144b4a34ed03",
         "HV-P03-077:592e6d4978651b4c"
       ],
-      "handling": "保留各版本，不選定單一規範文字；相同效果結構也不等於已裁定印刷差異"
+      "handling": "沿用已採納裁定，保留各版原文；執行開放仍需逐資料組情境測試"
     },
     {
       "kind": "DERIVED_AFFILIATION_TAG_MISMATCH",
@@ -95293,7 +95293,7 @@
         "HV-P04-072:3c5d12acc8934f82",
         "HV-P04-072:b4d29bb9a5f76540"
       ],
-      "handling": "保留各版本，不選定單一規範文字；相同效果結構也不等於已裁定印刷差異"
+      "handling": "沿用已採納裁定，保留各版原文；執行開放仍需逐資料組情境測試"
     },
     {
       "kind": "DERIVED_AFFILIATION_TAG_MISMATCH",
@@ -95400,7 +95400,7 @@
   },
   "validation": {
     "artifact": "BREAK-card-mapping-validation.json",
-    "checks": 80,
+    "checks": 81,
     "failed": 0,
     "scope": "data integrity, source expectations, selected condition projections; no game engine integration"
   }
