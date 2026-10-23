@@ -1,0 +1,2 @@
+'use strict';
+const assert=require('node:assert/strict'),T=require('./judgment-tests'),catalog=require('./data/cards.json');assert.equal(T.testFailure(catalog),1);T.testCard(catalog,catalog.cards.find(c=>c.card_no==='HV-P02-039'));console.log('forced judgment: registered before activation; only next opponent block judgment, 6/7 boundary, actor/type/condition/invalidation/expiry and replay passed');

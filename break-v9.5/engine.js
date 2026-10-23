@@ -480,7 +480,7 @@ class Game {
     const natsu = p.hand.includes('P03-096') && combo.some(x => HIN.has(x)) && !(combo.includes('P02-003') && tsu && p.hand.filter(x => !isC(x)).length < 2) ? 1 : 0;
     const names = sharedRules.distinctNameOptions(combo.map((c,i)=>entryNames(c).filter(name=>sharedRules.entryAllowed(this,p,c,i?'side:'+(i-1):'block',{name,entryCount:sharedRules.blockEntered(this,p)+combo.length}))));
     const legal = combo.length >= 1 && combo.length <= this.blockMax(p) && names.length>0 && combo.every(c => combo.filter(x=>x===c).length<=p.hand.filter(x=>x===c).length && st(c, 'blk') != null);
-    return { cards: [...combo], total, tsu, natsu: total < off && natsu > 0, ok: legal && total + natsu >= off, legal, cost: combo.length * 10 + combo.reduce((s, c) => s + val(c), 0) + (total < off ? 3 : 0) };
+    return { cards: [...combo], total, tsu, natsu: (total < off || sharedRules.judgmentFails(this,p,'block',total)) && natsu > 0, ok: legal && total + natsu >= off && !sharedRules.judgmentFails(this,p,'block',total+natsu), legal, cost: combo.length * 10 + combo.reduce((s, c) => s + val(c), 0) + (total < off ? 3 : 0) };
   }
   blockCombos(p, off) {
     const maxn = this.blockMax(p), cs = this.blockCands(p), res = [];
@@ -523,6 +523,7 @@ class Game {
     this.log(`${p.name} 攔網 ${cb.cards.map(short).join('＋')}：攔 ${p.ts.blk} vs ${this.ball.off}`);
     await this.eventLoop(p, 'blk', {});
     if(p.ts.keywordJump==='draw'){delete p.ts.keywordJump;this.cleanupSides(p);return this.receiveTurn(p);}
+    if(sharedRules.judgmentFails(this,p,'block',p.ts.blk)){this.cleanupSides(p);this.lost(p,`技能效果：攔網防禦 ${p.ts.blk} 符合必定失敗條件`);}
     if (p.ts.blk < this.ball.off) {this.cleanupSides(p);this.lost(p, `攔網 ${p.ts.blk} 小於進攻 ${this.ball.off}`);}
     await sharedRules.judgment(this,p,'block_success',{defense:p.ts.blk});
     this.cleanupSides(p);
@@ -849,7 +850,7 @@ const AI = {
           const c = x.value;
           if (sharedRules.handles(c) && p.ts.used?.[c]) continue;
           if (req.timing === 'rcv' && sharedRules.handles(c) && p.ts.rcv < g.ball.off) return c;
-          if (req.timing === 'blk') { if (p.ts.blk < g.ball.off) return c; continue; }
+          if (req.timing === 'blk') { if (p.ts.blk < g.ball.off || sharedRules.judgmentFails(g,p,'block',p.ts.blk)) return c; continue; }
           if (req.timing === 'rcv') {
             if (p.ts.rcv < g.ball.off && ['P01-013', 'P01-088', 'P04-089'].includes(c)) return c;
             if (c === 'P03-096' && p.ts.rcv < g.ball.off && g.cardName(p, 'receive') === '日向 翔陽') return c;

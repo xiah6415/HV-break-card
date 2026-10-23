@@ -6,7 +6,7 @@ const same = (a,b) => JSON.stringify(a) === JSON.stringify(b);
 const COURT = ['serve','block','receive','toss','attack','side:0','side:1'];
 const PARAMS = ['serve','block','receive','toss','attack'];
 const KINDS = new Set(['sequence','conditional','numeric','draw','draw_to_hand_size','move','move_self',
-  'pay_guts','payment_branch','formal_declaration_cost','retrieve','enter','enter_self','simultaneous_entry_group','cover_source_with_guts','watch','ban_action','invalidate_skill',
+  'pay_guts','payment_branch','formal_declaration_cost','retrieve','enter','enter_self','simultaneous_entry_group','cover_source_with_guts','force_judgment_failure','watch','ban_action','invalidate_skill',
   'rename_before_entry','protect_numeric_decrease','phase_jump','reveal_top','move_result','shuffle','external_action','optional','choose_modes','mill','keyword','deck_selection','exchange','each_player_optional_draw']);
 const EXTERNAL_ACTIONS={tilt_card:'將此卡傾斜',coin:'投擲 1 次硬幣',say_巣立てヒナガラス:'說出「巣立て ヒナガラス」',raise_both_hands_and_say_ただーし:'雙手舉起此牌並喊「ただーし！」',say_ジャンバル最高_and_peace_sign:'說出「ジャンバル最高!!」並比出勝利手勢'};
 const FILTERS = new Set(['names','exclude_names','tags','tags_any','positions','positions_any','years','years_any',
@@ -52,6 +52,9 @@ function validateProtection(n) {
     for(const [key,v]of Object.entries(n.target.filters||{}))need(key==='role'?v==='character':key==='tags'&&Array.isArray(v)&&v.length&&v.every(x=>typeof x==='string'),'Unsupported continuous protection filter');
   }else need(s.mode==='single'&&s.binding==='reference'&&['source','$target','$entered','$event.character','self_ball','opponent_ball'].includes(n.target),'Unsupported protection target');
   return true;
+}
+function validateJudgment(n) {
+  need(n.actor==='opponent'&&n.judge==='block'&&n.duration==='next_opponent_turn'&&n.condition?.kind==='compare'&&n.condition.field==='opponent.block_defense'&&n.condition.op==='lte'&&Number.isInteger(n.condition.value),'Unsupported judgment failure parameters');return true;
 }
 function walk(value, fn) {
   if (Array.isArray(value)) value.forEach(v=>walk(v,fn));
@@ -160,6 +163,7 @@ class Kernel {
       value=e.operation==='set' ? e.value : value+e.value;
     return value;
   }
+  judgmentFails(player,judge,defense) { return this.state.effects.some(e=>e.kind==='judgment_failure'&&this.active(e)&&e.actor===player&&e.judge===judge&&defense<=e.condition.value); }
   roleMatches(actual,wanted) { return wanted==='character' ? actual!=='guts' : wanted==='block' ? ['center_blocker','side_blocker'].includes(actual) : actual===wanted; }
   matches(id,filters={},ctx,event={}) {
     for (const key of Object.keys(filters)) need(FILTERS.has(key),'Unsupported filter '+key);
@@ -593,6 +597,7 @@ class Kernel {
       if(n.kind==='each_player_optional_draw')need(Number.isInteger(n.count)&&n.count>0&&n.count_mode==='exact_or_zero'&&n.chooser==='each_affected_player','Unsupported optional draw parameters');
       if(n.kind==='reveal_top')need(n.actor==='self'&&n.count===1&&n.count_mode==='exact'&&n.bind==='revealed','Unsupported reveal top parameters');
       if(n.kind==='move_result')need(n.result==='revealed'&&n.destination==='owner.deck_bottom'&&n.order==='chooser','Unsupported move result parameters');
+      if(n.kind==='force_judgment_failure')validateJudgment(n);
       if(n.kind==='cover_source_with_guts')need(n.count===1&&n.count_mode==='exact'&&n.pool?.kind==='selector','Unsupported source cover parameters');
       if(n.kind==='simultaneous_entry_group')need(n.complete_group_before_triggers===true&&Array.isArray(n.entries)&&n.entries.length>0&&n.entries.every(e=>e.kind==='enter'&&e.count===1&&e.count_mode==='upto'),'Unsupported simultaneous entry parameters');
       if(n.kind==='shuffle')need(['self','opponent'].includes(n.actor),'Unsupported shuffle parameters');
@@ -741,6 +746,7 @@ class Kernel {
       }
       case 'phase_jump': this._jump(node.destination);return true;
       case 'keyword': return this._keyword(node,ctx);
+      case 'force_judgment_failure': this.effect('judgment_failure',{actor:this.owner(node.actor,ctx),judge:node.judge,condition:node.condition},ctx,node.duration);return true;
       case 'cover_source_with_guts': {
         // Placing a Guts on a character changes the physical role, but the
         // instruction does not say enter: no entry skill or quota is created.
@@ -1119,6 +1125,6 @@ class Kernel {
     need(['rally','loss_triggers','interval'].includes(this.state.stage),'Invalid rally stage');
     const seen=new Set();for(const [zone,ids] of Object.entries(this.state.zones))for(const id of ids){need(!seen.has(id),'Physical card appears twice');seen.add(id);const c=this.card(id);need(c.zone===zone&&c.id===id&&[0,1].includes(c.owner)&&Number.isInteger(c.incarnation)&&c.incarnation>=0&&this.profiles[c.profileId],'Card identity/zone mismatch');}need(seen.size===Object.keys(this.state.cards).length,'Card conservation failed'); }
 }
-const api={validateProtection,validateInvalid,validateBan,Kernel,distinctNameOptions,NeedsReview,IllegalAction,capabilities:{status:'HOST_CONTROLLER_REQUIRED',nodes:[...KINDS],keywords:['one_touch','doshat','feint','blockout','a_pass','two_attack','back_attack','multi_attack'],defaultCatalogLiveCardApprovals:0}};
+const api={validateJudgment,validateProtection,validateInvalid,validateBan,Kernel,distinctNameOptions,NeedsReview,IllegalAction,capabilities:{status:'HOST_CONTROLLER_REQUIRED',nodes:[...KINDS],keywords:['one_touch','doshat','feint','blockout','a_pass','two_attack','back_attack','multi_attack'],defaultCatalogLiveCardApprovals:0}};
 if(typeof module!=='undefined')module.exports=api;else root.BreakRulesCore=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
