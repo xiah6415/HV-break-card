@@ -6,7 +6,7 @@ const same = (a,b) => JSON.stringify(a) === JSON.stringify(b);
 const COURT = ['serve','block','receive','toss','attack','side:0','side:1'];
 const PARAMS = ['serve','block','receive','toss','attack'];
 const KINDS = new Set(['sequence','conditional','numeric','draw','draw_to_hand_size','move','move_self',
-  'pay_guts','payment_branch','formal_declaration_cost','retrieve','enter','enter_self','simultaneous_entry_group','cover_source_with_guts','force_judgment_failure','parameter_absent','watch','ban_action','invalidate_skill',
+  'pay_guts','payment_branch','formal_declaration_cost','retrieve','retrieve_slots','enter','enter_self','simultaneous_entry_group','cover_source_with_guts','force_judgment_failure','parameter_absent','watch','ban_action','invalidate_skill',
   'rename_before_entry','protect_numeric_decrease','phase_jump','reveal_top','move_result','shuffle','external_action','optional','choose_modes','mill','keyword','deck_selection','exchange','each_player_optional_draw']);
 const EXTERNAL_ACTIONS={tilt_card:'將此卡傾斜',coin:'投擲 1 次硬幣',say_巣立てヒナガラス:'說出「巣立て ヒナガラス」',raise_both_hands_and_say_ただーし:'雙手舉起此牌並喊「ただーし！」',say_ジャンバル最高_and_peace_sign:'說出「ジャンバル最高!!」並比出勝利手勢'};
 const FILTERS = new Set(['names','exclude_names','tags','tags_any','positions','positions_any','years','years_any',
@@ -352,7 +352,7 @@ class Kernel {
     return ids.some((id,i)=>this._retrieveCompletions(ids.slice(i+1),n,constraints,[...prefix,id]));
   }
   _moveSelected(node,ctx) {
-    const ids=this.pool(node.pool,ctx), recipient=this.owner(node.pool.actor,ctx);
+    const ids=this.pool(node.pool,ctx).filter(id=>!ctx.slotExclusions?.includes(id)), recipient=this.owner(node.pool.actor,ctx);
     // Public-zone targets belong to the effect controller (QA1192/1317/1420).
     // A player discarding from their own private hand retains that choice.
     const chooser=node.pool.zone==='hand'?recipient:ctx.controller;
@@ -602,6 +602,7 @@ class Kernel {
       if(n.kind==='each_player_optional_draw')need(Number.isInteger(n.count)&&n.count>0&&n.count_mode==='exact_or_zero'&&n.chooser==='each_affected_player','Unsupported optional draw parameters');
       if(n.kind==='reveal_top')need(n.actor==='self'&&n.count===1&&n.count_mode==='exact'&&n.bind==='revealed','Unsupported reveal top parameters');
       if(n.kind==='move_result')need(n.result==='revealed'&&n.destination==='owner.deck_bottom'&&n.order==='chooser','Unsupported move result parameters');
+      if(n.kind==='retrieve_slots')need(n.destination==='self.hand'&&n.distinct_instances===true&&n.bind==='retrieved'&&Array.isArray(n.slots)&&n.slots.length>0&&n.slots.every(s=>s.kind==='retrieve'&&s.destination===n.destination),'Unsupported retrieve slots parameters');
       if(n.kind==='printed_parameter')need(n.of==='$target'&&PARAMS.includes(n.parameter),'Unsupported printed parameter expression');
       if(n.kind==='parameter_absent')validateAbsent(n);
       if(n.kind==='force_judgment_failure')validateJudgment(n);
@@ -640,6 +641,12 @@ class Kernel {
         if (node.count_mode==='upto') { const max=Math.min(n,this.zone(player,'deck').length);n=this._decide('draw_count',ctx,Array.from({length:max+1},(_,i)=>i),{player});legal(Number.isInteger(n)&&n>=0&&n<=max,'Invalid draw choice'); }
         ctx.bind.drawn=this._draw(player,n,ctx);return ctx.bind.drawn.length>0; }
       case 'draw_to_hand_size': { const player=this.owner(node.actor,ctx);ctx.bind.drawn=this._draw(player,Math.max(0,node.hand_size-this.zone(player,'hand').length),ctx);return ctx.bind.drawn.length>0; }
+      case 'retrieve_slots': {
+        const previous=ctx.slotExclusions,retrieved=[];
+        try{for(const slot of node.slots){ctx.slotExclusions=[...(previous||[]),...retrieved];this._run(slot,ctx);for(const id of ctx.bind[slot.bind||'retrieved']||[])if(!retrieved.includes(id))retrieved.push(id);}}
+        finally{if(previous)ctx.slotExclusions=previous;else delete ctx.slotExclusions;}
+        ctx.bind[node.bind]=retrieved;return retrieved.length>0;
+      }
       case 'move': case 'retrieve': return this._moveSelected(node,ctx);
       case 'move_self': { const id=ctx.source.id, dest=this._destination(node.destination,id,ctx);
         if(this.card(id).incarnation!==ctx.source.incarnation||this.card(id).zone===dest.player+'.'+dest.zone||ctx.inPayment&&this.profile(id).activation?.trigger?.event==='source_covered'&&(!COURT.includes(this.card(id).zone.split('.')[1])||this.role(id)!=='guts')){if(ctx.inPayment)throw new Unpayable();ctx.bind[node.bind||'moved']=[];return false;}
