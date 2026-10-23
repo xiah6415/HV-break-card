@@ -35,7 +35,9 @@ completed.push({id:'parameter_absent',test:require('./absent-tests').testAbsent}
 completed.push({id:'printed_parameter',test:require('./printed-tests').testPrinted});
 completed.push({id:'retrieve_slots',test:require('./slot-tests').testSlots});
 completed.push({id:'reveal_and_retrieve',test:require('./reveal-retrieve-tests').testRevealRetrieve});
+completed.push({id:'source_skill_maximum',test:require('./maximum-tests').testMaximum});
 function testCard(catalog,card){
+ if(I.dependencies(card).includes('source_skill_maximum'))return require('./maximum-tests').testCard(catalog,card);
  if(I.dependencies(card).includes('reveal_and_retrieve'))return require('./reveal-retrieve-tests').testCard(catalog,card);
  if(I.dependencies(card).includes('retrieve_slots'))return require('./slot-tests').testCard(catalog,card);
  if(I.dependencies(card).includes('printed_parameter'))return require('./printed-tests').testCard(catalog,card);
@@ -93,7 +95,7 @@ function testModules(catalog){
  for(const card of I.scope(catalog)){
   if(!eligible(card))continue;
   testCard(catalog,card);
-  if(I.dependencies(card).some(k=>['reveal_and_retrieve','retrieve_slots','printed_parameter','parameter_absent','force_judgment_failure','cover_source_with_guts','simultaneous_entry_group','phase_jump','enter_self','external_action','shuffle','reveal_top'].includes(k))||['source_covered','event_played','self_entry_cover'].includes(card.profiles[0].activation.trigger?.event)){cards[I.short(card.card_no)]={profileId:card.profiles[0].profile_id,modules:I.dependencies(card)};continue;}
+  if(I.dependencies(card).some(k=>['source_skill_maximum','reveal_and_retrieve','retrieve_slots','printed_parameter','parameter_absent','force_judgment_failure','cover_source_with_guts','simultaneous_entry_group','phase_jump','enter_self','external_action','shuffle','reveal_top'].includes(k))||['source_covered','event_played','self_entry_cover'].includes(card.profiles[0].activation.trigger?.event)){cards[I.short(card.card_no)]={profileId:card.profiles[0].profile_id,modules:I.dependencies(card)};continue;}
   if(I.dependencies(card).includes('protect_numeric_decrease'))require('./protect-node-tests').testProtectCard(catalog,card);
   if(I.dependencies(card).includes('invalidate_skill'))require('./invalid-node-tests').testInvalidCard(catalog,card);
   if(I.dependencies(card).includes('ban_action'))require('./ban-node-tests').testBanCard(catalog,card);

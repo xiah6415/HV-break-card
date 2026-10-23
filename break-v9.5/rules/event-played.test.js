@@ -33,7 +33,7 @@ for(const type of ['event','character']){
  assert.equal(k.parameter(id,'serve'),type==='event'?k.card(id).printed.parameters.serve+1:6);
 }
 {const{k,id,event}=T.setup(catalog,cards.find(c=>c.card_no==='HV-P02-007')),base=k.parameter(id,'attack');k.playEvent(event);k.resolveProgram({kind:'move_self',destination:'owner.hand'},0,event);k.playEvent(event);assert.equal(k.parameter(id,'attack'),base+10);assert.equal(k.card(event).eventPlaySerial,2);}
-// The third entry shape is tested independently of P03-047's still-unreleased cap module.
+// Isolate the third entry shape from the separately tested P03-047 cap module.
 for(const mode of ['positive','phase','origin','role','type']){
  const k=require('./frequent-node-tests').game(catalog),id=k.addCard('HV-P03-047',0,mode==='role'?'receive':'toss'),event=k.addCard(mode==='type'?'HV-D01-009':'HV-P02-082',0,'event');k.state.turn.phase=mode==='phase'?'draw':'attack';let seen=0;
  k._resolveSkill=(p,ctx)=>{assert.equal(ctx.source.id,id);seen++;return true;};

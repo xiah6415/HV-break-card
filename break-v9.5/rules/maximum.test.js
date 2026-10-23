@@ -1,0 +1,2 @@
+'use strict';
+const assert=require('node:assert/strict'),T=require('./maximum-tests'),catalog=require('./data/cards.json');assert.equal(T.testMaximum(catalog),1);T.testCard(catalog,catalog.cards.find(c=>c.card_no==='HV-P03-047'));console.log('source skill maximum: 0/2/3/negative/high external values, only this increment capped, four actual Events including invalid skills, phase/role/invalidation and replay passed');

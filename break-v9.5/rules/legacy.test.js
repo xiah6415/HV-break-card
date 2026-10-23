@@ -69,7 +69,7 @@ async function check(name,fn){await fn();cases.push({name,passed:true});}
     await g.resolve(p,'P01-013','rcv');assert.equal(p.ts.rcv,10);assert.equal(p.effects.receive.mods.rcv,5);assert.equal(g.cardName(p,'receive'),'日向 翔陽');g.finishTurn(p);assert.deepEqual(p.effects,{});
   });
   await check('Only released shared profiles are admitted',async()=>{
-    assert.equal(bridge.approvals.length,346);assert(!bridge.handles('P03-087'));assert(bridge.handles('P03-057'));assert(bridge.handles('P04-088'));
+    assert.equal(bridge.approvals.length,347);assert(!bridge.handles('P03-087'));assert(bridge.handles('P03-057'));assert(bridge.handles('P04-088'));
   });
   await check('Stale effects from a replaced card cannot swallow or contaminate a new bonus',async()=>{
     const {g,p}=setup(async()=> 'receive');p.hand=['P01-013'];p.area.receive=['P01-004'];p.ts.receiver='P01-004';p.ts.rcv=5;

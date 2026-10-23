@@ -602,6 +602,7 @@ class Kernel {
       if(n.kind==='each_player_optional_draw')need(Number.isInteger(n.count)&&n.count>0&&n.count_mode==='exact_or_zero'&&n.chooser==='each_affected_player','Unsupported optional draw parameters');
       if(n.kind==='reveal_top')need(n.actor==='self'&&n.count===1&&n.count_mode==='exact'&&n.bind==='revealed','Unsupported reveal top parameters');
       if(n.kind==='move_result')need(n.result==='revealed'&&n.destination==='owner.deck_bottom'&&n.order==='chooser','Unsupported move result parameters');
+      if(n.kind==='source_skill_maximum')need(Number.isInteger(n.max_result)&&n.max_result>=0&&n.never_reduce_other_source_value===true&&n.only_this_skill===true,'Unsupported source skill maximum parameters');
       if(n.kind==='reveal_and_retrieve')need(n.top_count===1&&n.count_mode==='upto'&&n.bind==='revealed'&&n.retrieved_bind==='retrieved'&&n.remainder==='deck_bottom'&&n.filters&&typeof n.filters==='object','Unsupported reveal retrieval parameters');
       if(n.kind==='retrieve_slots')need(n.destination==='self.hand'&&n.distinct_instances===true&&n.bind==='retrieved'&&Array.isArray(n.slots)&&n.slots.length>0&&n.slots.every(s=>s.kind==='retrieve'&&s.destination===n.destination),'Unsupported retrieve slots parameters');
       if(n.kind==='printed_parameter')need(n.of==='$target'&&PARAMS.includes(n.parameter),'Unsupported printed parameter expression');
