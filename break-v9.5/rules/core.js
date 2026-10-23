@@ -6,7 +6,7 @@ const same = (a,b) => JSON.stringify(a) === JSON.stringify(b);
 const COURT = ['serve','block','receive','toss','attack','side:0','side:1'];
 const PARAMS = ['serve','block','receive','toss','attack'];
 const KINDS = new Set(['sequence','conditional','numeric','draw','draw_to_hand_size','move','move_self',
-  'pay_guts','payment_branch','formal_declaration_cost','retrieve','enter','enter_self','simultaneous_entry_group','watch','ban_action','invalidate_skill',
+  'pay_guts','payment_branch','formal_declaration_cost','retrieve','enter','enter_self','simultaneous_entry_group','cover_source_with_guts','watch','ban_action','invalidate_skill',
   'rename_before_entry','protect_numeric_decrease','phase_jump','reveal_top','move_result','shuffle','external_action','optional','choose_modes','mill','keyword','deck_selection','exchange','each_player_optional_draw']);
 const EXTERNAL_ACTIONS={tilt_card:'將此卡傾斜',coin:'投擲 1 次硬幣',say_巣立てヒナガラス:'說出「巣立て ヒナガラス」',raise_both_hands_and_say_ただーし:'雙手舉起此牌並喊「ただーし！」',say_ジャンバル最高_and_peace_sign:'說出「ジャンバル最高!!」並比出勝利手勢'};
 const FILTERS = new Set(['names','exclude_names','tags','tags_any','positions','positions_any','years','years_any',
@@ -593,6 +593,7 @@ class Kernel {
       if(n.kind==='each_player_optional_draw')need(Number.isInteger(n.count)&&n.count>0&&n.count_mode==='exact_or_zero'&&n.chooser==='each_affected_player','Unsupported optional draw parameters');
       if(n.kind==='reveal_top')need(n.actor==='self'&&n.count===1&&n.count_mode==='exact'&&n.bind==='revealed','Unsupported reveal top parameters');
       if(n.kind==='move_result')need(n.result==='revealed'&&n.destination==='owner.deck_bottom'&&n.order==='chooser','Unsupported move result parameters');
+      if(n.kind==='cover_source_with_guts')need(n.count===1&&n.count_mode==='exact'&&n.pool?.kind==='selector','Unsupported source cover parameters');
       if(n.kind==='simultaneous_entry_group')need(n.complete_group_before_triggers===true&&Array.isArray(n.entries)&&n.entries.length>0&&n.entries.every(e=>e.kind==='enter'&&e.count===1&&e.count_mode==='upto'),'Unsupported simultaneous entry parameters');
       if(n.kind==='shuffle')need(['self','opponent'].includes(n.actor),'Unsupported shuffle parameters');
       if(n.kind==='external_action')need(['tilt_card','coin','say_巣立てヒナガラス','raise_both_hands_and_say_ただーし','say_ジャンバル最高_and_peace_sign'].includes(n.action)&&n.bind===(n.action==='coin'?'random':'external')&&(n.action!=='coin'||n.alternative_requires_both_consent===true),'Unsupported external action parameters');
@@ -740,6 +741,17 @@ class Kernel {
       }
       case 'phase_jump': this._jump(node.destination);return true;
       case 'keyword': return this._keyword(node,ctx);
+      case 'cover_source_with_guts': {
+        // Placing a Guts on a character changes the physical role, but the
+        // instruction does not say enter: no entry skill or quota is created.
+        if(!this.current(ctx.source)||!this.character(ctx.source.id))throw new Unpayable();
+        const source=this.card(ctx.source.id),zone=source.zone.split('.')[1];
+        const ids=this.pool(node.pool,ctx).filter(id=>this.card(id).zone===source.zone&&this.role(id)==='guts');
+        if(ids.length<node.count)throw new Unpayable();
+        const id=this._selection(ids,node.count,ctx,'payment_cards')[0],coveredRole=this.role(source.id),coveredCharacter={effective_name:this.effectiveName(source.id),tags:clone(source.printed.affiliation_tags),positions:clone(source.printed.position_tags)};
+        this._move(id,source.owner,zone,ctx,'cover_source_with_guts');ctx.paid.push(id);ctx.bind.moved=[id];
+        this._emit({type:'character_placement',player:source.owner,card:id,character:this.reference(id),role:this.role(id),coveredSource:this.reference(source.id),coveredRole,coveredCharacter});return true;
+      }
       case 'simultaneous_entry_group': {
         // Entries share one checkpoint: later entrants must already be on court
         // when entry observers and their source-role conditions are collected.
@@ -855,6 +867,7 @@ class Kernel {
       this.state.queue.push({id:this.id('q'),controller:e.controller,source:e.source,event,program:clone(e.then),generated:true,window:event.window});
     }
     if(event.type==='character_entry'){this._entryObservers(event);this._coveredObserver(event);}
+    if(event.type==='character_placement')this._coveredObserver(event);
     if(event.type==='event_played')this._entryObservers(event);
   }
   _entryObservers(event) {

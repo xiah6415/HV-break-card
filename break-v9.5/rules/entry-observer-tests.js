@@ -2,6 +2,7 @@
 const assert=require('node:assert/strict'),I=require('./node-inventory'),{fixture}=require('./batch-smoke'),{matchesPrinted}=require('./batch-fixtures');
 const areas=['serve','block','receive','toss','attack','side:0','side:1'];
 function setup(catalog,card,mode='positive'){
+ if(I.dependencies(card).includes('cover_source_with_guts'))return require('./source-cover-tests').setup(catalog,card,mode);
  const p=card.profiles[0],t=p.activation.trigger,sourceArea=t.source_role||I.nodes(p).find(n=>n.kind==='compare'&&n.field==='source.role'&&n.op==='eq')?.value||'receive';
  const {k,id}=fixture(card,p,sourceArea,{rich:true,conditioned:true,expanded:true,max:true,key:'positive'},0,catalog);
  if(mode==='short')for(const a of areas)for(const x of [...k.zone(0,a)]){if(a!==sourceArea&&x===k.top(0,a))continue;k._atomic(()=>k._move(x,0,'deck',k._context(id,0)));}
