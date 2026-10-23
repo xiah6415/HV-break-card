@@ -3,7 +3,7 @@ const assert=require('node:assert/strict'),E=require('./engine'),D=require('./de
 const locked=L.search('','locked'),chars=locked.filter(c=>c.kind==='C'&&c.stats.some(n=>n!==null));
 function setup(mode='numeric',choose=async(g,p,r)=>r.kind==='event'?null:r.options[0].value){const g=new E.Game({mode,seed:7,decks:['k1014','seijoh'],agents:[{choose,wantsAck:true},E.AI]});for(const p of g.players){for(const z of ['hand','deck','drop','sets','ev'])p[z]=[];for(const a in p.area)p.area[a]=[];}g.beginTurn(g.players[0]);return [g,g.players[0]];}
 (async()=>{
- assert.equal(Object.keys(E.DEF).length,541);assert.equal(R.catalog.cards.length,541);assert.equal(R.approved.length,343);assert.equal(R.catalog.cards.flatMap(c=>c.profiles).filter(p=>p.program).length,343);
+ assert.equal(Object.keys(E.DEF).length,541);assert.equal(R.catalog.cards.length,541);assert.equal(R.approved.length,344);assert.equal(R.catalog.cards.flatMap(c=>c.profiles).filter(p=>p.program).length,344);
  for(const c of locked){const cards=c.kind==='C'?{[c.code]:40}:{[c.code]:8,'P01-004':32};const payload={cards};assert.throws(()=>D.parseDeck(payload,E.DEF),/尚未開放/);assert(D.inspectDeck(payload,E.DEF,{mode:'numeric'}).ok);assert(D.parseDeck(payload,E.DEF,{mode:'numeric'}));assert.equal(R.catalog.cards.find(x=>x.card_no===c.number).profiles[0].program,null);}
  const pool=[...new Set([...chars.map(c=>c.code),...L.search('','playable').filter(c=>c.kind==='C').map(c=>c.code)])].slice(0,Math.max(10,chars.length));
  const sample={name:'數值模式新卡',cards:Object.fromEntries(pool.slice(0,10).map(code=>[code,4]))};E.DECKS.numeric=sample;assert.throws(()=>new E.Game({decks:['numeric','seijoh'],agents:[E.AI,E.AI]}),/尚未開放/);
@@ -33,5 +33,5 @@ function setup(mode='numeric',choose=async(g,p,r)=>r.kind==='event'?null:r.optio
  {
  const [g,p]=setup();p.area.receive=['PR-057'];const ref=g.roleReference(p,'receive');await assert.rejects(g.manualAction(p,{kind:'adjust',key:'receive',param:'srv',ref,delta:1}),/不能調整/);g.sharedRulesPending={};await assert.rejects(g.manualAction(p,{kind:'draw'}),/不能/);
  }
- delete E.DECKS.numeric;console.log(JSON.stringify({passed:true,strict:533,numeric:541,skillApprovals:343,lockedChecked:locked.length,realGames:games,lockedCharactersUsed:chars.length,manualFiveParameters:true,manualResourcesAndBall:true}));
+ delete E.DECKS.numeric;console.log(JSON.stringify({passed:true,strict:534,numeric:541,skillApprovals:344,lockedChecked:locked.length,realGames:games,lockedCharactersUsed:chars.length,manualFiveParameters:true,manualResourcesAndBall:true}));
 })().catch(e=>{console.error(e);process.exitCode=1;});

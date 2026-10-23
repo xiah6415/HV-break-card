@@ -602,6 +602,7 @@ class Kernel {
       if(n.kind==='each_player_optional_draw')need(Number.isInteger(n.count)&&n.count>0&&n.count_mode==='exact_or_zero'&&n.chooser==='each_affected_player','Unsupported optional draw parameters');
       if(n.kind==='reveal_top')need(n.actor==='self'&&n.count===1&&n.count_mode==='exact'&&n.bind==='revealed','Unsupported reveal top parameters');
       if(n.kind==='move_result')need(n.result==='revealed'&&n.destination==='owner.deck_bottom'&&n.order==='chooser','Unsupported move result parameters');
+      if(n.kind==='printed_parameter')need(n.of==='$target'&&PARAMS.includes(n.parameter),'Unsupported printed parameter expression');
       if(n.kind==='parameter_absent')validateAbsent(n);
       if(n.kind==='force_judgment_failure')validateJudgment(n);
       if(n.kind==='cover_source_with_guts')need(n.count===1&&n.count_mode==='exact'&&n.pool?.kind==='selector','Unsupported source cover parameters');

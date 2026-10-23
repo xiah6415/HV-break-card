@@ -1,0 +1,2 @@
+'use strict';
+const assert=require('node:assert/strict'),T=require('./printed-tests'),catalog=require('./data/cards.json');assert.equal(T.testPrinted(catalog),1);T.testCard(catalog,catalog.cards.find(c=>c.card_no==='HV-P02-081'));console.log('printed parameter: actual printed value, optional positive/negative restore, decline/no-op/protection, later independent +1 target, draw/invalid gates and replay passed');

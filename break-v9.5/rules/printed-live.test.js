@@ -1,0 +1,9 @@
+'use strict';
+const assert=require('node:assert/strict'),T=require('./printed-tests'),C=require('./covered-tests'),E=require('../engine'),I=require('./node-inventory'),catalog=require('./data/cards.json');
+(async()=>{let count=0;
+ for(const mode of ['positive','decreased','decline','unchanged','other_target','wrong_tag','no_receiver','empty_deck','invalid']){
+  const f=T.setup(catalog,catalog.cards.find(c=>c.card_no==='HV-P02-081'),mode),{k}=f,agent={async choose(g,p,r){if(r.kind==='skill')return mode!=='decline';if(mode==='other_target'&&r.kind==='target'&&r.options.some(o=>o.value==='attack'))return 'attack';return r.options[0].value;}},g=new E.Game({seed:7,mode:'strict',decks:['k1014','seijoh'],agents:[agent,agent]});C.install(g,k);for(const b of f.initialBoost)g.boostParameter(g.players[0],b.key,b.param,b.value);if(mode==='invalid')g.sharedRulesState={version:1,fingerprint:require('./runtime-data.json').fingerprint,next:k.state.next,effects:structuredClone(k.state.effects.filter(e=>e.kind!=='numeric')),receipts:[]};T.invoke(f);await g.resolve(g.players[0],'P02-081','rcv');
+  for(const p of g.players){for(const[h,z]of Object.entries({hand:'hand',deck:'deck',drop:'drop',ev:'event',sets:'sets'}))assert.deepEqual(p[h],k.zone(p.idx,z).map(x=>I.short(k.card(x).cardNo)),mode+' '+z);for(const[z]of Object.entries(p.area)){const top=k.top(p.idx,z);if(top)for(const[param,old]of Object.entries({serve:'srv',block:'blk',receive:'rcv',toss:'tos',attack:'atk'}))assert.equal(g.parameter(p,z,old),k.parameter(top,param)==='dash'?null:k.parameter(top,param),mode+' '+z+'.'+param);}}count++;
+ }
+ console.log('printed parameter live: '+count+' game/core cases; printed reset before +1, independent target, optional/empty/invalid and all zones/parameters passed');
+})().catch(e=>{console.error(e);process.exitCode=1;});
