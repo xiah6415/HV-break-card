@@ -144,14 +144,14 @@ function transaction(g,p,c,timing,notification=null) {
     throw new Error('Decision is outside migration scope: '+req.kind);
   }
   // A legal event needs at least one resolving effect. Explore the same rules,
-  // also removing a zero-draw choice when it would leave the entire event inert.
+  // The kernel distinguishes declining a legal quantity from having no legal effect.
   function possible(answers, budget={left:256}) {
     if(--budget.left<0)throw new Error('Admission search limit reached');
     let step;
     try {step=attempt(k,base,invoke,answers);}
     catch(e) {if(e.code==='ILLEGAL_ACTION'||e.code==='REQUIRES_REVIEW'&&e.message==='OPEN-EVENT-NO-CHANGE')return false;throw e;}
     // 失效的 Event 仍可打出放到 Event 區；手牌角色技能失效時無法宣告（否則主機重複詢問、無任何變化）
-    if(!step.boundary)return step.result.performed||step.result.invalid&&byShort[c].profiles[0].variants[0].printed.type==='event';
+    if(!step.boundary)return step.result.performed||(step.result.played||step.result.invalid)&&byShort[c].profiles[0].variants[0].printed.type==='event';
     const req=step.boundary.request;
     return choices(req).some(answer=>possible([...answers,{request:req,answer}],budget));
   }
@@ -304,7 +304,7 @@ function transaction(g,p,c,timing,notification=null) {
     const payment=req.payment?.steps?.[0],isPassive=byShort[short[req.source]]?.profiles[0].activation?.skill_type==='passive';
     const zoneLabel=z=>({serve:'發球區',receive:'接球區',toss:'舉球區',attack:'攻擊區','attack.guts':'攻擊區Guts','receive.guts':'接球區Guts',hand:'手牌',event:'Event區',drop:'棄牌區',deck:'牌庫',block:'攔網角色',court:'場上角色',deck_bottom:'牌庫底',choose_deck_top_or_bottom:'牌庫頂或底'}[z]||z);
     const handDiscard=payment?.pool?.zone==='hand'&&payment.count===1&&payment.destination==='owner.drop';
-    const paymentPrompt=(payment?.kind==='external_action'?payment.action==='coin'?'是否擲一次硬幣，發動登場效果？':'是否完成卡上指定的口號／動作，發動效果？':payment?.kind==='move_self'?'是否將這張已被覆蓋的卡送到棄牌區，發動效果？':payment?.kind==='pay_guts'?`是否支付 ${payment.count} Guts，發動登場效果？`:handDiscard?(isPassive?'是否棄 1 張手牌，發動登場效果？':'是否支付棄牌費用，對同一目標追加效果？'):payment?.kind==='mill'?`是否將牌庫頂 ${payment.count_mode==='upto'?'最多 ':''}${payment.count} 張送到棄牌區，發動效果？`:payment?.kind==='move'?`是否將 ${payment.count} 張${zoneLabel(payment.pool.zone)}放到${zoneLabel(payment.destination.split('.').slice(1).join('.'))}，發動效果？`:'是否支付費用，追加效果？')+(req.ineffectiveReason?' ⚠ '+req.ineffectiveReason:'');
+    const paymentPrompt=(payment?.kind==='external_action'?payment.action==='coin'?'是否擲一次硬幣，發動登場效果？':'是否完成卡上指定的口號／動作，發動效果？':payment?.kind==='move_self'?(payment.destination==='owner.drop'?'是否將這張已被覆蓋的卡送到棄牌區，發動效果？':`是否將這張卡放到${zoneLabel(payment.destination.split('.').slice(1).join('.'))}，發動效果？`):payment?.kind==='pay_guts'?`是否支付 ${payment.count} Guts，發動登場效果？`:handDiscard?(isPassive?'是否棄 1 張手牌，發動登場效果？':'是否支付棄牌費用，對同一目標追加效果？'):payment?.kind==='mill'?`是否將牌庫頂 ${payment.count_mode==='upto'?'最多 ':''}${payment.count} 張送到棄牌區，發動效果？`:payment?.kind==='move'?`是否將 ${payment.count} 張${zoneLabel(payment.pool.zone)}放到${zoneLabel(payment.destination.split('.').slice(1).join('.'))}，發動效果？`:'是否支付費用，追加效果？')+(req.ineffectiveReason?' ⚠ '+req.ineffectiveReason:'');
     const sourceName=req.kind==='trigger_order'?'效果':byShort[short[req.source]]?.display_name||g.src||'效果';
     const opts=available.map(answer=>{
       if(req.kind==='target') {

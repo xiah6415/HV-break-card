@@ -380,7 +380,7 @@ class Kernel {
       need(['exact','upto'].includes(node.count_mode),'Unsupported move quantity');
       if (ctx.inPayment && maximum<node.count) throw new Unpayable();
       n=Math.min(node.count,maximum);
-      if (node.count_mode==='upto') { n=this._decide('move_count',ctx,Array.from({length:n+1},(_,i)=>i),{player:chooser}); legal(Number.isInteger(n) && n>=0 && n<=Math.min(node.count,maximum),'Invalid move count'); }
+      if (node.count_mode==='upto') { n=this._decide('move_count',ctx,Array.from({length:n+1},(_,i)=>i),{player:chooser,selectionAction:node.kind}); legal(Number.isInteger(n) && n>=0 && n<=Math.min(node.count,maximum),'Invalid move count'); }
     }
     let chosen=[];
     if(constraints){
@@ -1045,7 +1045,11 @@ class Kernel {
     legal(this._phaseAllowed(p),'Event phase mismatch');
     legal(this.permission({action:'play_event',player:c.owner,origin:'rule',icons:a.activation_phases}).allowed,'Event play forbidden');
     c.eventPlaySerial=(c.eventPlaySerial||0)+1;this._move(id,c.owner,'event',this._context(id,c.owner),'normal_event_play');
-    const result=this._use(id,{event:true});need(result.performed||result.invalid,'OPEN-EVENT-NO-CHANGE');
+    const choiceStart=this.state.decisions.length,result=this._use(id,{event:true});
+    // A player may take zero from a genuinely available optional retrieval.
+    // No eligible card / forbidden addition still fails before offering a positive count.
+    const declinedAvailable=this.state.decisions.slice(choiceStart).some(d=>d.request.kind==='move_count'&&d.request.selectionAction==='retrieve'&&d.request.options.some(n=>Number.isInteger(n)&&n>0));
+    need(result.performed||result.invalid||declinedAvailable,'OPEN-EVENT-NO-CHANGE');
     this._emit({type:'event_played',player:c.owner,card:id,origin:'hand',playSerial:c.eventPlaySerial});this._drain();return {played:true,...result};
   }); }
   enter(id,area,{side=false,reason='rule'}={}) { return this._atomic(()=>{const c=this.card(id),ctx=this._context(id,c.owner);

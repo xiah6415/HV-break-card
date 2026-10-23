@@ -11,7 +11,8 @@ function role(k,id){const c=k.card(id),z=c.zone.split('.')[1];if(!C.includes(z)|
 function printed(k,id,f){const c=k.card(id),p=c.printed,profile=k.profiles[c.profileId];return Object.entries(f).every(([key,v])=>{
  if(key==='names')return v.includes(p.name);if(key==='exclude_names')return !v.includes(p.name);
  if(key==='type')return p.type===v;if(key==='role')return v==='character'?role(k,id)!=='guts':v==='block'?['center_blocker','side_blocker'].includes(role(k,id)):role(k,id)===v;
- if(key==='play_icons_any')return v.some(x=>profile.activation?.activation_phases.includes(x));
+ if(key==='play_icons_any')return v.some(x=>(profile.printed_play_icons??profile.activation?.activation_phases??[]).includes(x));
+ if(key==='play_icons_exact')return JSON.stringify([...v].sort())===JSON.stringify([...(profile.printed_play_icons??profile.activation?.activation_phases??[])].sort());
  if(key==='skillless')return !profile.program===v;
  if(key==='printed_attack_eq')return p.parameters?.attack===v;
  if(key==='current_receive_gte')return p.parameters?.receive>=v;
@@ -21,7 +22,7 @@ function printed(k,id,f){const c=k.card(id),p=c.printed,profile=k.profiles[c.pro
 });}
 function testSelector(catalog){return forms(catalog,'selector',node=>{
  const k=game(catalog),source=plain(k,0,'hand'),ctx=k._context(source,0),f=node.filters;k.preflight(node);
- const profile=catalog.cards.flatMap(c=>c.profiles.map((p,index)=>({c,p,index}))).find(({p})=>(!f.skillless||!p.program)&&(!f.play_icons_any||f.play_icons_any.some(i=>p.activation?.activation_phases.includes(i))));assert(profile);
+ const profile=catalog.cards.flatMap(c=>c.profiles.map((p,index)=>({c,p,index}))).find(({p})=>(!f.skillless||!p.program)&&(!f.play_icons_any||f.play_icons_any.some(i=>p.activation?.activation_phases.includes(i)))&&(!f.play_icons_exact||JSON.stringify([...f.play_icons_exact].sort())===JSON.stringify([...(p.printed_play_icons??p.activation?.activation_phases??[])].sort())));assert(profile);
  for(const who of [0,1])for(const z of [...C,'hand','drop','event','deck','sets'])for(let i=0;i<2;i++){
   const id=k.addCard(profile.c.card_no,who,z,profile.index),p=k.card(id).printed;
   p.parameters=Object.fromEntries(P.map(p=>[p,2]));p.name=f.names?.[0]||'測試角色';p.type=f.type||'character';

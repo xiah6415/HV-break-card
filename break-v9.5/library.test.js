@@ -8,7 +8,7 @@ const sampleCodes=['P03-004','P03-022','P01-014','P01-001','P01-009','P01-024','
 const sample={name:'新卡測試：無技能角色',cards:Object.fromEntries(sampleCodes.map(c=>[c,4]))};
 (async()=>{
  assert.deepEqual(L.data.counts,{cards:541,profiles:545,playable:541,basic:183,locked:0});
- assert.equal(added.length,165);assert.equal(Object.keys(E.DEF).length,541);assert.equal(bridge.approvals.length,355);
+ assert.equal(added.length,165);assert.equal(Object.keys(E.DEF).length,541);assert.equal(bridge.approvals.length,362);
  assert.equal(require('./rules/runtime-data.json').catalog.cards.length,541);
  for(const [p,sha] of Object.entries(L.data.sources))assert.equal(digest(fs.readFileSync(p)),sha);
  let versions=0,aliases=0;

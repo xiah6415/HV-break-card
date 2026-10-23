@@ -1,7 +1,7 @@
 const assert = require('node:assert/strict');
 const E = require('./engine');
 function fixture(choose = async (g, p, r) => r.kind === 'event' ? null : r.options[0].value) {
-  const g = new E.Game({ seed: 7, decks: ['quick', 'seijoh'], agents: [{ wantsAck: true, choose }, E.AI] });
+  const g = new E.Game({ seed: 7, decks: ['quick', 'seijoh'], agents: [{ wantsAck: true, choose:async(g,p,r)=>{if(r.kind==='rulesChoice')return r.options[0].value;if(r.kind==='guts'&&r.need!==6)return r.options.slice(0,r.need).map(o=>o.value);const v=await choose(g,p,r.kind==='guts'?{...r,kind:'gutsCourt'}:r);return r.kind==='name'&&typeof v==='string'?r.options.find(o=>o.value.replace(/\s/g,'')===v.replace(/\s/g,''))?.value??v:v;} }, E.AI] });
   const p = g.players[0]; g.beginTurn(p); p.hand = []; p.deck = ['D01-012']; g.ball = { type: 'attack', off: 3 };
   return { g, p };
 }
@@ -84,8 +84,8 @@ async function check(name, run) { try { await run(); console.log('PASS', name); 
   await check('P03-087 uses live top characters, exact affiliations and a nonempty court', async () => {
     const { g, p } = fixture(); p.hand = ['P03-087'];
     assert(!g.playable(p, 'rcv').some(x => x.card === 'P03-087'));
-    p.area.receive = ['P03-046', 'P01-004']; assert(g.playable(p, 'rcv').some(x => x.card === 'P03-087'));
-    p.area.serve = ['P03-046']; assert(!g.playable(p, 'rcv').some(x => x.card === 'P03-087'));
+    p.area.receive = ['P03-046', 'P01-004']; g.cardState=null;assert(g.playable(p, 'rcv').some(x => x.card === 'P03-087'));
+    p.area.serve = ['P03-046'];g.cardState=null; assert(!g.playable(p, 'rcv').some(x => x.card === 'P03-087'));
     p.area.serve = []; p.area.receive = ['P03-022']; assert(g.uniformCourt(p));
     p.area.receive = ['P03-015']; assert(!g.uniformCourt(p));
   });
@@ -124,8 +124,8 @@ async function check(name, run) { try { await run(); console.log('PASS', name); 
   await check('chosen Hinata name controls Kageyama attack bonus and Broad Attack; two PR-057 copies can choose different names', async () => {
     assert(E.canChain(['PR-057', 'PR-057'], '日向 翔陽'));
     for (const name of ['日向 翔陽', '西谷 夕']) {
-      const { g, p } = fixture(async (g,p,r) => r.kind==='name'?name:r.kind==='target'?'attack':r.options[0].value); p.hand = ['PR-057', 'D01-012']; p.deck = [];
-      p.area.toss = ['P01-006']; p.ts.setter = 'P01-006'; p.ts.toss = 1; p.ts.hin = 2;
+      const { g, p } = fixture(async (g,p,r) => r.kind==='skill'?true:r.kind==='name'?name:r.kind==='target'?'attack':r.options[0].value); p.hand = ['PR-057', 'D01-012']; p.deck = [];
+      p.area.toss = ['D01-009','P01-011'];p.hand.unshift('P01-006');g.rulePhase='tos';await g.enterCharacter(p,'toss','P01-006');p.ts.setter='P01-006';p.ts.toss=1;
       await g.enterAttack(p, 'PR-057', false); assert.equal(p.ts.atk, name === '日向 翔陽' ? 5 : 3);
       await g.resolve(p, 'D01-012', 'atk'); assert(!p.opp.pending.one_blocker);assert.equal(g.sharedRulesState.effects.some(e=>e.kind==='ban'&&e.scope.max_count===1),name==='日向 翔陽');g.beginTurn(p.opp);assert.equal(g.blockMax(p.opp),name==='日向 翔陽'?1:3);
     }

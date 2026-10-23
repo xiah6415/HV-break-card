@@ -5,6 +5,7 @@ const META=new Set(['node_id','shared_rule_ids','category_tags','classification_
 const short=n=>n.startsWith('HV-')?n.slice(3):n.startsWith('HVBP-')?n.slice(2):n;
 function walk(x,fn){if(Array.isArray(x))x.forEach(v=>walk(v,fn));else if(x&&typeof x==='object'){if(x.kind)fn(x);for(const[k,v]of Object.entries(x))if(!META.has(k))walk(v,fn);}}
 function nodes(p){const result=[];walk(p.program,n=>result.push(n));walk(p.formal_cost,n=>result.push(n));return result;}
+function migrationScope(catalog){return catalog.cards.filter(c=>legacy[short(c.card_no)]);}
 function scope(catalog){return catalog.cards.filter(c=>c.profiles[0].program&&!baseline[c.profiles[0].profile_id]&&!legacy[short(c.card_no)]);}
 function clean(x){if(Array.isArray(x))return x.map(clean);if(x&&typeof x==='object')return Object.fromEntries(Object.keys(x).filter(k=>!META.has(k)).sort().map(k=>[k,clean(x[k])]));return x;}
 function parameters(n){
@@ -14,7 +15,7 @@ function parameters(n){
  for(const k of ['steps','then','else','payment','condition','conditions','options','slots'])if(Object.hasOwn(result,k)&&(['sequence','conditional','payment_branch','optional','choose_modes','all','any','formal_declaration_cost','retrieve_slots'].includes(n.kind)))result[k]='$nodes';
  return clean(result);
 }
-function forms(catalog){const result={};for(const c of catalog.cards.filter(c=>c.profiles[0].program&&!legacy[short(c.card_no)]))for(const p of c.profiles)for(const n of nodes(p)){const bucket=result[n.kind]??=new Map(),key=JSON.stringify(parameters(n));if(!bucket.has(key))bucket.set(key,{node:n,cards:new Set()});bucket.get(key).cards.add(short(c.card_no));}return result;}
+function forms(catalog){const result={};for(const c of catalog.cards.filter(c=>c.profiles[0].program))for(const p of c.profiles)for(const n of nodes(p)){const bucket=result[n.kind]??=new Map(),key=JSON.stringify(parameters(n));if(!bucket.has(key))bucket.set(key,{node:n,cards:new Set()});bucket.get(key).cards.add(short(c.card_no));}return result;}
 function entrySupported(c){const a=c.profiles[0].activation;return reviewClear(c)&&!!a&&LIVE_ENTRIES.includes(entryKey(c))&&(!['event','active'].includes(a.skill_type)||JSON.stringify(a.source_zones)==='["hand"]');}
 function dependencies(c){return [...new Set(c.profiles.flatMap(p=>nodes(p).map(n=>n.kind)))].sort();}
 const PRIORITY=['numeric','selector','conditional','payment_branch','pay_guts','compare','draw'];
@@ -45,5 +46,5 @@ function inventory(catalog,completed,released=[]){
  if(pending){const ready=new Set(done),entries=new Set(LIVE_ENTRIES);(pending.type==='node'?ready:entries).add(pending.kind);next={...pending,routeEntryReady:pending.entryReady,entryReady:cards.filter(c=>c.reviewClear&&entries.has(c.entry)&&c.dependencies.every(k=>ready.has(k))).length};}
  return {scope:cards.length,kinds:rows.length,completed:[...completed],completedEntries:LIVE_ENTRIES,rows,path,next,cards};
 }
-module.exports={short,walk,nodes,scope,forms,parameters,clean,entrySupported,dependencies,inventory,entryKey,PRIORITY,LIVE_ENTRIES,reviewClear,equivalentProfiles,profileMechanics};
+module.exports={short,walk,nodes,scope,migrationScope,forms,parameters,clean,entrySupported,dependencies,inventory,entryKey,PRIORITY,LIVE_ENTRIES,reviewClear,equivalentProfiles,profileMechanics};
 if(require.main===module){const r=inventory(require('./data/cards.json'),require('./modules').completed.map(m=>m.id),Object.keys(require('./runtime-data.json').authority.cards).filter(c=>require('./runtime-data.json').authority.cards[c].kind==='shared'));console.log(JSON.stringify({scope:r.scope,kinds:r.kinds,completed:r.completed,path:r.path,next:r.next},null,2));}

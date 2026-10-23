@@ -97,7 +97,7 @@ function testModules(catalog){
   const tested=module.test(catalog);assert.equal(tested,fs[module.id].size,'Every parameter form must be tested: '+module.id);
   modules.push({id:module.id,parameterForms:tested,dependentCards:new Set([...fs[module.id].values()].flatMap(v=>[...v.cards])).size});
  }
- for(const card of I.scope(catalog)){
+ for(const card of [...I.scope(catalog),...I.migrationScope(catalog)]){
   if(!eligible(card))continue;
   testCard(catalog,card);
   if(I.dependencies(card).some(k=>['source_skill_maximum','reveal_and_retrieve','retrieve_slots','printed_parameter','parameter_absent','force_judgment_failure','cover_source_with_guts','simultaneous_entry_group','phase_jump','enter_self','external_action','shuffle','reveal_top'].includes(k))||['source_covered','event_played','self_entry_cover'].includes(card.profiles[0].activation.trigger?.event)){cards[I.short(card.card_no)]={profileId:card.profiles[0].profile_id,...(card.profiles.length>1?{profileIds:card.profiles.map(p=>p.profile_id)}:{}),modules:I.dependencies(card)};continue;}

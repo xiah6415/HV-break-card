@@ -13,4 +13,4 @@ class Scenario extends E.Game{
  again.resolve(again.req.options[0].value);await tick();assert.equal(normalize(session.game.cardName(session.game.players[0],'attack')),normalize(names[0]));queue.shift();
  session.start(history);await tick();const replay=queue.shift();assert.deepEqual(replay.state,end.state,'Replay restores selected name and role identity');assert.equal(errors.length,0);session.stop();console.log('rename Undo '+code+': before-name and named-role boundaries, alternate name, full state replay and stale callback passed');
 }
-(async()=>{for(const code of ['P01-072','P02-077','P02-078','P03-077'])await check(code);})().catch(e=>{console.error(e);process.exitCode=1;});
+(async()=>{for(const code of ['PR-057','P01-072','P02-077','P02-078','P03-077'])await check(code);})().catch(e=>{console.error(e);process.exitCode=1;});

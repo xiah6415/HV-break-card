@@ -3,7 +3,7 @@ const E = require(process.env.RULES_ENGINE_PATH || './engine');
 const STOP = Symbol('stop at next phase');
 const total = p => p.hand.length + p.deck.length + p.drop.length + p.ev.length + p.sets.length + Object.values(p.area).reduce((n, a) => n + a.length, 0) + (p.ts.sides || []).length;
 function fixture(choose = async (g, p, r) => r.kind === 'retrieve' ? null : r.kind === 'event' ? null : r.options[0].value) {
-  const g = new E.Game({ seed: 7, decks: ['k1014', 'seijoh'], agents: [{ wantsAck: true, choose }, E.AI] });
+  const g = new E.Game({ seed: 7, decks: ['k1014', 'seijoh'], agents: [{ wantsAck: true, choose:async(g,p,r)=>{if(r.kind==='skill'&&r.ctx?.card==='P03-086')return true;if(r.kind==='guts')return r.options.slice(0,r.need).map(o=>o.value);if(r.kind==='rulesChoice')return /選擇移動數量/.test(r.prompt)?0:r.options[0].value;return choose(g,p,r);} }, E.AI] });
   const p = g.players[0]; g.beginTurn(p); p.deck = []; g.ball = { type: 'serve', off: 1 };
   return { g, p };
 }
@@ -48,10 +48,10 @@ async function check(name, run) {
     p.area.toss = ['D01-009', 'P01-011'];
     await assert.rejects(g.receiveTurn(p), error => error === STOP);
     assert(!p.hand.includes('P01-002')); assert.deepEqual(p.deck, ['P01-002', 'D01-012']);
-    assert.equal(p.ts.hin, 2); assert.equal(p.guts('toss'), 0);
+    assert(g.sharedRulesState.effects.some(e=>e.kind==='watch'&&e.event==='character_entry'));  assert.equal(p.guts('toss'), 0);
   });
   await check('P03-086 may pay its bottom-deck cost with zero recovered events', async () => {
-    const { g, p } = fixture(); p.hand = ['P03-086']; p.ts.setter = 'P01-006'; p.ts.toss = 1;
+    const { g, p } = fixture(); p.hand = ['P03-086']; p.ts.setter = 'P01-006'; p.ts.toss = 1;p.area.toss=['P01-006'];
     await g.resolve(p, 'P03-086', 'tos');
     assert.equal(p.ts.toss, 2); assert.deepEqual(p.ev, []); assert.deepEqual(p.deck, ['P03-086']);
   });

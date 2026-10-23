@@ -27,8 +27,14 @@ def build_authority(catalog=None, approvals=None, legacy=None):
         for p in card['profiles']:
             assert p['profile_id'] not in by_id, 'Duplicate profile identity'
             by_id[p['profile_id']] = (code, p)
+    # Historical identity records are retained for handoff only. Once migrated,
+    # a failed module/card test must never fall back to an old controller grant.
+    for code, record in legacy['cards'].items():
+        pid = record.get('profile_id')
+        assert pid in by_id and by_id[pid][0] == code, 'Legacy profile belongs to another card'
+        assert pid not in approvals['profiles'], 'Migrated skill cannot bypass module tests through the historical baseline'
     grants = {}
-    for source, records in [('shared', approvals['profiles']), ('legacy', legacy['cards'])]:
+    for source, records in [('shared', approvals['profiles'])]:
         for key, record in records.items():
             pid = key if source == 'shared' else record.get('profile_id')
             assert pid in by_id, 'Orphan approval: ' + str(pid)
@@ -50,7 +56,7 @@ def build_authority(catalog=None, approvals=None, legacy=None):
     for code, record in release['cards'].items():
         assert code in by_code and record['profileId'] in by_id, 'Unknown module card'
         assert record.get('profileIds', [record['profileId']]) == [p['profile_id'] for p in by_code[code]['profiles']], 'Every preserved profile must pass module card tests'
-        assert code not in grants or grants[code]['kind'] == 'shared', 'Module conflicts with legacy controller'
+        assert code not in grants or grants[code]['kind'] == 'shared', 'Unexpected execution source'
         grants[code] = dict(kind='shared', **record)
     cards = {}
     for code, card in by_code.items():

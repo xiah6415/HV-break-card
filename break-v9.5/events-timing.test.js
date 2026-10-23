@@ -30,6 +30,7 @@ async function toSetter(g, p) {
   const flow = fixture(async (game, player, req) => {
     seen.push([req.kind, req.timing]);
     if (req.kind === 'ack') return true;
+    if(req.kind==='rulesChoice')return req.options[0].value;
     if (req.kind === 'retrieve') return req.options.find(o => o.value)?.value ?? null;
     if (req.kind === 'receiver') return 'D01-005';
     if (req.kind === 'event') {

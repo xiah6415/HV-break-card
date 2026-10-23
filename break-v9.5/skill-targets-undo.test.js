@@ -38,13 +38,13 @@ class Scenario extends E.Game {
   }
   const p = session.game.players[0]; assert.equal(p.ts.rcv, 6); assert.equal(p.ts.toss, 3); assert.equal(p.drop.length, 6);
   assert.deepEqual(p.effects, {}); assert.deepEqual(errors, []);
-  for (const kind of ['name', 'target', 'parameter', 'skill', 'gutsCourt', 'turnEnd']) assert(kinds.has(kind));
+  for (const kind of ['name', 'target', 'parameter', 'skill', 'guts', 'turnEnd']) assert(kinds.has(kind));
   assert(reversals >= 7); session.stop(); console.log('target Undo: passed', reversals, 'full state/log restores, name/target/parameter/cross-court Guts and obsolete callbacks');
 })();
 function answer(r) {
-  if (r.kind === 'name') return '日向 翔陽';
+  if (r.kind === 'name') return r.options.find(o=>o.value.replace(/\s/g,'')==='日向翔陽').value;
   if (r.kind === 'target') return r.ctx?.card==='P03-096' ? 'receive' : 'toss';
   if (r.kind === 'parameter') return r.ctx.target === 'receive' ? 'rcv' : 'tos';
-  if (r.kind === 'gutsCourt') return [0, 1, 2, 3, 4, 5];
+  if (r.kind === 'gutsCourt'||r.kind==='guts') return [0, 1, 2, 3, 4, 5];
   return true;
 }

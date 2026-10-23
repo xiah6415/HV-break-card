@@ -53,13 +53,13 @@ const conserve=g=>assert.equal(Object.keys(g.cardSnapshot().cards).length,Object
   });
   await check('A legacy multi-card skill completes all additions before its generated triggers resolve',async()=>{
     const f=fixture();f.o.hand=['PR-029'];await activate(f);const requests=[];
-    f.o.agent.choose=async(g,p,r)=>{requests.push(r.kind);if(r.kind==='retrieve')return r.options[0].value;assert.equal(p.hand.length>=1,true);return r.options[0].value;};
-    await f.g.resolve(f.o,'PR-029','drw');assert.deepEqual(requests,['retrieve','retrieve','rulesChoice','rulesChoice']);assert.equal(f.o.hand.length,0);assert.equal(f.g.sharedRulesState.receipts.length,2);assert.deepEqual(f.g.sharedRulesEvents,[]);conserve(f.g);
+    f.o.agent.choose=async(g,p,r)=>{requests.push({kind:r.kind,card:r.ctx?.card,hand:p.hand.length});if(r.ctx?.card==='P01-087')assert(p.hand.length>=1,'Generated discards only run after the original additions');return r.options[0].value;};
+    await f.g.resolve(f.o,'PR-029','drw');assert.equal(requests.filter(r=>r.card==='PR-029').length,4);assert(requests.slice(-2).every(r=>r.card==='P01-087'));assert.equal(f.o.hand.length,0);assert.equal(f.g.sharedRulesState.receipts.length,0,'Core handles the two triggers without external notification receipts');assert.deepEqual(f.g.sharedRulesEvents||[],[]);conserve(f.g);
   });
   await check('Loss during the second retrieval does not run the first queued trigger inside the unfinished skill',async()=>{
     const f=fixture();f.o.hand=['PR-029'];await activate(f);let retrievals=0;
-    f.o.agent.choose=async(g,p,r)=>{assert.equal(r.kind,'retrieve');return ++retrievals===1?r.options[0].value:{__loss:true};};
-    await assert.rejects(f.g.resolve(f.o,'PR-029','drw'),e=>e.why?.includes('主動 Loss'));assert.equal(f.g.sharedRulesDepth,0);assert.equal(f.g.sharedRulesEvents.length,1);assert.equal(f.g.sharedRulesState.receipts.length,0);assert(f.o.hand.includes('P01-002'));bridge.loss(f.g);assert.deepEqual(f.g.sharedRulesEvents,[]);
+    f.o.agent.choose=async(g,p,r)=>{assert.equal(r.kind,'rulesChoice');if(r.prompt.includes('選擇移動數量')&&++retrievals===2)return {__loss:true};return r.options[0].value;};
+    await assert.rejects(f.g.resolve(f.o,'PR-029','drw'),e=>e.why?.includes('主動 Loss'));assert.equal(f.g.sharedRulesDepth||0,0);assert.equal((f.g.sharedRulesEvents||[]).length,0);assert.equal(f.g.sharedRulesPending.queue.length,1,'The unfinished original skill retains the first generated trigger without running it');assert.equal(f.g.sharedRulesState.receipts.length,0);assert(f.o.hand.includes('P01-002'));bridge.loss(f.g);assert.deepEqual(f.g.sharedRulesEvents||[],[]);
   });
   await check('An actual addition still triggers after its card moves again within the same legacy effect',async()=>{
     const f=fixture();await activate(f);f.o.agent.choose=async(g,p,r)=>r.kind==='discard'?'P01-006':r.options[0].value;
@@ -86,7 +86,7 @@ const conserve=g=>assert.equal(Object.keys(g.cardSnapshot().cards).length,Object
   await check('Loss during discard preserves the actual addition; the real interval clears all pending watchers',async()=>{
     const STOP=Symbol('next serve');let turns=0;const f=fixture();f.p.sets=['D04-003'];f.o.sets=['P01-004'];await activate(f);f.o.agent.choose=async()=>({__loss:true});let lost;
     try{await f.g.sadd(f.o,'P01-006',f.o.drop);}catch(e){lost=e;}assert(lost?.why.includes('主動 Loss'));assert(f.o.hand.includes('P01-006'));assert(f.g.sharedRulesPending);
-    bridge.loss(f.g);assert.deepEqual(f.g.sharedRulesState.effects,[]);assert.deepEqual(f.g.sharedRulesEvents,[]);assert.equal(f.g.sharedRulesPending,null);
+    bridge.loss(f.g);assert.deepEqual(f.g.sharedRulesState.effects,[]);assert.deepEqual(f.g.sharedRulesEvents||[],[]);assert.equal(f.g.sharedRulesPending,null);
     const g=new E.Game({seed:7,decks:['seijoh','k1014'],agents:[E.AI,E.AI]});g.serveTurn=async function(p){this.beginTurn(p);if(turns++){assert.deepEqual(this.sharedRulesState.effects,[]);assert.equal(this.sharedRulesPending,null);assert.deepEqual(this.sharedRulesEvents,[]);throw STOP;}
       const source=this.players[0];this.beginTurn(source);
       for(const [code,to] of [['P01-033','0.serve'],['P01-087','0.hand']]){const state=this.cardSnapshot(),card=Object.values(state.cards).find(c=>c.owner===0&&c.code===code);this.moveCard(card.zone,to,state.zones[card.zone].indexOf(card.id));}

@@ -59,7 +59,6 @@ const DEF = {
 };
 const library = typeof module !== 'undefined' && module.exports ? require('./card-library') : root.BreakCardLibrary;
 for (const card of Object.values(library.data.cards)) if (!Object.hasOwn(DEF, card.code)) DEF[card.code] = card.definition;
-const legacySkill = c => library.permission(c)?.kind === 'legacy';
 const HIN = new Set(Object.keys(DEF).filter(c => library.card(c).printedName === '日向翔陽'));
 const DECKS = {
   k1014: { name: '烏野1014', cards: { 'D01-005': 2, 'P01-003': 1, 'P03-046': 2, 'P03-057': 1, 'P01-013': 1, 'P02-003': 1, 'P01-011': 2, 'P02-001': 1, 'P03-051': 2, 'PR-057': 1, 'D01-009': 1, 'P01-006': 4, 'P03-048': 3, 'PR-032': 1, 'PR-043': 1, 'P01-002': 3, 'P01-004': 2, 'BP-002': 3, 'D01-012': 2, 'P01-074': 1, 'P01-078': 2, 'P03-086': 1, 'P03-090': 1, 'PR-029': 1 } },
@@ -82,7 +81,7 @@ const hasYear = (c, n) => library.year(c, n);
 const isK = c => hasSchool(c, K);
 const isA = c => hasSchool(c, A);
 const short = c => nm(c).split(' ')[0];
-const entryNames = c => legacySkill(c) && c === 'PR-057' ? ['日向 翔陽', '西谷 夕'] : sharedRules.entryNames(c).length ? sharedRules.entryNames(c) : [nm(c)];
+const entryNames = c => sharedRules.entryNames(c).length ? sharedRules.entryNames(c) : [nm(c)];
 const recvName = c => nm(c);
 const atkName = c => nm(c);
 const isHin = c => HIN.has(c);
@@ -550,7 +549,6 @@ class Game {
     let c = await this.ask(p, { kind: 'receiver', prompt: `來球：${ball.type === 'serve' ? '發球' : ball.type === 'block' ? '攔網回球' : '攻擊'} ${off}。選擇接球角色`, ball, options: cs.map(x => ({ label: `${nm(x)}　接 ${this.rcvPreview(p, x)}`, card: x, value: x })) });
     await this.enterCharacter(p, 'receive', c); c=p.top('receive'); this.src = nm(c);
     let r = this.parameter(p,'receive','rcv') - (sharedRules.protectedParameter(this,p,'receive','rcv')?0:p.restrict.rcv_minus||0);
-    if (legacySkill(c) && c === 'PR-022' && sharedRules.skillAllowed(this,p,c,'receive') && ball.type !== 'block' && off <= 2) { p.ts.apass = 1; this.log('澤村：A 傳球(1)'); if (p.guts('receive') >= 1 && await this.yes(p, 'skill', '澤村：付 1 Guts 抽 1？', { card: c })) { await this.pay(p, 'receive', 1); this.sdraw(p, 1); } }
     p.ts.rcv = r; p.ts.receiver = c; p.ts.receiverRef = this.cardReference(p, 'receive');
     this.log(`${p.name} 接球 ${nm(c)}：${r} vs ${ball.off}`);
     await this.eventLoop(p, 'rcv', {});
@@ -565,10 +563,7 @@ class Game {
     await this.enterCharacter(p, 'toss', t); t=p.top('toss'); this.src = nm(t);
     if(p.ts.keywordJump==='end'){const out=await this.confirmTurnEnd(p,{type:'attack',off:p.ts.keywordOutgoing.offense});this.finishTurn(p);return out;}
     let toss = this.parameter(p,'toss','tos') + (p.ts.apass || 0);
-    if (legacySkill(t) && t === 'P01-006' && sharedRules.skillAllowed(this,p,t,'toss') && p.guts('toss') >= 2 && await this.yes(p, 'skill', '影山：付 2 Guts → 翻牌庫頂找日向/オープン，本回合日向攻擊 +2？', { card: t })) {
-      await this.pay(p, 'toss', 2); p.ts.hin = 2;
-      await this.revealTop(p, '影山', top => isHin(top) && top !== 'PR-057' || top === 'P01-078');
-    }
+
 
     p.ts.toss = toss; p.ts.setter = t; p.ts.setterRef = this.cardReference(p, 'toss');
     this.log(`${p.name} 舉球 ${nm(t)}：${toss}`);
@@ -578,7 +573,7 @@ class Game {
     this.setRulePhase('atk');
     const as = [...new Set(p.handC().filter(x => this.canEnter(p, 'attack', x)))];
     if (!as.length) this.lost(p, '沒有能攻擊的角色');
-    const a = await this.ask(p, { kind: 'attacker', prompt: '選擇攻擊角色', options: as.map(x => ({ label: `${nm(x)}　攻 ${st(x, 'atk')}${isHin(x) && p.ts.hin ? ' +2' : x === 'PR-057' ? '（登場時選名稱）' : ''}`, card: x, value: x })) });
+    const a = await this.ask(p, { kind: 'attacker', prompt: '選擇攻擊角色', options: as.map(x => ({ label: `${nm(x)}　攻 ${st(x, 'atk')}${entryNames(x).length>1?'（登場時選名稱）':''}`, card: x, value: x })) });
     await this.enterAttack(p, a, false);
     await this.eventLoop(p, 'atk', {});
     let offense = p.ts.toss + p.ts.atk;
@@ -607,7 +602,6 @@ class Game {
     let atk = this.parameter(p,'attack','atk');
     const g = p.guts('attack');
     const t = p.ts.setter;
-    if (this.cardName(p, 'attack') === '日向 翔陽' && p.ts.hin) atk += p.ts.hin;
     p.ts.atk = atk; p.ts.attacker = a; p.ts.attackerRef = this.cardReference(p, 'attack');
     this.log(`${p.name} 攻擊手 ${nm(a)}：攻 ${atk}`);
   }
@@ -631,21 +625,6 @@ class Game {
         if (!isC(c) && p.agent.wantsAck && (phases.includes(phase) || timing==='rcv'&&phases.includes('draw'))) res.push({card:c,label:nm(c)+'（技能未自動化）'});
         continue;
       }
-      if (!legacySkill(c)) continue;
-      const T = EVT[c];
-      if (isC(c)) {
-        continue;
-      }
-      if (!T || !(T.includes(timing) || (drawWindow && T.includes('drw')))) continue;
-      if(!sharedRules.skillAllowed(this,p,c)){res.push({card:c,label:nm(c)+'（技能失效，僅放入Event區）'});continue;}
-      if (p.ts.used[c] && ['P03-087', 'P04-088', 'P04-089'].includes(c)) continue;
-      const ok = {
-        'PR-029': () => this.skillHandAllowed(p) && p.drop.some(x => isHin(x) && x !== 'PR-057' || nm(x) === '影山 飛雄'),
-        'P03-086': () => !!p.ts.setter && ['影山 飛雄', '菅原 孝支', '及川 徹'].includes(nm(p.ts.setter)),
-        'P01-078': () => !!p.ts.attacker,
-        'P03-087': () => this.uniformCourt(p),
-      }[c];
-      if (ok && ok()) res.push({ card: c, label: nm(c) });
     }
     return res;
   }
@@ -674,64 +653,10 @@ class Game {
       const played=sharedRules.eventPlayStarted(this,p,c);this.moveCode(p.hand,p.ev,c);this.log(`${p.name} 放入 ${nm(c)}：${sharedRules.skillAllowed(this,p,c)?'技能未自動化，請手動處理':'技能已失效，不執行效果'}`,'ev');await sharedRules.eventPlayed(this,p,played,timing);return;
     }
     if (sharedRules.handles(c)) return sharedRules.resolve(this, p, c, timing);
-    if (!legacySkill(c)) throw Error('技能未獲自動結算核准');
-    return sharedRules.legacyEffect(this, async () => {const played=isC(c)?null:sharedRules.eventPlayStarted(this,p,c);const result=await this.resolveLegacy(p,c,timing);if(played)await sharedRules.eventPlayed(this,p,played,timing);return result;});
+    throw Error('技能未獲自動結算核准');
   }
-  async resolveLegacy(p, c, timing) {
-    if (!legacySkill(c)) throw Error('不在舊技能白名單');
-    const o = p.opp;
-    if (isC(c)) {
-      this.moveCode(p.hand, p.drop, c);
-      return;
-    }
-    this.moveCode(p.hand, p.ev, c); p.ts.used[c] = 1;
-    this.log(`${p.name} 打出 ${nm(c)}`, 'ev');
-    if(!sharedRules.skillAllowed(this,p,c)){this.log('技能已失效：僅放入Event區，不支付費用或執行效果。','warn');return;}
-    switch (c) {
-      case 'PR-029': {
-        for (const want of [x => isHin(x) && x !== 'PR-057', x => nm(x) === '影山 飛雄']) {
-          const cand = [...new Set(p.drop.filter(want))];
-          if (!cand.length) continue;
-          const x = await this.optionalRetrieve(p, '鬼と鬼だな：最多選 1 張回手', cand);
-          if (x && await this.sadd(p, x, p.drop)) this.log(`回收 ${nm(x)}`);
-        }
-        break;
-      }
-      case 'P03-086': {
-        p.ts.toss = 2; this.log('舉球設為 2');
-        const back = [...new Set(p.ev.filter(x => EVT[x] && EVT[x].length === 1 && EVT[x][0] === 'atk'))];
-        if (await this.yes(p, 'skill', 'おりこう：放回牌庫底，從 Event 區最多拿 1 張攻擊 Event 回手？', {})) {
-          const x = await this.optionalRetrieve(p, '最多選 1 張攻擊 Event 回手', back);
-          this.moveCode(p.ev, p.deck, c, 0);
-          if (x && await this.sadd(p, x, p.ev)) this.log(`回收 ${nm(x)}`);
-        }
-        break;
-      }
-      case 'P01-078': {
-        this.sdraw(p, 2);
-        if (p.hand.length) await this.discard(p, 'オープン攻撃：抽 2 後棄 1 張');
-        if (p.ev.filter(x => x === 'P01-078').length <= 2 && this.cardName(p, 'toss') !== '日向 翔陽') {
-          const hs = [...new Set(p.drop.filter(x => HIN.has(x)))];
-          if (hs.length) {
-            const h = hs.length === 1 ? hs[0] : await this.ask(p, { kind: 'summon', prompt: 'オープン攻撃：選棄牌區的日向登場攻擊區（必須）', options: hs.map(y => ({ label: `${nm(y)} ${y}　攻 ${st(y, 'atk')}`, card: y, value: y })) });
-            await this.enterAttack(p, h, true); p.ts.atk += 1; this.log(`オープン攻撃：${nm(h)} 登場，攻擊 → ${p.ts.atk}`);
-          } else this.log('棄牌區沒有日向，オープン只抽牌');
-        }
-        break;
-      }
-      case 'P03-087': {
-        if (!this.uniformCourt(p)) { this.log('場上角色未全部同為烏野或ユース，效果不成立', 'warn'); break; }
-        this.sdraw(p, 1);
-        const key = await this.chooseTarget(p, this.courtTargets(p).filter(t => this.parameter(p, t.key, 'atk') != null), '周りの上手さ：選擇場上 1 人攻擊 +1', timing);
-        if (key != null) {
-          this.boostParameter(p, key, 'atk', 1);
-          if (this.cardName(p, key) === '影山 飛雄' && this.courtGuts(p).length >= 6 && await this.yes(p, 'skill', '影山：從場上各區合計付 6 Guts，再選此角色任一數值 +2？', { card: 'P03-087', target: key })) {
-            if (await this.payCourt(p, 6)) await this.chooseParameter(p, key, 2, '影山 6 Guts', timing);
-          }
-        }
-        break;
-      }
-    }
+  async resolveLegacy() {
+    throw Error('不在舊技能白名單：舊控制器已停用，請走共用腳本');
   }
 }
 
@@ -808,7 +733,6 @@ const AI = {
           const t = x.value; const rest = p.hand.slice(); rest.splice(rest.indexOf(t), 1);
           let s = st(t, 'tos') * 3 - val(t) * 0.3;
           if (!g.legalEntryNames(p, 'toss', t).some(name => rest.some(a => isC(a) && st(a, 'atk') != null && entryNames(a).some(other => other !== name)))) s -= 50;
-          if (legacySkill(t) && t === 'P01-006' && sharedRules.skillAllowed(g,p,t,'toss') && p.guts('toss') + (p.area.toss.length ? 1 : 0) >= 2 && rest.some(a => HIN.has(a))) s += 8;
           if (t === 'P01-033' && rest.filter(isA).length >= 2) s += 3;
           if (['日向 翔陽', '岩泉 一'].includes(nm(t))) s -= 10;
           return s;

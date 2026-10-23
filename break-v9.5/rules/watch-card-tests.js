@@ -18,9 +18,10 @@ function testWatchCard(catalog,card){
   if(w.event==='character_entry'){
    const f=w.filters,area=f.role==='side_blocker'?'side:0':['block','center_blocker'].includes(f.role)?'block':f.role&&f.role!=='character'?f.role:'attack';
    const filters=Object.fromEntries(Object.entries(f).filter(([key])=>!['role','entry_origins'].includes(key)));
-   const other=area==='attack'?k.top(player,'toss'):area==='toss'?k.top(player,'receive'):null;
+   let other=area==='attack'?k.top(player,'toss'):area==='toss'?k.top(player,'receive'):null;
+   if(other&&filters.names?.includes(k.effectiveName(other))){const zone=area==='attack'?'toss':'receive';for(const card of [...k.zone(player,zone)])k._atomic(()=>k._move(card,player,'drop',k._context(id,0)));other=null;}
    const blockers=area==='block'||area.startsWith('side')?['block','side:0','side:1'].map(z=>k.top(player,z)).filter(Boolean):[];
-   const def=catalog.cards.find(c=>{const printed=c.profiles[0].variants[0].printed;return !c.profiles[0].program&&matchesPrinted(c.profiles[0],{type:'character',...filters})&&printed.parameters[area.startsWith('side')?'block':area]!=='dash'&&(!other||k.effectiveName(other)!==printed.name)&&!blockers.some(id=>k.effectiveName(id)===printed.name)&&(!area.startsWith('side')||k.top(player,'block')||c.card_no!=='HV-D01-009');});assert(def,'Missing follow-up character '+card.card_no);
+   const def=[...catalog.cards].sort((a,b)=>Number(!!a.profiles[0].program)-Number(!!b.profiles[0].program)).find(c=>{const printed=c.profiles[0].variants[0].printed;return matchesPrinted(c.profiles[0],{type:'character',...filters})&&printed.parameters[area.startsWith('side')?'block':area]!=='dash'&&(!other||k.effectiveName(other)!==printed.name)&&!blockers.some(id=>k.effectiveName(id)===printed.name)&&(!area.startsWith('side')||k.top(player,'block')||c.card_no!=='HV-D01-009');});assert(def,'Missing follow-up character '+card.card_no);
    target=k.addCard(def.card_no,player,'hand');if(area.startsWith('side')&&!k.top(player,'block'))k.addCard('HV-D01-009',player,'block');k.advancePhase(area.startsWith('side')?'block':area);
    invoke=()=>k.enter(target,area.startsWith('side')?'block':area,{side:area.startsWith('side')});
   }else if(w.event==='hand_added'){

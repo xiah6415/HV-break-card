@@ -11,9 +11,9 @@ let cases=0;
    const played=p.activation.trigger?.event==='event_played',covered=p.activation.trigger?.event==='source_covered',observer=covered||p.activation.trigger?.event==='character_entry',phase=gate?.condition.value||(played?p.activation.trigger.source_role:covered?p.activation.trigger.source_role:observer?(p.activation.trigger.filters.role_any?.[0]||p.activation.trigger.filters.role):p.activation.skill_type==='passive'?p.activation.trigger.destination_any[0]:p.activation.activation_phases[0]),seeded=I.dependencies(card).includes('cover_source_with_guts')?require('./source-cover-tests').setup(catalog,card):I.dependencies(card).includes('reveal_top')?require('./reveal-top-tests').setup(catalog,card):I.dependencies(card).includes('phase_jump')?require('./phase-jump-tests').setup(catalog,card):played?require('./event-played-tests').setup(catalog,card):covered?require('./covered-tests').setup(catalog,card):observer?require('./entry-observer-tests').setup(catalog,card):fixture(card,p,phase,{rich:true,conditioned:true,expanded:true,max:true,key:'positive'},0,catalog),{k,id,entryReason='rule'}=seeded;
    const player=w.actor==='opponent'?1:0;let area,def,target,second;
    if(w.event==='character_entry'){
-    const f=w.filters;area=f.role==='side_blocker'?'side:0':['block','center_blocker'].includes(f.role)?'block':f.role&&f.role!=='character'?f.role:'attack';
+    const f=w.filters;area=f.role==='side_blocker'?'side:0':['block','center_blocker'].includes(f.role)?'block':f.role&&f.role!=='character'?f.role:f.names?.length?'serve':'attack';
     const other=area==='attack'?(observer&&phase==='toss'?seeded.target:k.top(player,'toss')):area==='toss'?k.top(player,'receive'):null,blockers=area==='block'||area.startsWith('side')?['block','side:0','side:1'].map(z=>k.top(player,z)).filter(Boolean):[];
-    def=catalog.cards.find(c=>{const pr=c.profiles[0],printed=pr.variants[0].printed;return !pr.program&&matchesPrinted(pr,{type:'character',...Object.fromEntries(Object.entries(f).filter(([key])=>!['role','entry_origins','entry_keyword_family'].includes(key)))})&&printed.parameters[area.startsWith('side')?'block':area]!=='dash'&&(!other||k.effectiveName(other)!==printed.name)&&!blockers.some(x=>k.effectiveName(x)===printed.name)&&(!area.startsWith('side')||k.top(player,'block')||c.card_no!=='HV-D01-009');});
+    def=[...catalog.cards].sort((a,b)=>Number(!!a.profiles[0].program)-Number(!!b.profiles[0].program)).find(c=>{const pr=c.profiles[0],printed=pr.variants[0].printed;return matchesPrinted(pr,{type:'character',...Object.fromEntries(Object.entries(f).filter(([key])=>!['role','entry_origins','entry_keyword_family'].includes(key)))})&&printed.parameters[area.startsWith('side')?'block':area]!=='dash'&&(!other||k.effectiveName(other)!==printed.name)&&!blockers.some(x=>k.effectiveName(x)===printed.name)&&(!area.startsWith('side')||k.top(player,'block')||c.card_no!=='HV-D01-009');});
     assert(def,code);target=k.addCard(def.card_no,player,'hand');if(w.remaining_uses===1)second=k.addCard(def.card_no,player,'hand');if(area.startsWith('side')&&!k.top(player,'block'))k.addCard('HV-D01-009',player,'block');
    }else if(w.event==='hand_added'){def=catalog.cards.find(c=>c.card_no==='HV-D01-009');target=k.addCard(def.card_no,player,'drop');}
    else if(w.event==='block_success'){def=card;target=id;}
@@ -61,7 +61,7 @@ let cases=0;
    g.sharedRulesState=JSON.parse(JSON.stringify(g.sharedRulesState));B.assertReady(g);cases++;
   }
  }
- assert.equal(cases,80);
+ assert.equal(cases,82);
  const g=new E.Game({seed:7,decks:['k1014','seijoh'],agents:[E.AI,E.AI]}),p=g.players[0];g.beginTurn(p);
  const state=g.cardSnapshot(),id=state.zones['0.deck'].at(-1);g.moveCard(p.deck,p.ev,p.deck.length-1);
  const base={kind:'watch',actor:0,source:{id,incarnation:0},duration:{kind:'this_turn',turn:g.turnNo}};

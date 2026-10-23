@@ -17,7 +17,7 @@ class Scenario extends E.Game {
   const session=new UndoSession({Game:Scenario},{seed:7,decks:['k1014','seijoh'],agents:[provider,provider],onGame(){logs=[];},onLog:s=>logs.push(s),onError:e=>errors.push(e)});
   session.start();await flush();const checkpoints=[];
   for(let i=0;i<30;i++){const ticket=queue.shift();assert(ticket);checkpoints.push(ticket);if(ticket.req.kind==='turnEnd')break;ticket.resolve(answer(ticket.req));await flush();}
-  const history=copy(session.entries);assert.equal(checkpoints.at(-1).req.kind,'turnEnd');assert.equal(history.length,11);assert.equal(session.game.players[0].hand.length,0);
+  const history=copy(session.entries);assert.equal(checkpoints.at(-1).req.kind,'turnEnd');assert.equal(history.length,13,'Shared recovery has count/card choices followed by the generated discard queue');assert.equal(session.game.players[0].hand.length,0);
   let obsolete=checkpoints.at(-1),restores=0;
   for(let index=0;index<=history.length;index++){
     session.start(history.slice(0,index));await flush();const restored=queue.shift();assert(restored);assert.deepEqual(restored.state,checkpoints[index].state);restores++;
@@ -27,4 +27,4 @@ class Scenario extends E.Game {
   const target=session.status().target;assert(session.undo());await flush();const undo=queue.shift();assert.deepEqual(undo.state,checkpoints[target].state);obsolete.resolve(true);await flush();assert.deepEqual(snapshot(session.game),undo.state);
   assert.deepEqual(errors,[]);session.stop();console.log('watch Undo:',restores,'complete card/watch/queue/replay/legacy-batch checkpoint restores; normal Undo and stale replies passed');
 })().catch(e=>{console.error(e);process.exitCode=1;});
-function answer(r){if(r.kind==='target')return 'toss';return r.kind==='retrieve'?r.options[0].value:r.options.at(-1).value;}
+function answer(r){if(r.kind==='target')return 'toss';return r.kind==='rulesChoice'&&r.options.every(o=>Number.isInteger(o.value))?Math.max(...r.options.map(o=>o.value)):r.options[0].value;}

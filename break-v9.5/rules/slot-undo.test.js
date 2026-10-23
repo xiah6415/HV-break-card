@@ -12,4 +12,4 @@ async function check(code,mode,accept){
  for(let i=0;i<=history.length;i++){session.start(history.slice(0,i));await tick();const current=queue.shift();assert(current);assert.deepEqual(current.state,points[i].state,'Simultaneous Undo '+code+' '+i);stale.resolve(answer(stale.req));await tick();assert.deepEqual(snapshot(session.game),current.state,'Stale coverage reply cannot mutate the restored state');stale=current;}
  assert.deepEqual(errors,[]);session.stop();return points.length;
 }
-(async()=>{let n=0;for(const code of T.codes)for(const mode of ['positive','one','partial','copies'])n+=await check(code,mode,true);console.log('retrieve slots Undo: '+n+' full per-slot count/card/discard boundaries and stale reply isolation passed');})().catch(e=>{console.error(e);process.exitCode=1;});
+(async()=>{let n=0;for(const code of [...T.codes,'PR-029'])for(const mode of ['positive','one','partial','copies'])n+=await check(code,mode,true);console.log('retrieve slots Undo: '+n+' full per-slot count/card/discard boundaries and stale reply isolation passed');})().catch(e=>{console.error(e);process.exitCode=1;});
