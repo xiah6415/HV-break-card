@@ -8,8 +8,8 @@ function make(n){const g=new E.Game({seed:7,mode:'numeric',decks:['k1014','seijo
   if(n.action==='add_hand'){g.setRulePhase('drw');const p=g.players[target],hand=p.hand.length,deck=p.deck.length,blocksRule=n.scope.origins.includes('rule');assert.equal(g.draw(p,1),blocksRule?0:1);assert.equal(g.sdraw(p,1),0);assert.equal(p.hand.length,hand+(blocksRule?0:1));assert.equal(p.deck.length,deck-(blocksRule?0:1));}
   if(n.duration==='this_draw_phase'){g.setRulePhase('rcv');assert(!g.sharedRulesState.effects.some(e=>e.duration.kind==='this_draw_phase'));g.setRulePhase('drw');assert(B.permission(g,a).allowed,'Expired draw-phase ban cannot reactivate');}else{g.finishTurn(g.turnP);assert(B.permission(g,a).allowed);}
  }
- const n={kind:'ban_action',actor:'opponent',action:'play_event',scope:{play_icons_any:['toss','attack']},duration:'next_opponent_turn'},{g}=make(n),p=g.turnP;
- const events=Object.values(L.data.cards).filter(c=>c.kind==='E'&&c.activationPhases.some(x=>['toss','attack'].includes(x))),kinds=new Set();p.hand.push(...events.map(c=>c.code));
+ const n={kind:'ban_action',actor:'opponent',action:'play_event',scope:{play_icons_any:['receive','toss','attack']},duration:'next_opponent_turn'},{g}=make(n),p=g.turnP;
+ const events=Object.values(L.data.cards).filter(c=>c.kind==='E'&&c.activationPhases.some(x=>['receive','toss','attack'].includes(x))),kinds=new Set();p.hand.push(...events.map(c=>c.code));
  for(const card of events){const code=card.code;g.setRulePhase('atk');assert(!g.playable(p,'atk').some(o=>o.card===code));const before=g.cardSnapshot();await assert.rejects(g.resolve(p,code,'atk'),/禁止使用/);assert.deepEqual(g.cardSnapshot(),before);kinds.add(L.permission(code).kind);}
  assert(kinds.has('shared')&&kinds.has('legacy')&&kinds.has('unapproved'),'Shared, legacy and numeric-only Events use the same play ban');
  const quota={kind:'ban_action',actor:'opponent',action:'enter_character',scope:{role:'block',entry_origins:['hand'],max_count:2},duration:'next_opponent_turn'},f=make(quota);f.g.setRulePhase('blk');f.k.advancePhase('block');

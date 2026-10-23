@@ -6,7 +6,7 @@ const same = (a,b) => JSON.stringify(a) === JSON.stringify(b);
 const COURT = ['serve','block','receive','toss','attack','side:0','side:1'];
 const PARAMS = ['serve','block','receive','toss','attack'];
 const KINDS = new Set(['sequence','conditional','numeric','draw','draw_to_hand_size','move','move_self',
-  'pay_guts','payment_branch','formal_declaration_cost','retrieve','enter','enter_self','watch','ban_action','invalidate_skill',
+  'pay_guts','payment_branch','formal_declaration_cost','retrieve','enter','enter_self','simultaneous_entry_group','watch','ban_action','invalidate_skill',
   'rename_before_entry','protect_numeric_decrease','phase_jump','reveal_top','move_result','shuffle','external_action','optional','choose_modes','mill','keyword','deck_selection','exchange','each_player_optional_draw']);
 const EXTERNAL_ACTIONS={tilt_card:'將此卡傾斜',coin:'投擲 1 次硬幣',say_巣立てヒナガラス:'說出「巣立て ヒナガラス」',raise_both_hands_and_say_ただーし:'雙手舉起此牌並喊「ただーし！」',say_ジャンバル最高_and_peace_sign:'說出「ジャンバル最高!!」並比出勝利手勢'};
 const FILTERS = new Set(['names','exclude_names','tags','tags_any','positions','positions_any','years','years_any',
@@ -593,6 +593,7 @@ class Kernel {
       if(n.kind==='each_player_optional_draw')need(Number.isInteger(n.count)&&n.count>0&&n.count_mode==='exact_or_zero'&&n.chooser==='each_affected_player','Unsupported optional draw parameters');
       if(n.kind==='reveal_top')need(n.actor==='self'&&n.count===1&&n.count_mode==='exact'&&n.bind==='revealed','Unsupported reveal top parameters');
       if(n.kind==='move_result')need(n.result==='revealed'&&n.destination==='owner.deck_bottom'&&n.order==='chooser','Unsupported move result parameters');
+      if(n.kind==='simultaneous_entry_group')need(n.complete_group_before_triggers===true&&Array.isArray(n.entries)&&n.entries.length>0&&n.entries.every(e=>e.kind==='enter'&&e.count===1&&e.count_mode==='upto'),'Unsupported simultaneous entry parameters');
       if(n.kind==='shuffle')need(['self','opponent'].includes(n.actor),'Unsupported shuffle parameters');
       if(n.kind==='external_action')need(['tilt_card','coin','say_巣立てヒナガラス','raise_both_hands_and_say_ただーし','say_ジャンバル最高_and_peace_sign'].includes(n.action)&&n.bind===(n.action==='coin'?'random':'external')&&(n.action!=='coin'||n.alternative_requires_both_consent===true),'Unsupported external action parameters');
       if(n.kind==='enter_self')need(['receive','attack','block'].includes(n.destination)&&n.as_side_blocker===(n.destination==='block')&&n.bind==='entered','Unsupported self entry parameters');
@@ -739,6 +740,16 @@ class Kernel {
       }
       case 'phase_jump': this._jump(node.destination);return true;
       case 'keyword': return this._keyword(node,ctx);
+      case 'simultaneous_entry_group': {
+        // Entries share one checkpoint: later entrants must already be on court
+        // when entry observers and their source-role conditions are collected.
+        const events=[],previous=ctx.entryEvents;ctx.entryEvents=events;let performed=false;
+        try{for(const entry of node.entries)performed=this._run(entry,ctx)||performed;}
+        finally{if(previous)ctx.entryEvents=previous;else delete ctx.entryEvents;}
+        if(previous)previous.push(...events);
+        else for(const event of events){this._emit(event);this._enqueuePassive(event.card,event);}
+        return performed;
+      }
       case 'enter': case 'enter_self': { const ids=node.kind==='enter_self'?(this._selfEntryAvailable(node,ctx)?[ctx.source.id]:[]):this.pool(node.pool,ctx).filter(id=>this._entryOptions(id,ctx.controller,node.destination,node.as_side_blocker,'skill').names.length);let n=node.kind==='enter_self'?ids.length:Math.min(node.count,ids.length);
         if(node.count_mode==='upto'){const max=n;n=this._decide('entry_count',ctx,Array.from({length:n+1},(_,i)=>i));legal(Number.isInteger(n)&&n>=0&&n<=max,'Invalid entry count');}
         if(!n){ctx.bind.entered=null;return false;}need(n===1,'Multiple entry transaction not implemented');const id=node.kind==='enter_self'?ids[0]:this._selection(ids,1,ctx,'entry')[0];ctx.bind.entered=this._enter(id,ctx.controller,node.destination,ctx,'skill',node.as_side_blocker,true);if(node.kind==='enter_self'&&ctx.bind.entered)ctx.source=clone(ctx.bind.entered);return !!ctx.bind.entered; }
@@ -974,7 +985,7 @@ class Kernel {
     c.entryOrigin=entryOrigin;c.entryReason=origin==='skill'?'skill':'rule';c.entryTurn=this.state.turn.id;
     const event={type:'character_entry',player,card:id,character:this.reference(id),role:this.role(id),origin:entryOrigin,coveredSource:covered?this.reference(covered):null,coveredRole,coveredCharacter:clone(c.coveredCharacter),entry_keyword_family:keywordFamily,phase:this.state.turn.phase,window:this.state.turn.id+':'+this.state.turn.phase};
     if(parameter==='block')this._recordBlockEntry(player,entryOrigin);
-    this._emit(event);this._enqueuePassive(id,event);return this.reference(id);
+    if(ctx.entryEvents)ctx.entryEvents.push(event);else{this._emit(event);this._enqueuePassive(id,event);}return this.reference(id);
   }
   _jump(phase) { const old=this.state.turn.id+':'+this.state.turn.phase;this.state.queue=this.state.queue.filter(q=>q.window!==old);this.state.effects=this.state.effects.filter(e=>e.duration.kind!=='this_draw_phase');this.state.turn.phase=phase;this.state.turn.step='start';this.state.events.push({type:'phase_jump',from:old,to:phase}); }
   _atomic(fn) {

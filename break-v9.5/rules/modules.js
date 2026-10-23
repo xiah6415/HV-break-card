@@ -28,7 +28,9 @@ completed.push({id:'enter_self',test:require('./self-entry-tests').testEnterSelf
 completed.push({id:'external_action',test:require('./external-tests').testExternal});
 completed.push({id:'shuffle',test:require('./shuffle-node-tests').testShuffle});
 completed.push({id:'move_result',test:require('./reveal-top-tests').testMoveResult},{id:'reveal_top',test:require('./reveal-top-tests').testRevealTop});
+completed.push({id:'simultaneous_entry_group',test:require('./simultaneous-tests').testGroup});
 function testCard(catalog,card){
+ if(I.dependencies(card).includes('simultaneous_entry_group'))return require('./simultaneous-tests').testCard(catalog,card);
  if(I.dependencies(card).includes('reveal_top'))return require('./reveal-top-tests').testRevealCard(catalog,card);
  if(I.dependencies(card).includes('shuffle'))return require('./shuffle-node-tests').testShuffleCard(catalog,card);
  if(I.dependencies(card).includes('external_action'))return require('./external-tests').testExternalCard(catalog,card);
@@ -79,7 +81,7 @@ function testModules(catalog){
  for(const card of I.scope(catalog)){
   if(!eligible(card))continue;
   testCard(catalog,card);
-  if(I.dependencies(card).some(k=>['phase_jump','enter_self','external_action','shuffle','reveal_top'].includes(k))||['source_covered','event_played','self_entry_cover'].includes(card.profiles[0].activation.trigger?.event)){cards[I.short(card.card_no)]={profileId:card.profiles[0].profile_id,modules:I.dependencies(card)};continue;}
+  if(I.dependencies(card).some(k=>['simultaneous_entry_group','phase_jump','enter_self','external_action','shuffle','reveal_top'].includes(k))||['source_covered','event_played','self_entry_cover'].includes(card.profiles[0].activation.trigger?.event)){cards[I.short(card.card_no)]={profileId:card.profiles[0].profile_id,modules:I.dependencies(card)};continue;}
   if(I.dependencies(card).includes('protect_numeric_decrease'))require('./protect-node-tests').testProtectCard(catalog,card);
   if(I.dependencies(card).includes('invalidate_skill'))require('./invalid-node-tests').testInvalidCard(catalog,card);
   if(I.dependencies(card).includes('ban_action'))require('./ban-node-tests').testBanCard(catalog,card);
