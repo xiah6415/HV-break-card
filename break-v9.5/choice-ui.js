@@ -7,6 +7,7 @@ const H = root.BreakHostChoice || (typeof require !== 'undefined' ? require('./h
 const CSS = `
 .hc[data-kind]{display:grid;gap:10px;min-width:0;font:inherit;color:var(--ink,#122326)}
 .hc[data-kind] *{box-sizing:border-box}
+.hc-content{display:grid;gap:10px;min-width:0;min-height:0}
 .hc-head{display:flex;gap:10px;align-items:flex-start;min-width:0}
 .hc-head .hc-src{flex:0 0 44px;width:44px}
 .hc-q{font-weight:700;font-size:15px;line-height:1.4;min-width:0;overflow-wrap:anywhere}
@@ -133,16 +134,18 @@ function render(rootEl, request, opts = {}) {
     return out.length ? `<div class="hc-ctx">${out.join('')}</div>` : '';
   }
   function draw() {
+    const scrollTop=rootEl.querySelector('.hc-content')?.scrollTop||0;
     const ok = t === 'ack' || H.canSubmit(request, sel), prog = H.progress(request, sel);
     const src = request.source ? `<button type="button" class="hc-card hc-src" data-hc-src="1" aria-label="查看 ${esc(request.source.name || request.source.cardNo)}">${cardImg(request.source)}</button>` : '';
     const loss = request.canLoss && opts.onLoss ? (lossArm
       ? `<button type="button" class="hc-loss" data-hc-act="lossyes">確定 Loss</button><button type="button" class="hc-quiet" data-hc-act="lossno">不要</button>`
       : `<button type="button" class="hc-loss" data-hc-act="loss">喊 Loss</button>`) : '';
     rootEl.innerHTML = `<div class="hc" data-kind="${esc(request.kind)}" data-input="${t}">
-      <div class="hc-head">${src}<div class="hc-q">${esc(requestPrompt(request))}${prog ? `<small class="hc-prog">${esc(prog)}</small>` : ''}</div></div>
+      <div class="hc-content"><div class="hc-head">${src}<div class="hc-q">${esc(requestPrompt(request))}${prog ? `<small class="hc-prog">${esc(prog)}</small>` : ''}</div></div>
       ${ctx()}${body()}${chips()}
-      <div class="hc-err" role="alert">${esc(sel.error || '')}</div>
+      <div class="hc-err" role="alert">${esc(sel.error || '')}</div></div>
       <div class="hc-bar"><button type="button" class="hc-go" data-hc-act="go" ${ok ? '' : 'disabled'}>${esc(opts.goLabel || GO_LABEL[t])}</button>${(t === 'cards' || t === 'block') && sel.picked.length ? '<button type="button" class="hc-quiet" data-hc-act="clear">清除</button>' : ''}${loss}</div></div>`;
+    rootEl.querySelector('.hc-content').scrollTop=scrollTop;
   }
   function choose(value) { if (done) return; sel = H.toggle(request, sel, value); draw(); opts.onSelection && opts.onSelection(sel); }
   function onClick(e) {

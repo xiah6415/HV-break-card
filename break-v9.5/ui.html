@@ -196,13 +196,18 @@ select { font: inherit; padding: 10px; border-radius: 8px; border: 1px solid var
 .undo-button:disabled { opacity: .4; cursor: not-allowed; }
 .dock.collapsed .q, .dock.collapsed .opts { display: none; }
 .dock.collapsed .in { padding-block: 4px; }
-@media (max-width: 699px) {
+@media (max-width: 699px), (max-height: 500px) {
   .dock .in { max-height: calc(var(--viewh, 100vh) * .46 - env(safe-area-inset-bottom, 0px)); grid-template-rows: auto minmax(0, 1fr) auto; gap: 6px; padding-block: 4px 8px; }
   .dock .q { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
-  .dock .opts { max-height: calc(var(--viewh, 100vh) * .18); overscroll-behavior: contain; }
+  .dock .opts { max-height: calc(var(--viewh, 100vh) * .30); overscroll-behavior: contain; }
   .dock .opt { min-height: 44px; }
   .dock.collapsed .in { grid-template-rows: auto; }
 }
+/* Keep native confirmation reachable while only candidate content scrolls. */
+.dock:not(.collapsed) .opts.native-choice { display: block; overflow: hidden; }
+.dock .native-choice > .hc { max-height: inherit; grid-template-rows: minmax(0, 1fr) auto; }
+.dock .native-choice .hc-content { overflow-y: auto; overscroll-behavior: contain; padding: 4px; }
+.dock .native-choice .hc-bar { background: var(--surface); }
 .dots::after { content: "…"; animation: blink 1s steps(3) infinite; }
 @keyframes blink { 50% { opacity: .3; } }
 
@@ -777,7 +782,9 @@ p.imp-bad { padding-left: 0; }
 
   function render() {
     if (!game) return;
-    const savedSelection = pending && nativeWidget && nativeWidgetKey===pending.req.requestId+':'+pending.req.epoch ? nativeWidget.selection : null;
+    const sameRequest=pending&&nativeWidget&&nativeWidgetKey===pending.req.requestId+':'+pending.req.epoch;
+    const savedSelection = sameRequest ? nativeWidget.selection : null;
+    const savedScrollTop = sameRequest ? $('dockOpts').querySelector('.hc-content')?.scrollTop||0 : 0;
     nativeWidget?.destroy();nativeWidget=null;nativeSelection=null;
     const [me, ai] = game.players;
     nextTop = {}; nextVal = {};
@@ -793,6 +800,7 @@ p.imp-bad { padding-left: 0; }
     const logHTML = logBuf.slice(-200).map(([s, c]) => `<div class="${c || ''}">${esc(s)}</div>`).join('');
     $('logSide').innerHTML = logHTML; $('logSide').scrollTop = $('logSide').scrollHeight;
     const dock = $('dock'); dock.hidden = false;
+    $('dockOpts').classList.toggle('native-choice',!!pending&&!game.winner);
     $('manualBtn').hidden = !(game.mode==='numeric' && pending?.req.canManual);
     if (game.winner) {
       dock.classList.remove('wait');
@@ -800,6 +808,7 @@ p.imp-bad { padding-left: 0; }
       $('dockOpts').innerHTML = '<button class="opt primary" type="button" data-act="again">再打一場</button><button class="opt" type="button" data-act="setup">換牌組</button><button class="opt" type="button" data-act="log">看紀錄</button>';
     } else if (pending) {
       dock.classList.remove('wait');$('dockQ').textContent=flashMsg||pending.req.context.reason||'';renderNativeChoice(pending.req,savedSelection);
+      $('dockOpts').querySelector('.hc-content').scrollTop=savedScrollTop;
     } else {
       dock.classList.add('wait');
       $('dockQ').innerHTML = '<span class="dots">AI 行動中</span>';

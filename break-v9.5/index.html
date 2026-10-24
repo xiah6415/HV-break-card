@@ -196,13 +196,18 @@ select { font: inherit; padding: 10px; border-radius: 8px; border: 1px solid var
 .undo-button:disabled { opacity: .4; cursor: not-allowed; }
 .dock.collapsed .q, .dock.collapsed .opts { display: none; }
 .dock.collapsed .in { padding-block: 4px; }
-@media (max-width: 699px) {
+@media (max-width: 699px), (max-height: 500px) {
   .dock .in { max-height: calc(var(--viewh, 100vh) * .46 - env(safe-area-inset-bottom, 0px)); grid-template-rows: auto minmax(0, 1fr) auto; gap: 6px; padding-block: 4px 8px; }
   .dock .q { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
-  .dock .opts { max-height: calc(var(--viewh, 100vh) * .18); overscroll-behavior: contain; }
+  .dock .opts { max-height: calc(var(--viewh, 100vh) * .30); overscroll-behavior: contain; }
   .dock .opt { min-height: 44px; }
   .dock.collapsed .in { grid-template-rows: auto; }
 }
+/* Keep native confirmation reachable while only candidate content scrolls. */
+.dock:not(.collapsed) .opts.native-choice { display: block; overflow: hidden; }
+.dock .native-choice > .hc { max-height: inherit; grid-template-rows: minmax(0, 1fr) auto; }
+.dock .native-choice .hc-content { overflow-y: auto; overscroll-behavior: contain; padding: 4px; }
+.dock .native-choice .hc-bar { background: var(--surface); }
 .dots::after { content: "…"; animation: blink 1s steps(3) infinite; }
 @keyframes blink { 50% { opacity: .3; } }
 
@@ -2342,6 +2347,7 @@ const H = root.BreakHostChoice || (typeof require !== 'undefined' ? require('./h
 const CSS = `
 .hc[data-kind]{display:grid;gap:10px;min-width:0;font:inherit;color:var(--ink,#122326)}
 .hc[data-kind] *{box-sizing:border-box}
+.hc-content{display:grid;gap:10px;min-width:0;min-height:0}
 .hc-head{display:flex;gap:10px;align-items:flex-start;min-width:0}
 .hc-head .hc-src{flex:0 0 44px;width:44px}
 .hc-q{font-weight:700;font-size:15px;line-height:1.4;min-width:0;overflow-wrap:anywhere}
@@ -2468,16 +2474,18 @@ function render(rootEl, request, opts = {}) {
     return out.length ? `<div class="hc-ctx">${out.join('')}</div>` : '';
   }
   function draw() {
+    const scrollTop=rootEl.querySelector('.hc-content')?.scrollTop||0;
     const ok = t === 'ack' || H.canSubmit(request, sel), prog = H.progress(request, sel);
     const src = request.source ? `<button type="button" class="hc-card hc-src" data-hc-src="1" aria-label="查看 ${esc(request.source.name || request.source.cardNo)}">${cardImg(request.source)}</button>` : '';
     const loss = request.canLoss && opts.onLoss ? (lossArm
       ? `<button type="button" class="hc-loss" data-hc-act="lossyes">確定 Loss</button><button type="button" class="hc-quiet" data-hc-act="lossno">不要</button>`
       : `<button type="button" class="hc-loss" data-hc-act="loss">喊 Loss</button>`) : '';
     rootEl.innerHTML = `<div class="hc" data-kind="${esc(request.kind)}" data-input="${t}">
-      <div class="hc-head">${src}<div class="hc-q">${esc(requestPrompt(request))}${prog ? `<small class="hc-prog">${esc(prog)}</small>` : ''}</div></div>
+      <div class="hc-content"><div class="hc-head">${src}<div class="hc-q">${esc(requestPrompt(request))}${prog ? `<small class="hc-prog">${esc(prog)}</small>` : ''}</div></div>
       ${ctx()}${body()}${chips()}
-      <div class="hc-err" role="alert">${esc(sel.error || '')}</div>
+      <div class="hc-err" role="alert">${esc(sel.error || '')}</div></div>
       <div class="hc-bar"><button type="button" class="hc-go" data-hc-act="go" ${ok ? '' : 'disabled'}>${esc(opts.goLabel || GO_LABEL[t])}</button>${(t === 'cards' || t === 'block') && sel.picked.length ? '<button type="button" class="hc-quiet" data-hc-act="clear">清除</button>' : ''}${loss}</div></div>`;
+    rootEl.querySelector('.hc-content').scrollTop=scrollTop;
   }
   function choose(value) { if (done) return; sel = H.toggle(request, sel, value); draw(); opts.onSelection && opts.onSelection(sel); }
   function onClick(e) {
@@ -2986,7 +2994,9 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
 
   function render() {
     if (!game) return;
-    const savedSelection = pending && nativeWidget && nativeWidgetKey===pending.req.requestId+':'+pending.req.epoch ? nativeWidget.selection : null;
+    const sameRequest=pending&&nativeWidget&&nativeWidgetKey===pending.req.requestId+':'+pending.req.epoch;
+    const savedSelection = sameRequest ? nativeWidget.selection : null;
+    const savedScrollTop = sameRequest ? $('dockOpts').querySelector('.hc-content')?.scrollTop||0 : 0;
     nativeWidget?.destroy();nativeWidget=null;nativeSelection=null;
     const [me, ai] = game.players;
     nextTop = {}; nextVal = {};
@@ -3002,6 +3012,7 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
     const logHTML = logBuf.slice(-200).map(([s, c]) => `<div class="${c || ''}">${esc(s)}</div>`).join('');
     $('logSide').innerHTML = logHTML; $('logSide').scrollTop = $('logSide').scrollHeight;
     const dock = $('dock'); dock.hidden = false;
+    $('dockOpts').classList.toggle('native-choice',!!pending&&!game.winner);
     $('manualBtn').hidden = !(game.mode==='numeric' && pending?.req.canManual);
     if (game.winner) {
       dock.classList.remove('wait');
@@ -3009,6 +3020,7 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
       $('dockOpts').innerHTML = '<button class="opt primary" type="button" data-act="again">再打一場</button><button class="opt" type="button" data-act="setup">換牌組</button><button class="opt" type="button" data-act="log">看紀錄</button>';
     } else if (pending) {
       dock.classList.remove('wait');$('dockQ').textContent=flashMsg||pending.req.context.reason||'';renderNativeChoice(pending.req,savedSelection);
+      $('dockOpts').querySelector('.hc-content').scrollTop=savedScrollTop;
     } else {
       dock.classList.add('wait');
       $('dockQ').innerHTML = '<span class="dots">AI 行動中</span>';
