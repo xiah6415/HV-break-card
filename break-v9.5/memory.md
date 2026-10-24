@@ -1429,3 +1429,6 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 結果：新增meta.p0Name／p1Name，本人填入、回房保留原名；send({kind:'rematch',matchId:payload.view.match.id})確認本局，meta.rematch[uid]回報已確認局ID。雙方確認才用新ID與不同種子同房開局，沿用座位／牌組，AI自動同意；保留指令去重紀錄，AI指令ID加局別；快照保存後斷線可接手恢復同一新局，舊命令／同意不影響新局。
 - 測試／分工：168套回歸0失敗、68項權限規則、fuzz3000／6×300、單人三尺寸各3局與三級難度保存／接線通過；雙人／AI再戰、重複及同時確認、同意後及快照後斷線、刷新保留暱稱、舊局拒絕均通過；正式Firebase雙匿名10指令／同房再戰／私密拒讀通過且測試資料清除。claude/ai-tune 93ffc87合併為32ac083，online.html／online.js與ui多人連結未改，按鈕交Claude。
 - 部署：594c07c已推送、Pages built／無錯誤，12檔HTTP200與SHA256一致；RTDB新規則已部署。公開頁雙匿名10指令、同房雙方確認、新ID／種子、舊同意拒絕、暱稱及私密拒讀通過，測試房／帳號已清除；https://xiah6415.github.io/HV-break-card/break-v9.5/online.html?v=594c07c 。Claude可依上述send／meta接線，既有callback格式不變，介面分支完成後再審查合併部署；541可組牌／358技能不變。
+
+## 合併正式多人牌桌（2026-10-25）
+- 計畫：審查並合併claude/online-ui精確34c98e8，保留主線既有AI難度與同房再戰；新增meta.names映射並以規則限制本人名稱，同時保留p0Name／p1Name相容。更新多人／再戰測試到index.html?online=1與dockOpts，檢查第二座位旋轉、request實體參照、提示重播、斷線接手與隱私；修正合併時發現的整合缺口，舊mobile-review-e2e遷移至正式核心後驗證，建置／回歸／規則／公開頁實測通過再部署。再戰按鈕由Claude後續接線，連線send契約維持不變。
