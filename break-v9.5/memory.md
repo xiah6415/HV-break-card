@@ -1400,3 +1400,8 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 
 ## Firebase多人第一階段（2026-10-24）
 - 計畫：合併設定f05947d並審查claude/qa-match驗收工具；以Realtime Database＋匿名／Google Auth實作大廳、連線名單、邀請房號、多房雙人／AI座位與房主權威指令／各玩家私密視圖。安全規則隔離快照／完整指令紀錄僅當前權威端可讀，玩家只讀自己的視圖；onDisconnect與權威接手、快照／指令冪等與重連須實測，再部署規則及Pages。觀戰／戰績／雲端牌組第二階段、多人Undo最後，先不用Functions。
+
+## 多人連線：Firebase 設定（2026-10-24，分支 claude/firebase-config）
+- 使用者選定 Firebase：Realtime Database（asia-southeast1，haikyuu-playmat-default-rtdb）＋ Authentication（匿名＋Google）；網站仍在 GitHub Pages
+- 設定檔：firebase-config.js（Web 設定為公開資訊；權限靠資料庫安全規則）。多人實作由 Codex 負責；第一階段大廳／上線名單／邀請、房主權威、各自視圖、斷線接手；第二階段觀戰／戰績／牌組存檔；AI 座位用 AI.answer
+- 使用者待確認：Authentication 已啟用匿名＋Google、Authorized domains 加入 xiah6415.github.io、資料庫 locked mode（規則由 Codex 撰寫部署）
