@@ -138,7 +138,7 @@ function rollout(m0, me, value, seed, longHorizon) {
   } catch (e) { return -Infinity; }
   return evaluate(m, me, base);
 }
-// 難度：easy＝較常隨手選、不攔網；normal＝預設；hard＝角色選擇也模擬（取規則前 3 名）、每個選項抽樣 2 次取平均
+// 難度：easy＝較常隨手選、不攔網；normal＝預設；hard＝角色選擇也模擬（規則首選與次選）、每個選項抽樣 2 次取平均
 const LEVELS = {
   easy: { slip: 0.35, samples: 1, roles: false, block: false },
   normal: { slip: 0, samples: 1, roles: false, block: true },
@@ -149,7 +149,7 @@ function roleCandidates(m, r) {
   const ids = cardIds(r); if (ids.length < 2) return null;
   const pick = safeRules(m, r), rest = ids.filter(x => x !== pick);
   const score = x => { const p = { receiver: 'receive', setter: 'toss', attacker: 'attack', serve: 'serve' }[r.kind]; return int(printed(m, x, p)) - 0.2 * worth(m, x); };
-  return [pick, ...rest.sort((a, b) => score(b) - score(a)).slice(0, 2)];
+  return [pick, ...rest.sort((a, b) => score(b) - score(a)).slice(0, 1)];
 }
 function choose(m, r, level = 'normal') {
   const L = LEVELS[level] || LEVELS.normal;
@@ -165,8 +165,9 @@ function choose(m, r, level = 'normal') {
   let bestValue = list[0], bestScore = -Infinity;
   for (const value of list) {
     let score = 0;
-    for (let s = 0; s < L.samples; s++) score += rollout(m, r.actor, value, (seed + Math.imul(s, 0x632BE5AB)) >>> 0, long);
-    score /= L.samples;
+    const n = long ? 1 : L.samples; // 長距模擬成本高，只抽樣一次
+    for (let s = 0; s < n; s++) score += rollout(m, r.actor, value, (seed + Math.imul(s, 0x632BE5AB)) >>> 0, long);
+    score /= n;
     if (score > bestScore + 1e-9) { bestScore = score; bestValue = value; }
   }
   return bestValue;

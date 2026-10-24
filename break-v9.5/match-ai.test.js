@@ -24,3 +24,14 @@ for(let g=0;g<G;g++){
 assert(wins>=8,'strategy AI should clearly beat the baseline: '+wins+'/'+G);
 assert(blocks>0,'AI must block sometimes');assert(events>0,'AI must play Events');assert(checked>20);
 console.log(`match AI: ${wins}/${G} wins vs baseline, ${blocks} blocks, ${events} Events, ${checked} non-mutation checks; every answer validated`);
+// 難度：三種等級回答都合法、對局終局；easy 不攔網
+{
+ const {Match:M2}=require('./rules/match');
+ for(const level of ['easy','normal','hard']){
+  const m=new M2({id:'lv',seed:4242,decks:[deck('稲荷崎',1),deck('烏野',2)]});let blocks=0;
+  for(let i=0;;i++){const r=m.request(0)||m.request(1);if(!r)break;assert(i<4000,'stall');const ans=r.actor===0?AI.answer(m,r,{level}):H.aiAnswer(r);if(r.actor===0){assert(H.validate(r,ans).ok,level+' answer validates');if(r.kind==='defend'&&ans.value==='block')blocks++;}m.command({kind:'answer',answer:ans});}
+  assert.equal(m._m.phase,'finished');if(level==='easy')assert.equal(blocks,0,'easy never blocks');
+ }
+ assert.deepEqual(Object.keys(AI.LEVELS),['easy','normal','hard']);
+ console.log('match AI levels: easy/normal/hard finish with validated answers; easy never blocks');
+}
