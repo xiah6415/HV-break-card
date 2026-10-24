@@ -1444,3 +1444,4 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 ## Codex：正式多人牌桌整合結果
 - 結果：34c98e8合併470fdea，保留既有AI難度；新增meta.names並保留舊名稱欄位。補Firebase設定載入、接手／斷線控制、刷新及新局過場游標、相同request選取保留、私下看牌紀錄、認證回呼序列；攔網預演經send／本人receipt快取，不讀權威Match。多人終局禁止誤啟單人局，離開與紀錄仍可用；再戰send早已完成，按鈕仍由Claude接。
 - 測試：170套回歸0失敗／規則74項／fuzz3000／6×300／單人三尺寸各3局／AI三級保存與接線通過；更新online與rematch測試至正式入口，雙座位DOM選牌、同時雙房、私密拒讀、接手／刷新／RNG、新局／舊同意／快照後斷線及AI再戰通過，瀏覽器攔網唯讀預演5次。mobile-review已遷移正式介面，三尺寸計時／手動／Loss／舊計時取消通過；正式Firebase雙匿名meta.names、10指令、雙方確認新局及隱私通過，測試資料已清除。
+- 部署：0cab0c3已推送、Pages built／無錯誤，12檔HTTP200／SHA256一致，Firebase新規則已部署；公開雙匿名正式牌桌座位／暱稱、終局禁啟單人且可離開、10指令、雙方確認新ID／種子、舊同意拒絕與私密拒讀通過，測試房與帳號清除。舊online.html邀請保留room轉到正式入口、390px無溢出與頁面錯誤；https://xiah6415.github.io/HV-break-card/break-v9.5/index.html?online=1&v=0cab0c3 。541可組牌／358技能不變；Google真人OAuth及iPhone仍由使用者實測，再戰確認按鈕交Claude後續接線。
