@@ -197,15 +197,20 @@ select { font: inherit; padding: 10px; border-radius: 8px; border: 1px solid var
 .dock.collapsed .q, .dock.collapsed .opts { display: none; }
 .dock.collapsed .in { padding-block: 4px; }
 @media (max-width: 699px), (max-height: 500px) {
-  .dock .in { max-height: calc(var(--viewh, 100vh) * .46 - env(safe-area-inset-bottom, 0px)); grid-template-rows: auto minmax(0, 1fr) auto; gap: 6px; padding-block: 4px 8px; }
+  .dock .in { max-height: calc(var(--viewh, 100vh) * .46 - env(safe-area-inset-bottom, 0px)); grid-template-rows: auto minmax(0, auto) minmax(0, 1fr); gap: 6px; padding-block: 4px 8px; }
   .dock .q { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
   .dock .opts { max-height: calc(var(--viewh, 100vh) * .30); overscroll-behavior: contain; }
   .dock .opt { min-height: 44px; }
   .dock.collapsed .in { grid-template-rows: auto; }
 }
+/* Very short landscape views need a usable touch area above the action row. */
+@media (max-height: 349px) {
+  .dock .in { max-height: calc(var(--viewh, 100vh) * .65 - env(safe-area-inset-bottom, 0px)); }
+  .dock .opts { max-height: calc(var(--viewh, 100vh) * .50); }
+}
 /* Keep native confirmation reachable while only candidate content scrolls. */
-.dock:not(.collapsed) .opts.native-choice { display: block; overflow: hidden; }
-.dock .native-choice > .hc { max-height: inherit; grid-template-rows: minmax(0, 1fr) auto; }
+.dock:not(.collapsed) .opts.native-choice { display: block; overflow: hidden; min-height: 0; }
+.dock .native-choice > .hc { height: 100%; max-height: inherit; grid-template-rows: minmax(0, 1fr) auto; }
 .dock .native-choice .hc-content { overflow-y: auto; overscroll-behavior: contain; padding: 4px; }
 .dock .native-choice .hc-bar { background: var(--surface); }
 .dots::after { content: "…"; animation: blink 1s steps(3) infinite; }
