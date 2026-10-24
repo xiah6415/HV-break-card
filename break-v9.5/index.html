@@ -1787,8 +1787,7 @@ function boardView(view,deckKeys){
   const court=p.court.map((c,i)=>({...c,key:c.role==='center_blocker'?'block':c.role==='side_blocker'?'side:'+p.court.slice(0,i).filter(x=>x.role==='side_blocker').length:c.role}));
   const area=Object.fromEntries(['serve','block','receive','toss','attack'].map(key=>{const c=court.find(c=>c.key===key);return [key,c?[...c.guts.map(x=>short(x.cardNo)),short(c.cardNo)]:[]];}));
   const parameter=(key,param)=>{const n=court.find(c=>c.key===key)?.parameters[fields[param]||param];return n==='dash'||n==null?null:n;};
-  const effects=Object.fromEntries(court.map(c=>[c.key,{card:short(c.cardNo),mods:{}}]));
-  return {idx,deckKey:deckKeys[idx],hand:Array.isArray(p.hand)?p.hand.map(c=>short(c.cardNo)):{length:p.hand.count},deck:{length:p.deck.count},sets:{length:p.sets.count},area,ev:p.event.map(c=>short(c.cardNo)),drop:p.drop.map(c=>short(c.cardNo)),effects,
+  return {idx,deckKey:deckKeys[idx],hand:Array.isArray(p.hand)?p.hand.map(c=>short(c.cardNo)):{length:p.hand.count},deck:{length:p.deck.count},sets:{length:p.sets.count},area,ev:p.event.map(c=>short(c.cardNo)),drop:p.drop.map(c=>short(c.cardNo)),
    court,handRefs:Array.isArray(p.hand)?p.hand:[],top:key=>area[key]?.at(-1)||null,guts:key=>Math.max(0,(area[key]?.length||0)-1),
    ts:{finished:view.match.phase!=='rally',receiver:area.receive.at(-1),setter:area.toss.at(-1),attacker:area.attack.at(-1),rcv:parameter('receive','rcv'),toss:parameter('toss','tos'),atk:parameter('attack','atk'),sides:court.filter(c=>c.role==='side_blocker').map(c=>short(c.cardNo))},parameter};
  });
@@ -1931,6 +1930,15 @@ function createSelection(req) {
   const t = req.input.type;
   return { type: t, picked: [], center: null, value: undefined };
 }
+// Restore only legal candidate identities; never submit or restore an error.
+function restoreSelection(req, saved) {
+  let s=createSelection(req);if(!saved||saved.type!==req.input.type)return s;
+  const legal=v=>req.options.some(o=>same(o.value,v));
+  if(['single','number'].includes(req.input.type))return legal(saved.value)?toggle(req,s,saved.value):s;
+  for(const value of saved.picked||[])if(legal(value)&&!s.picked.some(v=>same(v,value)))s=toggle(req,s,value);
+  if(req.input.type==='block')s=setCenter(req,s,saved.center);
+  return {...s,error:null};
+}
 function toggle(req, sel, optionValue) {
   const t = req.input.type, key = JSON.stringify(optionValue);
   if (t === 'single' || t === 'number') return { ...sel, value: optionValue, error: null };
@@ -2020,7 +2028,7 @@ function aiAnswer(req) {
   return ans;
 }
 
-const api = { PROTOCOL, INPUT_TYPES, checkRequest, checkEnvelope, checkValue, validate, makeAnswer, createSelection, toggle, setCenter, selectionValue, canSubmit, progress, aiValue, aiAnswer, effName };
+const api = { PROTOCOL, INPUT_TYPES, checkRequest, checkEnvelope, checkValue, validate, makeAnswer, createSelection, restoreSelection, toggle, setCenter, selectionValue, canSubmit, progress, aiValue, aiAnswer, effName };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.BreakHostChoice = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
 
@@ -2198,6 +2206,15 @@ function createSelection(req) {
   const t = req.input.type;
   return { type: t, picked: [], center: null, value: undefined };
 }
+// Restore only legal candidate identities; never submit or restore an error.
+function restoreSelection(req, saved) {
+  let s=createSelection(req);if(!saved||saved.type!==req.input.type)return s;
+  const legal=v=>req.options.some(o=>same(o.value,v));
+  if(['single','number'].includes(req.input.type))return legal(saved.value)?toggle(req,s,saved.value):s;
+  for(const value of saved.picked||[])if(legal(value)&&!s.picked.some(v=>same(v,value)))s=toggle(req,s,value);
+  if(req.input.type==='block')s=setCenter(req,s,saved.center);
+  return {...s,error:null};
+}
 function toggle(req, sel, optionValue) {
   const t = req.input.type, key = JSON.stringify(optionValue);
   if (t === 'single' || t === 'number') return { ...sel, value: optionValue, error: null };
@@ -2287,7 +2304,7 @@ function aiAnswer(req) {
   return ans;
 }
 
-const api = { PROTOCOL, INPUT_TYPES, checkRequest, checkEnvelope, checkValue, validate, makeAnswer, createSelection, toggle, setCenter, selectionValue, canSubmit, progress, aiValue, aiAnswer, effName };
+const api = { PROTOCOL, INPUT_TYPES, checkRequest, checkEnvelope, checkValue, validate, makeAnswer, createSelection, restoreSelection, toggle, setCenter, selectionValue, canSubmit, progress, aiValue, aiAnswer, effName };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.BreakHostChoice = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
 
@@ -2307,6 +2324,8 @@ const CSS = `
 .hc-ctx{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--muted,#566b6e);flex-wrap:wrap}
 .hc-ctx .hc-rev{width:56px}
 .hc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px;min-width:0}
+.hc-item{min-width:0;display:grid;align-content:start;gap:4px}
+.hc-info{font:inherit;font-size:11px;border:1px solid var(--line,#c3d3d2);border-radius:6px;background:transparent;color:inherit;min-height:28px;cursor:pointer}
 .hc-card{position:relative;border:0;padding:0;background:none;cursor:pointer;display:grid;gap:3px;min-width:0;text-align:center;color:inherit;font:inherit;border-radius:7px}
 .hc-card img,.hc-src img,.hc-rev img{display:block;width:100%;aspect-ratio:300/419;object-fit:cover;border-radius:6px;background:var(--sunk,#d9e4e3)}
 .hc-card span.hc-nm{font-size:11px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -2344,7 +2363,7 @@ function render(rootEl, request, opts = {}) {
   const chk = H.checkRequest(request);
   if (!chk.ok) { rootEl.innerHTML = `<div class="hc"><p class="hc-err" role="alert">無法顯示這個選擇：${esc(chk.error)}</p></div>`; return { destroy() { rootEl.innerHTML = ''; } }; }
   const t = request.input.type, imgSrc = opts.imgSrc || (() => ''), cardImg = c => `<img src="${esc(imgSrc(c.cardNo))}" alt="${esc(c.name || c.cardNo)}" loading="lazy" draggable="false">`;
-  let sel = H.createSelection(request), lossArm = false, done = false;
+  let sel = H.restoreSelection(request, opts.selection), lossArm = false, done = false;
   const byKey = new Map(request.options.map(o => [key(o.value), o]));
   const hasCards = request.options.some(o => o.card);
 
@@ -2361,7 +2380,7 @@ function render(rootEl, request, opts = {}) {
         const c = o.card || { cardNo: '', name: o.label };
         const parts=String(c.zone||'').split('.'),zone=parts.length===2?parts[1]:parts[0],labels={hand:'手牌',deck:'牌庫',drop:'棄牌',event:'Event',serve:'發球',block:'中攔',receive:'接球',toss:'舉球',attack:'攻擊','side:0':'側攔','side:1':'側攔'};
         const location=labels[zone]?(parts.length===2?(+parts[0]===request.actor?'我方 ':'對方 '):'')+labels[zone]:'';
-        return `<button type="button" class="hc-card${on ? ' on' : ''}" aria-pressed="${on}" data-hc-v="${esc(key(o.value))}">${c.cardNo ? cardImg(c) : ''}<span class="hc-nm">${esc(o.label)}</span>${location?`<small class="hc-zone">${esc(location)}</small>`:''}${badge}</button>`;
+        return `<div class="hc-item"><button type="button" class="hc-card${on ? ' on' : ''}" aria-pressed="${on}" data-hc-v="${esc(key(o.value))}">${c.cardNo ? cardImg(c) : ''}<span class="hc-nm">${esc(o.label)}</span>${location?`<small class="hc-zone">${esc(location)}</small>`:''}${badge}</button>${o.card&&opts.onCard?`<button type="button" class="hc-info" data-hc-info="${esc(o.id)}" aria-label="查看 ${esc(o.label)} 卡片">查卡</button>`:''}</div>`;
       }).join('')}</div>`;
     }
     return `<div class="hc-opts" role="group">${request.options.map(o => `<button type="button" class="hc-opt${t === 'number' ? ' num' : ''}${sel.value !== undefined && key(sel.value) === key(o.value) ? ' on' : ''}" aria-pressed="${sel.value !== undefined && key(sel.value) === key(o.value)}" data-hc-v="${esc(key(o.value))}">${esc(o.label)}</button>`).join('')}</div>`;
@@ -2395,9 +2414,10 @@ function render(rootEl, request, opts = {}) {
     if (done) return;
     const b = e.target.closest('button'); if (!b || !rootEl.contains(b)) return;
     const d = b.dataset;
+    if (d.hcInfo) { const o=request.options.find(o=>o.id===d.hcInfo); if(o?.card)opts.onCard?.(o.card);return; }
     if (d.hcSrc) { opts.onCard && opts.onCard(request.source); return; }
     if (d.hcRm) { sel = H.toggle(request, sel, JSON.parse(d.hcRm)); draw(); opts.onSelection && opts.onSelection(sel); return; }
-    if (d.hcCtr) { sel = H.setCenter(request, sel, JSON.parse(d.hcCtr)); return draw(); }
+    if (d.hcCtr) { sel = H.setCenter(request, sel, JSON.parse(d.hcCtr)); draw();opts.onSelection?.(sel);return; }
     if (d.hcV !== undefined) return choose(JSON.parse(d.hcV));
     switch (d.hcAct) {
       case 'clear': sel = H.createSelection(request); draw(); opts.onSelection && opts.onSelection(sel); return;
@@ -2673,14 +2693,11 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
   };
 
   // ---------- game state
-  let game = null, session = null, pending = null, picked = new Set(), logBuf = [];
-  let nativeWidget = null, nativeSelection = null, tableSequence = 0;
+  let game = null, session = null, pending = null, logBuf = [];
+  let nativeWidget = null, nativeSelection = null, nativeWidgetKey = null, tableSequence = 0;
   let turnNotice = null, shownTransition = null, priorFocus = null, turnTimer = null;
-  let staged = null;            // { card, i(option index) } — 預放中的卡
-  let blk = null;               // { cards: [], center } — 攔網組裝中
-  let prevTop = {}, prevVal = {}, prevBall = null, suppressClick = false, lossArm = false;
-  const human = { label: '你', choose(g, p, req) { return new Promise(res => { pending = { req, res }; picked = new Set(); staged = null; lossArm = false; blk = req.kind === 'block' && req.build ? { cards: [], center: null } : null; setDockCollapsed(false); render(); if (req.kind === 'lossConfirm' || req.kind === 'turnEnd' || req.kind === 'mulligan' || handReq()) requestAnimationFrame(() => { measureDock(); if (window.matchMedia('(max-width: 699px)').matches) $('meSide').querySelector(req.kind === 'lossConfirm' || req.kind === 'turnEnd' ? '.main' : '.hand')?.scrollIntoView({ block: req.kind === 'lossConfirm' || req.kind === 'turnEnd' ? 'start' : 'nearest' }); }); }); } };
-  function answer(v) { if (!pending) return; if (game?.native) return nativeAnswer(v); const r = pending.res; pending = null; picked = new Set(); staged = null; blk = null; r(v); render(); }
+  let prevTop = {}, prevVal = {}, prevBall = null, suppressClick = false;
+  function answer(v) { if (pending) return nativeAnswer(v); }
 
   const nativeFields = {srv:'serve',blk:'block',rcv:'receive',tos:'toss',atk:'attack'};
   function nativeCommand(command) {
@@ -2699,9 +2716,10 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
     const me=game.players[0];$('meSide').innerHTML=mainHTML(me)+auxHTML(me)+stripHTML(me,true)+handHTML(me);
     requestAnimationFrame(measureDock);
   }
-  function renderNativeChoice(r) {
+  function renderNativeChoice(r, selection = null) {
     const labels={ack:'抽 1 張',turnEnd:'結束回合',lossConfirm:'喊 Loss',roll:'開始調度',reveal:'翻開牌庫頂',revealResult:'看完了，繼續',mulligan:'保留／重抽選取的牌'};
-    nativeWidget=BreakChoiceUI.render($('dockOpts'),r,{goLabel:labels[r.kind],
+    nativeWidgetKey=r.requestId+':'+r.epoch;
+    nativeWidget=BreakChoiceUI.render($('dockOpts'),r,{goLabel:labels[r.kind],selection,
       imgSrc:no=>IMG[no.replace(/^HV-?/,'')]||'',onCard:c=>cardSheet(c.cardNo.replace(/^HV-?/,'')),
       onAnswer:a=>nativeCommand({kind:'answer',answer:a}),onLoss:()=>nativeAnswer({__loss:true}),onSelection:syncNativeHand
     });
@@ -2711,7 +2729,7 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
   }
 
   function finishTransition(source) {
-    if (!source || source !== turnNotice || source.game !== game || !$('sheet').hidden || session?.takeback || session?.token?.paused) return;
+    if (!source || source !== turnNotice || source.game !== game || !$('sheet').hidden) return;
     const done = source.resolve; turnNotice = null; renderTransition(); done();
   }
   function scheduleTransition(source) {
@@ -2760,7 +2778,7 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
       action = n.final ? '查看對戰結果' : '確認結果，進入下一球';
     }
     const status = session?.status();
-    $('turnCard').innerHTML = `<div class="turn-eyebrow">BREAK · 第 ${n.rally} 球</div><h2 class="turn-title" id="turnTitle">${title}</h2><p class="turn-phase">${phase}</p>${middle}<p class="turn-detail" id="turnDetail">${esc(detail)}</p><div class="turn-actions"><button class="turn-next" id="turnNext" type="button">${action}</button><button class="turn-undo" id="turnUndo" type="button" ${status?.enabled ? '' : 'disabled'}>${status?.opponent ? '請求悔棋' : '返回上一步（Undo）'}</button></div>`;
+    $('turnCard').innerHTML = `<div class="turn-eyebrow">BREAK · 第 ${n.rally} 球</div><h2 class="turn-title" id="turnTitle">${title}</h2><p class="turn-phase">${phase}</p>${middle}<p class="turn-detail" id="turnDetail">${esc(detail)}</p><div class="turn-actions"><button class="turn-next" id="turnNext" type="button">${action}</button><button class="turn-undo" id="turnUndo" type="button" ${status?.enabled ? '' : 'disabled'}>返回上一步（Undo）</button></div>`;
     $('turnNext').onclick = () => finishTransition(source);
     scheduleTransition(source);
     $('turnUndo').onclick = () => $('undoBtn').onclick();
@@ -2775,7 +2793,6 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
   });
 
   // 哪些 req 是「從手牌選一張」；選到的卡會放去哪
-  const HAND_KINDS = new Set(['serve', 'receiver', 'setter', 'attacker', 'event', 'discard', 'cost']);
   function targetOf(req, c) {
     if (!req) return null;
     switch (req.kind) {
@@ -2786,68 +2803,12 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
       default: return null;
     }
   }
-  const handReq = () => game?.native ? !!pending?.req.options.some(o=>o.card && game.players[0].handRefs.some(c=>c.id===o.value)) : pending && !pending.req.multi && (HAND_KINDS.has(pending.req.kind) || (pending.req.kind === 'block' && blk));
+  const handReq = () => !!pending?.req.options.some(o=>o.card && game.players[0].handRefs.some(c=>c.id===o.value));
   function legalCards() {
-    if (!pending) return new Set();
-    const r = pending.req;
-    if(game.native)return new Set(r.options.filter(o=>game.players[0].handRefs.some(c=>c.id===o.value)).map(o=>o.card.cardNo.replace(/^HV-?/,'')));
-    if (r.kind === 'block' && blk) return new Set(r.build.cands);
-    if (!HAND_KINDS.has(r.kind)) return new Set();
-    return new Set(r.options.filter(o => o.card && game.players[0].hand.includes(o.card)).map(o => o.card));
-  }
-  function stage(c) {
-    setDockCollapsed(false);
-    const r = pending.req, i = r.options.findIndex(o => o.card === c);
-    if (i < 0) return;
-    staged = { card: c, i }; render();
-  }
-  function blkToggle(c, addCopy = false) {
-    const me = game.players[0];
-    if (blk.cards.includes(c) && !addCopy) { blk.cards.splice(blk.cards.indexOf(c),1); if (blk.center === c) blk.center = blk.cards[0] || null; return render(); }
-    const max = pending.req.build.max;
-    if (blk.cards.length >= max) return flash(`最多 ${max} 人攔網`);
-    if (!game.evalBlock(me,[...blk.cards,c]).legal) return flash('攔網名稱重複或已無可用卡片');
-    blk.cards.push(c); if (!blk.center) blk.center = c; render();
+    return new Set((pending?.req.options||[]).filter(o=>game.players[0].handRefs.some(c=>c.id===o.value)).map(o=>o.card.cardNo.replace(/^HV-?/,'')));
   }
   let flashMsg = '', flashT = 0;
   function flash(s) { flashMsg = s; clearTimeout(flashT); flashT = setTimeout(() => { flashMsg = ''; render(); }, 1800); render(); }
-
-  // ---------- 預覽
-  const num = s => { const m = String(s).match(/-?\d+/); return m ? +m[0] : 0; };
-  function preview(req, c) {
-    const me = game.players[0], b = game.ball, out = { val: '', lines: [], tone: '' };
-    if(game.native)return {val:'',lines:['印刷數值供參考；登場後依實際技能結算'],tone:''};
-    if (req.kind === 'event' && CL.permission(c)?.kind === 'shared' && me.ts.used?.[c]) return {val:'',lines:['技能已失效：這張只會放入 Event 區，不會再次抽牌或加值。'],tone:'warn'};
-    const rest = me.hand.slice(); rest.splice(rest.indexOf(c), 1);
-    if (req.kind === 'serve') { out.val = '發 ' + st(c, 'srv'); out.lines.push(`發球威力 ${st(c, 'srv')}${c === 'P01-033' ? '（可再發動技能 +1）' : ''}`); }
-    if (req.kind === 'receiver') {
-      const s = game.rcvPreview(me, c), base = num(s), ex = (s.match(/\+(\d+)/g) || []).reduce((t, x) => t + +x.slice(1), 0);
-      out.val = '接 ' + base;
-      if (base >= b.off) { out.lines.push(`接 ${base} ≥ 來球 ${b.off}：接得起`); out.tone = 'good'; }
-      else if (base + ex >= b.off) { out.lines.push(`接 ${base}，發動技能 +${ex} 後 ${base + ex} ≥ ${b.off}：要發動技能才接得起`); out.tone = 'warn'; }
-      else { out.lines.push(`接 ${base}${ex ? `（技能 +${ex}）` : ''} < 來球 ${b.off}：要靠 Event 補，不然失分`); out.tone = 'bad'; }
-      if (!E.entryNames(c).some(name => E.canChain(rest, name))) { out.lines.push('⚠ 接完後手上湊不出「舉球＋攻擊」，會在後面失分'); out.tone = 'bad'; }
-      if (c === 'PR-057') out.lines.push('登場時再選日向翔陽／西谷夕；名稱影響後續同名限制');
-    }
-    if (req.kind === 'setter') {
-      const t = st(c, 'tos') + (me.ts.apass || 0); out.val = '舉 ' + t;
-      const atks = [...new Set(rest.filter(x => isC(x) && st(x, 'atk') != null && game.legalEntryNames(me, 'toss', c).some(name => E.entryNames(x).some(other => other !== name))).map(x => `${E.short(x)} 攻${st(x, 'atk')}`))];
-      out.lines.push(`舉球 ${t}${me.ts.apass ? `（含 A 傳球 +${me.ts.apass}）` : ''}`);
-      if (atks.length) out.lines.push('之後可攻擊：' + atks.join('、')); else { out.lines.push('⚠ 舉完沒有能攻擊的角色（不能與舉球同名）'); out.tone = 'bad'; }
-      if (c === 'PR-057') out.lines.push('登場時選名稱；不能與本回合接球角色同名');
-    }
-    if (req.kind === 'attacker') {
-      const o = req.options.find(x => x.card === c), a = st(c, 'atk') + (E.isHin(c) && me.ts.hin ? me.ts.hin : 0);
-      out.val = '攻 ' + a; out.lines.push(`進攻 = 舉 ${me.ts.toss} ＋ 攻 ${a} ＝ ${me.ts.toss + a}`);
-      if (/技能|\+/.test(DEF[c][10] || '')) out.lines.push('登場後會問你要不要發動技能');
-      if (c === 'PR-057') out.lines.push(`登場時選名稱${me.ts.hin && game.legalEntryNames(me, 'attack', c).includes('日向 翔陽') ? '；選日向翔陽可再獲影山的攻擊 +2' : ''}`);
-      void o;
-    }
-    if (req.kind === 'event') { out.val = isC(c) ? '棄' : 'EV'; out.lines.push((isC(c) ? '棄掉發動：' : '打出：') + (req.options.find(x => x.card === c) || {}).label); }
-    if (req.kind === 'discard') { out.val = '棄'; out.lines.push(`把 ${nm(c)} 丟到棄牌區`); }
-    if (req.kind === 'cost') { out.val = 'EV'; out.lines.push(`把 ${nm(c)} 放到 Event 區`); }
-    return out;
-  }
 
   function zone(p, a) {
     const mine = p.idx === 0, top = p.top(a), g = p.guts(a);
@@ -2863,13 +2824,13 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
     const gl = guts.length ? `<button class="glist" type="button" data-zone="${a}" data-p="${p.idx}" aria-label="${E.AREA_ZH[a]}區 Guts ${guts.length} 張">${guts.slice(0, 3).map(c => `<span>${esc(E.short(c))}</span>`).join('')}${guts.length > 3 ? `<span class="more">＋${guts.length - 3}</span>` : ''}</button>` : '<div class="glist none">－</div>';
     let ghost = '', tgt = '';
     if (mine && pending) {
-      if (staged && targetOf(pending.req, staged.card) === a) { const pv = preview(pending.req, staged.card); ghost = `<div class="ghost">${img(staged.card)}<span class="badge v pv ${pv.tone}">${esc(pv.val)}</span></div>`; }
       if (handReq() && targetOf(pending.req, [...legalCards()][0]) === a) tgt = ' tgt';
       if (pending.req.kind === 'defend' && a === 'receive') tgt = ' tgt';
     }
-    const fx = p.effects[a], labels = { srv: '發球', blk: '攔網', rcv: '接球', tos: '舉球', atk: '攻擊' };
-    const changes = fx?.card === top ? Object.entries(fx.mods || {}).map(([k, n]) => `${labels[k]} +${n}`).join('／') : '';
-    const chosen = (top === 'PR-057' && game.cardName(p, a) !== nm(top) || changes) ? `<small class="court-name">${top === 'PR-057' ? '本回合：' + esc(game.cardName(p, a)) : ''}${changes ? `<br>${esc(changes)}` : ''}</small>` : '';
+    const fields={srv:'serve',blk:'block',rcv:'receive',tos:'toss',atk:'attack'},labels={srv:'發球',blk:'攔網',rcv:'接球',tos:'舉球',atk:'攻擊'};
+    const card=p.court.find(c=>c.key===a), changes=top?Object.keys(fields).flatMap(k=>{const base=st(top,k),value=card?.parameters[fields[k]];return Number.isInteger(base)&&Number.isInteger(value)&&base!==value?[`${labels[k]} ${value-base>0?'+':''}${value-base}`]:[];}).join('／'):'';
+    const name=top?game.cardName(p,a):'',renamed=top&&name.replace(/\s/g,'')!==nm(top).replace(/\s/g,'');
+    const chosen=renamed||changes?`<small class="court-name">${renamed?'目前名稱：'+esc(name):''}${changes?`${renamed?'<br>':''}${esc(changes)}`:''}</small>`:'';
     return `<div class="zone"><div class="zl">${E.AREA_ZH[a]}</div><div class="slot${tgt}${enter ? ' enter' : ''}" ${mine ? `data-drop="${a}"` : ''}>${top ? `<button class="cbtn" type="button" data-zone="${a}" data-p="${p.idx}">${img(top)}</button>` : ''}${g ? `<span class="badge g">G${g}</span>` : ''}${v ? `<span class="badge v${pop ? ' pop' : ''}">${v}</span>` : ''}${ghost}</div>${chosen}${gl}</div>`;
   }
   let nextTop = {}, nextVal = {};
@@ -2884,11 +2845,9 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
   function auxGhost(p, k) {
     if (p.idx !== 0 || !pending) return { cls: '', html: '' };
     const r = pending.req;
-    if (k === 'block' && blk) return { cls: ' tgt', html: blk.cards.length ? `<span class="gh">${blk.cards.map(c => `<span class="at ghost-mini">${img(c)}</span>`).join('')}</span>` : '' };
     if (r.kind === 'defend' && k === 'block') return { cls: ' tgt', html: '' };
     let cls = '';
     if (handReq() && legalCards().size && [...legalCards()].some(c => targetOf(r, c) === k)) cls = ' tgt';
-    if (staged && targetOf(r, staged.card) === k) return { cls, html: `<span class="gh"><span class="at ghost-mini">${img(staged.card)}</span></span>` };
     return { cls, html: '' };
   }
   function mini(p, a) {
@@ -2907,17 +2866,11 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
   function handHTML(p) {
     const req = pending && pending.req, legal = legalCards();
     if (!p.hand.length) return '<div class="hand"><span class="empty">手牌空了</span></div>';
-    const left = Object.assign({}, p.newCount || {}), isNew = new Array(p.hand.length).fill(false);
-    for (let i = p.hand.length - 1; i >= 0; i--) { const c = p.hand[i]; if (left[c] > 0) { isNew[i] = true; left[c]--; } }
-    const nNew = isNew.filter(Boolean).length;
-    let stagedIdx = -1; if (staged) stagedIdx = p.hand.indexOf(staged.card);
-    const blkIdx = new Set(); if (blk) blk.cards.forEach(c => { const i = p.hand.findIndex((x, j) => x === c && !blkIdx.has(j)); if (i >= 0) blkIdx.add(i); });
-    const hint = req && !req.multi && legal.size ? '<span class="newnote">亮框的牌可以點或拖到發光的區域</span>' : nNew ? `<span class="newnote">剛抽到 ${nNew} 張（標 NEW）</span>` : '';
+    const hint = req && !req.multi && legal.size ? '<span class="newnote">亮框的牌可以點或拖到發光的區域</span>' : '';
     return `<div class="handhead"><span>手牌 ${p.hand.length} 張</span>${hint}</div><div class="hand" style="--hn:${p.hand.length <= 6 ? p.hand.length : Math.ceil(p.hand.length / 2)}">${p.hand.map((c, i) => {
       const ref=p.handRefs?.[i], selection=nativeSelection?.picked||[nativeSelection?.value];
       const nativeClass=req ? selection.includes(ref?.id)?(req.kind==='mulligan'?'picked':'staged'):req.options.some(o=>o.value===ref?.id)?'sel':legal.size?'dim':'' : '';
-      const cls = game.native ? nativeClass : req && req.kind === 'mulligan' ? (picked.has(i) ? 'picked' : '') : (i === stagedIdx || blkIdx.has(i)) ? 'staged' : legal.has(c) ? 'sel' : (req && legal.size ? 'dim' : '');
-      return `<div class="hc ${cls}">${isNew[i] ? '<span class="newb">NEW</span>' : ''}${blk && blk.center === c && blkIdx.has(i) && i === p.hand.indexOf(c) ? '<span class="newb ctr">中攔</span>' : ''}<button class="cbtn" type="button" data-hand="${i}" data-card="${c}">${img(c)}</button></div>`;
+      return `<div class="hc ${nativeClass}">${nativeSelection?.center===ref?.id?'<span class="newb ctr">中攔</span>':''}<button class="cbtn" type="button" data-hand="${i}" data-card="${c}">${img(c)}</button></div>`;
     }).join('')}</div>`;
   }
   function netHTML() {
@@ -2929,94 +2882,6 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
       ball = `<div class="ball ${toMe ? 'toMe' : 'toOpp'}${pop ? ' pop' : ''}"><span class="k">${z}${toMe ? '→你' : '→AI'}</span><span class="v">${b.off}</span></div>`;
     }
     return `<span class="ticker">第 ${game.rallyNo} 球</span>${ball}<span class="ticker">${esc(last)}</span>`;
-  }
-
-  function oppSrvText() {
-    const d = DECKS[game.players[1].deckKey].cards, sv = Object.keys(d).filter(c => isC(c) && st(c, 'srv') != null).map(c => st(c, 'srv'));
-    const mx = Math.max(...sv), oi = 'P01-033' in d;
-    return `對手牌組最高發球 ${mx}${oi ? '，及川 033 可再 +1 → 最多 6' : ''}`;
-  }
-  function mullHint(r) {
-    const me = game.players[0], kept = me.hand.filter((c, i) => !picked.has(i)).filter(isC);
-    if (!kept.length) return '<div class="chk"><span class="bad">全部放回</span></div>';
-    const best = (k, arr = kept) => arr.filter(c => st(c, k) != null).sort((a, b) => st(b, k) - st(a, k))[0];
-    const rows = [];
-    const sv = best('srv');
-    if (r.role === 'serve') rows.push([!!sv && st(sv, 'srv') >= 3, `發球手：${sv ? `${E.short(sv)} 發 ${st(sv, 'srv')}` : '沒有'}`]);
-    const d = DECKS[game.players[1].deckKey].cards, mx = Math.max(...Object.keys(d).filter(c => isC(c) && st(c, 'srv') != null).map(c => st(c, 'srv'))) + ('P01-033' in d ? 1 : 0);
-    const rc = best('rcv');
-    rows.push([!!rc && (r.role === 'serve' || st(rc, 'rcv') >= Math.min(mx, 5)), `接球手：${rc ? `${E.short(rc)} 接 ${st(rc, 'rcv')}` : '沒有'}${r.role === 'receive' ? `（對手發球最高約 ${mx}）` : ''}`]);
-    const ts = kept.filter(c => st(c, 'tos') != null && st(c, 'tos') >= 1).sort((a, b) => st(b, 'tos') - st(a, 'tos'))[0];
-    rows.push([!!ts, `舉球手：${ts ? `${E.short(ts)} 舉 ${st(ts, 'tos')}` : '沒有舉球 ≥1 的角色'}`]);
-    const at = ts ? best('atk', kept.filter((c, i) => i !== kept.indexOf(ts) && E.entryNames(ts).some(name => E.entryNames(c).some(other => other !== name)))) : best('atk');
-    rows.push([!!at && st(at, 'atk') >= 2, `攻擊手：${at ? `${E.short(at)} 攻 ${st(at, 'atk')}` : '沒有'}${ts && at ? `（進攻約 ${st(ts, 'tos') + st(at, 'atk')}）` : ''}`]);
-    return `<div class="chk"><b>${r.role === 'serve' ? '你先發球' : '你先接發球'}・保留後的手牌：</b>${rows.map(([ok, t]) => `<span class="${ok ? 'good' : 'bad'}">${ok ? '✓' : '✗'} ${esc(t)}</span>`).join('')}</div>`;
-  }
-  function lossHTML(r) {
-    if (!r.canLoss) return '';
-    if (!lossArm) return '<button class="opt quiet lossb" type="button" data-act="loss">喊 Loss</button>';
-    return '<span class="lossq">確定放棄這球？已登場的牌留在場上</span><button class="opt lossy" type="button" data-act="lossyes">確定 Loss</button><button class="opt quiet" type="button" data-act="lossno">不要</button>';
-  }
-  function dockHTML() {
-    const r = pending.req, me = game.players[0];
-    const fl = flashMsg ? `<small class="flash">${esc(flashMsg)}</small>` : '';
-    if (r.kind === 'lossConfirm') return [`<div class="loss-state"><b>這球無法繼續，等待你喊 Loss</b><small>${esc(r.reason)}。已登場的牌留在場上；按下 Loss 才結算下一球。</small></div>`, '<button class="opt lossy" type="button" id="confirmLoss" data-i="0">喊 Loss</button>'];
-    if (r.kind === 'turnEnd') return [`<b>${esc(r.prompt)}</b><small>${r.outgoing.type === 'attack' ? '接／托／打與事件已完成' : r.outgoing.type === 'serve' ? '發球準備完成' : '攔網已完成'}，確認球場後再交棒；現在仍可喊 Loss。</small>`, '<button class="opt primary" type="button" data-i="0" id="endTurn">結束回合</button>'];
-    if (r.kind === 'firstService') {
-      const [a, b] = r.ctx.dice;
-      return [`<div class="dice"><div><span class="die roll">${a}</span><small>你</small></div><b class="vs">VS</b><div><span class="die roll d2">${b}</span><small>AI</small></div></div><div class="rollres">${esc(r.prompt)}</div><small>先發：先派發球角色。先接：由AI先發球，你先抽1張再接球。選好後從發球方開始調度。</small>`, '<button class="opt primary" type="button" data-i="0" id="chooseFirstServe">先發球</button><button class="opt" type="button" data-i="1" id="chooseFirstReceive">先接球</button>'];
-    }
-    if (r.kind === 'roll') {
-      const [a, b] = r.ctx.dice, meFirst = r.ctx.server === 0;
-      return [`<div class="dice"><div><span class="die roll">${a}</span><small>你</small></div><b class="vs">VS</b><div><span class="die roll d2">${b}</span><small>AI</small></div></div>
-        <div class="rollres">${meFirst ? '你先發球' : 'AI 先發球'}</div><small>${r.ctx.winner === 0 ? '你' : 'AI'}擲骰獲勝，選擇${r.ctx.choice === 'receive' ? '先接球' : '先發球'}。</small><small>${meFirst ? '你是發球方：第 1 球先派發球角色，之後要接 AI 的攻擊。調度時至少留 1 張發球角色＋接球／舉球／攻擊。' : `你是接發球方：要先接 AI 的發球（${oppSrvText()}），抽 1 張後接→舉→攻。調度時優先留能接住發球的接球手、舉球手、攻擊手。`}</small>`,
-        '<button class="opt primary" type="button" data-i="0">開始調度</button>'];
-    }
-    if (r.kind === 'guts' || r.kind === 'gutsCourt') {
-      const n = r.need, ok = picked.size === n;
-      return [`${esc(r.prompt)}<small>已選 ${picked.size} / ${n}</small>${r.area === 'receive' && me.top('receive') === 'P03-051' ? '<small class="warn">西谷 P03-051：付的 Guts 全是烏野才有效</small>' : ''}<div class="gpick">${r.options.map((o, i) => `<button type="button" class="gp${picked.has(i) ? ' on' : ''}" data-gp="${i}">${img(o.card)}<span>${esc(r.kind === 'gutsCourt' ? o.label : E.short(o.card))}</span></button>`).join('')}</div>`,
-        `<button class="opt primary" type="button" data-act="gutsok" ${ok ? '' : 'disabled'}>付這 ${n} 張</button><button class="opt quiet" type="button" data-act="gutsbottom">${r.kind === 'gutsCourt' ? '自動選 6 張 Guts' : '從最下面付'}</button>`];
-    }
-    if (r.kind === 'mulligan') return [`${r.prompt}<small>已選 ${picked.size} 張放回</small>${mullHint(r)}`, `<button class="opt primary" type="button" data-act="multi">${picked.size ? `放回 ${picked.size} 張並重抽` : '全部保留'}</button>` + (picked.size ? '<button class="opt quiet" type="button" data-act="clear">取消選取</button>' : '')];
-    if (r.kind === 'ack') return [esc(r.prompt) + '<small>輪到你了，按下方大按鈕抽牌</small>', '<button class="opt primary draw-action" type="button" data-act="ack">抽 1 張<small>點此抽牌，再進行接球</small></button>'];
-    if (r.kind === 'reveal') return [`<b>${esc(r.prompt)}</b><small>翻開後會顯示卡圖與結果，再決定是否加入手牌。</small>`, '<button class="opt primary draw-action" type="button" id="flipTop" data-i="0">翻開牌庫頂<small>點此公開 1 張牌</small></button>'];
-    if (r.kind === 'revealResult' || r.ctx && Object.hasOwn(r.ctx, 'revealed')) {
-      const c = r.ctx.revealed;
-      return [`<div class="reveal-result" id="revealResult">${c ? `<button class="cbtn" type="button" data-card="${c}" aria-label="查看翻開的卡片">${img(c)}</button>` : '<b>牌庫已空</b>'}<div><b>${c ? '翻開：' + esc(nm(c)) : '沒有可翻開的牌'}</b>${c ? `<small>${esc(c)} · 點卡圖可放大</small>` : ''}<small>${esc(r.prompt)}</small></div></div>`, r.options.map((o, i) => `<button class="opt ${i === 0 ? 'primary' : 'quiet'}" type="button" data-i="${i}">${esc(o.label)}</button>`).join('')];
-    }
-    if (r.kind === 'block' && blk) {
-      const need = game.ball.off, ev = blk.cards.length ? game.evalBlock(me, blk.cards, need, blk.center) : null;
-      const chips = blk.cards.map((c,i) => `<span class="bchip${i === blk.cards.indexOf(blk.center) ? ' ctr' : ''}">${i === blk.cards.indexOf(blk.center) ? '中' : '側'}・${esc(E.short(c))} ${ev?.centerAbsent&&c===blk.center?'—':st(c, 'blk')}${i !== blk.cards.indexOf(blk.center) ? `<button type="button" data-ctr="${c}" aria-label="設為中攔">設中攔</button>` : ''}<button type="button" data-rm="${c}" aria-label="移除">✕</button></span>`).join('');
-      const stat = ev ? `攔 ${ev.total}${ev.centerAbsent?'（中攔參數不存在）':''}${ev.tsu ? '（可選月島 +6）' : ''} vs 進攻 ${need}${ev.ok ? (ev.natsu ? '：還差 1，需打日向夏' : '：預估可攔，仍需結算技能') : '：目前不足，可先登場再發動技能'}` : `需要攔 ≥ ${need}`;
-      const recs = r.options.slice(0, 3).map(o => `<button class="opt quiet rec" type="button" data-rec="${o.value}">${esc(o.label)}</button>`).join('');
-      return [`組攔網：點手牌加入（第 1 張是中攔，最多 ${r.build.max} 人、不能同名）<small class="${ev && ev.ok ? 'good' : 'bad'}">${stat}</small>${fl}${chips ? `<div class="bchips">${chips}</div>` : ''}`,
-        `<button class="opt primary" type="button" data-act="blk" ${ev && ev.legal ? '' : 'disabled'}>確認攔網</button>${blk.cards.length ? '<button class="opt quiet" type="button" data-act="blkclear">清空</button>' : ''}${recs ? `<span class="reclab">推薦：</span>${recs}` : ''}`];
-    }
-    if (r.kind === 'skill') {
-      const c = r.ctx && r.ctx.card;
-      const head = c ? `<div class="skl"><button class="cbtn at2" type="button" data-card="${c}">${img(c)}</button><div><b>${esc(r.prompt)}</b><small>${esc((DEF[c][10] || '').slice(0, 140))}</small></div></div>` : esc(r.prompt);
-      return [head, r.options.map((o, i) => `<button class="opt ${o.value ? 'primary' : 'quiet'}" type="button" data-i="${i}">${esc(o.label)}</button>`).join('')];
-    }
-    if (r.kind === 'defend') {
-      const bestR = Math.max(...me.handC().filter(c => game.canEnter(me,'receive',c)).map(c => num(game.rcvPreview(me, c))), 0);
-      const best = r.combos[0];
-      return [`${esc(r.prompt)}<small>點「接球區」或「攔網區」也可以選</small>`,
-        `<button class="opt" type="button" data-i="0">接球（先抽 1 張）<small>手上最高接 ${bestR}</small></button><button class="opt" type="button" data-i="1">攔網（不抽牌）<small>${best ? '例：' + esc(best.cards.map(E.short).join('＋')) + ' 攔 ' + best.total : '可手動組合，登場與技能後再判定'}</small></button>`];
-    }
-    const hasHand = HAND_KINDS.has(r.kind) && legalCards().size;
-    if (staged) {
-      const pv = preview(r, staged.card);
-      return [`<div class="skl"><button class="cbtn at2" type="button" data-card="${staged.card}">${img(staged.card)}</button><div><b>${esc(nm(staged.card))} → ${E.AREA_ZH[targetOf(r, staged.card)] || ({ ev: 'Event 區', drop: '棄牌區' })[targetOf(r, staged.card)] || ''}</b>${pv.lines.map(l => `<small class="${pv.tone}">${esc(l)}</small>`).join('')}</div></div>`,
-        `<button class="opt primary" type="button" data-act="confirm">確認${{ serve: '發球', receiver: '接球', setter: '舉球', attacker: '攻擊', event: '使用', discard: '棄掉', cost: '放置' }[r.kind] || ''}</button><button class="opt quiet" type="button" data-act="unstage">取消</button>`];
-    }
-    // 牌在牌堆（回收/登場）→ 縮圖選項
-    const pileOpts = !hasHand && r.options.some(o => o.card);
-    return [esc(r.prompt) + (r.kind === 'event' && r.timing === 'rcv' ? '<small>抽牌階段可用的事件，現在也能使用</small>' : '') + (hasHand ? '<small>點亮框手牌（或拖到發光區域）先預放，再按確認</small>' : '') + fl,
-      r.options.map((o, i) => {
-        if (o.card && hasHand) return '';
-        if (pileOpts && o.card) return `<button class="opt card" type="button" data-i="${i}"><span class="at">${img(o.card)}</span>${esc(o.label)}</button>`;
-        return `<button class="opt ${o.value === null || o.value === false ? 'quiet' : !hasHand && i === 0 ? 'primary' : ''}" type="button" data-i="${i}">${esc(o.label)}</button>`;
-      }).join('') || '<span class="sub">從手牌選</span>'];
   }
 
   function measureDock() {
@@ -3040,26 +2905,18 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
   syncViewport();
 
   function updateUndoButton() {
-    const status = session?.status();
-    $('undoBtn').disabled = !!session?.replaying || !(staged || status?.enabled);
-    $('undoBtn').textContent = !staged && status?.opponent ? '請求悔棋' : 'Undo';
-    $('undoBtn').title = staged ? '取消尚未確認的預放' : status?.opponent ? '回到交棒前最後一個我方決策' : '撤回本回合上一個已確認操作';
+    $('undoBtn').disabled = !session?.status().enabled;
+    $('undoBtn').textContent = 'Undo';
+    $('undoBtn').title = '撤回本回合上一個已確認操作';
   }
   $('undoBtn').onclick = () => {
-    if (!session || session.replaying) return;
-    if (staged && !game.native) { staged = null; return render(); }
-    const status = session.status();
-    if (!status.enabled) return;
-    if (!status.opponent) { closeSheet(); session.undo(); return; }
-    const current = session;
-    const request = current.requestTakeback();
-    if (!request) return;
-    openSheet('<h3>請求悔棋</h3><p>向 AI 請求回到交棒前最後一個我方決策？AI 對練會自動接受；抽牌與擲骰沿用原結果。</p><div class="opts"><button class="opt primary" id="confirmUndo" type="button">送出悔棋請求</button><button class="opt" data-close="1" type="button">繼續對戰</button></div>', () => current.cancelTakeback(request.id));
-    $('confirmUndo').onclick = () => { current.resolveTakeback(request.id, request.responder, true); closeSheet(); };
+    if (!session?.status().enabled) return;
+    closeSheet();session.undo();
   };
 
   function render() {
     if (!game) return;
+    const savedSelection = pending && nativeWidget && nativeWidgetKey===pending.req.requestId+':'+pending.req.epoch ? nativeWidget.selection : null;
     nativeWidget?.destroy();nativeWidget=null;nativeSelection=null;
     const [me, ai] = game.players;
     nextTop = {}; nextVal = {};
@@ -3080,11 +2937,8 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
       dock.classList.remove('wait');
       $('dockQ').textContent = game.winner.idx === 0 ? '你贏了！' : 'AI 贏了';
       $('dockOpts').innerHTML = '<button class="opt primary" type="button" data-act="again">再打一場</button><button class="opt" type="button" data-act="setup">換牌組</button><button class="opt" type="button" data-act="log">看紀錄</button>';
-    } else if (pending && game.native) {
-      dock.classList.remove('wait');$('dockQ').textContent=pending.req.context.reason||'';renderNativeChoice(pending.req);
     } else if (pending) {
-      dock.classList.remove('wait');
-      const [q, o] = dockHTML(); $('dockQ').innerHTML = q; $('dockOpts').innerHTML = o + lossHTML(pending.req);
+      dock.classList.remove('wait');$('dockQ').textContent=flashMsg||pending.req.context.reason||'';renderNativeChoice(pending.req,savedSelection);
     } else {
       dock.classList.add('wait');
       $('dockQ').innerHTML = '<span class="dots">AI 行動中</span>';
@@ -3101,44 +2955,15 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
     if (a === 'setup') return backToSetup();
     if (a === 'log') return showLog();
     if (!pending) return;
-    if (a === 'multi') return answer([...picked]);
-    if (a === 'clear') { picked = new Set(); return render(); }
     if (a === 'ack') return answer(true);
-    if (a === 'loss') { lossArm = true; return render(); }
-    if (a === 'lossno') { lossArm = false; return render(); }
-    if (a === 'lossyes') return answer({ __loss: true });
-    if (a === 'gutsok') return answer([...picked]);
-    if (a === 'gutsbottom') { const n = pending.req.need; return answer([...Array(n).keys()]); }
-    if (a === 'confirm' && staged) return answer(pending.req.options[staged.i].value);
-    if (a === 'unstage') { staged = null; return render(); }
-    if (a === 'blk' && blk) return answer({ cards: blk.cards.slice(), center: blk.center });
-    if (a === 'blkclear') { blk.cards = []; blk.center = null; return render(); }
   }
-  $('dockQ').addEventListener('click', e => {
-    const b = e.target.closest('button'); if (!b) return;
-    if (b.dataset.rm) { blkToggle(b.dataset.rm); return; }
-    if (b.dataset.ctr) { blk.center = b.dataset.ctr; return render(); }
-    if (b.dataset.gp != null) { const i = +b.dataset.gp, n = pending.req.need; if (picked.has(i)) picked.delete(i); else if (picked.size < n) picked.add(i); else return flash(`只能選 ${n} 張`); return render(); }
-    if (b.dataset.card) cardSheet(b.dataset.card);
-  });
   $('dockOpts').addEventListener('click', e => {
-    const b = e.target.closest('button'); if (!b || b.disabled) return;
-    if (b.dataset.act) return act(b.dataset.act, b);
-    if (b.dataset.rec != null && blk) { const o = pending.req.options.find(x => String(x.value) === b.dataset.rec); blk.cards = o.cards.slice(); blk.center = blk.cards.slice().sort((x, y) => E.val(y) - E.val(x))[0]; return render(); }
-    if (pending && b.dataset.i != null) {
-      const o = pending.req.options[+b.dataset.i];
-      if (o.card && !['block', 'target', 'rulesChoice'].includes(pending.req.kind) && !Object.hasOwn(pending.req.ctx || {}, 'revealed')) { setDockCollapsed(false); staged = { card: o.card, i: +b.dataset.i }; return render(); }
-      answer(o.value);
-    }
+    const b = e.target.closest('[data-act]'); if (b && !b.disabled) act(b.dataset.act);
   });
-  function onHandPick(c, handIndex = null) {
-    if (!pending) return false;
-    const r = pending.req;
-    if(game.native){const ref=game.players[0].handRefs[handIndex];if(!r.options.some(o=>o.value===ref?.id))return false;nativeWidget.select(ref.id);return true;}
-    if (r.kind === 'block' && blk) { if (r.build.cands.includes(c)) { const count=blk.cards.filter(x=>x===c).length,ordinal=game.players[0].hand.slice(0,handIndex==null?0:handIndex).filter(x=>x===c).length;blkToggle(c,handIndex!=null&&ordinal>=count);return true; } return false; }
-    if (!legalCards().has(c)) return false;
-    if (staged && staged.card === c) { cardSheet(c); return true; }
-    stage(c); return true;
+  function onHandPick(c, handIndex) {
+    const ref=game.players[0].handRefs[handIndex];
+    if(!pending?.req.options.some(o=>o.value===ref?.id))return false;
+    nativeWidget.select(ref.id);return true;
   }
   function onZonePick(z) {
     if (!pending) return false;
@@ -3154,7 +2979,6 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
     const b = e.target.closest('.cbtn, .pile, .pilebox, .aux, .glist[data-zone]'); if (!b || b.closest('#dock')) return;
     if (b.dataset.hand != null && pending) {
       const i = +b.dataset.hand, c = b.dataset.card;
-      if (!game.native && pending.req.kind === 'mulligan') { picked.has(i) ? picked.delete(i) : picked.add(i); return render(); }
       if (onHandPick(c,i)) return;
     }
     if (b.dataset.pile) { const p = game.players[+b.dataset.p]; return pileSheet(`${p.idx === 0 ? '你的' : 'AI 的'}${b.dataset.pile === 'ev' ? ' Event 區' : '棄牌區'}（最新的在前）`, (b.dataset.pile === 'ev' ? p.ev : p.drop).slice().reverse()); }
@@ -3192,7 +3016,7 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
     if (d.el) d.el.remove(); if (d.over) d.over.classList.remove('over');
     if (!d.over || !pending) return;
     const want = targetOf(pending.req, d.c);
-    if (d.over.dataset.drop === want) { if(game.native){onHandPick(d.c,d.handIndex);return;} if (blk) { if (!blk.cards.includes(d.c)) blkToggle(d.c); } else stage(d.c); }
+    if (d.over.dataset.drop === want) onHandPick(d.c,d.handIndex);
     else flash(`${nm(d.c)} 這時候要放到「${E.AREA_ZH[want] || { ev: 'Event 區', drop: '棄牌區' }[want] || '?'}」`);
   }
   document.addEventListener('pointerup', endDrag); document.addEventListener('pointercancel', endDrag);
@@ -3220,7 +3044,7 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
     const expand=key=>Object.entries(DECKS[key].cards).flatMap(([card,count])=>Array(count).fill(card));
     session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableSequence),seed:Date.now()>>>0,decks:[expand(my),expand(ai)],deckKeys:[my,ai],mode:modeOptions().mode,delay:speed,wantsAck:[true,false]}, {
       onBoard(board,view) {
-        game=board;pending=null;turnNotice=null;picked=new Set();staged=null;blk=null;lossArm=false;
+        game=board;pending=null;turnNotice=null;
         logBuf=view.publicLog.map(e=>[publicLogText(e), '']);render();
       },
       onRequest(req) {pending={req};setDockCollapsed(false);render();},

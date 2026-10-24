@@ -56,6 +56,20 @@ const out = process.env.E2E_OUTPUT_DIR || '.';
       for (const x of [ov[2], ov[0], ov[1]]) await page.locator(`#stage [data-hc-v='${JSON.stringify(x)}']`).click();
       assert.deepEqual(await page.locator('#stage .hc-badge').allTextContents(), ['2', '3', '1']);
       if (width === 390) await page.screenshot({ path: path.join(out, 'choice-ordered-390.png') });
+      // Restoring a partially assembled physical block keeps its chosen center;
+      // inspecting a candidate does not answer, select or clear anything.
+      await page.evaluate(({r,ids,center})=>{
+        const box=document.createElement('div');box.id='restoreStage';document.querySelector('main').append(box);
+        window.restoredAnswers=[];window.inspected=[];
+        window.restoredWidget=BreakChoiceUI.render(box,r,{selection:{type:'block',picked:ids,center},imgSrc:no=>'img/'+no.replace(/^HV-?/,'')+'.webp',onAnswer:a=>restoredAnswers.push(a),onCard:c=>inspected.push(c.id)});
+      },{r:b,ids:[h1,kag],center:kag});
+      assert.equal(await page.locator('#restoreStage .hc-card.on').count(),2);
+      assert.equal(await page.locator('#restoreStage .hc-card.on:has(.ctr)').getAttribute('data-hc-v'),JSON.stringify(kag));
+      await page.locator('#restoreStage .hc-info').first().click();
+      assert.equal(await page.evaluate(()=>restoredAnswers.length),0);assert.equal(await page.evaluate(()=>inspected.length),1);
+      assert.equal(await page.locator('#restoreStage .hc-card.on').count(),2);
+      await page.locator('#restoreStage [data-hc-act="go"]').click();assert.deepEqual(await page.evaluate(()=>restoredAnswers[0].value),{cards:[h1,kag],center:kag});
+      await page.evaluate(()=>{restoredWidget.destroy();document.getElementById('restoreStage').remove();});
       assert.deepEqual(errors, []);
       console.log(JSON.stringify({ width, fixtures: fixtures.length, passed: true }));
       await page.close();

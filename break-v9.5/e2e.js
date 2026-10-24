@@ -28,6 +28,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=req
    if(r.kind==='mulligan'&&!mull){
     const ref=r.options[0].value,index=await page.evaluate(id=>tableTest.match.view(0).players[0].hand.findIndex(c=>c.id===id),ref);
     await click(`.hand [data-hand="${index}"]`);assert.equal(await page.locator('.hand .hc.picked').count(),1);
+    await click('#dockOpts .hc-item:has(.hc-card.on) .hc-info');assert(await page.isVisible('#sheet'));await click('#sheet [data-close]');assert.equal(await page.locator('.hand .hc.picked').count(),1);assert.equal(await page.locator('.hc-card.on').count(),1);
     await click('#dockToggle');assert.equal(await page.isVisible('#dockOpts'),false);await click('#dockToggle');
     await page.locator('.hand .hc').last().scrollIntoViewIfNeeded();const geometry=await page.evaluate(()=>({dock:document.getElementById('dock').getBoundingClientRect().toJSON(),hand:document.querySelector('.hand').getBoundingClientRect().toJSON()}));
     if(width<500){assert(geometry.dock.height<=height*.46+1,'dock too tall');assert(geometry.hand.bottom<=geometry.dock.top+1,'hand covered');}
@@ -36,6 +37,9 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=req
    if(['single','number'].includes(r.input.type)){
     if(!drag&&width===1280&&r.kind==='serve'){
      const index=await page.evaluate(id=>tableTest.match.view(0).players[0].hand.findIndex(c=>c.id===id),value),hand=page.locator(`.hand [data-hand="${index}"]`),target=page.locator('#meSide [data-drop="serve"]');await hand.scrollIntoViewIfNeeded();const h=await hand.boundingBox(),t=await target.boundingBox();await page.mouse.move(h.x+h.width/2,h.y+h.height/2);await page.mouse.down();await page.mouse.move(h.x+20,h.y-20,{steps:3});await page.mouse.move(t.x+t.width/2,t.y+t.height/2,{steps:6});await page.mouse.up();assert.equal(await page.locator('.hc-card.on').count(),1);drag=true;
+     // An invalid drop redraws the same request. Its selected physical card
+     // must survive both the warning and the timer clearing it.
+     const selected=await page.locator('.hc-card.on').getAttribute('data-hc-v'),h2=await hand.boundingBox(),bad=await page.locator('#meSide [data-drop="receive"]').boundingBox();await page.mouse.move(h2.x+h2.width/2,h2.y+h2.height/2);await page.mouse.down();await page.mouse.move(h2.x+20,h2.y-20,{steps:3});await page.mouse.move(bad.x+bad.width/2,bad.y+bad.height/2,{steps:6});await page.mouse.up();assert.equal(await page.locator('.hc-card.on').getAttribute('data-hc-v'),selected);await page.waitForTimeout(1900);assert.equal(await page.locator('.hc-card.on').getAttribute('data-hc-v'),selected);
     }else await select(value);
    }else if(r.input.type==='cards')for(const v of value)await select(v);
    else if(r.input.type==='block'){for(const v of value.cards)await select(v);}

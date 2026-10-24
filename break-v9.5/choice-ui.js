@@ -14,6 +14,8 @@ const CSS = `
 .hc-ctx{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--muted,#566b6e);flex-wrap:wrap}
 .hc-ctx .hc-rev{width:56px}
 .hc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px;min-width:0}
+.hc-item{min-width:0;display:grid;align-content:start;gap:4px}
+.hc-info{font:inherit;font-size:11px;border:1px solid var(--line,#c3d3d2);border-radius:6px;background:transparent;color:inherit;min-height:28px;cursor:pointer}
 .hc-card{position:relative;border:0;padding:0;background:none;cursor:pointer;display:grid;gap:3px;min-width:0;text-align:center;color:inherit;font:inherit;border-radius:7px}
 .hc-card img,.hc-src img,.hc-rev img{display:block;width:100%;aspect-ratio:300/419;object-fit:cover;border-radius:6px;background:var(--sunk,#d9e4e3)}
 .hc-card span.hc-nm{font-size:11px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -51,7 +53,7 @@ function render(rootEl, request, opts = {}) {
   const chk = H.checkRequest(request);
   if (!chk.ok) { rootEl.innerHTML = `<div class="hc"><p class="hc-err" role="alert">無法顯示這個選擇：${esc(chk.error)}</p></div>`; return { destroy() { rootEl.innerHTML = ''; } }; }
   const t = request.input.type, imgSrc = opts.imgSrc || (() => ''), cardImg = c => `<img src="${esc(imgSrc(c.cardNo))}" alt="${esc(c.name || c.cardNo)}" loading="lazy" draggable="false">`;
-  let sel = H.createSelection(request), lossArm = false, done = false;
+  let sel = H.restoreSelection(request, opts.selection), lossArm = false, done = false;
   const byKey = new Map(request.options.map(o => [key(o.value), o]));
   const hasCards = request.options.some(o => o.card);
 
@@ -68,7 +70,7 @@ function render(rootEl, request, opts = {}) {
         const c = o.card || { cardNo: '', name: o.label };
         const parts=String(c.zone||'').split('.'),zone=parts.length===2?parts[1]:parts[0],labels={hand:'手牌',deck:'牌庫',drop:'棄牌',event:'Event',serve:'發球',block:'中攔',receive:'接球',toss:'舉球',attack:'攻擊','side:0':'側攔','side:1':'側攔'};
         const location=labels[zone]?(parts.length===2?(+parts[0]===request.actor?'我方 ':'對方 '):'')+labels[zone]:'';
-        return `<button type="button" class="hc-card${on ? ' on' : ''}" aria-pressed="${on}" data-hc-v="${esc(key(o.value))}">${c.cardNo ? cardImg(c) : ''}<span class="hc-nm">${esc(o.label)}</span>${location?`<small class="hc-zone">${esc(location)}</small>`:''}${badge}</button>`;
+        return `<div class="hc-item"><button type="button" class="hc-card${on ? ' on' : ''}" aria-pressed="${on}" data-hc-v="${esc(key(o.value))}">${c.cardNo ? cardImg(c) : ''}<span class="hc-nm">${esc(o.label)}</span>${location?`<small class="hc-zone">${esc(location)}</small>`:''}${badge}</button>${o.card&&opts.onCard?`<button type="button" class="hc-info" data-hc-info="${esc(o.id)}" aria-label="查看 ${esc(o.label)} 卡片">查卡</button>`:''}</div>`;
       }).join('')}</div>`;
     }
     return `<div class="hc-opts" role="group">${request.options.map(o => `<button type="button" class="hc-opt${t === 'number' ? ' num' : ''}${sel.value !== undefined && key(sel.value) === key(o.value) ? ' on' : ''}" aria-pressed="${sel.value !== undefined && key(sel.value) === key(o.value)}" data-hc-v="${esc(key(o.value))}">${esc(o.label)}</button>`).join('')}</div>`;
@@ -102,9 +104,10 @@ function render(rootEl, request, opts = {}) {
     if (done) return;
     const b = e.target.closest('button'); if (!b || !rootEl.contains(b)) return;
     const d = b.dataset;
+    if (d.hcInfo) { const o=request.options.find(o=>o.id===d.hcInfo); if(o?.card)opts.onCard?.(o.card);return; }
     if (d.hcSrc) { opts.onCard && opts.onCard(request.source); return; }
     if (d.hcRm) { sel = H.toggle(request, sel, JSON.parse(d.hcRm)); draw(); opts.onSelection && opts.onSelection(sel); return; }
-    if (d.hcCtr) { sel = H.setCenter(request, sel, JSON.parse(d.hcCtr)); return draw(); }
+    if (d.hcCtr) { sel = H.setCenter(request, sel, JSON.parse(d.hcCtr)); draw();opts.onSelection?.(sel);return; }
     if (d.hcV !== undefined) return choose(JSON.parse(d.hcV));
     switch (d.hcAct) {
       case 'clear': sel = H.createSelection(request); draw(); opts.onSelection && opts.onSelection(sel); return;

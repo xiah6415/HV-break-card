@@ -106,6 +106,15 @@ function createSelection(req) {
   const t = req.input.type;
   return { type: t, picked: [], center: null, value: undefined };
 }
+// Restore only legal candidate identities; never submit or restore an error.
+function restoreSelection(req, saved) {
+  let s=createSelection(req);if(!saved||saved.type!==req.input.type)return s;
+  const legal=v=>req.options.some(o=>same(o.value,v));
+  if(['single','number'].includes(req.input.type))return legal(saved.value)?toggle(req,s,saved.value):s;
+  for(const value of saved.picked||[])if(legal(value)&&!s.picked.some(v=>same(v,value)))s=toggle(req,s,value);
+  if(req.input.type==='block')s=setCenter(req,s,saved.center);
+  return {...s,error:null};
+}
 function toggle(req, sel, optionValue) {
   const t = req.input.type, key = JSON.stringify(optionValue);
   if (t === 'single' || t === 'number') return { ...sel, value: optionValue, error: null };
@@ -195,6 +204,6 @@ function aiAnswer(req) {
   return ans;
 }
 
-const api = { PROTOCOL, INPUT_TYPES, checkRequest, checkEnvelope, checkValue, validate, makeAnswer, createSelection, toggle, setCenter, selectionValue, canSubmit, progress, aiValue, aiAnswer, effName };
+const api = { PROTOCOL, INPUT_TYPES, checkRequest, checkEnvelope, checkValue, validate, makeAnswer, createSelection, restoreSelection, toggle, setCenter, selectionValue, canSubmit, progress, aiValue, aiAnswer, effName };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.BreakHostChoice = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
