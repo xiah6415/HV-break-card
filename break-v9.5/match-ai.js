@@ -4,7 +4,7 @@
    - 結構選擇（發球／接球／舉球／攻擊角色、重抽、付 Guts、棄牌）用規則：看自己的卡片數值與目前來球。
    - 會改變數值的選擇（Event、是否付費發動、效果對象、參數、模式、名稱、數量、接球或攔網）做短距模擬：
      複製對局 → 套用選項 → 由自己的規則策略接手到下一個結構決策或換對手行動 → 靜態評分，取最高分。
-   - 公平性：模擬前把對手手牌＋牌庫、自己牌庫重新洗牌（只知道張數，不知道內容），評分不看卡片身分。
+   - 公平性：以未知區剩餘牌池抽樣，不使用實際手牌位置、牌庫順序或未來亂數；目前請求已知的卡保留。
    純函式：不修改傳入的 match。 */
 (function (root) {
 'use strict';
@@ -33,14 +33,25 @@ function clone(m) {
 }
 function shuffle(a, r) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } }
 function hideUnknown(m, me, seed) {
-  const s = K(m).state, r = rng(seed), opp = 1 - me;
-  shuffle(s.zones[me + '.deck'], r);
-  const hand = s.zones[opp + '.hand'], deck = s.zones[opp + '.deck'], pool = [...hand, ...deck];
-  shuffle(pool, r);
-  hand.splice(0, hand.length, ...pool.slice(0, hand.length)); deck.splice(0, deck.length, ...pool.slice(hand.length));
-  for (const id of hand) s.cards[id].zone = opp + '.hand';
-  for (const id of deck) s.cards[id].zone = opp + '.deck';
+  const current=K(m).state,known=new Set(zone(m,me,'hand'));
+  for(const c of Object.values(current.cards))if(!['hand','deck','sets'].includes(c.zone.split('.')[1]))known.add(c.id);
+  const remember=value=>{if(typeof value==='string'&&current.cards[value])known.add(value);else if(value&&typeof value==='object')for(const v of Object.values(value))remember(v);};
+  remember(current.match.pending?.options);remember(current.match.pending?.source);remember(current.match.pending?.context);
+  for(const a of current.match.continuation?.answers||[])remember(a.value);
+  // A pending choice resumes from its immutable baseline. Mask both snapshots;
+  // fixed known slots retain cards already revealed/drawn during this step.
+  for(let state=current;state;state=state.match?.continuation?.baseline){
+    for(const p of [me,1-me]){
+      const names=p===me?[p+'.deck']:[p+'.hand',p+'.deck'];
+      const pool=names.flatMap(z=>state.zones[z]).filter(id=>!known.has(id)).sort();
+      shuffle(pool,rng((seed^Math.imul(p+1,2246822519))>>>0));let i=0;
+      for(const z of names)for(let j=0;j<state.zones[z].length;j++)if(!known.has(state.zones[z][j])){const id=pool[i++];state.zones[z][j]=id;state.cards[id].zone=z;}
+    }
+    state.rng={algorithm:'mulberry32-v1',word:seed>>>0,calls:0};
+    state.match.seed=seed>>>0;if(state.match.rng)state.match.rng={...state.rng};
+  }
 }
+function simulation(m,me,seed){const c=clone(m);hideUnknown(c,me,seed);return c;}
 
 // ---------- 靜態評分（自己視角）
 const handValue = n => W.hand * Math.min(n, W.handCap) + W.handExtra * Math.max(0, n - W.handCap);
@@ -114,7 +125,7 @@ function candidates(r) {
 }
 function rollout(m0, me, value, seed, longHorizon) {
   const base = { rally: m0._m.rally };
-  const m = clone(m0); hideUnknown(m, me, seed);
+  const m = simulation(m0, me, seed);
   try {
     let r = m.request(me); m.command({ kind: 'answer', answer: H.makeAnswer(r, value) });
     for (let i = 0; i < (longHorizon ? 40 : 12); i++) {
@@ -147,6 +158,6 @@ function answer(m, r) {
   if (value === undefined || !legal(r, value)) return H.aiAnswer(r);
   return H.makeAnswer(r, value);
 }
-const api = { answer, choose, evaluate, rulesValue, clone, W };
+const api = { answer, choose, evaluate, rulesValue, clone, simulation, W };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.BreakMatchAI = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
