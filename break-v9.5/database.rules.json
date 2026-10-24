@@ -83,7 +83,21 @@
           "$other": {
             ".validate": false
           },
-          ".validate": "newData.hasChildren(['id','title','p0','status','mode','createdAt'])"
+          ".validate": "newData.hasChildren(['id','title','p0','status','mode','createdAt'])",
+          "p0Name": {
+            ".write": "auth != null && auth.uid == root.child('rooms').child($room).child('meta/p0').val()",
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 40 && (newData.val() == data.val() || auth.uid == newData.parent().child('p0').val())"
+          },
+          "p1Name": {
+            ".write": "auth != null && auth.uid == root.child('rooms').child($room).child('meta/p1').val()",
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 40 && (newData.val() == data.val() || auth.uid == newData.parent().child('p1').val() || (newData.parent().child('p1').val() == 'AI' && auth.uid == newData.parent().child('p0').val()))"
+          },
+          "rematch": {
+            "$uid": {
+              ".write": "auth != null && (auth.uid == root.child('rooms').child($room).child('meta/p0').val() || auth.uid == root.child('rooms').child($room).child('meta/p1').val()) && auth.uid == $uid && root.child('rooms').child($room).child('meta/status').val() == 'finished'",
+              ".validate": "newData.isString() && auth.uid == $uid && newData.val() == (root.child('rooms').child($room).child('bundle/matchId').exists() ? root.child('rooms').child($room).child('bundle/matchId').val() : 'room-'+$room) && root.child('rooms').child($room).child('meta/status').val() == 'finished'"
+            }
+          }
         },
         "authority": {
           ".read": "auth != null && (auth.uid == root.child('rooms').child($room).child('meta').child('p0').val() || auth.uid == root.child('rooms').child($room).child('meta').child('p1').val())",
@@ -162,7 +176,7 @@
         "bundle": {
           ".read": "auth != null && auth.uid == root.child('rooms').child($room).child('authority').child('uid').val()",
           ".write": "auth != null && auth.uid == root.child('rooms').child($room).child('authority').child('uid').val() && root.child('rooms').child($room).child('presence').child(auth.uid).child(root.child('rooms').child($room).child('authority').child('connection').val()).exists() && root.child('rooms').child($room).child('meta').child('status').val() != 'closed' && newData.child('term').val() == root.child('rooms').child($room).child('authority').child('term').val() && newData.child('writer').val() == root.child('rooms').child($room).child('authority').child('connection').val()",
-          ".validate": "newData.hasChildren(['term','revision','writer','checkpointJSON','logJSON','views','updatedAt'])",
+          ".validate": "newData.hasChildren(['term','revision','writer','checkpointJSON','logJSON','views','updatedAt']) && (!data.child('matchId').exists() || newData.child('matchId').exists())",
           "term": {
             ".validate": "newData.isNumber()"
           },
@@ -189,6 +203,9 @@
           },
           "$other": {
             ".validate": false
+          },
+          "matchId": {
+            ".validate": "newData.isString() && newData.val().length <= 160 && (!data.parent().exists() || newData.val() == (data.parent().child('matchId').exists() ? data.parent().child('matchId').val() : 'room-'+$room) || (root.child('rooms').child($room).child('meta/status').val() == 'finished' && root.child('rooms').child($room).child('meta/rematch').child(root.child('rooms').child($room).child('meta/p0').val()).val() == (data.parent().child('matchId').exists() ? data.parent().child('matchId').val() : 'room-'+$room) && (root.child('rooms').child($room).child('meta/p1').val() == 'AI' || root.child('rooms').child($room).child('meta/rematch').child(root.child('rooms').child($room).child('meta/p1').val()).val() == (data.parent().child('matchId').exists() ? data.parent().child('matchId').val() : 'room-'+$room))))"
           }
         },
         "$other": {

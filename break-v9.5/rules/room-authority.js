@@ -29,6 +29,6 @@ class RoomAuthority{
   const uid=this.players[actor],last=Object.values(this.log).filter(x=>x.uid===uid).at(-1);
   out[uid]=JSON.stringify({term,revision,actor,pendingActor:r?.actor??null,view:this.match.view(actor),receipt:last?{cmdId:last.cmdId,ok:last.ok,error:last.error}:null});
  }return out;}
- bundle(term,revision,writer){return {term,revision,writer,checkpointJSON:JSON.stringify(this.checkpoint()),logJSON:JSON.stringify(this.log),views:this.views(term,revision),updatedAt:Date.now()};}
+ bundle(term,revision,writer){return {term,revision,writer,matchId:this.config.id,checkpointJSON:JSON.stringify(this.checkpoint()),logJSON:JSON.stringify(this.log),views:this.views(term,revision),updatedAt:Date.now()};}
 }
 module.exports={RoomAuthority};

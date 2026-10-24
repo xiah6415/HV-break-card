@@ -377,6 +377,7 @@ p.imp-bad { padding-left: 0; }
     <div class="panel">
       <h2>AI 對手</h2>
       <label class="field" for="aiDeck">牌組<select id="aiDeck"><option value="seijoh">青葉城西（第四彈）</option><option value="hk_axis">烏野 日向影山軸</option><option value="k1014">烏野1014</option><option value="k1014c">1014c（接 6 強化）</option><option value="quick">烏野快攻版</option><option value="k1010">烏野1010</option></select></label>
+      <label class="field" for="aiLevel">AI 難度<select id="aiLevel"><option value="easy">簡單（較常失誤、不攔網）</option><option value="normal" selected>普通</option><option value="hard">困難（思考較久）</option></select></label>
       <button class="chip" type="button" id="editAiDeck">匯入 AI 牌組</button>
       <label class="field" for="speed">AI 出牌速度
         <select id="speed"><option value="200">快</option><option value="550" selected>正常</option><option value="1000">慢</option></select>
@@ -1848,7 +1849,7 @@ function boardView(view,deckKeys){
   courtTargets:p=>p.court.map(c=>({key:c.key,card:short(c.cardNo)})),roleReference:(p,key)=>{const c=p.court.find(c=>c.key===key);return c?{id:c.id,incarnation:c.incarnation}:null;},cardReference:(p,zone,index)=>zone==='hand'&&p.handRefs[index]?{id:p.handRefs[index].id,incarnation:p.handRefs[index].incarnation}:null};
 }
 class TableSession {
- constructor(options,callbacks={}){this.local=new LocalSession(options);this.match=this.local.match;this.callbacks=callbacks;this.deckKeys=options.deckKeys;this.delay=options.delay??200;this.token=0;this.timer=null;this.noticeIndex=0;this.stopped=true;this.waiting=null;}
+ constructor(options,callbacks={}){this.local=new LocalSession(options);this.match=this.local.match;this.callbacks=callbacks;this.deckKeys=options.deckKeys;this.aiLevel=options.aiLevel||'normal';this.delay=options.delay??200;this.token=0;this.timer=null;this.noticeIndex=0;this.stopped=true;this.waiting=null;}
  board(){return boardView(this.match.view(0),this.deckKeys);}
  status(){return this.local.status();}
  request(){return this.match.request(0);}
@@ -1863,7 +1864,7 @@ class TableSession {
    if(this.noticeIndex<notices.length){const raw=notices[this.noticeIndex++],data={...raw,...(raw.ball?{ball:{type:raw.ball.kind,off:raw.ball.offense}}:{})};this.callbacks.onNotice?.(board,data,this._guard(token,()=>this._drive()));return;}
    const r=this.match.request(0)||this.match.request(1);if(!r)return;
    if(r.actor===0){this.waiting=r;this.callbacks.onRequest?.(r);return;}
-   this.timer=setTimeout(this._guard(token,()=>{try{this.local.command({kind:'answer',answer:AI.answer(this.match,r)});this._drive();}catch(e){this._error(e);}}),this.delay);
+   this.timer=setTimeout(this._guard(token,()=>{try{this.local.command({kind:'answer',answer:AI.answer(this.match,r,{level:this.aiLevel})});this._drive();}catch(e){this._error(e);}}),this.delay);
   }catch(e){this._error(e);}
  }
  _error(e){this.stop();this.callbacks.onError?.(e);}
@@ -1905,7 +1906,7 @@ class RoomAuthority{
   const uid=this.players[actor],last=Object.values(this.log).filter(x=>x.uid===uid).at(-1);
   out[uid]=JSON.stringify({term,revision,actor,pendingActor:r?.actor??null,view:this.match.view(actor),receipt:last?{cmdId:last.cmdId,ok:last.ok,error:last.error}:null});
  }return out;}
- bundle(term,revision,writer){return {term,revision,writer,checkpointJSON:JSON.stringify(this.checkpoint()),logJSON:JSON.stringify(this.log),views:this.views(term,revision),updatedAt:Date.now()};}
+ bundle(term,revision,writer){return {term,revision,writer,matchId:this.config.id,checkpointJSON:JSON.stringify(this.checkpoint()),logJSON:JSON.stringify(this.log),views:this.views(term,revision),updatedAt:Date.now()};}
 }
 module.exports={RoomAuthority};
 
@@ -2263,27 +2264,49 @@ function rollout(m0, me, value, seed, longHorizon) {
   } catch (e) { return -Infinity; }
   return evaluate(m, me, base);
 }
-function choose(m, r) {
+// 難度：easy＝較常隨手選、不攔網；normal＝預設；hard＝角色選擇也模擬（規則首選與次選）、每個選項抽樣 2 次取平均
+const LEVELS = {
+  easy: { slip: 0.35, samples: 1, roles: false, block: false },
+  normal: { slip: 0, samples: 1, roles: false, block: true },
+  hard: { slip: 0, samples: 2, roles: true, block: true },
+};
+const ROLE_KINDS = new Set(['receiver', 'setter', 'attacker', 'serve']);
+function roleCandidates(m, r) {
+  const ids = cardIds(r); if (ids.length < 2) return null;
+  const pick = safeRules(m, r), rest = ids.filter(x => x !== pick);
+  const score = x => { const p = { receiver: 'receive', setter: 'toss', attacker: 'attack', serve: 'serve' }[r.kind]; return int(printed(m, x, p)) - 0.2 * worth(m, x); };
+  return [pick, ...rest.sort((a, b) => score(b) - score(a)).slice(0, 1)];
+}
+function choose(m, r, level = 'normal') {
+  const L = LEVELS[level] || LEVELS.normal;
   if (r.input.type === 'ack') return true;
   if (r.context?.ineffectiveReason && r.options.some(o => o.value === false)) return false;
-  const list = SIMULATE.has(r.kind) ? candidates(r) : null;
+  const seed = (m._m.seed ^ Math.imul(m._m.decisionIndex + 1, 2654435761)) >>> 0;
+  if (r.kind === 'defend' && !L.block && r.options.some(o => o.value === 'receive')) return 'receive';
+  let list = SIMULATE.has(r.kind) ? candidates(r) : null, long = r.kind === 'defend';
+  if (!list && L.roles && ROLE_KINDS.has(r.kind)) { list = roleCandidates(m, r); long = true; }
   if (!list || list.length < 2) return safeRules(m, r);
-  const seed = (m._m.seed ^ Math.imul(m._m.decisionIndex + 1, 2654435761)) >>> 0, long = r.kind === 'defend';
+  list = list.filter(v => legal(r, v)).slice(0, 10); if (!list.length) return safeRules(m, r);
+  if (L.slip && rng(seed ^ 0x9E3779B9)() < L.slip) return list[Math.floor(rng(seed)() * list.length)];
   let bestValue = list[0], bestScore = -Infinity;
-  for (const value of list.slice(0, 10)) {
-    if (!legal(r, value)) continue;
-    const score = rollout(m, r.actor, value, seed, long);
+  for (const value of list) {
+    let score = 0;
+    const n = long ? 1 : L.samples; // 長距模擬成本高，只抽樣一次
+    for (let s = 0; s < n; s++) score += rollout(m, r.actor, value, (seed + Math.imul(s, 0x632BE5AB)) >>> 0, long);
+    score /= n;
     if (score > bestScore + 1e-9) { bestScore = score; bestValue = value; }
   }
   return bestValue;
 }
-function answer(m, r) {
+function answer(m, r, options = {}) {
   let value;
-  try { value = choose(m, r); } catch (e) { value = undefined; }
+  try { value = choose(m, r, options.level); } catch (e) { value = undefined; }
   if (value === undefined || !legal(r, value)) return H.aiAnswer(r);
   return H.makeAnswer(r, value);
 }
-const api = { answer, choose, evaluate, rulesValue, clone, simulation, W };
+// 以暫時權重回答（調參／難度用）：同步執行，結束後還原
+function answerWith(weights, m, r, options) { const saved = { ...W }; Object.assign(W, weights || {}); try { return answer(m, r, options); } finally { Object.assign(W, saved); } }
+const api = { LEVELS, answer, answerWith, rollout, choose, evaluate, rulesValue, clone, simulation, W };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.BreakMatchAI = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
 
@@ -2884,6 +2907,8 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
   const AI_DECKS = ['seijoh', 'hk_axis', 'k1014', 'k1014c', 'quick', 'k1010'];
   const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
   if (store.get('bk_game_mode') === 'strict') $('gameMode').value = 'strict';
+  if (['easy','normal','hard'].includes(store.get('bk_ai_level'))) $('aiLevel').value = store.get('bk_ai_level');
+  $('aiLevel').onchange = () => store.set('bk_ai_level', $('aiLevel').value);
   const modeOptions = () => ({mode:$('gameMode').value});
   try { const saved = store.get('bk_custom_deck'); if (saved) { DECKS.custom = DT.parseDeck(saved, DEF, {mode:'numeric'}); MY_DECKS.push('custom'); } } catch (e) { console.warn('自訂牌組載入失敗：' + e.message); }
   try { const saved = store.get('bk_custom_ai_deck'); if (saved) { DECKS.custom_ai = DT.parseDeck(saved, DEF, {mode:'numeric'}); AI_DECKS.push('custom_ai'); } } catch (e) { console.warn('AI 自訂牌組載入失敗：' + e.message); }
@@ -3367,7 +3392,7 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
     store.set('bk_my', my); store.set('bk_ai', ai); store.set('bk_speed', String(speed));
     session?.stop();
     const expand=key=>Object.entries(DECKS[key].cards).flatMap(([card,count])=>Array(count).fill(card));
-    session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableSequence),seed:Date.now()>>>0,decks:[expand(my),expand(ai)],deckKeys:[my,ai],mode:modeOptions().mode,delay:speed,wantsAck:[true,false]}, {
+    session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableSequence),seed:Date.now()>>>0,decks:[expand(my),expand(ai)],deckKeys:[my,ai],mode:modeOptions().mode,aiLevel:$('aiLevel').value,delay:speed,wantsAck:[true,false]}, {
       onBoard(board,view) {
         game=board;pending=null;turnNotice=null;
         skillResults=view.publicLog.filter(e=>e.type==='skill_resolved'&&e.turn===view.turn.id).slice(-2);
