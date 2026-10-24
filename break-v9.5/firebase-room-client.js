@@ -25,8 +25,8 @@ export class FirebaseRooms{
  async create({title,deck,aiDeck=null,mode='strict'}){
   if(!this.online)throw Error('請先連線登入');await this.leave();const uid=this.user.uid;
   for(let tries=0;tries<4;tries++){
-   const id=code(),meta={id,title:(title||this.name+'的房間').slice(0,60),p0:uid,p0Name:this.name,status:'waiting',mode,createdAt:this.D.serverTimestamp()},settings={[uid]:{deckJSON:JSON.stringify(deck),ready:true}};
-   if(aiDeck){meta.p1='AI';meta.p1Name='策略 AI';settings.AI={deckJSON:JSON.stringify(aiDeck),ready:true};}
+   const id=code(),meta={id,title:(title||this.name+'的房間').slice(0,60),p0:uid,p0Name:this.name,names:{[uid]:this.name},status:'waiting',mode,createdAt:this.D.serverTimestamp()},settings={[uid]:{deckJSON:JSON.stringify(deck),ready:true}};
+   if(aiDeck){meta.p1='AI';meta.p1Name='策略 AI';meta.names.AI=meta.p1Name;settings.AI={deckJSON:JSON.stringify(aiDeck),ready:true};}
    try{await this.D.set(this.ref('rooms/'+id),{meta,authority:{uid,connection:this.connection,term:1},settings});await this._enter(id);return id;}catch(e){if(tries===3)throw e;}
   }
  }
@@ -35,6 +35,7 @@ export class FirebaseRooms{
    const joined=await this.D.runTransaction(this.ref('rooms/'+id+'/meta/p1'),v=>v===null?this.user.uid:undefined,{applyLocally:false});if(!joined.committed)throw Error('房間已滿');
   }
   const nameField=meta.p0===this.user.uid?'p0Name':'p1Name';if(!meta[nameField])await this.D.set(this.ref('rooms/'+id+'/meta/'+nameField),this.name);
+  if(!meta.names?.[this.user.uid])await this.D.set(this.ref('rooms/'+id+'/meta/names/'+this.user.uid),meta[nameField]||this.name);
   if(meta.status==='waiting')await this.D.set(this.ref('rooms/'+id+'/settings/'+this.user.uid),{deckJSON:JSON.stringify(deck),ready:true});await this._enter(id);return id;
  }
  async _enter(id){this.room=id;this.roomStops=[];this.meta=null;this.lease=null;this.roomOnline={};this.settings=null;this.lastView=null;this.pending=null;this.cb.room?.(id);await this._roomPresence();const root='rooms/'+id+'/';

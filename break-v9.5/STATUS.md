@@ -87,12 +87,15 @@
 | 攔網組合技能提示 | 依已選中攔／側攔組合即時核心預演亮框；換中攔／清除同步更新，費用不足／條件不符／技能失效／非法組合不亮，預演不改狀態或RNG |
 | 後續負責分工（使用者指定） | Codex：多人房間／權威狀態同步／手牌隱私／斷線重連，基礎同步穩定後處理多人Undo；Claude：AI決策／腳本預演評分／難度；共用核心變更須先同步 |
 | 策略AI接線 | 已合併Claude 5b05335；AI.answer(match, request)接正式牌桌，合法回答／不改原Match；模擬的隱藏牌抽樣涵蓋重演基準並使用獨立模擬亂數，多人AI沿用同入口於權威端執行 |
-| Firebase多人第一階段 | 已完成：獨立online.html、大廳／onDisconnect上線名單／8碼房號與邀請、多房1對1、匿名＋Google登入、權威端AI座位 |
+| Firebase多人第一階段 | 已整合index.html?online=1正式牌桌；online.html保留邀請轉址；大廳／onDisconnect上線名單／8碼邀請、多房1對1、匿名＋Google、權威端AI |
 | 多人權威／私密資料 | 房主RoomAuthority持有Match；玩家僅讀自己的view／寫自己的不可覆寫指令；快照與完整紀錄僅當前權威端可讀；斷線接手以term＋連線識別排除舊權威 |
-| 多人驗證 | Firebase規則47項通過；雙瀏覽器整局、雙房隔離、斷線接手／刷新重連／RNG保留、AI整局、三尺寸無溢出；正式公開頁雙匿名12指令／私密拒讀／斷線接手／舊權威排除通過；168套回歸／fuzz3000／6×300通過 |
+| 多人驗證 | Firebase規則74項、170套回歸／fuzz3000／6×300通過；正式牌桌雙座位、雙房隔離、接手／刷新／RNG、雙人及AI整局與再戰、三尺寸無溢出；公開頁驗證見最新memory |
 | Firebase部署／下一階段 | haikyuu-playmat，asia-southeast1，RTDB安全規則已部署；Auth匿名／Google與Pages授權網域已確認；觀戰／戰績／雲端牌組第二階段，雙方同意Undo最後；不使用Functions |
 | 多人公開版本 | 594c07c；https://xiah6415.github.io/HV-break-card/break-v9.5/online.html?v=594c07c ；Pages built／12檔HTTP200及SHA256一致；連線層再戰可用，按鈕等待Claude介面 |
 | 同房再戰連線契約 | send({kind:rematch,matchId:payload.view.match.id})；meta.rematch[uid]為確認的局ID；雙方確認才開新局，AI自動同意；保留房號／牌組／座位，換ID與種子；按鈕由Claude接線 |
 | 雙方暱稱／多人介面分工 | meta.p0Name／p1Name；回房保留原名、僅本人修改；Claude負責online.html／online.js與多人牌桌，Codex本批僅連線／規則，介面等待claude/online-ui |
 | 同房再戰驗證 | 規則68項、單方／重複／同時確認、舊局拒絕、雙人及AI再戰、快照後斷線與接手／刷新均通過；正式Firebase雙匿名再戰及私密拒讀通過 |
 | 單人AI難度 | 已合併claude/ai-tune 93ffc87：簡單／普通／困難並保存選擇；多人AI暫維持普通；困難增加預演與耗時，沒有顯著勝率提升保證 |
+| 多人介面整合 | claude/online-ui 34c98e8已合併470fdea；OnlineSession雙座位旋轉、原request送出、同request選取保留、新局過場重置與回房略過舊提示；接手按鈕與斷線送出鎖定已接通 |
+| 暱稱／攔網提示契約 | meta.names[uid]＋p0Name／p1Name相容；send({kind:previewBlock,answer})唯讀，僅本人receipt.preview回傳組合與技能ID，不改Match／RNG、不提供權威快照 |
+| 多人終局介面 | 已阻止再打一場誤啟單人局；可離開／看紀錄；雙方確認再戰連線已完成，按鈕由Claude後續接線 |

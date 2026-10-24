@@ -97,6 +97,12 @@
               ".write": "auth != null && (auth.uid == root.child('rooms').child($room).child('meta/p0').val() || auth.uid == root.child('rooms').child($room).child('meta/p1').val()) && auth.uid == $uid && root.child('rooms').child($room).child('meta/status').val() == 'finished'",
               ".validate": "newData.isString() && auth.uid == $uid && newData.val() == (root.child('rooms').child($room).child('bundle/matchId').exists() ? root.child('rooms').child($room).child('bundle/matchId').val() : 'room-'+$room) && root.child('rooms').child($room).child('meta/status').val() == 'finished'"
             }
+          },
+          "names": {
+            "$uid": {
+              ".write": "auth != null && auth.uid == $uid && (auth.uid == root.child('rooms').child($room).child('meta/p0').val() || auth.uid == root.child('rooms').child($room).child('meta/p1').val())",
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 40 && ((auth.uid == $uid && ($uid == newData.parent().parent().child('p0').val() || $uid == newData.parent().parent().child('p1').val())) || (newData.val() == data.val()) || ($uid == 'AI' && newData.parent().parent().child('p1').val() == 'AI' && auth.uid == newData.parent().parent().child('p0').val()))"
+            }
           }
         },
         "authority": {

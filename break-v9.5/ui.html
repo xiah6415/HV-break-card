@@ -392,6 +392,7 @@ p.imp-bad { padding-left: 0; }
     </div>
   </div>
 
+  <div id="olConnectionBar" class="ol-row" hidden><span id="olConnectionText" role="status"></span><button class="chip" id="olTakeover" type="button" hidden>接手房主</button></div>
   <div id="runtimeStatus" role="status" style="margin:10px 0;padding:10px 12px;background:#45251b;color:#fff;border-radius:8px;font-size:13px">⚠️ 尚未啟動 JavaScript。如果此提示一直顯示，代表目前的檔案預覽器不執行遊戲程式。請下載 HTML 後以瀏覽器開啟，或透過 HTTPS 網站遊玩。</div>
   <div class="modebar" role="tablist" aria-label="對戰方式" id="modebar"><button type="button" role="tab" id="modeSolo" aria-selected="true">單人對練</button><button type="button" role="tab" id="modeOnline" aria-selected="false">多人連線</button></div>
   <section id="setup" class="setup">
@@ -625,7 +626,8 @@ p.imp-bad { padding-left: 0; }
   // ---------- game state
   let game = null, session = null, pending = null, logBuf = [], skillResults = [];
   let oppName = 'AI'; // 對手顯示名稱：單人為 AI，多人為對方暱稱
-  const OL = { client: null, services: null, meta: null, rooms: {}, presence: {}, loading: null, inGame: false, roomId: null, lastUid: null };
+  const OL = { client: null, services: null, meta: null, rooms: {}, presence: {}, loading: null, inGame: false, roomId: null, lastUid: null, authority: null, authWork: Promise.resolve() };
+  window.BREAK_ONLINE={get client(){return OL.client;},get current(){return OL.client?.lastView;},get session(){return OL.inGame?session:null;}};
   let nativeWidget = null, nativeSelection = null, nativeWidgetKey = null, tableSequence = 0;
   let turnNotice = null, shownTransition = null, priorFocus = null, turnTimer = null;
   let prevTop = {}, prevVal = {}, prevBall = null, suppressClick = false;
@@ -633,6 +635,7 @@ p.imp-bad { padding-left: 0; }
 
   const nativeFields = {srv:'serve',blk:'block',rcv:'receive',tos:'toss',atk:'attack'};
   function nativeCommand(command) {
+    if(OL.inGame&&!olCanSend())return olToast('連線同步中，請稍候再操作');
     try { session.submit(command); } catch (e) { $('runtimeStatus').hidden = false; $('runtimeStatus').textContent = '❌ ' + e.message; console.error(e); }
   }
   function nativeAnswer(v) {
@@ -654,7 +657,7 @@ p.imp-bad { padding-left: 0; }
     nativeWidget=BreakChoiceUI.render($('dockOpts'),r,{goLabel:labels[r.kind],selection,
       previewBlockSkills:a=>session.match.previewBlockSkills(a),
       imgSrc:no=>IMG[no.replace(/^HV-?/,'')]||'',onCard:c=>cardSheet(c.cardNo.replace(/^HV-?/,'')),
-      onAnswer:a=>nativeCommand({kind:'answer',answer:a}),onLoss:()=>nativeAnswer({__loss:true}),onSelection:syncNativeHand
+      onAnswer:a=>nativeCommand({kind:'answer',answer:a}),onLoss:()=>nativeAnswer({__loss:true}),onSelection:s=>{syncNativeHand(s);olControls();}
     });
     if(labels[r.kind])$('dockOpts').querySelector('[data-hc-act="go"]').textContent=labels[r.kind];
     if(r.kind==='ack')$('dockOpts').querySelector('[data-hc-act="go"]').classList.add('draw-action');
@@ -873,6 +876,7 @@ p.imp-bad { padding-left: 0; }
       dock.classList.remove('wait');
       $('dockQ').textContent = game.winner.idx === 0 ? '你贏了！' : `${oppName} 贏了`;
       $('dockOpts').innerHTML = '<button class="opt primary" type="button" data-act="again">再打一場</button><button class="opt" type="button" data-act="setup">換牌組</button><button class="opt" type="button" data-act="log">看紀錄</button>';
+      if(OL.inGame){const again=$('dockOpts').querySelector('[data-act="again"]');again.disabled=true;again.title='再戰確認尚未開放';$('dockOpts').querySelector('[data-act="setup"]').textContent='離開房間';}
     } else if (pending) {
       dock.classList.remove('wait');$('dockQ').innerHTML=(skillResults.length?'<div class="skill-results" role="status">'+skillResults.map(e=>'<div>✦ '+esc(publicLogText(e))+'</div>').join('')+'</div>':'')+esc(flashMsg||pending.req.context.reason||'');renderNativeChoice(pending.req,savedSelection);
       $('dockOpts').querySelector('.hc-content').scrollTop=savedScrollTop;
@@ -883,13 +887,14 @@ p.imp-bad { padding-left: 0; }
     }
     $('dockSummary').textContent = game.winner ? $('dockQ').textContent : pending ? pending.req.prompt : `${oppName} 行動中`;
     updateUndoButton();
+    olControls();
     renderTransition();
     requestAnimationFrame(measureDock);
   }
 
   function act(a, b) {
-    if (a === 'again') return start();
-    if (a === 'setup') return backToSetup();
+    if (a === 'again') { if(OL.inGame)return;return start(); }
+    if (a === 'setup') return OL.inGame?olRun(()=>OL.client.leave())():backToSetup();
     if (a === 'log') return showLog();
     if (!pending) return;
     if (a === 'ack') return answer(true);
@@ -967,7 +972,8 @@ p.imp-bad { padding-left: 0; }
     const who=e.player===0?'你':oppName;
     if(e.type==='skill_resolved'){const params={receive:'接球',toss:'舉球',attack:'攻擊',serve:'發球',block:'攔網'},parts=[...(e.draws||[]).map(d=>(d.player===e.player?'':d.player===0?'你':oppName)+'抽 '+d.count+' 張'),...(e.numeric||[]).map(n=>(params[n.parameter]||'數值')+(n.operation==='set'?'設為 '+n.value:(n.value>=0?' +':' ')+n.value))];return `${who}・${nm(e.cardNo.replace(/^HV-?/,''))} 技能已結算${parts.length?'：'+parts.join('、'):''}`;}
     if(e.type==='draw')return `${who}抽${e.count}張`;
-    if(e.type==='deck_view')return `${who}公開：${e.cards.map(c=>nm(c.cardNo.replace(/^HV-?/,''))).join('、')||'牌庫為空'}`;
+    if(e.type==='deck_view'&&e.visibility==='look')return `${who}查看牌庫頂 ${e.count} 張`;
+    if(e.type==='deck_view')return `${who}公開：${(e.cards||[]).map(c=>nm(c.cardNo.replace(/^HV-?/,''))).join('、')||'牌庫為空'}`;
     if(e.type==='reveal_condition')return e.matched?'翻牌條件成立':'翻牌條件不成立，依卡片效果回牌庫';
     if(e.type==='revealed_returned')return `${who}將${e.count}張翻開牌放回牌庫底`;
     if(e.type==='deck_remainder')return `其餘${e.count}張放回${e.destination==='deck_bottom'?'牌庫底':'牌庫頂'}`;
@@ -987,7 +993,7 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
   function tableCallbacks() {
     return {
       onBoard(board,view) {
-        game=board;pending=null;turnNotice=null;
+        const same=pending&&view.request?.requestId===pending.req.requestId&&view.request?.epoch===pending.req.epoch;game=board;if(!same)pending=null;turnNotice=null;
         skillResults=view.publicLog.filter(e=>e.type==='skill_resolved'&&e.turn===view.turn.id).slice(-2);
         logBuf=view.publicLog.map(e=>[publicLogText(e), '']);render();
       },
@@ -1010,22 +1016,32 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
   function setMode(mode) {
     document.body.dataset.mode = mode;
     $('modeSolo').setAttribute('aria-selected', String(mode === 'solo')); $('modeOnline').setAttribute('aria-selected', String(mode === 'online'));
-    if (mode === 'online') { $('gameMode').value = 'strict'; $('gameMode').onchange?.(); olLoad(); }
+    if (mode === 'online') { $('gameMode').value = 'strict'; $('gameMode').onchange?.(); olLoad().catch(()=>{}); }
     store.set('bk_play_mode', mode);
   }
   $('modeSolo').onclick = () => setMode('solo'); $('modeOnline').onclick = () => setMode('online');
   function olDeck() { const key = $('myDeck').value, cards = Object.entries(DECKS[key].cards).flatMap(([c, n]) => Array(n).fill(c)); new BreakMatchPilot.Match({ decks: [cards, cards], mode: 'strict' }); return { key, cards }; }
-  function olNameOf(uid) { if (uid === 'AI') return '策略 AI'; const conns = OL.presence[uid]; const first = conns && Object.values(conns)[0]; return cleanName(OL.meta?.names?.[uid] || first?.name) || '對手'; }
+  function olNameOf(uid) { if (uid === 'AI') return '策略 AI'; const conns = OL.presence[uid]; const first = conns && Object.values(conns)[0]; return cleanName(OL.meta?.names?.[uid] || (uid===OL.meta?.p0?OL.meta?.p0Name:OL.meta?.p1Name) || first?.name) || '對手'; }
   function olView() {
     const c = OL.client, signedIn = !!c?.user, inRoom = !!OL.roomId, waiting = inRoom && OL.meta?.status === 'waiting';
     $('olLogin').hidden = signedIn; $('olLobby').hidden = !signedIn || inRoom; $('olWait').hidden = !waiting;
     if (signedIn) { $('olWho').textContent = cleanName(c.name) + (c.user.isAnonymous ? '' : '・Google'); $('olLink').hidden = !c.user.isAnonymous; $('olDot').classList.toggle('on', !!c.online); }
     document.body.dataset.room = inRoom ? '1' : '';
+    $('olCreate').disabled=$('olJoin').disabled=!c?.online;olConnectionChanged();
     if (waiting) { $('olWaitCode').textContent = OL.roomId; $('olWaitText').textContent = OL.meta.p1 === 'AI' ? '正在準備對局' : '等待朋友加入'; }
   }
+  function olCanSend(v=session?.last){const c=OL.client,a=OL.authority;return !!(c?.online&&!c.pending&&OL.meta?.status==='running'&&a?.active&&a.lease.term===v?.term);}
+  function olControls(){if(!OL.inGame)return;const locked=!olCanSend();for(const b of $('dockOpts').querySelectorAll('.hc button')){if(locked){if(!b.hasAttribute('data-ol-disabled'))b.dataset.olDisabled=String(b.disabled);b.disabled=true;}else if(b.hasAttribute('data-ol-disabled')){b.disabled=b.dataset.olDisabled==='true';delete b.dataset.olDisabled;}}}
+  function olConnectionChanged(){
+    $('olConnectionBar').hidden=!OL.roomId;const a=OL.authority,c=OL.client;
+    $('olConnectionText').textContent=!c?.online?'連線中斷，恢復後同步對局':!a?.active?'房主離線，等待接手':a.mine?'房主：你':'房主在線';
+    $('olTakeover').hidden=!OL.roomId||!c?.online||!a||a.mine||a.active;
+    if(OL.inGame){session?.setAvailable?.(olCanSend());olControls();}
+  }
+  $('olTakeover').onclick=olRun(()=>OL.client.takeover());
   function olLobby() {
     const mine = OL.client?.user?.uid, list = Object.values(OL.rooms).filter(r => r && r.status !== 'closed').sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 30);
-    $('olRooms').innerHTML = list.map(r => `<div class="ol-room"><div><b>${esc(r.title || r.room)}</b><small>${esc(r.room)}・${({ waiting: '等待玩家', running: '對戰中', finished: '已結束' })[r.status] || esc(r.status)}${OL.presence[r.owner] ? '' : '・房主離線'}</small></div><button class="btn outline" type="button" data-ol-join="${esc(r.room)}">${r.owner === mine || r.p0 === mine || r.p1 === mine ? '回到房間' : r.status === 'waiting' ? '加入' : '觀看'}</button></div>`).join('') || '<p class="ol-empty">目前沒有房間，建立一間邀請朋友吧。</p>';
+    $('olRooms').innerHTML = list.map(r => `<div class="ol-room"><div><b>${esc(r.title || r.room)}</b><small>${esc(r.room)}・${({ waiting: '等待玩家', running: '對戰中', finished: '已結束' })[r.status] || esc(r.status)}${OL.presence[r.owner] ? '' : '・房主離線'}</small></div><button class="btn outline" type="button" data-ol-join="${esc(r.room)}">${r.owner === mine || r.p0 === mine || r.p1 === mine ? '回到房間' : r.status === 'waiting' ? '加入' : '加入／回房'}</button></div>`).join('') || '<p class="ol-empty">目前沒有房間，建立一間邀請朋友吧。</p>';
     const people = Object.entries(OL.presence).map(([uid, conns]) => ({ uid, name: cleanName(Object.values(conns || {})[0]?.name) })).filter(p => p.name);
     $('olPeople').innerHTML = people.map(p => `<span class="ol-person"><span class="ol-dot on"></span>${esc(p.name)}${p.uid === mine ? '（你）' : ''}</span>`).join('') || '<span class="ol-empty">目前沒有其他人在線</span>';
   }
@@ -1043,6 +1059,7 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
     if (OL.loading) return OL.loading;
     OL.loading = (async () => {
       $('olAnon').disabled = $('olGoogle').disabled = true; $('olAnon').textContent = '連線中…';
+      await import('./firebase-config.js');
       const mod = await import('./firebase-room-client.js');
       const services = OL.services = await mod.firebaseServices();
       const c = OL.client = new mod.FirebaseRooms(services, {
@@ -1050,18 +1067,18 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
         connection: () => olView(),
         lobby: v => { OL.rooms = v || {}; olLobby(); },
         presence: v => { OL.presence = v || {}; olLobby(); if (OL.inGame && OL.meta) { const me = c.user?.uid, other = OL.meta.p0 === me ? OL.meta.p1 : OL.meta.p0; oppName = olNameOf(other); } },
-        room: id => { OL.roomId = id || null; if (id) { const u = new URL(location.href); u.searchParams.set('online', '1'); u.searchParams.set('room', id); history.replaceState(null, '', u); } else { OL.meta = null; olLeaveGame(); } olView(); },
-        meta: v => { OL.meta = v; if (v?.status === 'closed') { olToast('房間已關閉'); c.leave(); } olView(); },
-        authority: () => {},
-        view: v => { if (!v) return; if (!OL.inGame) olEnterGame(); session?.handle?.(v); },
-        sending: () => {},
+        room: id => { OL.roomId = id || null; if (id) { const u = new URL(location.href); u.searchParams.set('online', '1'); u.searchParams.set('room', id); history.replaceState(null, '', u); } else { OL.meta = null;OL.authority=null;const u=new URL(location.href);u.searchParams.delete('room');history.replaceState(null,'',u);olLeaveGame(); } olView(); },
+        meta: v => { OL.meta = v;if(OL.inGame&&v){oppName=olNameOf(v.p0===c.user?.uid?v.p1:v.p0);setLogoSub('你 vs '+oppName);} if (v?.status === 'closed') { olToast('房間已關閉'); c.leave(); } olView(); },
+        authority: info => {OL.authority=info;olConnectionChanged();},
+        view: v => { if (!v) return; if (!OL.inGame) olEnterGame(); session.available=olCanSend(v);session?.handle?.(v); },
+        sending: () => olConnectionChanged(),
       });
       services.A.onAuthStateChanged(services.auth, user => {
-        const uid = user?.uid || null; if (uid === OL.lastUid) return olView(); OL.lastUid = uid;
-        (async () => { await c.logout(); if (user) await c.login(user, cleanName($('olName').value) || cleanName(user.displayName) || '玩家'); olView(); olLobby(); })().catch(e => olToast(olFriendly(e)));
+        const uid = user?.uid || null; if (uid === OL.lastUid){if(user)c.user=user;return olView();} OL.lastUid = uid;
+        OL.authWork=OL.authWork.then(async () => { await c.logout(); if (user) await c.login(user, cleanName($('olName').value) || cleanName(user.displayName) || '玩家'); olView(); olLobby(); }).catch(e => olToast(olFriendly(e)));
       });
       $('olAnon').disabled = $('olGoogle').disabled = false; $('olAnon').textContent = '開始（免註冊）';
-    })().catch(e => { OL.loading = null; $('olAnon').disabled = $('olGoogle').disabled = false; $('olAnon').textContent = '重試連線'; olToast('多人連線載入失敗：' + olFriendly(e)); });
+    })().catch(e => { OL.loading = null; $('olAnon').disabled = $('olGoogle').disabled = false; $('olAnon').textContent = '重試連線'; olToast('多人連線載入失敗：' + olFriendly(e)); throw e; });
     return OL.loading;
   }
   $('olName').value = store.get('bk_ol_name') || ''; $('olName').onchange = () => store.set('bk_ol_name', cleanName($('olName').value));
@@ -1074,9 +1091,9 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
   $('olJoin').onclick = () => olJoin($('olCode').value)();
   $('olCode').onkeydown = e => { if (e.key === 'Enter') olJoin($('olCode').value)(); };
   $('olRooms').addEventListener('click', e => { const b = e.target.closest('[data-ol-join]'); if (b) olJoin(b.dataset.olJoin)(); });
-  $('olCancel').onclick = olRun(async () => { await (OL.client.close?.() ?? OL.client.leave()); });
+  $('olCancel').onclick = olRun(async () => { await (OL.authority?.mine?OL.client.close():OL.client.leave()); });
   $('olShare').onclick = olRun(async () => {
-    const u = new URL(location.href); u.search = ''; u.hash = ''; u.searchParams.set('online', '1'); u.searchParams.set('room', OL.roomId);
+    const u = new URL(location.href); u.search = ''; u.hash = ''; u.searchParams.set('online', '1'); u.searchParams.set('room', OL.roomId);if(new URLSearchParams(location.search).get('emulator')==='1')u.searchParams.set('emulator','1');
     const text = `來 BREAK 對練台跟我打一場！房號 ${OL.roomId}`;
     if (navigator.share) { try { await navigator.share({ title: 'BREAK 對練邀請', text, url: u.href }); return; } catch (e) { if (e?.name === 'AbortError') return; } }
     await navigator.clipboard.writeText(text + '\n' + u.href); olToast('');$('olWaitText').textContent = '邀請連結已複製，貼給朋友就能加入';
