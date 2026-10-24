@@ -1405,3 +1405,8 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 使用者選定 Firebase：Realtime Database（asia-southeast1，haikyuu-playmat-default-rtdb）＋ Authentication（匿名＋Google）；網站仍在 GitHub Pages
 - 設定檔：firebase-config.js（Web 設定為公開資訊；權限靠資料庫安全規則）。多人實作由 Codex 負責；第一階段大廳／上線名單／邀請、房主權威、各自視圖、斷線接手；第二階段觀戰／戰績／牌組存檔；AI 座位用 AI.answer
 - 使用者待確認：Authentication 已啟用匿名＋Google、Authorized domains 加入 xiah6415.github.io、資料庫 locked mode（規則由 Codex 撰寫部署）
+
+## Claude：541 張全開後驗收（2026-10-24，分支 claude/qa-match）
+- 計畫：新 Match 架構逐卡實戰（358 技能卡各 4 張入牌組，AI／隨機，嚴格＋數值，隨機點 Undo 重播比對）＋手機 320／360 短／390 實機點擊巡檢
+- 工具：rules/claude-card-qa.js（逐卡；攔截 _resolveSkill 計「實際結算」）
+- 結果：2148 局 0 例外／卡死，1981 次 Undo 重播一致；358 張皆確認可實際結算（P04-022／P04-038 需玩家攔網）；發現正式牌桌 AI（aiAnswer）從不攔網；手機無溢出，小螢幕選擇區偏矮、查卡鈕 28px
