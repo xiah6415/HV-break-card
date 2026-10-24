@@ -1400,4 +1400,8 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 
 ## Claude：AI 調參＋難度分級（2026-10-24，分支 claude/ai-tune）
 - 計畫：遮蔽修正後重測（對基礎 AI 100 局 98 勝，強度不靠偷看）；以 AI 自我對戰 A/B 調評分權重；加 easy／normal／hard 難度（UI 選單＋table-session 傳入 aiLevel）
-- 進行中：match-ai.js 加 answerWith（暫時權重）、LEVELS；ui.html 新增「AI 難度」選單（記住上次選擇）；table-session 傳 {level}
+- 結果：match-ai.js 加 answerWith、LEVELS（easy 35% 隨手選且不攔網；normal 預設；hard 角色選擇也模擬首選／次選、短距抽樣 2 次）；ui.html「AI 難度」選單（localStorage 記住）；table-session 傳 {level}
+- 調參：權重 6 組變體 A/B 皆 30/60——405 個決策在極端權重下也無一改變，評分主要由手牌數與失球／接不住主導，權重不是瓶頸
+- 強度：easy 對 normal 38%（60 局）；hard 對 normal 53.7%（80 局，差距在誤差內）；對基礎 AI 三級皆全勝（小樣本）
+- 速度（Node）：normal 平均 35ms；hard 平均 94ms、單步最長 0.8 秒、連續最長約 7 秒（含 200ms 出牌延遲）
+- 測試：match-ai.test.js 加三級合法／終局／easy 不攔網；全套回歸 0 失敗、fuzz 通過；瀏覽器選困難實打 4 球無錯誤
