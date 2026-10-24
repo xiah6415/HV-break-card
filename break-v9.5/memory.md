@@ -1411,5 +1411,6 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 ## Firebase多人第一階段（2026-10-24）
 - 計畫：合併設定f05947d並審查claude/qa-match驗收工具；以Realtime Database＋匿名／Google Auth實作大廳、連線名單、邀請房號、多房雙人／AI座位與房主權威指令／各玩家私密視圖。安全規則隔離快照／完整指令紀錄僅當前權威端可讀，玩家只讀自己的視圖；onDisconnect與權威接手、快照／指令冪等與重連須實測，再部署規則及Pages。觀戰／戰績／雲端牌組第二階段、多人Undo最後，先不用Functions。
 - 結果：合併f05947d與claude/qa-match（0eb98c6，含860b0e2）；新增online.html＋FirebaseRooms＋RoomAuthority，大廳／onDisconnect名單／8碼邀請／多房1對1／匿名與Google登入／權威端策略AI已接通。每次指令原子保存快照、完整紀錄與各自視圖，term＋connection防止舊權威寫入；刷新可重回原座位，接手保留RNG，既有541卡／358技能不變。
-- 測試：build、168套回歸0失敗、單人三尺寸各3局通過；多人雙房隔離、人對人及AI整局、斷線接手／刷新重連／舊房主排除／三尺寸選牌無溢出／分享匯入通過；Firebase模擬器47項權限測試與正式雙匿名12指令／私密拒讀通過，正式測試房與帳號已清除；fuzz3000與6×300長跑仍執行中。
+- 測試：build、168套回歸0失敗、單人三尺寸各3局通過；多人雙房隔離、人對人及AI整局、斷線接手／刷新重連／舊房主排除／三尺寸選牌無溢出／分享匯入通過；Firebase模擬器47項權限測試與正式雙匿名12指令／私密拒讀通過，正式測試房與帳號已清除；fuzz3000與6×300長跑全部通過。
 - 服務：RTDB安全規則已部署haikyuu-playmat（asia-southeast1）；匿名／Google啟用與xiah6415.github.io授權網域已確認，Google真人OAuth與iPhone由使用者實測。快照／完整紀錄限當前權威端；朋友間接受房主端信任，接手者亦持有完整Match；觀戰／戰績／雲端牌組第二階段、雙方同意Undo最後，不用Functions。
+- 部署：實作5638bf2已推送、Pages built無錯誤；公開index／多人頁／SDK設定／runtime／選擇元件／牌組／安全規則與卡圖共12檔HTTP200／SHA256一致。公開頁真實雙匿名12指令、對手私密拒讀、onDisconnect接手與舊權威排除通過，測試房／帳號已清除；https://xiah6415.github.io/HV-break-card/break-v9.5/online.html?v=5638bf2 。Claude QA歷史「AI不攔網」是舊aiAnswer觀察，正式單人／多人AI均已使用此前合併的策略AI；多人暫不提供Undo。

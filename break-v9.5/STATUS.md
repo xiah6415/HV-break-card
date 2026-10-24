@@ -89,5 +89,6 @@
 | 策略AI接線 | 已合併Claude 5b05335；AI.answer(match, request)接正式牌桌，合法回答／不改原Match；模擬的隱藏牌抽樣涵蓋重演基準並使用獨立模擬亂數，多人AI沿用同入口於權威端執行 |
 | Firebase多人第一階段 | 已完成：獨立online.html、大廳／onDisconnect上線名單／8碼房號與邀請、多房1對1、匿名＋Google登入、權威端AI座位 |
 | 多人權威／私密資料 | 房主RoomAuthority持有Match；玩家僅讀自己的view／寫自己的不可覆寫指令；快照與完整紀錄僅當前權威端可讀；斷線接手以term＋連線識別排除舊權威 |
-| 多人驗證 | Firebase規則47項通過；雙瀏覽器整局、雙房隔離、斷線接手／刷新重連／RNG保留、AI整局、三尺寸無溢出；正式Firebase雙匿名12指令與私密拒讀通過 |
+| 多人驗證 | Firebase規則47項通過；雙瀏覽器整局、雙房隔離、斷線接手／刷新重連／RNG保留、AI整局、三尺寸無溢出；正式公開頁雙匿名12指令／私密拒讀／斷線接手／舊權威排除通過；168套回歸／fuzz3000／6×300通過 |
 | Firebase部署／下一階段 | haikyuu-playmat，asia-southeast1，RTDB安全規則已部署；Auth匿名／Google與Pages授權網域已確認；觀戰／戰績／雲端牌組第二階段，雙方同意Undo最後；不使用Functions |
+| 多人公開版本 | 5638bf2；https://xiah6415.github.io/HV-break-card/break-v9.5/online.html?v=5638bf2 ；Pages built／12檔HTTP200及SHA256一致 |
