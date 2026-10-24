@@ -2401,8 +2401,28 @@ function describePayment(node){
   default:return '支付卡上指定的費用';
  }
 }
+const quantityActions={draw_count:['抽牌','不抽牌'],move_count:['移動／回收卡片','不移動卡片'],mill_count:['將牌庫頂的牌送到棄牌區','不送出牌庫的牌'],payment_count:['支付費用','不支付此項費用'],entry_count:['讓角色登場','不讓角色登場'],target_count:['選擇效果對象','不選擇對象']};
+function requestPrompt(request){
+ // Preserve card-specific instructions and ordering supplied by the core.
+ if(request.prompt&&request.prompt!=='請選擇合法選項')return request.prompt;
+ if(request.context?.selectionAction==='exchange')return '是否交換兩側各1張？';
+ const action=quantityActions[request.kind];
+ if(action)return request.kind==='target_count'?'選擇本次效果的對象數量':'選擇本次'+action[0]+'的張數';
+ if(request.kind==='guts_destination')return '選擇 Guts 放置區域';
+ return request.prompt||'請選擇合法選項';
+}
+function optionLabel(request,option){
+ if(request.context?.selectionAction==='exchange'&&request.kind==='move_count')return option.value===0?'不交換':option.value===1?'交換兩側各1張':option.label;
+ if(quantityActions[request.kind]&&Number.isInteger(option.value)&&option.label===String(option.value)){
+  const unit=request.kind==='target_count'?' 個對象':' 張',zero=quantityActions[request.kind][1];
+  return option.value+unit+(option.value===0?'（'+zero+'）':'');
+ }
+ if(request.kind==='guts_destination'&&zoneNames[option.value])return zoneText(option.value);
+ return option.label;
+}
 function requestDetail(request){
  if(request.kind==='activate_payment')return describePayment(request.context?.payment);
+ if(quantityActions[request.kind]&&request.context?.selectionAction!=='exchange')return '請從目前提供的數量中選擇，再按確認；下一步依此數量結算。';
  if(['move_cards','payment_cards','entry'].includes(request.kind)&&request.context?.destination)return '目的地：'+zoneText(request.context.destination);
  return '';
 }
@@ -2432,7 +2452,7 @@ function render(rootEl, request, opts = {}) {
         return `<div class="hc-item"><button type="button" class="hc-card${on ? ' on' : ''}" aria-pressed="${on}" data-hc-v="${esc(key(o.value))}">${c.cardNo ? cardImg(c) : ''}<span class="hc-nm">${esc(o.label)}</span>${location?`<small class="hc-zone">${esc(location)}</small>`:''}${badge}</button>${o.card&&opts.onCard?`<button type="button" class="hc-info" data-hc-info="${esc(o.id)}" aria-label="查看 ${esc(o.label)} 卡片">查卡</button>`:''}</div>`;
       }).join('')}</div>`;
     }
-    return `<div class="hc-opts" role="group">${request.options.map(o => `<button type="button" class="hc-opt${t === 'number' ? ' num' : ''}${sel.value !== undefined && key(sel.value) === key(o.value) ? ' on' : ''}" aria-pressed="${sel.value !== undefined && key(sel.value) === key(o.value)}" data-hc-v="${esc(key(o.value))}">${esc(o.label)}</button>`).join('')}</div>`;
+    return `<div class="hc-opts" role="group">${request.options.map(o => `<button type="button" class="hc-opt${t === 'number' ? ' num' : ''}${sel.value !== undefined && key(sel.value) === key(o.value) ? ' on' : ''}" aria-pressed="${sel.value !== undefined && key(sel.value) === key(o.value)}" data-hc-v="${esc(key(o.value))}">${esc(optionLabel(request,o))}</button>`).join('')}</div>`;
   }
   function chips() {
     if (t !== 'block' || !sel.picked.length) return '';
@@ -2454,7 +2474,7 @@ function render(rootEl, request, opts = {}) {
       ? `<button type="button" class="hc-loss" data-hc-act="lossyes">確定 Loss</button><button type="button" class="hc-quiet" data-hc-act="lossno">不要</button>`
       : `<button type="button" class="hc-loss" data-hc-act="loss">喊 Loss</button>`) : '';
     rootEl.innerHTML = `<div class="hc" data-kind="${esc(request.kind)}" data-input="${t}">
-      <div class="hc-head">${src}<div class="hc-q">${esc(request.prompt)}${prog ? `<small class="hc-prog">${esc(prog)}</small>` : ''}</div></div>
+      <div class="hc-head">${src}<div class="hc-q">${esc(requestPrompt(request))}${prog ? `<small class="hc-prog">${esc(prog)}</small>` : ''}</div></div>
       ${ctx()}${body()}${chips()}
       <div class="hc-err" role="alert">${esc(sel.error || '')}</div>
       <div class="hc-bar"><button type="button" class="hc-go" data-hc-act="go" ${ok ? '' : 'disabled'}>${esc(opts.goLabel || GO_LABEL[t])}</button>${(t === 'cards' || t === 'block') && sel.picked.length ? '<button type="button" class="hc-quiet" data-hc-act="clear">清除</button>' : ''}${loss}</div></div>`;
@@ -2485,7 +2505,7 @@ function render(rootEl, request, opts = {}) {
   draw();
   return { destroy() { rootEl.removeEventListener('click', onClick); rootEl.innerHTML = ''; }, select: choose, get selection() { return sel; } };
 }
-const api = { render, CSS, describePayment, requestDetail };
+const api = { render, CSS, describePayment, requestDetail, requestPrompt, optionLabel };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.BreakChoiceUI = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
 
