@@ -179,6 +179,6 @@ function answer(m, r, options = {}) {
 }
 // 以暫時權重回答（調參／難度用）：同步執行，結束後還原
 function answerWith(weights, m, r, options) { const saved = { ...W }; Object.assign(W, weights || {}); try { return answer(m, r, options); } finally { Object.assign(W, saved); } }
-const api = { LEVELS, answer, answerWith, choose, evaluate, rulesValue, clone, simulation, W };
+const api = { LEVELS, answer, answerWith, rollout, choose, evaluate, rulesValue, clone, simulation, W };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.BreakMatchAI = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
