@@ -1283,6 +1283,10 @@ class Match {
  _pick(role,kind,next){const p=this._m.actor,ids=this._cards(p,role);if(!ids.length){this._lose('沒有能'+({serve:'發球',receive:'接球',toss:'舉球',attack:'攻擊'}[role])+'的角色');return;}const entrySkillIds=ids.filter(id=>this._probe(()=>{const n=this._kernel.state.publicLog.length;this._kernel.enter(id,role);return this._kernel.state.publicLog.slice(n).some(e=>e.type==='skill_resolved'&&e.source===id);}));const id=this._ask(kind,p,{type:'single'},ids,entrySkillIds.length?{entrySkillIds}:{});this._kernel.enter(id,role);this._m.roleTotals[p][role]=this._param(p,role);this._next(next);}
  _blockMax(p){const k=this._kernel;return [3,2,1].find(n=>k.permission({action:'enter_character',player:p,origin:'rule',role:'center_blocker',entryOrigin:'hand',entryCount:(k.state.turn.blockEntries?.[p]||0)+n,entryCounts:k._entryCounts(p,'hand',n),name:'',printed:{position_tags:[],parameters:{receive:'dash'}}}).allowed)||0;}
  _blockLegal(p,answer){const k=this._kernel,ids=answer?.cards;if(!Array.isArray(ids)||!ids.length||ids.length>this._blockMax(p)||new Set(ids).size!==ids.length||!ids.includes(answer.center)||!ids.every(id=>this._cards(p,'block').includes(id)))return false;return distinctNameOptions(ids.map(id=>k.entryNames(id))).length>0;}
+ previewBlockSkills(answer){
+  if(this._m.pending?.kind!=='block'||!this._blockLegal(this._m.actor,answer))return [];
+  return this._probe(()=>{const start=this._kernel.state.publicLog.length;this._enterBlock(answer);return [...new Set(this._kernel.state.publicLog.slice(start).filter(e=>e.type==='skill_resolved'&&answer.cards.includes(e.source)).map(e=>e.source))];})||[];
+ }
  _enterBlock(answer){if(!this._blockLegal(this._m.actor,answer))throw Error('Invalid blockers');this._kernel.enterBlock(answer.cards,answer.center);}
  _cleanupSides(p){for(const z of ['side:0','side:1'])for(const id of [...this._zone(p,z)])this._move(id,p,'drop');}
  _outgoing(){const p=this._m.actor,t=this._m.outgoingType;return {kind:t,owner:p,offense:t==='serve'?this._param(p,'serve'):t==='block'?0:this._param(p,'toss')+this._param(p,'attack')};}

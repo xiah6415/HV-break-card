@@ -111,7 +111,7 @@ function render(rootEl, request, opts = {}) {
   const doc = rootEl.ownerDocument; ensureCss(doc);
   const chk = H.checkRequest(request);
   if (!chk.ok) { rootEl.innerHTML = `<div class="hc"><p class="hc-err" role="alert">無法顯示這個選擇：${esc(chk.error)}</p></div>`; return { destroy() { rootEl.innerHTML = ''; } }; }
-  const timing=timingHint(request);
+  let timing=timingHint(request);
   const t = request.input.type, imgSrc = opts.imgSrc || (() => ''), cardImg = c => `<img src="${esc(imgSrc(c.cardNo))}" alt="${esc(c.name || c.cardNo)}" loading="lazy" draggable="false">`;
   let sel = H.restoreSelection(request, opts.selection), lossArm = false, done = false;
   const byKey = new Map(request.options.map(o => [key(o.value), o]));
@@ -150,6 +150,7 @@ function render(rootEl, request, opts = {}) {
   }
   function draw() {
     const scrollTop=rootEl.querySelector('.hc-content')?.scrollTop||0;
+    if(t==='block'&&opts.previewBlockSkills){const ids=opts.previewBlockSkills(H.selectionValue(request,sel));timing=ids.length?{label:'此攔網組合可觸發技能',active:true,candidates:true,ids}:null;}
     const ok = t === 'ack' || H.canSubmit(request, sel), prog = H.progress(request, sel);
     const src = request.source ? `<button type="button" class="hc-card hc-src${timing?.active?' hc-ready':''}" data-hc-src="1" aria-label="查看 ${esc(request.source.name || request.source.cardNo)}">${cardImg(request.source)}</button>` : '';
     const loss = request.canLoss && opts.onLoss ? (lossArm
@@ -186,7 +187,7 @@ function render(rootEl, request, opts = {}) {
   }
   rootEl.addEventListener('click', onClick);
   draw();
-  return { destroy() { rootEl.removeEventListener('click', onClick); rootEl.innerHTML = ''; }, select: choose, get selection() { return sel; } };
+  return { destroy() { rootEl.removeEventListener('click', onClick); rootEl.innerHTML = ''; }, select: choose, get selection() { return sel; }, get timing() { return timing; } };
 }
 const api = { render, CSS, describePayment, requestDetail, requestPrompt, optionLabel, timingHint };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.BreakChoiceUI = api;

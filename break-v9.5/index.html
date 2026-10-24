@@ -1706,6 +1706,10 @@ class Match {
  _pick(role,kind,next){const p=this._m.actor,ids=this._cards(p,role);if(!ids.length){this._lose('沒有能'+({serve:'發球',receive:'接球',toss:'舉球',attack:'攻擊'}[role])+'的角色');return;}const entrySkillIds=ids.filter(id=>this._probe(()=>{const n=this._kernel.state.publicLog.length;this._kernel.enter(id,role);return this._kernel.state.publicLog.slice(n).some(e=>e.type==='skill_resolved'&&e.source===id);}));const id=this._ask(kind,p,{type:'single'},ids,entrySkillIds.length?{entrySkillIds}:{});this._kernel.enter(id,role);this._m.roleTotals[p][role]=this._param(p,role);this._next(next);}
  _blockMax(p){const k=this._kernel;return [3,2,1].find(n=>k.permission({action:'enter_character',player:p,origin:'rule',role:'center_blocker',entryOrigin:'hand',entryCount:(k.state.turn.blockEntries?.[p]||0)+n,entryCounts:k._entryCounts(p,'hand',n),name:'',printed:{position_tags:[],parameters:{receive:'dash'}}}).allowed)||0;}
  _blockLegal(p,answer){const k=this._kernel,ids=answer?.cards;if(!Array.isArray(ids)||!ids.length||ids.length>this._blockMax(p)||new Set(ids).size!==ids.length||!ids.includes(answer.center)||!ids.every(id=>this._cards(p,'block').includes(id)))return false;return distinctNameOptions(ids.map(id=>k.entryNames(id))).length>0;}
+ previewBlockSkills(answer){
+  if(this._m.pending?.kind!=='block'||!this._blockLegal(this._m.actor,answer))return [];
+  return this._probe(()=>{const start=this._kernel.state.publicLog.length;this._enterBlock(answer);return [...new Set(this._kernel.state.publicLog.slice(start).filter(e=>e.type==='skill_resolved'&&answer.cards.includes(e.source)).map(e=>e.source))];})||[];
+ }
  _enterBlock(answer){if(!this._blockLegal(this._m.actor,answer))throw Error('Invalid blockers');this._kernel.enterBlock(answer.cards,answer.center);}
  _cleanupSides(p){for(const z of ['side:0','side:1'])for(const id of [...this._zone(p,z)])this._move(id,p,'drop');}
  _outgoing(){const p=this._m.actor,t=this._m.outgoingType;return {kind:t,owner:p,offense:t==='serve'?this._param(p,'serve'):t==='block'?0:this._param(p,'toss')+this._param(p,'attack')};}
@@ -2469,7 +2473,7 @@ function render(rootEl, request, opts = {}) {
   const doc = rootEl.ownerDocument; ensureCss(doc);
   const chk = H.checkRequest(request);
   if (!chk.ok) { rootEl.innerHTML = `<div class="hc"><p class="hc-err" role="alert">無法顯示這個選擇：${esc(chk.error)}</p></div>`; return { destroy() { rootEl.innerHTML = ''; } }; }
-  const timing=timingHint(request);
+  let timing=timingHint(request);
   const t = request.input.type, imgSrc = opts.imgSrc || (() => ''), cardImg = c => `<img src="${esc(imgSrc(c.cardNo))}" alt="${esc(c.name || c.cardNo)}" loading="lazy" draggable="false">`;
   let sel = H.restoreSelection(request, opts.selection), lossArm = false, done = false;
   const byKey = new Map(request.options.map(o => [key(o.value), o]));
@@ -2508,6 +2512,7 @@ function render(rootEl, request, opts = {}) {
   }
   function draw() {
     const scrollTop=rootEl.querySelector('.hc-content')?.scrollTop||0;
+    if(t==='block'&&opts.previewBlockSkills){const ids=opts.previewBlockSkills(H.selectionValue(request,sel));timing=ids.length?{label:'此攔網組合可觸發技能',active:true,candidates:true,ids}:null;}
     const ok = t === 'ack' || H.canSubmit(request, sel), prog = H.progress(request, sel);
     const src = request.source ? `<button type="button" class="hc-card hc-src${timing?.active?' hc-ready':''}" data-hc-src="1" aria-label="查看 ${esc(request.source.name || request.source.cardNo)}">${cardImg(request.source)}</button>` : '';
     const loss = request.canLoss && opts.onLoss ? (lossArm
@@ -2544,7 +2549,7 @@ function render(rootEl, request, opts = {}) {
   }
   rootEl.addEventListener('click', onClick);
   draw();
-  return { destroy() { rootEl.removeEventListener('click', onClick); rootEl.innerHTML = ''; }, select: choose, get selection() { return sel; } };
+  return { destroy() { rootEl.removeEventListener('click', onClick); rootEl.innerHTML = ''; }, select: choose, get selection() { return sel; }, get timing() { return timing; } };
 }
 const api = { render, CSS, describePayment, requestDetail, requestPrompt, optionLabel, timingHint };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.BreakChoiceUI = api;
@@ -2831,6 +2836,7 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
     const labels={ack:'抽 1 張',turnEnd:'結束回合',lossConfirm:'喊 Loss',roll:'開始調度',reveal:'翻開牌庫頂',revealResult:'看完了，繼續',mulligan:'保留／重抽選取的牌'};
     nativeWidgetKey=r.requestId+':'+r.epoch;
     nativeWidget=BreakChoiceUI.render($('dockOpts'),r,{goLabel:labels[r.kind],selection,
+      previewBlockSkills:a=>session.match.previewBlockSkills(a),
       imgSrc:no=>IMG[no.replace(/^HV-?/,'')]||'',onCard:c=>cardSheet(c.cardNo.replace(/^HV-?/,'')),
       onAnswer:a=>nativeCommand({kind:'answer',answer:a}),onLoss:()=>nativeAnswer({__loss:true}),onSelection:syncNativeHand
     });
@@ -2981,7 +2987,7 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
     return `<div class="handhead"><span>手牌 ${p.hand.length} 張</span>${hint}</div><div class="hand" style="--hn:${p.hand.length <= 6 ? p.hand.length : Math.ceil(p.hand.length / 2)}">${p.hand.map((c, i) => {
       const ref=p.handRefs?.[i], selection=nativeSelection?.picked||[nativeSelection?.value];
       const nativeClass=req ? selection.includes(ref?.id)?(req.kind==='mulligan'?'picked':'staged'):req.options.some(o=>o.value===ref?.id)?'sel':legal.size?'dim':'' : '';
-      return `<div class="hc ${nativeClass}${req&&(req.kind==='event'&&req.options.some(o=>o.value===ref?.id)||req.context.entrySkillIds?.includes(ref?.id))?' skill-ready':''}">${nativeSelection?.center===ref?.id?'<span class="newb ctr">中攔</span>':''}<button class="cbtn" type="button" data-hand="${i}" data-card="${c}">${img(c)}</button></div>`;
+      return `<div class="hc ${nativeClass}${req&&(req.kind==='event'&&req.options.some(o=>o.value===ref?.id)||req.context.entrySkillIds?.includes(ref?.id)||req.kind==='block'&&nativeWidget?.timing?.ids?.includes(ref?.id))?' skill-ready':''}">${nativeSelection?.center===ref?.id?'<span class="newb ctr">中攔</span>':''}<button class="cbtn" type="button" data-hand="${i}" data-card="${c}">${img(c)}</button></div>`;
     }).join('')}</div>`;
   }
   function netHTML() {
