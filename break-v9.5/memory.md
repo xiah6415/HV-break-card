@@ -1414,3 +1414,6 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 測試：build、168套回歸0失敗、單人三尺寸各3局通過；多人雙房隔離、人對人及AI整局、斷線接手／刷新重連／舊房主排除／三尺寸選牌無溢出／分享匯入通過；Firebase模擬器47項權限測試與正式雙匿名12指令／私密拒讀通過，正式測試房與帳號已清除；fuzz3000與6×300長跑全部通過。
 - 服務：RTDB安全規則已部署haikyuu-playmat（asia-southeast1）；匿名／Google啟用與xiah6415.github.io授權網域已確認，Google真人OAuth與iPhone由使用者實測。快照／完整紀錄限當前權威端；朋友間接受房主端信任，接手者亦持有完整Match；觀戰／戰績／雲端牌組第二階段、雙方同意Undo最後，不用Functions。
 - 部署：實作5638bf2已推送、Pages built無錯誤；公開index／多人頁／SDK設定／runtime／選擇元件／牌組／安全規則與卡圖共12檔HTTP200／SHA256一致。公開頁真實雙匿名12指令、對手私密拒讀、onDisconnect接手與舊權威排除通過，測試房／帳號已清除；https://xiah6415.github.io/HV-break-card/break-v9.5/online.html?v=5638bf2 。Claude QA歷史「AI不攔網」是舊aiAnswer觀察，正式單人／多人AI均已使用此前合併的策略AI；多人暫不提供Undo。
+
+## 多人連線分工與同房再戰（2026-10-25）
+- 計畫／介面通知：Claude負責online.html／online.js與單人牌桌樣式沿用，本批不改這些檔案的多人介面。連線層新增meta.p0Name／p1Name（各座位自己寫入，AI名固定）；沿用send({kind:'rematch',matchId:回呼.view.match.id})提交本局確認，meta.rematch[uid]=matchId供按鈕顯示，雙方確認後同房新Match／新種子，AI自動同意；舊局指令／同意不可套用新局，接手恢復不得重開兩次。審查claude/ai-tune的單人難度改動及相容接線，驗證規則／連線／核心後部署並更新STATUS。
