@@ -216,6 +216,9 @@ select { font: inherit; padding: 10px; border-radius: 8px; border: 1px solid var
 .dots::after { content: "…"; animation: blink 1s steps(3) infinite; }
 @keyframes blink { 50% { opacity: .3; } }
 
+.skill-results{font-size:12px;line-height:1.4;color:#6c4b00;background:#fff4cf;border-left:3px solid #e4ac20;padding:4px 7px;overflow-wrap:anywhere}
+.skill-ready .ci,.slot.skill-ready,.slot.skill-resolved{outline:3px solid #e4ac20;outline-offset:1px;box-shadow:0 0 12px #e4ac2080}
+@media(prefers-reduced-motion:no-preference){.skill-ready .ci{animation:hc-pulse 1.6s ease-in-out infinite}}
 /* ---------- sheet */
 .sheet { position: fixed; inset: 0; z-index: 40; background: rgb(0 0 0 / .5); display: flex; align-items: flex-end; justify-content: center; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-top: calc(16px + env(safe-area-inset-top, 0px)); }
 .sheet .box { background: var(--surface); border-radius: 16px 16px 0 0; width: min(560px, 100%); max-height: 86vh; overflow-y: auto; padding: 16px 16px calc(18px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 10px; }
@@ -564,7 +567,7 @@ p.imp-bad { padding-left: 0; }
   };
 
   // ---------- game state
-  let game = null, session = null, pending = null, logBuf = [];
+  let game = null, session = null, pending = null, logBuf = [], skillResults = [];
   let nativeWidget = null, nativeSelection = null, nativeWidgetKey = null, tableSequence = 0;
   let turnNotice = null, shownTransition = null, priorFocus = null, turnTimer = null;
   let prevTop = {}, prevVal = {}, prevBall = null, suppressClick = false;
@@ -702,7 +705,7 @@ p.imp-bad { padding-left: 0; }
     const card=p.court.find(c=>c.key===a), changes=top?Object.keys(fields).flatMap(k=>{const base=st(top,k),value=card?.parameters[fields[k]];return Number.isInteger(base)&&Number.isInteger(value)&&base!==value?[`${labels[k]} ${value-base>0?'+':''}${value-base}`]:[];}).join('／'):'';
     const name=top?game.cardName(p,a):'',renamed=top&&name.replace(/\s/g,'')!==nm(top).replace(/\s/g,'');
     const chosen=renamed||changes?`<small class="court-name">${renamed?'目前名稱：'+esc(name):''}${changes?`${renamed?'<br>':''}${esc(changes)}`:''}</small>`:'';
-    return `<div class="zone"><div class="zl">${E.AREA_ZH[a]}</div><div class="slot${tgt}${enter ? ' enter' : ''}" ${mine ? `data-drop="${a}"` : ''}>${top ? `<button class="cbtn" type="button" data-zone="${a}" data-p="${p.idx}">${img(top)}</button>` : ''}${g ? `<span class="badge g">G${g}</span>` : ''}${v ? `<span class="badge v${pop ? ' pop' : ''}">${v}</span>` : ''}${ghost}</div>${chosen}${gl}</div>`;
+    return `<div class="zone"><div class="zl">${E.AREA_ZH[a]}</div><div class="slot${skillResults.some(e=>e.source===card?.id)?' skill-resolved':''}${card&&pending&&pending.req.source?.id===card.id&&BreakChoiceUI.timingHint(pending.req)?.active?' skill-ready':''}${tgt}${enter ? ' enter' : ''}" ${mine ? `data-drop="${a}"` : ''}>${top ? `<button class="cbtn" type="button" data-zone="${a}" data-p="${p.idx}">${img(top)}</button>` : ''}${g ? `<span class="badge g">G${g}</span>` : ''}${v ? `<span class="badge v${pop ? ' pop' : ''}">${v}</span>` : ''}${ghost}</div>${chosen}${gl}</div>`;
   }
   let nextTop = {}, nextVal = {};
   const sets = p => `<span class="sets" title="セットカード ${p.sets.length}">${[0, 1].map(i => `<i class="${i < p.sets.length ? '' : 'off'}"></i>`).join('')}</span>`;
@@ -741,7 +744,7 @@ p.imp-bad { padding-left: 0; }
     return `<div class="handhead"><span>手牌 ${p.hand.length} 張</span>${hint}</div><div class="hand" style="--hn:${p.hand.length <= 6 ? p.hand.length : Math.ceil(p.hand.length / 2)}">${p.hand.map((c, i) => {
       const ref=p.handRefs?.[i], selection=nativeSelection?.picked||[nativeSelection?.value];
       const nativeClass=req ? selection.includes(ref?.id)?(req.kind==='mulligan'?'picked':'staged'):req.options.some(o=>o.value===ref?.id)?'sel':legal.size?'dim':'' : '';
-      return `<div class="hc ${nativeClass}">${nativeSelection?.center===ref?.id?'<span class="newb ctr">中攔</span>':''}<button class="cbtn" type="button" data-hand="${i}" data-card="${c}">${img(c)}</button></div>`;
+      return `<div class="hc ${nativeClass}${req&&(req.kind==='event'&&req.options.some(o=>o.value===ref?.id)||req.context.entrySkillIds?.includes(ref?.id))?' skill-ready':''}">${nativeSelection?.center===ref?.id?'<span class="newb ctr">中攔</span>':''}<button class="cbtn" type="button" data-hand="${i}" data-card="${c}">${img(c)}</button></div>`;
     }).join('')}</div>`;
   }
   function netHTML() {
@@ -812,7 +815,7 @@ p.imp-bad { padding-left: 0; }
       $('dockQ').textContent = game.winner.idx === 0 ? '你贏了！' : 'AI 贏了';
       $('dockOpts').innerHTML = '<button class="opt primary" type="button" data-act="again">再打一場</button><button class="opt" type="button" data-act="setup">換牌組</button><button class="opt" type="button" data-act="log">看紀錄</button>';
     } else if (pending) {
-      dock.classList.remove('wait');$('dockQ').textContent=flashMsg||pending.req.context.reason||'';renderNativeChoice(pending.req,savedSelection);
+      dock.classList.remove('wait');$('dockQ').innerHTML=(skillResults.length?'<div class="skill-results" role="status">'+skillResults.map(e=>'<div>✦ '+esc(publicLogText(e))+'</div>').join('')+'</div>':'')+esc(flashMsg||pending.req.context.reason||'');renderNativeChoice(pending.req,savedSelection);
       $('dockOpts').querySelector('.hc-content').scrollTop=savedScrollTop;
     } else {
       dock.classList.add('wait');
@@ -903,6 +906,7 @@ p.imp-bad { padding-left: 0; }
 
   function publicLogText(e) {
     const who=e.player===0?'你':'AI';
+    if(e.type==='skill_resolved'){const params={receive:'接球',toss:'舉球',attack:'攻擊',serve:'發球',block:'攔網'},parts=[...(e.draws||[]).map(d=>(d.player===e.player?'':d.player===0?'你':'AI')+'抽 '+d.count+' 張'),...(e.numeric||[]).map(n=>(params[n.parameter]||'數值')+(n.operation==='set'?'設為 '+n.value:(n.value>=0?' +':' ')+n.value))];return `${who}・${nm(e.cardNo.replace(/^HV-?/,''))} 技能已結算${parts.length?'：'+parts.join('、'):''}`;}
     if(e.type==='draw')return `${who}抽${e.count}張`;
     if(e.type==='deck_view')return `${who}公開：${e.cards.map(c=>nm(c.cardNo.replace(/^HV-?/,''))).join('、')||'牌庫為空'}`;
     if(e.type==='reveal_condition')return e.matched?'翻牌條件成立':'翻牌條件不成立，依卡片效果回牌庫';
@@ -920,13 +924,14 @@ p.imp-bad { padding-left: 0; }
     session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableSequence),seed:Date.now()>>>0,decks:[expand(my),expand(ai)],deckKeys:[my,ai],mode:modeOptions().mode,delay:speed,wantsAck:[true,false]}, {
       onBoard(board,view) {
         game=board;pending=null;turnNotice=null;
+        skillResults=view.publicLog.filter(e=>e.type==='skill_resolved'&&e.turn===view.turn.id).slice(-2);
         logBuf=view.publicLog.map(e=>[publicLogText(e), '']);render();
       },
       onRequest(req) {pending={req};setDockCollapsed(false);render();},
       onNotice(board,data,resolve) {turnNotice={data,resolve,game:board};render();},
       onError(err) {pending=null;turnNotice=null;logBuf.push(['發生錯誤：'+err.message,'lost']);render();$('runtimeStatus').hidden=false;$('runtimeStatus').textContent='❌ '+err.message;console.error(err);}
     });
-    prevTop={};prevVal={};prevBall=null;flashMsg='';clearTimeout(flashT);
+    prevTop={};prevVal={};prevBall=null;skillResults=[];flashMsg='';clearTimeout(flashT);
     if(drag?.el)drag.el.remove();if(drag?.over)drag.over.classList.remove('over');drag=null;suppressClick=false;document.body.classList.remove('dragging');
     $('setup').hidden = true; $('game').hidden = false; $('tbtns').hidden = false;
     session.start();

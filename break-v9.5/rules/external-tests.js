@@ -33,7 +33,7 @@ function testExternalCard(catalog,card){
   invoke(f);const after=k.snapshot(),decisions=after.decisions.slice(before.decisions.length),rng=k.state.rng.calls-before.rng.calls;
   if(code==='P02-048'){
    assert.equal(rng,mode==='decline'?0:1);assert.equal(k.parameter(id,'block'),k.card(id).printed.parameters.block+(mode==='positive'?4:0));assert.equal(k.zone(0,'drop').length,['tails','short'].includes(mode)?Math.min(3,before.zones['0.deck'].length):0);
-   if(mode!=='decline')assert.equal(after.publicLog.at(-1).result,mode==='positive'?'heads':'tails');
+   if(mode!=='decline')assert.equal(after.publicLog.filter(e=>e.type==='coin_result').at(-1).result,mode==='positive'?'heads':'tails');
   }
   if(code==='PR-037'){const yes=mode==='positive';assert.equal(k.zone(0,'drop').length,yes?1:0);assert.equal(k.parameter(id,'attack'),k.card(id).printed.parameters.attack+(yes?3:0));assert.equal(decisions.some(d=>d.request.kind==='external_action'),yes);}
   if(code==='PR-050'){

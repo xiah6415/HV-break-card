@@ -41,6 +41,11 @@ const CSS = `
 .hc-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line,#c3d3d2);border-radius:999px;padding:3px 4px 3px 10px;font-size:12.5px;background:var(--sunk,#d9e4e3)}
 .hc-chip.ctr{border-color:var(--teal,#0e7175)}
 .hc-chip button{border:0;background:var(--surface,#fff);color:inherit;border-radius:999px;padding:3px 9px;font:inherit;font-size:11.5px;cursor:pointer;min-height:28px}
+.hc-timing{font-size:13px;font-weight:700;color:var(--ev,#8a5900)}
+.hc-timing.ready{color:#936000}
+.hc-ready img{outline:3px solid #e4ac20;outline-offset:1px;box-shadow:0 0 12px #e4ac2080}
+@keyframes hc-pulse{50%{box-shadow:0 0 20px #e4ac20bb}}
+@media (prefers-reduced-motion:no-preference){.hc-ready img{animation:hc-pulse 1.6s ease-in-out infinite}}
 @media (prefers-reduced-motion:no-preference){.hc-card img{transition:box-shadow .12s}}`;
 function ensureCss(doc) {
   if (doc.getElementById('hc-style')) return;
@@ -93,10 +98,20 @@ function requestDetail(request){
  return '';
 }
 
+function timingHint(request){
+ const c=request.context||{};
+ if(['receiver','setter','attacker','serve'].includes(request.kind)&&c.entrySkillIds?.length)return {label:'登場技能可觸發',active:true,candidates:true,ids:c.entrySkillIds};
+ if(request.kind==='event'&&request.options.some(o=>o.card))return {label:'卡片／技能可使用',active:true,candidates:true};
+ if(request.kind==='activate_payment'&&request.options.some(o=>o.value===true))return c.ineffectiveReason?{label:'效果可能無效，請確認費用',active:false}:{label:'技能可發動',active:true};
+ if(request.kind==='optional'&&request.options.some(o=>o.value===true))return {label:'可選效果',active:true};
+ if(request.kind==='trigger_order')return {label:'觸發效果待結算',active:true,candidates:true};
+ return null;
+}
 function render(rootEl, request, opts = {}) {
   const doc = rootEl.ownerDocument; ensureCss(doc);
   const chk = H.checkRequest(request);
   if (!chk.ok) { rootEl.innerHTML = `<div class="hc"><p class="hc-err" role="alert">無法顯示這個選擇：${esc(chk.error)}</p></div>`; return { destroy() { rootEl.innerHTML = ''; } }; }
+  const timing=timingHint(request);
   const t = request.input.type, imgSrc = opts.imgSrc || (() => ''), cardImg = c => `<img src="${esc(imgSrc(c.cardNo))}" alt="${esc(c.name || c.cardNo)}" loading="lazy" draggable="false">`;
   let sel = H.restoreSelection(request, opts.selection), lossArm = false, done = false;
   const byKey = new Map(request.options.map(o => [key(o.value), o]));
@@ -115,7 +130,7 @@ function render(rootEl, request, opts = {}) {
         const c = o.card || { cardNo: '', name: o.label };
         const parts=String(c.zone||'').split('.'),zone=parts.length===2?parts[1]:parts[0],labels={hand:'手牌',deck:'牌庫',drop:'棄牌',event:'Event',serve:'發球',block:'中攔',receive:'接球',toss:'舉球',attack:'攻擊','side:0':'側攔','side:1':'側攔'};
         const location=labels[zone]?(parts.length===2?(+parts[0]===request.actor?'我方 ':'對方 '):'')+labels[zone]:'';
-        return `<div class="hc-item"><button type="button" class="hc-card${on ? ' on' : ''}" aria-pressed="${on}" data-hc-v="${esc(key(o.value))}">${c.cardNo ? cardImg(c) : ''}<span class="hc-nm">${esc(o.label)}</span>${location?`<small class="hc-zone">${esc(location)}</small>`:''}${badge}</button>${o.card&&opts.onCard?`<button type="button" class="hc-info" data-hc-info="${esc(o.id)}" aria-label="查看 ${esc(o.label)} 卡片">查卡</button>`:''}</div>`;
+        return `<div class="hc-item"><button type="button" class="hc-card${timing?.active&&timing.candidates&&o.card&&(!timing.ids||timing.ids.includes(o.value))?' hc-ready':''}${on ? ' on' : ''}" aria-pressed="${on}" data-hc-v="${esc(key(o.value))}">${c.cardNo ? cardImg(c) : ''}<span class="hc-nm">${esc(o.label)}</span>${location?`<small class="hc-zone">${esc(location)}</small>`:''}${badge}</button>${o.card&&opts.onCard?`<button type="button" class="hc-info" data-hc-info="${esc(o.id)}" aria-label="查看 ${esc(o.label)} 卡片">查卡</button>`:''}</div>`;
       }).join('')}</div>`;
     }
     return `<div class="hc-opts" role="group">${request.options.map(o => `<button type="button" class="hc-opt${t === 'number' ? ' num' : ''}${sel.value !== undefined && key(sel.value) === key(o.value) ? ' on' : ''}" aria-pressed="${sel.value !== undefined && key(sel.value) === key(o.value)}" data-hc-v="${esc(key(o.value))}">${esc(optionLabel(request,o))}</button>`).join('')}</div>`;
@@ -136,13 +151,13 @@ function render(rootEl, request, opts = {}) {
   function draw() {
     const scrollTop=rootEl.querySelector('.hc-content')?.scrollTop||0;
     const ok = t === 'ack' || H.canSubmit(request, sel), prog = H.progress(request, sel);
-    const src = request.source ? `<button type="button" class="hc-card hc-src" data-hc-src="1" aria-label="查看 ${esc(request.source.name || request.source.cardNo)}">${cardImg(request.source)}</button>` : '';
+    const src = request.source ? `<button type="button" class="hc-card hc-src${timing?.active?' hc-ready':''}" data-hc-src="1" aria-label="查看 ${esc(request.source.name || request.source.cardNo)}">${cardImg(request.source)}</button>` : '';
     const loss = request.canLoss && opts.onLoss ? (lossArm
       ? `<button type="button" class="hc-loss" data-hc-act="lossyes">確定 Loss</button><button type="button" class="hc-quiet" data-hc-act="lossno">不要</button>`
       : `<button type="button" class="hc-loss" data-hc-act="loss">喊 Loss</button>`) : '';
     rootEl.innerHTML = `<div class="hc" data-kind="${esc(request.kind)}" data-input="${t}">
       <div class="hc-content"><div class="hc-head">${src}<div class="hc-q">${esc(requestPrompt(request))}${prog ? `<small class="hc-prog">${esc(prog)}</small>` : ''}</div></div>
-      ${ctx()}${body()}${chips()}
+      ${timing?`<div class="hc-timing${timing.active?' ready':''}" role="status">✦ ${esc(timing.label)}</div>`:''}${ctx()}${body()}${chips()}
       <div class="hc-err" role="alert">${esc(sel.error || '')}</div></div>
       <div class="hc-bar"><button type="button" class="hc-go" data-hc-act="go" ${ok ? '' : 'disabled'}>${esc(opts.goLabel || GO_LABEL[t])}</button>${(t === 'cards' || t === 'block') && sel.picked.length ? '<button type="button" class="hc-quiet" data-hc-act="clear">清除</button>' : ''}${loss}</div></div>`;
     rootEl.querySelector('.hc-content').scrollTop=scrollTop;
@@ -173,6 +188,6 @@ function render(rootEl, request, opts = {}) {
   draw();
   return { destroy() { rootEl.removeEventListener('click', onClick); rootEl.innerHTML = ''; }, select: choose, get selection() { return sel; } };
 }
-const api = { render, CSS, describePayment, requestDetail, requestPrompt, optionLabel };
+const api = { render, CSS, describePayment, requestDetail, requestPrompt, optionLabel, timingHint };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.BreakChoiceUI = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

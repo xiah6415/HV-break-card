@@ -942,7 +942,7 @@ class Kernel {
         const ctx=this._context(job.source?.id,job.controller,job.event);ctx.source=job.source;
         if(!job.generated && !this._skillAllowed(ctx,this.profiles[job.profileId]))continue;
         this.state.events.push({type:'resolve_trigger',id:job.id,controller:job.controller,generated:job.generated});
-        if(job.generated){this.depth++;try{this._run(job.program,ctx);}finally{this.depth--;}}
+        if(job.generated){this.depth++;try{this._withSkillLog(ctx,()=>this._run(job.program,ctx));}finally{this.depth--;}}
         else this._resolveSkill(this.profiles[job.profileId],ctx);
       }
     }finally{this.draining=false;}
@@ -968,10 +968,20 @@ class Kernel {
     finally {ctx.inPayment=previous;}
     ctx.bind.paid=[...ctx.paid];return ctx.paid.length>0;
   }
+  _withSkillLog(ctx,run,declared=false) {
+    const source=ctx.source&&this.state.cards[ctx.source.id],visible=source&&(declared||!['hand','deck','sets'].includes(source.zone.split('.')[1]));
+    const logStart=this.state.publicLog.length,effectStart=this.state.effects.length,result=run();
+    if(result&&visible){
+      const draws=this.state.publicLog.slice(logStart).filter(e=>e.type==='draw').map(e=>({player:e.player,count:e.count}));
+      const numeric=this.state.effects.slice(effectStart).filter(e=>e.kind==='numeric'&&e.source?.id===ctx.source.id).map(e=>({parameter:e.parameter,operation:e.operation,value:e.value}));
+      this.state.publicLog.push({type:'skill_resolved',player:ctx.controller,turn:this.state.turn.id,source:ctx.source.id,cardNo:source.cardNo,draws,numeric});
+    }
+    return result;
+  }
   _resolveSkill(p,ctx) {
     const name=this.effectiveName(ctx.source.id);
     if(p.formal_cost)this._run(p.formal_cost,ctx);
-    this.depth++;let performed;try{performed=this._run(p.program,ctx);}finally{this.depth--;}
+    this.depth++;let performed;try{performed=this._withSkillLog(ctx,()=>this._run(p.program,ctx),!!p.activation.reveal_source_on_declaration);}finally{this.depth--;}
     if(performed&&p.limit)this.state.locks.push({player:ctx.controller,name,turn:this.state.turn.id});
     return performed;
   }
