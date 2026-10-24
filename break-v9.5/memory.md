@@ -1424,3 +1424,8 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 強度：easy 對 normal 38%（60 局）；hard 對 normal 53.7%（80 局，差距在誤差內）；對基礎 AI 三級皆全勝（小樣本）
 - 速度（Node）：normal 平均 35ms；hard 平均 94ms、單步最長 0.8 秒、連續最長約 7 秒（含 200ms 出牌延遲）
 - 測試：match-ai.test.js 加三級合法／終局／easy 不攔網；全套回歸 0 失敗、fuzz 通過；瀏覽器選困難實打 4 球無錯誤
+
+## 同房再戰連線交接（接續本批計畫）
+- 結果：新增meta.p0Name／p1Name，本人填入、回房保留原名；send({kind:'rematch',matchId:payload.view.match.id})確認本局，meta.rematch[uid]回報已確認局ID。雙方確認才用新ID與不同種子同房開局，沿用座位／牌組，AI自動同意；保留指令去重紀錄，AI指令ID加局別；快照保存後斷線可接手恢復同一新局，舊命令／同意不影響新局。
+- 測試／分工：168套回歸0失敗、68項權限規則、fuzz3000／6×300、單人三尺寸各3局與三級難度保存／接線通過；雙人／AI再戰、重複及同時確認、同意後及快照後斷線、刷新保留暱稱、舊局拒絕均通過；正式Firebase雙匿名10指令／同房再戰／私密拒讀通過且測試資料清除。claude/ai-tune 93ffc87合併為32ac083，online.html／online.js與ui多人連結未改，按鈕交Claude。
+- 部署：594c07c已推送、Pages built／無錯誤，12檔HTTP200與SHA256一致；RTDB新規則已部署。公開頁雙匿名10指令、同房雙方確認、新ID／種子、舊同意拒絕、暱稱及私密拒讀通過，測試房／帳號已清除；https://xiah6415.github.io/HV-break-card/break-v9.5/online.html?v=594c07c 。Claude可依上述send／meta接線，既有callback格式不變，介面分支完成後再審查合併部署；541可組牌／358技能不變。

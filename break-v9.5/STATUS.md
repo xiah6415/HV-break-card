@@ -91,4 +91,8 @@
 | 多人權威／私密資料 | 房主RoomAuthority持有Match；玩家僅讀自己的view／寫自己的不可覆寫指令；快照與完整紀錄僅當前權威端可讀；斷線接手以term＋連線識別排除舊權威 |
 | 多人驗證 | Firebase規則47項通過；雙瀏覽器整局、雙房隔離、斷線接手／刷新重連／RNG保留、AI整局、三尺寸無溢出；正式公開頁雙匿名12指令／私密拒讀／斷線接手／舊權威排除通過；168套回歸／fuzz3000／6×300通過 |
 | Firebase部署／下一階段 | haikyuu-playmat，asia-southeast1，RTDB安全規則已部署；Auth匿名／Google與Pages授權網域已確認；觀戰／戰績／雲端牌組第二階段，雙方同意Undo最後；不使用Functions |
-| 多人公開版本 | 5638bf2；https://xiah6415.github.io/HV-break-card/break-v9.5/online.html?v=5638bf2 ；Pages built／12檔HTTP200及SHA256一致 |
+| 多人公開版本 | 594c07c；https://xiah6415.github.io/HV-break-card/break-v9.5/online.html?v=594c07c ；Pages built／12檔HTTP200及SHA256一致；連線層再戰可用，按鈕等待Claude介面 |
+| 同房再戰連線契約 | send({kind:rematch,matchId:payload.view.match.id})；meta.rematch[uid]為確認的局ID；雙方確認才開新局，AI自動同意；保留房號／牌組／座位，換ID與種子；按鈕由Claude接線 |
+| 雙方暱稱／多人介面分工 | meta.p0Name／p1Name；回房保留原名、僅本人修改；Claude負責online.html／online.js與多人牌桌，Codex本批僅連線／規則，介面等待claude/online-ui |
+| 同房再戰驗證 | 規則68項、單方／重複／同時確認、舊局拒絕、雙人及AI再戰、快照後斷線與接手／刷新均通過；正式Firebase雙匿名再戰及私密拒讀通過 |
+| 單人AI難度 | 已合併claude/ai-tune 93ffc87：簡單／普通／困難並保存選擇；多人AI暫維持普通；困難增加預演與耗時，沒有顯著勝率提升保證 |
