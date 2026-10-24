@@ -1582,7 +1582,7 @@ const identity=cards=>JSON.stringify(Object.values(cards||{}).map(c=>[c.id,c.own
 const full=c=>library.card(c).number;
 const short=c=>c.replace(/^HV-?/,'');
 const prompts={firstService:'擲骰勝者：選擇先發或先接',roll:'確認首球發球方，開始調度',mulligan:'選擇要放回重抽的手牌',serve:'選擇發球角色',defend:'選擇接球或攔網',block:'選擇攔網角色與中攔',ack:'抽牌階段：確認抽1張',receiver:'選擇接球角色',setter:'選擇舉球角色',attacker:'選擇攻擊角色',event:'選擇要使用的卡片，或繼續',turnEnd:'確認結束回合；交棒前仍可喊Loss',lossConfirm:'本球無法繼續，請確認喊Loss',target:'選擇效果對象',activate_payment:'是否支付費用發動效果？',payment_cards:'選擇用來支付費用的牌',move_cards:'選擇要移動的牌',guts:'選擇要支付的Guts',parameter:'選擇要調整的數值'};
-const CORE_VERSION='break.match.local.2';
+const CORE_VERSION='break.match.local.3';
 const signature=r=>JSON.stringify({actor:r.actor,origin:r.origin,kind:r.kind,input:r.input,options:r.options,context:r.context,source:r.source,canLoss:r.canLoss,canManual:r.canManual});
 class Boundary extends Error {constructor(request,state){super('Decision boundary');this.request=request;this.state=state;}}
 class Match {
@@ -1609,9 +1609,9 @@ class Match {
  _code(id){return short(this._kernel.card(id).cardNo);}
  _cards(p,role){const k=this._kernel;return this._zone(p,'hand').filter(id=>k.card(id).printed.type==='character'&&k.card(id).printed.parameters[role]!=='dash'&&this._canEnter(p,id,role));}
  _canEnter(p,id,role){const k=this._kernel,c=k.card(id),other=role==='toss'?k.top(p,'receive'):role==='attack'?k.top(p,'toss'):null;return k.entryNames(id).some(name=>(!other||k.effectiveName(other)!==name)&&k.permission({action:'enter_character',player:p,origin:'rule',role:role==='block'?'center_blocker':role,entryOrigin:'hand',entryCount:role==='block'?(k.state.turn.blockEntries?.[p]||0)+1:1,entryCounts:k._entryCounts(p,'hand'),name,printed:c.printed}).allowed);}
- _options(values){return values.map((value,i)=>{const c=typeof value==='string'?this._kernel.state.cards[value]:null,labels={serve:'發球',receive:'接球',block:'攔網',toss:'舉球',attack:'攻擊',true:'確認／發動',false:'不發動',null:'不使用，繼續'};return {id:c?value:'option-'+i,value,label:c?c.printed.display_name||c.printed.name:labels[String(value)]||String(value),...(c?{card:{id:value,incarnation:c.incarnation,cardNo:c.cardNo,name:c.printed.display_name||c.printed.name,effectiveName:this._kernel.effectiveName(value),entryNames:this._kernel.entryNames(value),zone:c.zone}}:{})};});}
+ _options(values){return values.map((value,i)=>{const c=typeof value==='string'?this._kernel.state.cards[value]:null,labels={serve:'發球',receive:'接球',block:'攔網',toss:'舉球',attack:'攻擊',true:'確認／發動',false:'不發動',null:'不使用，繼續',deck_top:'放回牌庫頂',deck_bottom:'放回牌庫底'};return {id:c?value:'option-'+i,value,label:c?c.printed.display_name||c.printed.name:labels[String(value)]||String(value),...(c?{card:{id:value,incarnation:c.incarnation,cardNo:c.cardNo,name:c.printed.display_name||c.printed.name,effectiveName:this._kernel.effectiveName(value),entryNames:this._kernel.entryNames(value),zone:c.zone}}:{})};});}
  _ask(kind,actor,input,values,context={},origin='game',source=null){
-  const r={protocol:'break.host.v1',matchId:this._m.id,requestId:this._m.id+':'+this.epoch+':'+this._m.decisionIndex,epoch:this.epoch,revision:this._kernel.state.revision,decisionIndex:this._m.decisionIndex,actor,origin,kind,prompt:context.prompt||prompts[kind]||'請選擇合法選項',input,options:this._options(values).map(o=>context.modeLabels?{...o,label:context.modeLabels[o.value]}:o),context,source,timing:this._kernel.state.turn.phase,canLoss:this._m.phase==='rally'&&this._kernel.state.stage==='rally'&&actor===this._kernel.state.turn.player&&!['roll','mulligan','lossConfirm'].includes(kind),canManual:false};
+  const r={protocol:'break.host.v1',matchId:this._m.id,requestId:this._m.id+':'+this.epoch+':'+this._m.decisionIndex,epoch:this.epoch,revision:this._kernel.state.revision,decisionIndex:this._m.decisionIndex,actor,origin,kind,prompt:context.prompt||prompts[kind]||'請選擇合法選項',input,options:this._options(values).map(o=>({...o,...(context.modeLabels?{label:context.modeLabels[o.value]||o.label}:{}),...(context.optionCards?.[o.value]?{card:context.optionCards[o.value]}:{})})),context,source,timing:this._kernel.state.turn.phase,canLoss:this._m.phase==='rally'&&this._kernel.state.stage==='rally'&&actor===this._kernel.state.turn.player&&!['roll','mulligan','lossConfirm'].includes(kind),canManual:false};
   r.canManual=this._m.mode==='numeric'&&origin==='game'&&r.canLoss&&this._m.pc!=='manualApply';
   const sig=signature(r);
   if(this._cursor<this._answers.length){const a=this._answers[this._cursor++];if(a.signature!==sig)throw Error('Replay decision diverged: '+kind);return copy(a.value);}
@@ -1619,12 +1619,37 @@ class Match {
   // snapshot; the immutable step baseline + answer tape resumes it atomically.
   throw new Boundary(r,copy(this._kernel.state));
  }
+ _eventChoicePossible(answer){
+  const probe=new Kernel({catalog:runtime.catalog,ruleIds:runtime.ruleIds,fingerprint:runtime.fingerprint,mode:'live',practiceDrawBeforeReceive:true}),base=this._eventPreview.base,id=this._eventPreview.id,prefix=[...this._eventPreview.answers,copy(answer)],budget={left:256};
+  class NeedChoice extends Error{constructor(request){super('Preview boundary');this.request=request;}}
+  function* choices(r){
+   if(r.count!=null){const pick=[];function* walk(start){if(pick.length===r.count){yield [...pick];return;}for(let i=start;i<=r.options.length-(r.count-pick.length);i++){pick.push(r.options[i]);yield* walk(i+1);pick.pop();}}yield* walk(0);return;}
+   yield* [...r.options].reverse();
+  }
+  function possible(answers){
+   if(--budget.left<0)throw Error('Event choice preflight limit');probe.restore(base);let cursor=0;
+   probe.choose=r=>{if(cursor<answers.length)return copy(answers[cursor++]);throw new NeedChoice(r);};
+   try{probe.playEvent(id);return true;}catch(e){if(e instanceof NeedChoice){for(const value of choices(e.request))if(possible([...answers,value]))return true;return false;}if(e.code==='ILLEGAL_ACTION'||e.code==='REQUIRES_REVIEW'&&e.message==='OPEN-EVENT-NO-CHANGE')return false;throw e;}
+  }
+  return possible(prefix);
+ }
  _native(req){
   const cards=['target','payment_cards','move_cards','guts','entry','revealResult'].includes(req.kind);
   const numbers=['target_count','payment_count','move_count','draw_count','mill_count','entry_count'].includes(req.kind);
-  const input=['external_action','external_result'].includes(req.kind)?{type:'ack'}:cards?{type:'cards',min:req.count,max:req.count,ordered:false}:numbers?{type:'number'}:{type:'single'};
-  const prompt=['external_action','external_result'].includes(req.kind)?req.actionLabel+(req.kind==='external_action'?'；完成後確認':'；確認結果後結算效果'):req.kind==='reveal'?`點擊查看牌庫頂 ${req.top_count} 張`:req.kind==='revealResult'?req.purpose==='effect'?'公開的牌：確認後依卡片條件結算，再放回牌庫底':req.purpose==='retrieve'?'公開牌：確認後符合條件者加入手牌，未符合則放回牌庫底':req.eligible_count?'確認查看的卡片，再選擇加入手牌':'沒有符合的牌；確認後安排放回牌庫':req.ordering?'安排其餘牌的順序（先選的先抽到）':req.kind==='mode'?req.effectModes?'選擇1項效果':req.keywordOutgoing?'選擇回球進攻值':'其餘牌放回牌庫頂或底？':null;
-  return this._ask(req.kind,req.player,input,req.options,{...(prompt?{prompt}:{}),...(req.selectionAction==='exchange'?{selectionAction:req.selectionAction,prompt:req.kind==='move_count'?'是否交換兩側各1張？':'選擇交換的卡片'}:{}),...(req.effectDescription?{effectDescription:req.effectDescription,prompt:'是否執行：'+req.effectDescription+'？'}:{}),...(req.effectModes?{effectModes:true,modeLabels:req.modeLabels}:{}),...(req.count!=null?{count:req.count}:{}),...(req.destination?{destination:req.destination}:{}),...(req.target?{target:req.target}:{}),...(req.payment?{payment:req.payment}:{}),...(req.ineffectiveReason?{ineffectiveReason:req.ineffectiveReason,prompt:req.ineffectiveReason+' 是否仍支付費用？'}:{})},'kernel',req.source?{id:req.source,incarnation:this._kernel.card(req.source).incarnation,cardNo:this._kernel.card(req.source).cardNo}:null);
+  const input=['external_action','external_result'].includes(req.kind)?{type:'ack'}:cards?{type:'cards',min:req.count,max:req.count,ordered:!!req.ordering}:numbers?{type:'number'}:{type:'single'};
+  const options=this._eventPreview?req.options.filter(value=>(value!==0&&value!==false)||this._eventChoicePossible(value)):req.options;
+  const destinations={deck_top:'牌庫頂',deck_bottom:'牌庫底',hand:'手牌',drop:'棄牌區',event:'Event區'};
+  const destination=String(req.destination||'').split('.').at(-1),placement=destinations[destination]||'指定位置';
+  const triggerLabels={},triggerCards={};
+  if(req.kind==='trigger_order')for(const value of req.options){
+   const job=this._kernel.state.queue.find(q=>q.id===value),card=job?.source?.id?this._kernel.state.cards[job.source.id]:null;
+   const type=job?.covered?'被覆蓋時效果':job?.generated?'已觸發效果':'登場時效果';
+   triggerLabels[value]=(card?card.printed.display_name||card.printed.name:'效果')+' · '+type+(card?'（'+short(card.cardNo)+'）':'');
+   if(card)triggerCards[value]={id:card.id,incarnation:card.incarnation,cardNo:card.cardNo,name:card.printed.display_name||card.printed.name,zone:card.zone};
+  }
+  const prompt=['external_action','external_result'].includes(req.kind)?req.actionLabel+(req.kind==='external_action'?'；完成後確認':'；確認結果後結算效果'):req.kind==='reveal'?`點擊查看牌庫頂 ${req.top_count} 張`:req.kind==='revealResult'?req.purpose==='effect'?'公開的牌：確認後依卡片條件結算，再放回牌庫底':req.purpose==='retrieve'?'公開牌：確認後符合條件者加入手牌，未符合則放回牌庫底':req.eligible_count?'確認查看的卡片，再選擇加入手牌':'沒有符合的牌；確認後安排放回牌庫':req.kind==='trigger_order'?'選擇下一個先結算的效果；其餘效果仍會依序處理':req.ordering?`安排放回${placement}的順序（先選的先抽到）`:req.kind==='mode'?req.effectModes?'選擇1項效果':req.keywordOutgoing?'選擇回球進攻值':'其餘牌放回牌庫頂或底？':null;
+  const answer=this._ask(req.kind,req.player,input,options,{...(prompt?{prompt}:{}),...(req.kind==='trigger_order'?{modeLabels:triggerLabels,optionCards:triggerCards}:{}),...(req.ordering?{ordering:true}:{}),...(req.selectionAction==='exchange'?{selectionAction:req.selectionAction,prompt:req.kind==='move_count'?'是否交換兩側各1張？':'選擇交換的卡片'}:{}),...(req.effectDescription?{effectDescription:req.effectDescription,prompt:'是否執行：'+req.effectDescription+'？'}:{}),...(req.effectModes?{effectModes:true,modeLabels:req.modeLabels}:{}),...(req.count!=null?{count:req.count}:{}),...(req.destination?{destination:req.destination}:{}),...(req.target?{target:req.target}:{}),...(req.payment?{payment:req.payment}:{}),...(req.ineffectiveReason?{ineffectiveReason:req.ineffectiveReason,prompt:req.ineffectiveReason+' 是否仍支付費用？'}:{})},'kernel',req.source?{id:req.source,incarnation:this._kernel.card(req.source).incarnation,cardNo:this._kernel.card(req.source).cardNo}:null);
+  if(this._eventPreview)this._eventPreview.answers.push(copy(answer));return answer;
  }
  _pump(){
   for(let loops=0;loops<2000;loops++){
@@ -1654,7 +1679,7 @@ class Match {
  _param(p,area){const id=this._kernel.top(p,area);return id?this._kernel.parameter(id,area):0;}
  _probe(fn){const saved=this._kernel.snapshot(),choose=this._kernel.choose;this._kernel.choose=r=>r.count!=null?r.options.slice(0,r.count):r.options.includes(true)?true:r.options.length&&r.options.every(Number.isInteger)?Math.max(...r.options):r.options[0];try{return fn();}catch(e){if(e.code==='ILLEGAL_ACTION'||e.code==='REQUIRES_REVIEW'&&e.message==='OPEN-EVENT-NO-CHANGE')return false;throw e;}finally{this._kernel.restore(saved);this._kernel.choose=choose;}}
  _playable(p){const k=this._kernel,phase=k.state.turn.phase;return this._zone(p,'hand').filter(id=>{const pr=k.profile(id),a=pr.activation;if(!pr.runtime_approved||!['event','active'].includes(a?.skill_type))return false;if(a.skill_type==='active'&&pr.limit&&k.state.locks.some(l=>l.player===p&&l.turn===k.state.turn.id&&l.name===k.effectiveName(id)))return false;if(!a.activation_phases.includes(phase)&&!(phase==='receive'&&pr.practice_override?.extra_window==='before_receive_judgment'))return false;const result=this._probe(()=>k.card(id).printed.type==='event'?k.playEvent(id):k.useSkill(id));return !!result&&(result.performed||result.invalid&&k.card(id).printed.type==='event');});}
- _event(next){const p=this._m.actor,opts=this._playable(p);if(!opts.length&&this._m.mode!=='numeric'){this._next(next);return;}const id=this._ask('event',p,{type:'single'},[...opts,null]);if(id===null){this._next(next);return;}if(this._kernel.card(id).printed.type==='event')this._kernel.playEvent(id);else this._kernel.useSkill(id);}
+ _event(next){const p=this._m.actor,opts=this._playable(p);if(!opts.length&&this._m.mode!=='numeric'){this._next(next);return;}const id=this._ask('event',p,{type:'single'},[...opts,null]);if(id===null){this._next(next);return;}if(this._kernel.card(id).printed.type==='event'){this._eventPreview={base:this._kernel.snapshot(),id,answers:[]};try{this._kernel.playEvent(id);}finally{this._eventPreview=null;}}else this._kernel.useSkill(id);}
  _pick(role,kind,next){const p=this._m.actor,ids=this._cards(p,role);if(!ids.length){this._lose('沒有能'+({serve:'發球',receive:'接球',toss:'舉球',attack:'攻擊'}[role])+'的角色');return;}const id=this._ask(kind,p,{type:'single'},ids);this._kernel.enter(id,role);this._m.roleTotals[p][role]=this._param(p,role);this._next(next);}
  _blockMax(p){const k=this._kernel;return [3,2,1].find(n=>k.permission({action:'enter_character',player:p,origin:'rule',role:'center_blocker',entryOrigin:'hand',entryCount:(k.state.turn.blockEntries?.[p]||0)+n,entryCounts:k._entryCounts(p,'hand',n),name:'',printed:{position_tags:[],parameters:{receive:'dash'}}}).allowed)||0;}
  _blockLegal(p,answer){const k=this._kernel,ids=answer?.cards;if(!Array.isArray(ids)||!ids.length||ids.length>this._blockMax(p)||new Set(ids).size!==ids.length||!ids.includes(answer.center)||!ids.every(id=>this._cards(p,'block').includes(id)))return false;return distinctNameOptions(ids.map(id=>k.entryNames(id))).length>0;}
@@ -2329,6 +2354,7 @@ const CSS = `
 .hc-card{position:relative;border:0;padding:0;background:none;cursor:pointer;display:grid;gap:3px;min-width:0;text-align:center;color:inherit;font:inherit;border-radius:7px}
 .hc-card img,.hc-src img,.hc-rev img{display:block;width:100%;aspect-ratio:300/419;object-fit:cover;border-radius:6px;background:var(--sunk,#d9e4e3)}
 .hc-card span.hc-nm{font-size:11px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hc[data-kind="trigger_order"] .hc-nm{white-space:normal;overflow:visible;overflow-wrap:anywhere}
 .hc-zone{font-size:10px;color:var(--muted,#566b6e)}
 .hc-card.on img{box-shadow:0 0 0 3px var(--court,#d96a1f)}
 .hc-card[aria-pressed="false"] img{opacity:.92}

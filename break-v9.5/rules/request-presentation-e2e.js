@@ -1,0 +1,10 @@
+'use strict';
+const assert=require('node:assert/strict'),path=require('node:path'),{pathToFileURL}=require('node:url'),{chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),{fixtures}=require('./request-presentation-match.test');
+(async()=>{const browser=await chromium.launch({executablePath:process.env.PLAYWRIGHT_EXECUTABLE||undefined});try{for(const [width,height]of [[1280,900],[390,844],[320,568]]){
+ const page=await browser.newPage({viewport:{width,height},isMobile:width<500,hasTouch:width<500}),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto(pathToFileURL(path.resolve('choice-demo.html')).href);
+ for(const req of fixtures){await page.evaluate(r=>{window.widget?.destroy();const root=document.createElement('section');root.id='nativeRequests';document.querySelector('main').replaceChildren(root);window.answer=null;window.inspected=null;window.widget=BreakChoiceUI.render(root,r,{imgSrc:no=>'img/'+no.replace(/^HV-?/,'' )+'.webp',onAnswer:a=>window.answer=a,onCard:c=>window.inspected=c.cardNo});},req);
+  const value=req.options[0].value,button=page.locator('#nativeRequests [data-hc-v]').first();await button.click();
+  if(req.kind==='trigger_order'){assert.match(await page.textContent('#nativeRequests'),/被覆蓋|登場/);assert.equal(await page.locator('#nativeRequests .hc-nm').first().evaluate(e=>getComputedStyle(e).whiteSpace),'normal');await page.locator('#nativeRequests .hc-info').first().click();assert.equal(await page.evaluate(()=>window.inspected),req.options[0].card.cardNo);assert.equal(await page.evaluate(()=>window.answer),null);}
+  await page.locator('#nativeRequests [data-hc-act="go"]').click();assert.deepEqual(await page.evaluate(()=>window.answer.value),req.input.type==='cards'?[value]:value);assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+ }assert.deepEqual(errors,[]);console.log('Native request presentation '+width+': '+fixtures.length+' real trigger/remainder requests passed');await page.close();
+}}finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

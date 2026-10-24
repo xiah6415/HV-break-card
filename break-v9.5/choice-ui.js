@@ -19,6 +19,7 @@ const CSS = `
 .hc-card{position:relative;border:0;padding:0;background:none;cursor:pointer;display:grid;gap:3px;min-width:0;text-align:center;color:inherit;font:inherit;border-radius:7px}
 .hc-card img,.hc-src img,.hc-rev img{display:block;width:100%;aspect-ratio:300/419;object-fit:cover;border-radius:6px;background:var(--sunk,#d9e4e3)}
 .hc-card span.hc-nm{font-size:11px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hc[data-kind="trigger_order"] .hc-nm{white-space:normal;overflow:visible;overflow-wrap:anywhere}
 .hc-zone{font-size:10px;color:var(--muted,#566b6e)}
 .hc-card.on img{box-shadow:0 0 0 3px var(--court,#d96a1f)}
 .hc-card[aria-pressed="false"] img{opacity:.92}
