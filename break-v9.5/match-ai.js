@@ -138,26 +138,48 @@ function rollout(m0, me, value, seed, longHorizon) {
   } catch (e) { return -Infinity; }
   return evaluate(m, me, base);
 }
-function choose(m, r) {
+// 難度：easy＝較常隨手選、不攔網；normal＝預設；hard＝角色選擇也模擬（規則首選與次選）、每個選項抽樣 2 次取平均
+const LEVELS = {
+  easy: { slip: 0.35, samples: 1, roles: false, block: false },
+  normal: { slip: 0, samples: 1, roles: false, block: true },
+  hard: { slip: 0, samples: 2, roles: true, block: true },
+};
+const ROLE_KINDS = new Set(['receiver', 'setter', 'attacker', 'serve']);
+function roleCandidates(m, r) {
+  const ids = cardIds(r); if (ids.length < 2) return null;
+  const pick = safeRules(m, r), rest = ids.filter(x => x !== pick);
+  const score = x => { const p = { receiver: 'receive', setter: 'toss', attacker: 'attack', serve: 'serve' }[r.kind]; return int(printed(m, x, p)) - 0.2 * worth(m, x); };
+  return [pick, ...rest.sort((a, b) => score(b) - score(a)).slice(0, 1)];
+}
+function choose(m, r, level = 'normal') {
+  const L = LEVELS[level] || LEVELS.normal;
   if (r.input.type === 'ack') return true;
   if (r.context?.ineffectiveReason && r.options.some(o => o.value === false)) return false;
-  const list = SIMULATE.has(r.kind) ? candidates(r) : null;
+  const seed = (m._m.seed ^ Math.imul(m._m.decisionIndex + 1, 2654435761)) >>> 0;
+  if (r.kind === 'defend' && !L.block && r.options.some(o => o.value === 'receive')) return 'receive';
+  let list = SIMULATE.has(r.kind) ? candidates(r) : null, long = r.kind === 'defend';
+  if (!list && L.roles && ROLE_KINDS.has(r.kind)) { list = roleCandidates(m, r); long = true; }
   if (!list || list.length < 2) return safeRules(m, r);
-  const seed = (m._m.seed ^ Math.imul(m._m.decisionIndex + 1, 2654435761)) >>> 0, long = r.kind === 'defend';
+  list = list.filter(v => legal(r, v)).slice(0, 10); if (!list.length) return safeRules(m, r);
+  if (L.slip && rng(seed ^ 0x9E3779B9)() < L.slip) return list[Math.floor(rng(seed)() * list.length)];
   let bestValue = list[0], bestScore = -Infinity;
-  for (const value of list.slice(0, 10)) {
-    if (!legal(r, value)) continue;
-    const score = rollout(m, r.actor, value, seed, long);
+  for (const value of list) {
+    let score = 0;
+    const n = long ? 1 : L.samples; // 長距模擬成本高，只抽樣一次
+    for (let s = 0; s < n; s++) score += rollout(m, r.actor, value, (seed + Math.imul(s, 0x632BE5AB)) >>> 0, long);
+    score /= n;
     if (score > bestScore + 1e-9) { bestScore = score; bestValue = value; }
   }
   return bestValue;
 }
-function answer(m, r) {
+function answer(m, r, options = {}) {
   let value;
-  try { value = choose(m, r); } catch (e) { value = undefined; }
+  try { value = choose(m, r, options.level); } catch (e) { value = undefined; }
   if (value === undefined || !legal(r, value)) return H.aiAnswer(r);
   return H.makeAnswer(r, value);
 }
-const api = { answer, choose, evaluate, rulesValue, clone, simulation, W };
+// 以暫時權重回答（調參／難度用）：同步執行，結束後還原
+function answerWith(weights, m, r, options) { const saved = { ...W }; Object.assign(W, weights || {}); try { return answer(m, r, options); } finally { Object.assign(W, saved); } }
+const api = { LEVELS, answer, answerWith, rollout, choose, evaluate, rulesValue, clone, simulation, W };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.BreakMatchAI = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
