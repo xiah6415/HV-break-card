@@ -1397,3 +1397,6 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 結果：已合併5b05335（合併提交b636faf），memory衝突保留雙方交接；策略AI已接table-session並加入瀏覽器打包。審查重現遮蔽會被continuation.baseline覆蓋，補上重演基準同步抽樣、已知卡固定與模擬用亂數；兩座位交換真實隱藏牌位置／順序不改AI回答，真實Match不變。保持Claude策略與權重，未知區以剩餘牌池抽樣，並非僅憑公開視圖重建完整信念模型；多人AI應在持有權威Match的一端呼叫同一answer入口。
 - 測試：build／167套回歸0失敗／fuzz3000／6×300通過；Claude AI契約10局全部終局、回答全部合法，51次不改狀態檢查通過（測試樣本10勝，非正式勝率）。新增重演抽樣、雙座位隱藏位置／順序與回答一致、模擬RNG、已公開來源固定、原Match不變通過；策略AI正式三尺寸各3局與赤木／Event／攔網亮框通過；未例行執行非必跑bench。
 - 部署：cfd61be已推送、Pages built／無錯誤；公開index、AI模組、runtime／牌庫規則、table-session、STATUS與三卡圖HTTP200／SHA256一致，確認正式接線使用AI.answer。公開390px完成策略AI對局3局／290步，數值＋嚴格、手動／Undo／Loss／抽牌通過，無舊Game、頁面錯誤或溢出；541可組牌／358技能不變，Safari依使用者手動驗證。https://xiah6415.github.io/HV-break-card/break-v9.5/?v=cfd61be-release 。
+
+## Firebase多人第一階段（2026-10-24）
+- 計畫：合併設定f05947d並審查claude/qa-match驗收工具；以Realtime Database＋匿名／Google Auth實作大廳、連線名單、邀請房號、多房雙人／AI座位與房主權威指令／各玩家私密視圖。安全規則隔離快照／完整指令紀錄僅當前權威端可讀，玩家只讀自己的視圖；onDisconnect與權威接手、快照／指令冪等與重連須實測，再部署規則及Pages。觀戰／戰績／雲端牌組第二階段、多人Undo最後，先不用Functions。
