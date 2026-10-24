@@ -87,3 +87,7 @@
 | 攔網組合技能提示 | 依已選中攔／側攔組合即時核心預演亮框；換中攔／清除同步更新，費用不足／條件不符／技能失效／非法組合不亮，預演不改狀態或RNG |
 | 後續負責分工（使用者指定） | Codex：多人房間／權威狀態同步／手牌隱私／斷線重連，基礎同步穩定後處理多人Undo；Claude：AI決策／腳本預演評分／難度；共用核心變更須先同步 |
 | 策略AI接線 | 已合併Claude 5b05335；AI.answer(match, request)接正式牌桌，合法回答／不改原Match；模擬的隱藏牌抽樣涵蓋重演基準並使用獨立模擬亂數，多人AI沿用同入口於權威端執行 |
+| Firebase多人第一階段 | 已完成：獨立online.html、大廳／onDisconnect上線名單／8碼房號與邀請、多房1對1、匿名＋Google登入、權威端AI座位 |
+| 多人權威／私密資料 | 房主RoomAuthority持有Match；玩家僅讀自己的view／寫自己的不可覆寫指令；快照與完整紀錄僅當前權威端可讀；斷線接手以term＋連線識別排除舊權威 |
+| 多人驗證 | Firebase規則47項通過；雙瀏覽器整局、雙房隔離、斷線接手／刷新重連／RNG保留、AI整局、三尺寸無溢出；正式Firebase雙匿名12指令與私密拒讀通過 |
+| Firebase部署／下一階段 | haikyuu-playmat，asia-southeast1，RTDB安全規則已部署；Auth匿名／Google與Pages授權網域已確認；觀戰／戰績／雲端牌組第二階段，雙方同意Undo最後；不使用Functions |

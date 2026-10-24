@@ -9,6 +9,7 @@ ui = open('ui.html').read(); decktools = open('deck-tools.js').read()
 # Legacy engine stays a Node regression oracle; only static presentation data
 # are imported at build time. The public page contains no old Game or bridge.
 table_data = subprocess.check_output(['node','-e',"const E=require('./engine');process.stdout.write(JSON.stringify({DEF:E.DEF,DECKS:E.DECKS}))"], text=True)
+open('online-decks.json','w').write(json.dumps(json.loads(table_data)['DECKS'], ensure_ascii=False))
 eng = 'window.BreakTableData=' + table_data.replace('<','\\u003c') + ';\n' + open('table-data.js').read()
 assets = json.load(open('library/assets.json'))['images']
 imgs = {code: ('data:image/webp;base64,' + base64.b64encode(open(a['file'], 'rb').read()).decode() if a['origin'] == 'legacy_preserved' else a['file']) for code, a in assets.items()}

@@ -395,7 +395,7 @@ p.imp-bad { padding-left: 0; }
       <label class="field" for="turnPromptStyle">回合／發球提示
         <select id="turnPromptStyle"><option value="auto" selected>顯示 1 秒後繼續</option><option value="manual">點擊後繼續</option></select>
       </label>
-      <button class="btn" id="startBtn" type="button">開始對戰</button>
+      <button class="btn" id="startBtn" type="button">開始對戰</button><a class="btn" href="online.html" style="display:block;text-align:center;text-decoration:none">多人連線</a>
     </div>
   </section>
 
@@ -1873,6 +1873,43 @@ class TableSession {
 module.exports={TableSession,boardView};
 
 },
+"rules/room-authority.js":function(require,module,exports){
+/* Trusted browser authority. Never send this checkpoint to a non-authority seat. */
+'use strict';
+const {Match}=require('./match'),AI=require('../match-ai');
+const copy=x=>JSON.parse(JSON.stringify(x));
+class RoomAuthority{
+ constructor({id,decks,players,seed=1,mode='strict',checkpoint,log={}}){
+  if(!Array.isArray(players)||players.length!==2||players[0]===players[1])throw Error('INVALID_PLAYERS');
+  this.players=[...players];this.log=copy(log);
+  const c=checkpoint||{id,decks,seed,mode};
+  if(checkpoint&&(c.schema!==1||JSON.stringify(c.players)!==JSON.stringify(players)))throw Error('CHECKPOINT_PLAYERS_MISMATCH');
+  this.config={id:c.id,decks:copy(c.decks),seed:c.seed,mode:c.mode};
+  this.match=new Match({...this.config,wantsAck:[true,true]});
+  if(checkpoint){this.match.epoch=c.epoch;this.match.restore(c.snapshot);}
+ }
+ apply(uid,cmdId,command){
+  if(this.log[cmdId])return copy(this.log[cmdId]);
+  const r=this.match.request(0)||this.match.request(1);let ok=false,error=null;
+  try{
+   if(!r||this.players[r.actor]!==uid)throw Error('NOT_YOUR_DECISION');
+   if(!['answer','loss'].includes(command?.kind))throw Error('UNSUPPORTED_REMOTE_COMMAND');
+   if((command.kind==='answer'?command.answer?.actor:command.actor)!==r.actor)throw Error('WRONG_SEAT');
+   this.match.command(command);ok=true;
+  }catch(e){error=String(e.message).slice(0,180);}
+  const receipt={cmdId,uid,ok,error,command:copy(command||null),decisionIndex:this.match._m.decisionIndex};this.log[cmdId]=receipt;return copy(receipt);
+ }
+ aiCommand(){const r=this.match.request(0)||this.match.request(1);return r&&this.players[r.actor]==='AI'?{kind:'answer',answer:AI.answer(this.match,r)}:null;}
+ checkpoint(){return {schema:1,...copy(this.config),players:[...this.players],epoch:this.match.epoch,snapshot:this.match.snapshot()};}
+ views(term,revision){const out={},r=this.match.request(0)||this.match.request(1);for(let actor=0;actor<2;actor++)if(this.players[actor]!=='AI'){
+  const uid=this.players[actor],last=Object.values(this.log).filter(x=>x.uid===uid).at(-1);
+  out[uid]=JSON.stringify({term,revision,actor,pendingActor:r?.actor??null,view:this.match.view(actor),receipt:last?{cmdId:last.cmdId,ok:last.ok,error:last.error}:null});
+ }return out;}
+ bundle(term,revision,writer){return {term,revision,writer,checkpointJSON:JSON.stringify(this.checkpoint()),logJSON:JSON.stringify(this.log),views:this.views(term,revision),updatedAt:Date.now()};}
+}
+module.exports={RoomAuthority};
+
+},
 "host-choice.js":function(require,module,exports){
 /* BREAK 通用玩家選擇（C）：依 rules/HOST-CONTRACT.md（break.host.v1）驗證回答、管理選取狀態、產生 AI 基礎合法決策。
    純函式、不碰 DOM、不改規則狀態；UI（choice-ui.js）與 AI 共用同一套驗證。Claude 2026-10-21。 */
@@ -2314,7 +2351,7 @@ module.exports={"schemaVersion":2,"authority":{"version":2,"cards":{"P01-001":{"
 ;
 }},cache={};
 function load(id){if(cache[id])return cache[id].exports;if(!modules[id])throw Error('Unknown pilot module '+id);const m=cache[id]={exports:{}};modules[id](name=>{const a=id.split('/');a.pop();for(const x of name.split('/')){if(x==='.')continue;if(x==='..')a.pop();else a.push(x);}let key=a.join('/');if(!/\.(js|json)$/.test(key))key+='.js';return load(key);},m,m.exports);return m.exports;}
-root.BreakCardLibrary=load('card-library.js');root.BREAK_LIBRARY=root.BreakCardLibrary.data;root.BreakMatchPilot={...load('rules/match.js'),...load('rules/local-session.js'),...load('rules/table-session.js')};})(globalThis);
+root.BreakCardLibrary=load('card-library.js');root.BREAK_LIBRARY=root.BreakCardLibrary.data;root.BreakMatchPilot={...load('rules/match.js'),...load('rules/local-session.js'),...load('rules/table-session.js'),...load('rules/room-authority.js')};})(globalThis);
 
 /* BREAK 通用玩家選擇（C）：依 rules/HOST-CONTRACT.md（break.host.v1）驗證回答、管理選取狀態、產生 AI 基礎合法決策。
    純函式、不碰 DOM、不改規則狀態；UI（choice-ui.js）與 AI 共用同一套驗證。Claude 2026-10-21。 */

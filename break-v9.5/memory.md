@@ -1398,9 +1398,6 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 測試：build／167套回歸0失敗／fuzz3000／6×300通過；Claude AI契約10局全部終局、回答全部合法，51次不改狀態檢查通過（測試樣本10勝，非正式勝率）。新增重演抽樣、雙座位隱藏位置／順序與回答一致、模擬RNG、已公開來源固定、原Match不變通過；策略AI正式三尺寸各3局與赤木／Event／攔網亮框通過；未例行執行非必跑bench。
 - 部署：cfd61be已推送、Pages built／無錯誤；公開index、AI模組、runtime／牌庫規則、table-session、STATUS與三卡圖HTTP200／SHA256一致，確認正式接線使用AI.answer。公開390px完成策略AI對局3局／290步，數值＋嚴格、手動／Undo／Loss／抽牌通過，無舊Game、頁面錯誤或溢出；541可組牌／358技能不變，Safari依使用者手動驗證。https://xiah6415.github.io/HV-break-card/break-v9.5/?v=cfd61be-release 。
 
-## Firebase多人第一階段（2026-10-24）
-- 計畫：合併設定f05947d並審查claude/qa-match驗收工具；以Realtime Database＋匿名／Google Auth實作大廳、連線名單、邀請房號、多房雙人／AI座位與房主權威指令／各玩家私密視圖。安全規則隔離快照／完整指令紀錄僅當前權威端可讀，玩家只讀自己的視圖；onDisconnect與權威接手、快照／指令冪等與重連須實測，再部署規則及Pages。觀戰／戰績／雲端牌組第二階段、多人Undo最後，先不用Functions。
-
 ## 多人連線：Firebase 設定（2026-10-24，分支 claude/firebase-config）
 - 使用者選定 Firebase：Realtime Database（asia-southeast1，haikyuu-playmat-default-rtdb）＋ Authentication（匿名＋Google）；網站仍在 GitHub Pages
 - 設定檔：firebase-config.js（Web 設定為公開資訊；權限靠資料庫安全規則）。多人實作由 Codex 負責；第一階段大廳／上線名單／邀請、房主權威、各自視圖、斷線接手；第二階段觀戰／戰績／牌組存檔；AI 座位用 AI.answer
@@ -1410,3 +1407,9 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 計畫：新 Match 架構逐卡實戰（358 技能卡各 4 張入牌組，AI／隨機，嚴格＋數值，隨機點 Undo 重播比對）＋手機 320／360 短／390 實機點擊巡檢
 - 工具：rules/claude-card-qa.js（逐卡；攔截 _resolveSkill 計「實際結算」）
 - 結果：2148 局 0 例外／卡死，1981 次 Undo 重播一致；358 張皆確認可實際結算（P04-022／P04-038 需玩家攔網）；發現正式牌桌 AI（aiAnswer）從不攔網；手機無溢出，小螢幕選擇區偏矮、查卡鈕 28px
+
+## Firebase多人第一階段（2026-10-24）
+- 計畫：合併設定f05947d並審查claude/qa-match驗收工具；以Realtime Database＋匿名／Google Auth實作大廳、連線名單、邀請房號、多房雙人／AI座位與房主權威指令／各玩家私密視圖。安全規則隔離快照／完整指令紀錄僅當前權威端可讀，玩家只讀自己的視圖；onDisconnect與權威接手、快照／指令冪等與重連須實測，再部署規則及Pages。觀戰／戰績／雲端牌組第二階段、多人Undo最後，先不用Functions。
+- 結果：合併f05947d與claude/qa-match（0eb98c6，含860b0e2）；新增online.html＋FirebaseRooms＋RoomAuthority，大廳／onDisconnect名單／8碼邀請／多房1對1／匿名與Google登入／權威端策略AI已接通。每次指令原子保存快照、完整紀錄與各自視圖，term＋connection防止舊權威寫入；刷新可重回原座位，接手保留RNG，既有541卡／358技能不變。
+- 測試：build、168套回歸0失敗、單人三尺寸各3局通過；多人雙房隔離、人對人及AI整局、斷線接手／刷新重連／舊房主排除／三尺寸選牌無溢出／分享匯入通過；Firebase模擬器47項權限測試與正式雙匿名12指令／私密拒讀通過，正式測試房與帳號已清除；fuzz3000與6×300長跑仍執行中。
+- 服務：RTDB安全規則已部署haikyuu-playmat（asia-southeast1）；匿名／Google啟用與xiah6415.github.io授權網域已確認，Google真人OAuth與iPhone由使用者實測。快照／完整紀錄限當前權威端；朋友間接受房主端信任，接手者亦持有完整Match；觀戰／戰績／雲端牌組第二階段、雙方同意Undo最後，不用Functions。
