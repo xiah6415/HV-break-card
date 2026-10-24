@@ -2384,6 +2384,29 @@ const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, m => ({ '&': '&a
 const key = v => JSON.stringify(v);
 const GO_LABEL = { ack: '確認', block: '確認攔網', cards: '確認', single: '確認', number: '確認' };
 
+// Presentation only: the core still determines candidates, affordability and effects.
+const zoneNames={hand:'手牌',deck:'牌庫',deck_top:'牌庫頂',deck_bottom:'牌庫底',drop:'棄牌區',event:'Event區',serve:'發球區',block:'攔網區',receive:'接球區',toss:'舉球區',attack:'攻擊區',court:'球場','side:0':'側攔區','side:1':'側攔區'};
+function zoneText(zone){const parts=String(zone||'').split('.');return parts.at(-1)==='guts'?(zoneNames[parts.at(-2)]||'指定區域')+' Guts':zoneNames[parts.at(-1)]||'指定區域';}
+function describePayment(node){
+ if(!node||typeof node!=='object')return '';
+ if(node.kind==='sequence')return (node.steps||[]).map(describePayment).filter(Boolean).join('；再');
+ const count=Number.isInteger(node.count)?String(node.count):'指定數量',quantity=node.count_mode==='upto'?'至多 '+count:count;
+ switch(node.kind){
+  case 'pay_guts':return (node.areas==='source_area'?'從此卡所在區域':node.areas==='court'?'從球場':Array.isArray(node.areas)?'從'+node.areas.map(zoneText).join('、'):'')+'支付 '+(node.count_mode==='one_of_exact'?'可選數量的':quantity+' 張')+' Guts';
+  case 'move_self':return node.destination==='owner.drop'?'將此卡送到棄牌區':'將此卡放到'+zoneText(node.destination);
+  case 'move':return '從'+zoneText(node.pool?.zone)+'選'+(node.count_mode==='all'?'全部':quantity+' 張')+'符合條件的牌，放到'+zoneText(node.destination);
+  case 'mill':return '將牌庫頂'+quantity+' 張送到棄牌區';
+  case 'cover_source_with_guts':return '從'+zoneText(node.pool?.zone)+'選'+quantity+' 張符合條件的牌，覆蓋此卡';
+  case 'external_action':return node.action==='coin'?'擲 1 次硬幣':node.action==='tilt_card'?'傾斜此卡':'完成卡上指定的口號／動作';
+  default:return '支付卡上指定的費用';
+ }
+}
+function requestDetail(request){
+ if(request.kind==='activate_payment')return describePayment(request.context?.payment);
+ if(['move_cards','payment_cards','entry'].includes(request.kind)&&request.context?.destination)return '目的地：'+zoneText(request.context.destination);
+ return '';
+}
+
 function render(rootEl, request, opts = {}) {
   const doc = rootEl.ownerDocument; ensureCss(doc);
   const chk = H.checkRequest(request);
@@ -2417,7 +2440,8 @@ function render(rootEl, request, opts = {}) {
       return `<span class="hc-chip${ctr ? ' ctr' : ''}">${ctr ? '中攔' : '側攔'}・${esc(o.label)}${ctr ? '' : `<button type="button" data-hc-ctr="${esc(key(v))}">設為中攔</button>`}<button type="button" data-hc-rm="${esc(key(v))}" aria-label="移除">✕</button></span>`; }).join('')}</div>`;
   }
   function ctx() {
-    const c = request.context || {}, out = [];
+    const c = request.context || {}, out = [], detail=requestDetail(request);
+    if(detail)out.push(`<span class="hc-detail">${esc(detail)}</span>`);
     if (c.ball) { const kind=c.ball.kind || c.ball.type, value=c.ball.offense ?? c.ball.off; out.push(`來球：${esc({ serve: '發球', attack: '攻擊', block: '攔網回球' }[kind] || kind)} ${esc(value)}`); }
     if (c.revealed) out.push(`<span class="hc-rev">${cardImg(c.revealed)}</span><span>翻開：${esc(c.revealed.name || c.revealed.cardNo)}</span>`);
     if (c.dice) out.push(`擲骰 ${esc(c.dice[0])} : ${esc(c.dice[1])}`);
@@ -2461,7 +2485,7 @@ function render(rootEl, request, opts = {}) {
   draw();
   return { destroy() { rootEl.removeEventListener('click', onClick); rootEl.innerHTML = ''; }, select: choose, get selection() { return sel; } };
 }
-const api = { render, CSS };
+const api = { render, CSS, describePayment, requestDetail };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.BreakChoiceUI = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
 
