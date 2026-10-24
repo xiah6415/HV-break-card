@@ -68,6 +68,34 @@ select { font: inherit; padding: 10px; border-radius: 8px; border: 1px solid var
 .deckstrip figure span { position: absolute; right: 2px; bottom: 2px; background: rgb(0 0 0 / .72); color: #fff; font-size: 10px; border-radius: 4px; padding: 0 4px; font-variant-numeric: tabular-nums; }
 .btn { border: 0; border-radius: 999px; padding: 12px 20px; background: var(--court); color: #fff; font-weight: 700; cursor: pointer; letter-spacing: .04em; }
 .rules { font-size: 13px; color: var(--muted); margin: 0; padding-left: 18px; }
+/* ---------- mode switch + online lobby（Claude 2026-10-25） */
+.modebar { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; margin-top: 14px; background: var(--sunk); border: 1px solid var(--line); border-radius: 999px; max-width: 420px; }
+.modebar button { border: 0; border-radius: 999px; padding: 10px 12px; min-height: 44px; background: none; color: var(--muted); font: inherit; font-weight: 700; cursor: pointer; }
+.modebar button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgb(0 0 0 / .12); }
+body[data-mode="online"] .solo-only, body[data-mode="solo"] .online-only, body[data-room="1"] #deckPanel, body[data-room="1"] #modebar { display: none !important; }
+.ol-input { font: inherit; padding: 11px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--sunk); color: var(--ink); min-width: 0; width: 100%; }
+.ol-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.ol-row > * { min-width: 0; }
+.ol-join { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.ol-code-input { text-transform: uppercase; letter-spacing: .18em; font-weight: 700; text-align: center; }
+.btn.outline { background: var(--surface); color: var(--court); border: 1.5px solid var(--court); }
+.btn.wide { width: 100%; min-height: 48px; }
+.ol-me { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.ol-me b { font-size: 15px; }
+.ol-dot { width: 8px; height: 8px; border-radius: 50%; background: #9aa9a8; flex: 0 0 8px; }
+.ol-dot.on { background: #2f9e5b; }
+.ol-sp { flex: 1; }
+.ol-list { display: grid; gap: 6px; }
+.ol-room { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; padding: 10px 12px; border-radius: 10px; background: var(--sunk); }
+.ol-room b { display: block; overflow-wrap: anywhere; }
+.ol-room small, .ol-empty { color: var(--muted); font-size: 12px; }
+.ol-people { display: flex; flex-wrap: wrap; gap: 6px; }
+.ol-person { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; background: var(--sunk); font-size: 13px; }
+.ol-code { font-size: 34px; font-weight: 800; letter-spacing: .2em; text-align: center; font-variant-numeric: tabular-nums; padding: 6px 0; overflow-wrap: anywhere; }
+.ol-wait { text-align: center; color: var(--muted); font-size: 13px; }
+.ol-wait .dots::after { content: '…'; }
+.ol-hint { font-size: 12px; color: var(--muted); margin: 0; }
+
 .rules li { margin-bottom: 4px; }
 
 /* ---------- card image */
@@ -365,16 +393,17 @@ p.imp-bad { padding-left: 0; }
   </div>
 
   <div id="runtimeStatus" role="status" style="margin:10px 0;padding:10px 12px;background:#45251b;color:#fff;border-radius:8px;font-size:13px">⚠️ 尚未啟動 JavaScript。如果此提示一直顯示，代表目前的檔案預覽器不執行遊戲程式。請下載 HTML 後以瀏覽器開啟，或透過 HTTPS 網站遊玩。</div>
+  <div class="modebar" role="tablist" aria-label="對戰方式" id="modebar"><button type="button" role="tab" id="modeSolo" aria-selected="true">單人對練</button><button type="button" role="tab" id="modeOnline" aria-selected="false">多人連線</button></div>
   <section id="setup" class="setup">
-    <div class="panel">
+    <div class="panel" id="deckPanel">
       <h2>你的牌組</h2>
-      <label class="field" for="gameMode">對戰模式<select id="gameMode"><option value="numeric" selected>數值模式（含手動技能）</option><option value="strict">嚴格模式（已支援卡片）</option></select></label>
+      <label class="field solo-only" for="gameMode">對戰模式<select id="gameMode"><option value="numeric" selected>數值模式（含手動技能）</option><option value="strict">嚴格模式（已支援卡片）</option></select></label>
       <label class="field" for="myDeck">牌組<select id="myDeck"><option value="k1014">烏野1014</option><option value="k1014c">1014c（接 6 強化）</option><option value="quick">烏野快攻版</option><option value="k1010">烏野1010</option><option value="seijoh">青葉城西（第四彈）</option><option value="hk_axis">烏野 日向影山軸</option></select></label>
       <div class="deckstrip" id="myStrip"></div>
       <button class="chip" type="button" id="editDeck">匯入／編輯自訂牌組</button>
       <button class="chip" type="button" id="supportBtn">卡庫／支援狀態</button>
     </div>
-    <div class="panel">
+    <div class="panel solo-only">
       <h2>AI 對手</h2>
       <label class="field" for="aiDeck">牌組<select id="aiDeck"><option value="seijoh">青葉城西（第四彈）</option><option value="hk_axis">烏野 日向影山軸</option><option value="k1014">烏野1014</option><option value="k1014c">1014c（接 6 強化）</option><option value="quick">烏野快攻版</option><option value="k1010">烏野1010</option></select></label>
       <button class="chip" type="button" id="editAiDeck">匯入 AI 牌組</button>
@@ -383,7 +412,31 @@ p.imp-bad { padding-left: 0; }
       </label>
       <div class="deckstrip" id="aiStrip"></div>
     </div>
-    <div class="panel">
+    <div class="panel online-only" id="olPanel">
+      <h2>多人連線</h2>
+      <div id="olLogin" class="ol-list">
+        <label class="field" for="olName">暱稱<input class="ol-input" id="olName" maxlength="20" autocomplete="nickname" placeholder="朋友看到的名字"></label>
+        <button class="btn wide" type="button" id="olAnon" disabled>開始（免註冊）</button>
+        <button class="btn outline wide" type="button" id="olGoogle" disabled>用 Google 登入</button>
+        <p class="ol-hint">免註冊身份只存在這個瀏覽器；想換裝置接續請用 Google。多人對戰使用嚴格模式。</p>
+      </div>
+      <div id="olLobby" class="ol-list" hidden>
+        <div class="ol-me"><span class="ol-dot" id="olDot"></span><b id="olWho"></b><span class="ol-sp"></span><button class="chip" type="button" id="olLink" hidden>連結 Google</button><button class="chip" type="button" id="olLogout">登出</button></div>
+        <label class="field" for="olOpp">對手<select id="olOpp"><option value="human">邀請朋友</option><option value="AI">策略 AI</option></select></label>
+        <button class="btn wide" type="button" id="olCreate">建立房間</button>
+        <div class="ol-join"><input class="ol-input ol-code-input" id="olCode" maxlength="8" autocomplete="off" placeholder="房號" aria-label="8 碼房號"><button class="btn outline" type="button" id="olJoin">加入</button></div>
+        <h2>房間</h2><div class="ol-list" id="olRooms"></div>
+        <h2>在線</h2><div class="ol-people" id="olPeople"></div>
+      </div>
+      <div id="olWait" class="ol-list" hidden>
+        <div class="ol-wait">房號</div>
+        <div class="ol-code" id="olWaitCode"></div>
+        <div class="ol-wait"><span class="dots" id="olWaitText">等待朋友加入</span></div>
+        <button class="btn wide" type="button" id="olShare">分享邀請</button>
+        <button class="btn outline wide" type="button" id="olCancel">取消房間</button>
+      </div>
+    </div>
+    <div class="panel solo-only">
       <h2>規則提醒</h2>
       <ul class="rules">
         <li>起手 6 張，可以挑任意張放回牌庫重抽（調度 1 次）。</li>
@@ -395,7 +448,7 @@ p.imp-bad { padding-left: 0; }
       <label class="field" for="turnPromptStyle">回合／發球提示
         <select id="turnPromptStyle"><option value="auto" selected>顯示 1 秒後繼續</option><option value="manual">點擊後繼續</option></select>
       </label>
-      <button class="btn" id="startBtn" type="button">開始對戰</button><a class="btn" href="online.html" style="display:block;text-align:center;text-decoration:none">多人連線</a>
+      <button class="btn" id="startBtn" type="button">開始對戰</button>
     </div>
   </section>
 
@@ -568,6 +621,8 @@ p.imp-bad { padding-left: 0; }
 
   // ---------- game state
   let game = null, session = null, pending = null, logBuf = [], skillResults = [];
+  let oppName = 'AI'; // 對手顯示名稱：單人為 AI，多人為對方暱稱
+  const OL = { client: null, services: null, meta: null, rooms: {}, presence: {}, loading: null, inGame: false, roomId: null, lastUid: null };
   let nativeWidget = null, nativeSelection = null, nativeWidgetKey = null, tableSequence = 0;
   let turnNotice = null, shownTransition = null, priorFocus = null, turnTimer = null;
   let prevTop = {}, prevVal = {}, prevBall = null, suppressClick = false;
@@ -628,35 +683,35 @@ p.imp-bad { padding-left: 0; }
     if (!source) { if (priorFocus?.isConnected) priorFocus.focus({ preventScroll: true }); return; }
     priorFocus = document.activeElement;
     const n = turnNotice?.data, mine = n?.player === 0;
-    const who = mine ? '你' : 'AI';
+    const who = mine ? '你' : oppName;
     let title, phase, detail, middle = '', action;
     if (n.type === 'serve') {
-      title = mine ? '你的發球回合' : 'AI 的發球回合';
+      title = mine ? '你的發球回合' : `${oppName} 的發球回合`;
       phase = '發球階段'; detail = `第 ${n.rally} 球，由${who}先發球。`;
       middle = '<div class="turn-ball"><span>準備發球</span><strong aria-hidden="true">SERVE</strong></div>';
-      action = mine ? '開始選擇發球角色' : '讓 AI 開始發球';
+      action = mine ? '開始選擇發球角色' : (OL.inGame ? `看 ${oppName} 發球` : '讓 AI 開始發球');
     } else if (n.type === 'turn') {
-      title = mine ? '輪到你了' : '輪到 AI 了';
+      title = mine ? '輪到你了' : `輪到 ${oppName} 了`;
       phase = n.ball.type === 'attack' ? '接球／攔網回合' : '接球回合';
-      const from = mine ? 'AI' : '你', kind = { serve: '發球威力', attack: '進攻', block: '攔網回球' }[n.ball.type];
+      const from = mine ? oppName : '你', kind = { serve: '發球威力', attack: '進攻', block: '攔網回球' }[n.ball.type];
       middle = `<div class="turn-ball"><span>${from}打出的${kind}</span><strong>${n.ball.off}</strong>${n.ball.type === 'attack' ? (n.toss != null && n.attack != null ? `<span>舉球 ${n.toss} ＋ 攻擊 ${n.attack} ＝ ${n.ball.off}</span>` : '<span>依技能效果結算的回球總值</span>') : ''}</div>`;
       detail = n.ball.type === 'attack' ? `${who}接下來選擇接球或合法的攔網。` : '這種來球只能接球，不能攔網。';
-      action = mine ? '我準備好了' : '讓 AI 開始防守';
+      action = mine ? '我準備好了' : (OL.inGame ? `看 ${oppName} 防守` : '讓 AI 開始防守');
     } else if (n.type === 'reveal') {
       title = `${who}的翻牌結果`; phase = `${n.source}技能 · ${n.result}`;
       middle = n.card ? `<div class="reveal-public">${img(n.card)}<b>${esc(nm(n.card))}</b><span>${esc(n.card)}</span></div>` : '';
       detail = n.reason; action = '看完了，繼續';
     } else {
-      title = mine ? '你 LOSS' : 'AI LOSS'; phase = mine ? 'AI 得分' : '你得分';
+      title = mine ? '你 LOSS' : `${oppName} LOSS`; phase = mine ? `${oppName} 得分` : '你得分';
       detail = n.reason;
-      middle = `<div class="turn-ball"><span>${n.final ? (n.winner === 0 ? '你贏了這場對戰' : 'AI 贏了這場對戰') : `下一球：${n.winner === 0 ? '你' : 'AI'}發球`}</span></div>`;
+      middle = `<div class="turn-ball"><span>${n.final ? (n.winner === 0 ? '你贏了這場對戰' : `${oppName} 贏了這場對戰`) : `下一球：${n.winner === 0 ? '你' : oppName}發球`}</span></div>`;
       action = n.final ? '查看對戰結果' : '確認結果，進入下一球';
     }
     const status = session?.status();
     $('turnCard').innerHTML = `<div class="turn-eyebrow">BREAK · 第 ${n.rally} 球</div><h2 class="turn-title" id="turnTitle">${title}</h2><p class="turn-phase">${phase}</p>${middle}<p class="turn-detail" id="turnDetail">${esc(detail)}</p><div class="turn-actions"><button class="turn-next" id="turnNext" type="button">${action}</button><button class="turn-undo" id="turnUndo" type="button" ${status?.enabled ? '' : 'disabled'}>返回上一步（Undo）</button></div>`;
     $('turnNext').onclick = () => finishTransition(source);
     scheduleTransition(source);
-    $('turnUndo').onclick = () => $('undoBtn').onclick();
+    $('turnUndo').onclick = () => $('undoBtn').onclick(); $('turnUndo').hidden = OL.inGame;
     $('turnNext').focus({ preventScroll: true });
   }
   document.addEventListener('keydown', e => {
@@ -712,7 +767,7 @@ p.imp-bad { padding-left: 0; }
   const sets = p => `<span class="sets" title="セットカード ${p.sets.length}">${[0, 1].map(i => `<i class="${i < p.sets.length ? '' : 'off'}"></i>`).join('')}</span>`;
   function stripHTML(p, mine) {
     const ack = mine && pending && pending.req.kind === 'ack';
-    return `<div class="strip"><span class="who">${mine ? '你' : 'AI'}</span><span class="dk">${DECKS[p.deckKey].name}</span>${sets(p)}<span class="sp"></span>
+    return `<div class="strip"><span class="who">${mine ? '你' : esc(oppName)}</span><span class="dk">${esc(DECKS[p.deckKey]?.name||'')}</span>${sets(p)}<span class="sp"></span>
       <span>手 <b>${p.hand.length}</b></span>${ack ? `<button class="deckbtn tgt" type="button" data-act="ack">牌庫 <b>${p.deck.length}</b>　點我抽牌</button>` : `<span>庫 <b>${p.deck.length}</b></span>`}
       </div>`;
   }
@@ -754,7 +809,7 @@ p.imp-bad { padding-left: 0; }
     if (b) {
       const z = { serve: '發球', attack: '攻擊', block: '攔網回球' }[b.type];
       const toMe = game.target === 0, sig = b.type + b.off + game.target, pop = sig !== prevBall; prevBall = sig;
-      ball = `<div class="ball ${toMe ? 'toMe' : 'toOpp'}${pop ? ' pop' : ''}"><span class="k">${z}${toMe ? '→你' : '→AI'}</span><span class="v">${b.off}</span></div>`;
+      ball = `<div class="ball ${toMe ? 'toMe' : 'toOpp'}${pop ? ' pop' : ''}"><span class="k">${z}${toMe ? '→你' : '→' + esc(oppName)}</span><span class="v">${b.off}</span></div>`;
     }
     return `<span class="ticker">第 ${game.rallyNo} 球</span>${ball}<span class="ticker">${esc(last)}</span>`;
   }
@@ -780,7 +835,7 @@ p.imp-bad { padding-left: 0; }
   syncViewport();
 
   function updateUndoButton() {
-    $('undoBtn').disabled = !session?.status().enabled;
+    $('undoBtn').disabled = !session?.status().enabled; $('undoBtn').hidden = OL.inGame;
     $('undoBtn').textContent = 'Undo';
     $('undoBtn').title = '撤回本回合上一個已確認操作';
   }
@@ -803,9 +858,9 @@ p.imp-bad { padding-left: 0; }
     $('net').innerHTML = netHTML();
     const server = game.server ?? game.firstServer;
     const owner = game.turnP?.idx;
-    const who = owner === 0 ? '你' : 'AI';
+    const who = owner === 0 ? '你' : oppName;
     const state = game.winner ? '對局結束' : pending?.req.kind === 'lossConfirm' ? '你的回合 · 等待你喊 Loss' : pending?.req.kind === 'turnEnd' ? '你的回合 · 等待結束或 Loss' : owner == null ? '準備／交接中' : !game.ball ? `${who}正在發球` : `${who}的回合`;
-    $('rallyStatus').innerHTML = `<strong>${game.rallyNo ? `第 ${game.rallyNo} 球 · 本球發球：${server === 0 ? '你' : 'AI'}` : '準備對局'}</strong><span>${state}</span>`;
+    $('rallyStatus').innerHTML = `<strong>${game.rallyNo ? `第 ${game.rallyNo} 球 · 本球發球：${server === 0 ? '你' : esc(oppName)}` : '準備對局'}</strong><span>${state}</span>`;
     const logHTML = logBuf.slice(-200).map(([s, c]) => `<div class="${c || ''}">${esc(s)}</div>`).join('');
     $('logSide').innerHTML = logHTML; $('logSide').scrollTop = $('logSide').scrollHeight;
     const dock = $('dock'); dock.hidden = false;
@@ -813,17 +868,17 @@ p.imp-bad { padding-left: 0; }
     $('manualBtn').hidden = !(game.mode==='numeric' && pending?.req.canManual);
     if (game.winner) {
       dock.classList.remove('wait');
-      $('dockQ').textContent = game.winner.idx === 0 ? '你贏了！' : 'AI 贏了';
+      $('dockQ').textContent = game.winner.idx === 0 ? '你贏了！' : `${oppName} 贏了`;
       $('dockOpts').innerHTML = '<button class="opt primary" type="button" data-act="again">再打一場</button><button class="opt" type="button" data-act="setup">換牌組</button><button class="opt" type="button" data-act="log">看紀錄</button>';
     } else if (pending) {
       dock.classList.remove('wait');$('dockQ').innerHTML=(skillResults.length?'<div class="skill-results" role="status">'+skillResults.map(e=>'<div>✦ '+esc(publicLogText(e))+'</div>').join('')+'</div>':'')+esc(flashMsg||pending.req.context.reason||'');renderNativeChoice(pending.req,savedSelection);
       $('dockOpts').querySelector('.hc-content').scrollTop=savedScrollTop;
     } else {
       dock.classList.add('wait');
-      $('dockQ').innerHTML = '<span class="dots">AI 行動中</span>';
+      $('dockQ').innerHTML = `<span class="dots">${esc(oppName)} 行動中</span>`;
       $('dockOpts').innerHTML = '';
     }
-    $('dockSummary').textContent = game.winner ? $('dockQ').textContent : pending ? pending.req.prompt : 'AI 行動中';
+    $('dockSummary').textContent = game.winner ? $('dockQ').textContent : pending ? pending.req.prompt : `${oppName} 行動中`;
     updateUndoButton();
     renderTransition();
     requestAnimationFrame(measureDock);
@@ -860,8 +915,8 @@ p.imp-bad { padding-left: 0; }
       const i = +b.dataset.hand, c = b.dataset.card;
       if (onHandPick(c,i)) return;
     }
-    if (b.dataset.pile) { const p = game.players[+b.dataset.p]; return pileSheet(`${p.idx === 0 ? '你的' : 'AI 的'}${b.dataset.pile === 'ev' ? ' Event 區' : '棄牌區'}（最新的在前）`, (b.dataset.pile === 'ev' ? p.ev : p.drop).slice().reverse()); }
-    if (b.dataset.zone) { const p = game.players[+b.dataset.p], s = p.area[b.dataset.zone]; if (!s.length) return; return pileSheet(`${p.idx === 0 ? '你的' : 'AI 的'}${E.AREA_ZH[b.dataset.zone]}區（第 1 張是角色，後面是 Guts，越後面越早放；付 Guts 時從最下面開始付）`, s.slice().reverse()); }
+    if (b.dataset.pile) { const p = game.players[+b.dataset.p]; return pileSheet(`${p.idx === 0 ? '你的' : esc(oppName) + ' 的'}${b.dataset.pile === 'ev' ? ' Event 區' : '棄牌區'}（最新的在前）`, (b.dataset.pile === 'ev' ? p.ev : p.drop).slice().reverse()); }
+    if (b.dataset.zone) { const p = game.players[+b.dataset.p], s = p.area[b.dataset.zone]; if (!s.length) return; return pileSheet(`${p.idx === 0 ? '你的' : esc(oppName) + ' 的'}${E.AREA_ZH[b.dataset.zone]}區（第 1 張是角色，後面是 Guts，越後面越早放；付 Guts 時從最下面開始付）`, s.slice().reverse()); }
     if (b.dataset.card) cardSheet(b.dataset.card);
   }, true);
 
@@ -901,13 +956,13 @@ p.imp-bad { padding-left: 0; }
   document.addEventListener('pointerup', endDrag); document.addEventListener('pointercancel', endDrag);
   function showLog() { openSheet(`<h3>對局紀錄</h3><div class="log" style="max-height:60vh">${logBuf.map(([s, c]) => `<div class="${c || ''}">${esc(s)}</div>`).join('')}</div>`); const l = $('sheetBox').querySelector('.log'); l.scrollTop = l.scrollHeight; }
   $('logBtn').onclick = showLog;
-  $('menuBtn').onclick = () => openSheet('<h3>選單</h3><div class="opts"><button class="opt primary" type="button" id="mRestart">重新開始這場</button><button class="opt" type="button" id="mSetup">回到選牌組</button></div>');
-  $('sheet').addEventListener('click', e => { if (e.target.id === 'mRestart') { closeSheet(); start(); } if (e.target.id === 'mSetup') { closeSheet(); backToSetup(); } });
-  function backToSetup() { nativeWidget?.destroy();nativeWidget=null;session?.stop(); session = null; game = null; pending = null; turnNotice = null; renderTransition(); $('game').hidden = true; $('dock').hidden = true; $('tbtns').hidden = true; $('setup').hidden = false; }
+  $('menuBtn').onclick = () => openSheet(OL.inGame ? '<h3>選單</h3><div class="opts"><button class="opt" type="button" id="mLeave">離開房間（回到大廳）</button></div><p class="sub">離開後可從大廳「回到房間」接續；房主離開時對手可接手。</p>' : '<h3>選單</h3><div class="opts"><button class="opt primary" type="button" id="mRestart">重新開始這場</button><button class="opt" type="button" id="mSetup">回到選牌組</button></div>');
+  $('sheet').addEventListener('click', e => { if (e.target.id === 'mRestart') { closeSheet(); start(); } if (e.target.id === 'mSetup') { closeSheet(); backToSetup(); } if (e.target.id === 'mLeave') { closeSheet(); olRun(async () => { await OL.client.leave(); olLeaveGame(); })(); } });
+  function backToSetup() { nativeWidget?.destroy();nativeWidget=null;session?.stop(); session = null; game = null; pending = null; turnNotice = null; renderTransition(); $('game').hidden = true; $('dock').hidden = true; $('tbtns').hidden = true; $('setup').hidden = false; $('modebar').hidden = false; }
 
   function publicLogText(e) {
-    const who=e.player===0?'你':'AI';
-    if(e.type==='skill_resolved'){const params={receive:'接球',toss:'舉球',attack:'攻擊',serve:'發球',block:'攔網'},parts=[...(e.draws||[]).map(d=>(d.player===e.player?'':d.player===0?'你':'AI')+'抽 '+d.count+' 張'),...(e.numeric||[]).map(n=>(params[n.parameter]||'數值')+(n.operation==='set'?'設為 '+n.value:(n.value>=0?' +':' ')+n.value))];return `${who}・${nm(e.cardNo.replace(/^HV-?/,''))} 技能已結算${parts.length?'：'+parts.join('、'):''}`;}
+    const who=e.player===0?'你':oppName;
+    if(e.type==='skill_resolved'){const params={receive:'接球',toss:'舉球',attack:'攻擊',serve:'發球',block:'攔網'},parts=[...(e.draws||[]).map(d=>(d.player===e.player?'':d.player===0?'你':oppName)+'抽 '+d.count+' 張'),...(e.numeric||[]).map(n=>(params[n.parameter]||'數值')+(n.operation==='set'?'設為 '+n.value:(n.value>=0?' +':' ')+n.value))];return `${who}・${nm(e.cardNo.replace(/^HV-?/,''))} 技能已結算${parts.length?'：'+parts.join('、'):''}`;}
     if(e.type==='draw')return `${who}抽${e.count}張`;
     if(e.type==='deck_view')return `${who}公開：${e.cards.map(c=>nm(c.cardNo.replace(/^HV-?/,''))).join('、')||'牌庫為空'}`;
     if(e.type==='reveal_condition')return e.matched?'翻牌條件成立':'翻牌條件不成立，依卡片效果回牌庫';
@@ -922,7 +977,12 @@ p.imp-bad { padding-left: 0; }
     store.set('bk_my', my); store.set('bk_ai', ai); store.set('bk_speed', String(speed));
     session?.stop();
     const expand=key=>Object.entries(DECKS[key].cards).flatMap(([card,count])=>Array(count).fill(card));
-    session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableSequence),seed:Date.now()>>>0,decks:[expand(my),expand(ai)],deckKeys:[my,ai],mode:modeOptions().mode,delay:speed,wantsAck:[true,false]}, {
+    session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableSequence),seed:Date.now()>>>0,decks:[expand(my),expand(ai)],deckKeys:[my,ai],mode:modeOptions().mode,delay:speed,wantsAck:[true,false]}, tableCallbacks());
+    oppName='AI';setLogoSub('你 vs AI');enterTable();
+  }
+  function setLogoSub(t) { const small = document.querySelector('.logo small'); if (small) small.textContent = t; }
+  function tableCallbacks() {
+    return {
       onBoard(board,view) {
         game=board;pending=null;turnNotice=null;
         skillResults=view.publicLog.filter(e=>e.type==='skill_resolved'&&e.turn===view.turn.id).slice(-2);
@@ -931,12 +991,94 @@ p.imp-bad { padding-left: 0; }
       onRequest(req) {pending={req};setDockCollapsed(false);render();},
       onNotice(board,data,resolve) {turnNotice={data,resolve,game:board};render();},
       onError(err) {pending=null;turnNotice=null;logBuf.push(['發生錯誤：'+err.message,'lost']);render();$('runtimeStatus').hidden=false;$('runtimeStatus').textContent='❌ '+err.message;console.error(err);}
-    });
+    };
+  }
+  function enterTable() {
     prevTop={};prevVal={};prevBall=null;skillResults=[];flashMsg='';clearTimeout(flashT);
     if(drag?.el)drag.el.remove();if(drag?.over)drag.over.classList.remove('over');drag=null;suppressClick=false;document.body.classList.remove('dragging');
-    $('setup').hidden = true; $('game').hidden = false; $('tbtns').hidden = false;
+    $('setup').hidden = true; $('modebar').hidden = true; $('game').hidden = false; $('tbtns').hidden = false;
     session.start();
   }
+  /* ---------- 多人連線（Claude 2026-10-25）：大廳在選牌頁，開打後沿用同一張正式牌桌 */
+  const cleanName = n => String(n || '').replace(/[<>&"'`]/g, '').trim().slice(0, 20);
+  function olToast(msg) { const box = $('runtimeStatus'); box.hidden = !msg; box.textContent = msg ? '⚠️ ' + msg : ''; }
+  function olFriendly(e) { const code = e?.code || ''; return ({ 'auth/popup-blocked': '登入視窗被瀏覽器擋下，請允許彈出視窗後再試。', 'auth/popup-closed-by-user': 'Google 登入已取消。', 'auth/unauthorized-domain': '這個網址尚未加入 Google 登入的授權網域。', 'auth/credential-already-in-use': '這個 Google 帳號已被使用，請先登出再用 Google 登入。', 'PERMISSION_DENIED': '權限已變更，請重新加入房間。' })[code] || e?.message || String(e); }
+  const olRun = f => async () => { try { olToast(''); await f(); } catch (e) { olToast(olFriendly(e)); } };
+  function setMode(mode) {
+    document.body.dataset.mode = mode;
+    $('modeSolo').setAttribute('aria-selected', String(mode === 'solo')); $('modeOnline').setAttribute('aria-selected', String(mode === 'online'));
+    if (mode === 'online') { $('gameMode').value = 'strict'; $('gameMode').onchange?.(); olLoad(); }
+    store.set('bk_play_mode', mode);
+  }
+  $('modeSolo').onclick = () => setMode('solo'); $('modeOnline').onclick = () => setMode('online');
+  function olDeck() { const key = $('myDeck').value, cards = Object.entries(DECKS[key].cards).flatMap(([c, n]) => Array(n).fill(c)); new BreakMatchPilot.Match({ decks: [cards, cards], mode: 'strict' }); return { key, cards }; }
+  function olNameOf(uid) { if (uid === 'AI') return '策略 AI'; const conns = OL.presence[uid]; const first = conns && Object.values(conns)[0]; return cleanName(OL.meta?.names?.[uid] || first?.name) || '對手'; }
+  function olView() {
+    const c = OL.client, signedIn = !!c?.user, inRoom = !!OL.roomId, waiting = inRoom && OL.meta?.status === 'waiting';
+    $('olLogin').hidden = signedIn; $('olLobby').hidden = !signedIn || inRoom; $('olWait').hidden = !waiting;
+    if (signedIn) { $('olWho').textContent = cleanName(c.name) + (c.user.isAnonymous ? '' : '・Google'); $('olLink').hidden = !c.user.isAnonymous; $('olDot').classList.toggle('on', !!c.online); }
+    document.body.dataset.room = inRoom ? '1' : '';
+    if (waiting) { $('olWaitCode').textContent = OL.roomId; $('olWaitText').textContent = OL.meta.p1 === 'AI' ? '正在準備對局' : '等待朋友加入'; }
+  }
+  function olLobby() {
+    const mine = OL.client?.user?.uid, list = Object.values(OL.rooms).filter(r => r && r.status !== 'closed').sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 30);
+    $('olRooms').innerHTML = list.map(r => `<div class="ol-room"><div><b>${esc(r.title || r.room)}</b><small>${esc(r.room)}・${({ waiting: '等待玩家', running: '對戰中', finished: '已結束' })[r.status] || esc(r.status)}${OL.presence[r.owner] ? '' : '・房主離線'}</small></div><button class="btn outline" type="button" data-ol-join="${esc(r.room)}">${r.owner === mine || r.p0 === mine || r.p1 === mine ? '回到房間' : r.status === 'waiting' ? '加入' : '觀看'}</button></div>`).join('') || '<p class="ol-empty">目前沒有房間，建立一間邀請朋友吧。</p>';
+    const people = Object.entries(OL.presence).map(([uid, conns]) => ({ uid, name: cleanName(Object.values(conns || {})[0]?.name) })).filter(p => p.name);
+    $('olPeople').innerHTML = people.map(p => `<span class="ol-person"><span class="ol-dot on"></span>${esc(p.name)}${p.uid === mine ? '（你）' : ''}</span>`).join('') || '<span class="ol-empty">目前沒有其他人在線</span>';
+  }
+  function olEnterGame() {
+    if (OL.inGame || !OL.client) return;
+    OL.inGame = true; nativeWidget?.destroy(); nativeWidget = null; session?.stop();
+    const me = OL.client.user.uid, other = OL.meta ? (OL.meta.p0 === me ? OL.meta.p1 : OL.meta.p0) : null;
+    oppName = olNameOf(other); setLogoSub('你 vs ' + oppName);
+    DECKS.__online_me = { name: DECKS[$('myDeck').value]?.name || '我的牌組', cards: {} }; DECKS.__online_opp = { name: oppName + ' 的牌組', cards: {} };
+    session = new BreakMatchPilot.OnlineSession(OL.client, { ...tableCallbacks(), onSendError(e) { olToast(olFriendly(e)); } });
+    enterTable();
+  }
+  function olLeaveGame() { if (!OL.inGame) return; OL.inGame = false; backToSetup(); }
+  async function olLoad() {
+    if (OL.loading) return OL.loading;
+    OL.loading = (async () => {
+      $('olAnon').disabled = $('olGoogle').disabled = true; $('olAnon').textContent = '連線中…';
+      const mod = await import('./firebase-room-client.js');
+      const services = OL.services = await mod.firebaseServices();
+      const c = OL.client = new mod.FirebaseRooms(services, {
+        error: e => olToast(olFriendly(e)),
+        connection: () => olView(),
+        lobby: v => { OL.rooms = v || {}; olLobby(); },
+        presence: v => { OL.presence = v || {}; olLobby(); if (OL.inGame && OL.meta) { const me = c.user?.uid, other = OL.meta.p0 === me ? OL.meta.p1 : OL.meta.p0; oppName = olNameOf(other); } },
+        room: id => { OL.roomId = id || null; if (id) { const u = new URL(location.href); u.searchParams.set('online', '1'); u.searchParams.set('room', id); history.replaceState(null, '', u); } else { OL.meta = null; olLeaveGame(); } olView(); },
+        meta: v => { OL.meta = v; if (v?.status === 'closed') { olToast('房間已關閉'); c.leave(); } olView(); },
+        authority: () => {},
+        view: v => { if (!v) return; if (!OL.inGame) olEnterGame(); session?.handle?.(v); },
+        sending: () => {},
+      });
+      services.A.onAuthStateChanged(services.auth, user => {
+        const uid = user?.uid || null; if (uid === OL.lastUid) return olView(); OL.lastUid = uid;
+        (async () => { await c.logout(); if (user) await c.login(user, cleanName($('olName').value) || cleanName(user.displayName) || '玩家'); olView(); olLobby(); })().catch(e => olToast(olFriendly(e)));
+      });
+      $('olAnon').disabled = $('olGoogle').disabled = false; $('olAnon').textContent = '開始（免註冊）';
+    })().catch(e => { OL.loading = null; $('olAnon').disabled = $('olGoogle').disabled = false; $('olAnon').textContent = '重試連線'; olToast('多人連線載入失敗：' + olFriendly(e)); });
+    return OL.loading;
+  }
+  $('olName').value = store.get('bk_ol_name') || ''; $('olName').onchange = () => store.set('bk_ol_name', cleanName($('olName').value));
+  $('olAnon').onclick = olRun(async () => { if (!OL.client) await olLoad(); if (!cleanName($('olName').value)) { $('olName').focus(); throw Error('請先輸入暱稱'); } store.set('bk_ol_name', cleanName($('olName').value)); await OL.services.A.signInAnonymously(OL.services.auth); });
+  $('olGoogle').onclick = olRun(async () => { if (!OL.client) await olLoad(); await OL.services.A.signInWithPopup(OL.services.auth, new OL.services.A.GoogleAuthProvider()); });
+  $('olLink').onclick = olRun(async () => { if (OL.roomId) throw Error('請先離開房間再連結帳號'); await OL.services.A.linkWithPopup(OL.services.auth.currentUser, new OL.services.A.GoogleAuthProvider()); });
+  $('olLogout').onclick = olRun(async () => { await OL.client.logout(); await OL.services.A.signOut(OL.services.auth); });
+  $('olCreate').onclick = olRun(async () => { const { cards } = olDeck(); await OL.client.create({ title: cleanName(OL.client.name) + ' 的房間', deck: cards, aiDeck: $('olOpp').value === 'AI' ? cards : null }); });
+  const olJoin = code => olRun(async () => { const id = String(code || '').trim().toUpperCase(); if (!/^[A-Z0-9]{8}$/.test(id)) throw Error('房號是 8 碼英數字'); const { cards } = olDeck(); await OL.client.join(id, cards); });
+  $('olJoin').onclick = () => olJoin($('olCode').value)();
+  $('olCode').onkeydown = e => { if (e.key === 'Enter') olJoin($('olCode').value)(); };
+  $('olRooms').addEventListener('click', e => { const b = e.target.closest('[data-ol-join]'); if (b) olJoin(b.dataset.olJoin)(); });
+  $('olCancel').onclick = olRun(async () => { await (OL.client.close?.() ?? OL.client.leave()); });
+  $('olShare').onclick = olRun(async () => {
+    const u = new URL(location.href); u.search = ''; u.hash = ''; u.searchParams.set('online', '1'); u.searchParams.set('room', OL.roomId);
+    const text = `來 BREAK 對練台跟我打一場！房號 ${OL.roomId}`;
+    if (navigator.share) { try { await navigator.share({ title: 'BREAK 對練邀請', text, url: u.href }); return; } catch (e) { if (e?.name === 'AbortError') return; } }
+    await navigator.clipboard.writeText(text + '\n' + u.href); olToast('');$('olWaitText').textContent = '邀請連結已複製，貼給朋友就能加入';
+  });
+  { const q = new URLSearchParams(location.search); if (q.get('online') === '1' || q.get('room')) { if (q.get('room')) $('olCode').value = q.get('room').toUpperCase(); setTimeout(() => setMode('online'), 0); } else if (store.get('bk_play_mode') === 'online') setTimeout(() => setMode('online'), 0); else document.body.dataset.mode = 'solo'; }
   $('startBtn').onclick = () => { try { start(); document.getElementById('runtimeStatus').hidden = true; } catch (e) { const box = document.getElementById('runtimeStatus'); box.hidden = false; box.textContent = '❌ 遊戲啟動錯誤：' + (e && e.message || e); console.error(e); } };
   try { const q = location.search + location.hash; if (/[?&#]deck=/.test(q)) { setTimeout(() => openImporter('me', q), 0); history.replaceState(null, '', location.pathname); } } catch (e) { /* 網址參數不可用時略過 */ }
   document.getElementById('runtimeStatus').hidden = true;

@@ -1414,3 +1414,8 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 測試：build、168套回歸0失敗、單人三尺寸各3局通過；多人雙房隔離、人對人及AI整局、斷線接手／刷新重連／舊房主排除／三尺寸選牌無溢出／分享匯入通過；Firebase模擬器47項權限測試與正式雙匿名12指令／私密拒讀通過，正式測試房與帳號已清除；fuzz3000與6×300長跑全部通過。
 - 服務：RTDB安全規則已部署haikyuu-playmat（asia-southeast1）；匿名／Google啟用與xiah6415.github.io授權網域已確認，Google真人OAuth與iPhone由使用者實測。快照／完整紀錄限當前權威端；朋友間接受房主端信任，接手者亦持有完整Match；觀戰／戰績／雲端牌組第二階段、雙方同意Undo最後，不用Functions。
 - 部署：實作5638bf2已推送、Pages built無錯誤；公開index／多人頁／SDK設定／runtime／選擇元件／牌組／安全規則與卡圖共12檔HTTP200／SHA256一致。公開頁真實雙匿名12指令、對手私密拒讀、onDisconnect接手與舊權威排除通過，測試房／帳號已清除；https://xiah6415.github.io/HV-break-card/break-v9.5/online.html?v=5638bf2 。Claude QA歷史「AI不攔網」是舊aiAnswer觀察，正式單人／多人AI均已使用此前合併的策略AI；多人暫不提供Undo。
+
+## Claude：多人介面改用正式牌桌（2026-10-25，分支 claude/online-ui）
+- 分工（使用者同意）：Claude 負責多人介面（沿用 ui.html 牌桌／選擇面板／過場／亮框，重做手機優先大廳）；Codex 維持連線層（firebase-room-client.js、room-authority.js、安全規則、接手重連）
+- 計畫：做 OnlineSession 轉接器，介面同 TableSession（callbacks onBoard／onNotice／onRequest、submit），資料來源改為 FirebaseRooms 的 view 回呼；大廳整合；進房隱藏登入、房間資訊一行、分享按鈕、結束後「再來一局」按鈕（連線層由 Codex 補）
+- 不改 FirebaseRooms 公開介面；本機以假連線層截圖驗收（容器連不到 Firebase）
