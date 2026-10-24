@@ -18,7 +18,7 @@ function boardView(view,deckKeys){
   courtTargets:p=>p.court.map(c=>({key:c.key,card:short(c.cardNo)})),roleReference:(p,key)=>{const c=p.court.find(c=>c.key===key);return c?{id:c.id,incarnation:c.incarnation}:null;},cardReference:(p,zone,index)=>zone==='hand'&&p.handRefs[index]?{id:p.handRefs[index].id,incarnation:p.handRefs[index].incarnation}:null};
 }
 class TableSession {
- constructor(options,callbacks={}){this.local=new LocalSession(options);this.match=this.local.match;this.callbacks=callbacks;this.deckKeys=options.deckKeys;this.delay=options.delay??200;this.token=0;this.timer=null;this.noticeIndex=0;this.stopped=true;this.waiting=null;}
+ constructor(options,callbacks={}){this.local=new LocalSession(options);this.match=this.local.match;this.callbacks=callbacks;this.deckKeys=options.deckKeys;this.aiLevel=options.aiLevel||'normal';this.delay=options.delay??200;this.token=0;this.timer=null;this.noticeIndex=0;this.stopped=true;this.waiting=null;}
  board(){return boardView(this.match.view(0),this.deckKeys);}
  status(){return this.local.status();}
  request(){return this.match.request(0);}
@@ -33,7 +33,7 @@ class TableSession {
    if(this.noticeIndex<notices.length){const raw=notices[this.noticeIndex++],data={...raw,...(raw.ball?{ball:{type:raw.ball.kind,off:raw.ball.offense}}:{})};this.callbacks.onNotice?.(board,data,this._guard(token,()=>this._drive()));return;}
    const r=this.match.request(0)||this.match.request(1);if(!r)return;
    if(r.actor===0){this.waiting=r;this.callbacks.onRequest?.(r);return;}
-   this.timer=setTimeout(this._guard(token,()=>{try{this.local.command({kind:'answer',answer:AI.answer(this.match,r)});this._drive();}catch(e){this._error(e);}}),this.delay);
+   this.timer=setTimeout(this._guard(token,()=>{try{this.local.command({kind:'answer',answer:AI.answer(this.match,r,{level:this.aiLevel})});this._drive();}catch(e){this._error(e);}}),this.delay);
   }catch(e){this._error(e);}
  }
  _error(e){this.stop();this.callbacks.onError?.(e);}
