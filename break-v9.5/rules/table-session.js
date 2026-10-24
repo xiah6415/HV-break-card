@@ -1,7 +1,7 @@
 /* UI scheduling and read-only presentation. Match is the only rules state. */
 'use strict';
 const {LocalSession}=require('./local-session');
-const H=require('../host-choice');
+const H=require('../host-choice'),AI=require('../match-ai');
 const short=c=>c.replace(/^HV-?/,'');
 const fields={srv:'serve',blk:'block',rcv:'receive',tos:'toss',atk:'attack'};
 function boardView(view,deckKeys){
@@ -33,7 +33,7 @@ class TableSession {
    if(this.noticeIndex<notices.length){const raw=notices[this.noticeIndex++],data={...raw,...(raw.ball?{ball:{type:raw.ball.kind,off:raw.ball.offense}}:{})};this.callbacks.onNotice?.(board,data,this._guard(token,()=>this._drive()));return;}
    const r=this.match.request(0)||this.match.request(1);if(!r)return;
    if(r.actor===0){this.waiting=r;this.callbacks.onRequest?.(r);return;}
-   this.timer=setTimeout(this._guard(token,()=>{try{this.local.command({kind:'answer',answer:H.aiAnswer(r)});this._drive();}catch(e){this._error(e);}}),this.delay);
+   this.timer=setTimeout(this._guard(token,()=>{try{this.local.command({kind:'answer',answer:AI.answer(this.match,r)});this._drive();}catch(e){this._error(e);}}),this.delay);
   }catch(e){this._error(e);}
  }
  _error(e){this.stop();this.callbacks.onError?.(e);}

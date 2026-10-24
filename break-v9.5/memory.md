@@ -1385,3 +1385,11 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 
 ## 合併Claude策略AI（2026-10-24）
 - 計畫：審查並合併claude/match-ai精確提交5b05335，保留現有多人／AI分工與交接；核對answer不改原Match、回答合法、預演的隱藏資訊在重演基準中仍遮蔽。跑AI契約與必要整體／瀏覽器回歸，重建產物後部署並核對公開版本；非必跑bench不例行擴跑。
+
+## Claude：新對局策略 AI（2026-10-24，分支 claude/match-ai）
+- 分工：Claude 負責 AI；Codex（GPT）負責多人遊戲。避免衝突：AI 放獨立檔案，接線只改 table-session.js 一行（H.aiAnswer → 策略 AI）
+- 計畫：以 Match 請求（break.host.v1）為介面寫策略 AI——攔網／接球判斷、角色選擇、Event／技能時機、Guts 與棄牌挑選；可用模擬（不偷看對手手牌／牌庫順序）評估選項
+- 驗收：對 aiAnswer 勝率顯著 >50%、0 例外、每步決策時間可接受（手機）；不改規則行為
+- 結果：match-ai.js（規則＋短距模擬，模擬前洗掉對手手牌／牌庫與自己牌庫順序，不修改傳入對局）；接線 rules/table-session.js 一行＋rules/build-pilot.js 打包清單加 match-ai.js
+- 測試：對基礎 AI 100 局 98 勝、0 例外；自我對戰 30 局 14:16；每步平均 36ms、最慢約 1.2 秒（Node）；防守 174 次中攔網 22 次、Event 220 次；match-ai.test.js（10 局 ≥8 勝、回答全部驗證、思考不改變對局）；全套回歸 0 失敗；瀏覽器 390 寬實打無錯誤
+- 未提交建置產物（index.html、pilot-runtime.js），由 Codex 建置部署
