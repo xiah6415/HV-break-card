@@ -6,13 +6,15 @@
 'use strict';
 const {Match}=require('./match'),H=require('../host-choice'),CL=require('../card-library');
 const N=Number(process.argv[2]||3),ONLY=process.argv[3]?new Set(process.argv[3].split(',')):null;
-const all=Object.values(CL.data.cards).filter(c=>c.playable);
+const all=Object.values(CL.data.cards).filter(c=>c.playable),PARTNERS=JSON.parse(process.env.PARTNERS||'{}');
 const targets=all.filter(c=>c.hasSkill&&(!ONLY||ONLY.has(c.code)));
 function rng(seed){let w=seed>>>0;return()=>{w=(w+0x6D2B79F5)>>>0;let t=w;t=Math.imul(t^t>>>15,1|t);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
 function deck(card,seed){
  const school=card.schoolTags[0],same=all.filter(c=>c.code!==card.code&&c.schoolTags.includes(school));
  const out=Array(4).fill(card.code),count=c=>out.filter(x=>x===c).length;
  let events=card.kind==='E'?4:0;
+ // 搭檔卡（環境變數 PARTNERS={"卡號":[搭檔...]}）：各 4 張，讓組合條件型技能有機會觸發
+ for(const c of (PARTNERS[card.code]||[])){const e=CL.data.cards[c].kind==='E';for(let i=0;i<4&&(!e||events<8);i++){out.push(c);if(e)events++;}}
  for(const e of same.filter(c=>c.kind==='E'))for(let i=0;i<2&&events<8;i++){out.push(e.code);events++;}
  const chars=[...same.filter(c=>c.kind==='C'),...all.filter(c=>c.kind==='C'&&!c.schoolTags.includes(school))];
  for(let i=seed;out.length<40;i++){const c=chars[i%chars.length].code;if(count(c)<4)out.push(c);}
@@ -32,7 +34,7 @@ function randomAnswer(m,r,random){
 const norm=s=>{const c=JSON.parse(JSON.stringify(s));if(c.match?.pending){delete c.match.pending.epoch;delete c.match.pending.requestId;}return JSON.stringify(c);};
 const report={cards:0,games:0,errors:[],unused:[],undoChecks:0};
 for(const card of targets){
- const full='HV-'+card.code;let used=false,cardErrors=0;report.cards++;
+ const full=card.number;let used=false,cardErrors=0;report.cards++;
  for(let s=0;s<N;s++)for(const policy of ['ai','rand0','rand1']){
   const seed=s*7919+card.code.split('').reduce((n,ch)=>n*31+ch.charCodeAt(0)>>>0,7),random=rng(seed),mode=s%2?'numeric':'strict';let m,step=0;
   try{
