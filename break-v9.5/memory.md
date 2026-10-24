@@ -1432,3 +1432,10 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 
 ## 合併正式多人牌桌（2026-10-25）
 - 計畫：審查並合併claude/online-ui精確34c98e8，保留主線既有AI難度與同房再戰；新增meta.names映射並以規則限制本人名稱，同時保留p0Name／p1Name相容。更新多人／再戰測試到index.html?online=1與dockOpts，檢查第二座位旋轉、request實體參照、提示重播、斷線接手與隱私；修正合併時發現的整合缺口，舊mobile-review-e2e遷移至正式核心後驗證，建置／回歸／規則／公開頁實測通過再部署。再戰按鈕由Claude後續接線，連線send契約維持不變。
+## Claude：多人介面改用正式牌桌（2026-10-25，分支 claude/online-ui）
+- 分工（使用者同意）：Claude 負責多人介面（沿用 ui.html 牌桌／選擇面板／過場／亮框，重做手機優先大廳）；Codex 維持連線層（firebase-room-client.js、room-authority.js、安全規則、接手重連）
+- 計畫：做 OnlineSession 轉接器，介面同 TableSession（callbacks onBoard／onNotice／onRequest、submit），資料來源改為 FirebaseRooms 的 view 回呼；大廳整合；進房隱藏登入、房間資訊一行、分享按鈕、結束後「再來一局」按鈕（連線層由 Codex 補）
+- 不改 FirebaseRooms 公開介面；本機以假連線層截圖驗收（容器連不到 Firebase）
+- 結果：rules/online-session.js（OnlineSession：介面同 TableSession，自己坐 1 號位時視圖左右對調，request 原樣送出；不持有權威狀態）打包進 pilot；ui.html 選牌頁加「單人對練／多人連線」切換，多人大廳（暱稱＋免註冊／Google、建立房間、房號加入、房間列表、在線名單）、等待頁（大房號＋分享邀請＋取消），開打沿用正式牌桌；對手名稱取代所有寫死的「AI」；多人隱藏 Undo、選單改「離開房間」；online.html 改為轉址到 index.html?online=1（保留舊邀請連結）
+- 測試：rules/online-session.test.js（1 號座位對調、notices、送出流程、禁止重複送出）；全套回歸 0 失敗、e2e.js／choice-e2e.js 通過；本機假連線層截圖 390／360／1280：建房等待→朋友加入對局、離開→加入別人房間（1 號座位）皆無錯誤、無溢出
+- 待 Codex：連線層補「再來一局」與 meta 暱稱（names[uid]）；multiplayer/online-e2e.cjs 仍針對舊 online.html 元件，需改成 index.html?online=1 的新元件（#olName／#olAnon／#olCreate／#olCode／#olJoin，牌桌為 #dockOpts）；mobile-review-e2e.js 在 master 已因舊 Game 移除而失敗（非本次造成）
