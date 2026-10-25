@@ -601,7 +601,7 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
       <p class="sub" id="deckHint" role="status">尚無牌組，請先組牌或匯入牌組。</p>
       <div class="deckstrip" id="myStrip"></div>
       <div class="opts"><button class="chip" type="button" id="newDeck">＋內建組牌器</button><button class="chip" type="button" id="editMyDeck">編輯</button><button class="chip" type="button" id="renameDeck">改名</button><button class="chip" type="button" id="deleteDeck">刪除</button><button class="chip" type="button" id="exportDeck">匯出分享碼</button></div>
-      <a class="chip" id="buildDeck" href="../index.html">🃏 到卡牌資料庫組牌</a>
+      <a class="chip" id="buildDeck" href="https://weilun2022.github.io/haikyuu-cards/index.html" target="_blank" rel="noopener">🃏 到外部牌庫組牌</a>
       <button class="chip" type="button" id="editDeck">匯入／編輯自訂牌組</button>
       <button class="chip" type="button" id="supportBtn">卡庫／支援狀態</button>
     </div>
@@ -755,9 +755,9 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
     const t = TARGET[target], source = DECKS[$(t.sel).value] || {name:'新牌組',cards:{}};
     openSheet(`<h3>匯入${t.label}牌組</h3>
       <section class="imp">
-        <label class="field" for="shareURL">在卡牌資料庫「牌組構築」按「🏐 對練」可直接帶入；或貼上查卡網站的分享連結（…?deck=…）
+        <label class="field" for="shareURL">在外部牌庫組好後按「牌組 → 📲 分享 → 複製連結」，貼到這裡（…?deck=…）
           <input id="shareURL" type="url" inputmode="url" autocomplete="off" placeholder="貼上分享連結（…?deck=…）"></label>
-        <div class="opts"><button class="opt primary" type="button" id="shareGo">讀取</button><a class="opt quiet" href="../index.html">開啟卡牌資料庫組牌</a></div>
+        <div class="opts"><button class="opt primary" type="button" id="shareGo">讀取</button><a class="opt quiet" href="https://weilun2022.github.io/haikyuu-cards/index.html" target="_blank" rel="noopener">開啟外部牌庫組牌</a></div>
         <div id="sharePreview" aria-live="polite"></div>
       </section>
       <details class="imp-json"><summary>進階：用 JSON 匯入／編輯（可組牌 ${modeOptions().mode==='numeric'?CL.data.counts.cards:CL.data.counts.playable} 種卡）</summary>
