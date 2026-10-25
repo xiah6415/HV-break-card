@@ -1493,3 +1493,16 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 
 ## Codex：多牌組／組牌器／Firebase Hosting
 - 計畫：先合併b7318b8，保留資料庫相對連結；我方改為bk_my_decks多牌組及舊檔遷移，空牌組禁開局／建房，AI只列青葉城西與自訂。新增內建組牌器與改名／刪除／分享匯出，匯入一律新增；更新測試注入牌組、完整驗證後部署同站Firebase Hosting並核對授權網域、舊Pages與邀請參數，更新memory／STATUS。
+## Claude：組牌入口與資料庫互通（2026-10-25，分支 claude/deck-link）
+- 使用者要求：對練台多一個組牌入口，連回本站卡牌資料庫（repo 根目錄 index.html）；託管改 Firebase Hosting（交 Codex）
+- 計畫：對練台選牌頁「我的牌組」旁加「組牌」按鈕→ ../（同站資料庫）；匯入面板改指向本站資料庫；資料庫分享視窗加「帶去對練台」→ break-v9.5/index.html?deck=<同一編碼>（對練台既有 ?deck= 匯入流程）、標頭加「對練台」連結；連結皆用相對路徑，GitHub Pages 與 Firebase Hosting 都可用
+- 結果：對練台選牌頁加「🃏 到卡牌資料庫組牌」（../index.html，同分頁）；匯入面板改連本站資料庫；根目錄 index.html（資料庫）實際使用簡化版牌組構築面板（sdeck，openShareModal 已被覆寫為空函式），故在面板標頭加「🏐 對練」：以 {n,c:[[卡號,張數]]} LZString 編碼帶到 break-v9.5/index.html?deck=，非 40 張先確認；資料庫標頭加「🏐 對練台」連結。相對路徑，GitHub Pages／Firebase Hosting 皆可
+- 測試：資料庫 361 張卡號（HV-D01-001 形式）對練台全數可解析；390／1280 來回流程（對練台→資料庫→對練→匯入預覽）無頁面錯誤；fuzz3000、test.js 300、e2e、share、library、choice e2e 通過
+- 注意：資料庫 cards.json 只有 361 張，對練台 541 張，新系列在資料庫組不到
+
+## 待 Codex：牌組改版＋Firebase Hosting（使用者 2026-10-25 指定交 Codex）
+- 預設牌組：我方不再提供內建牌組（MY_DECKS 清空，選單顯示「尚無牌組」、未選牌組時開始／建房鈕停用並提示去組牌）；AI 只保留青葉城西（seijoh）＋AI 自訂；engine.js 的 DECKS 資料可保留給測試用，只是不列在介面。使用者之後會自己把構築放進來
+- 我方多牌組：改存 bk_my_decks（[{id,name,cards}]），舊 bk_custom_deck 自動遷移；可選擇、改名、刪除、匯出分享碼
+- 三種組牌方式都要：①對練台內建組牌器（搜尋卡號／名稱／學校、角色／Event 篩選、點卡 +/−、即時顯示 x/40、Event ≤8 與張數檢查，嚴格模式只列可對戰卡、數值模式全 541 張，可編輯既有牌組）②本站卡牌資料庫「🏐 對練」帶入（claude/deck-link 已完成）③外部牌庫分享連結匯入（既有 openImporter）。匯入成功一律存成新的一副牌組
+- 測試影響：e2e.js／mobile-review-e2e.js／share-e2e.js／browser-test-helpers.cjs 會直接按 #startBtn，依賴預設我方牌組；需改成先注入測試牌組（例如 fixture 或預存 bk_my_decks）
+- 託管：改用 Firebase Hosting（haikyuu-playmat），firebase.json 加 hosting（public 為 repo 根目錄，忽略 .git、測試與 node 檔），根目錄資料庫與 break-v9.5 同站部署；Authentication 授權網域確認 haikyuu-playmat.web.app／firebaseapp.com；GitHub Pages 舊網址保留或轉址到新網址（含 ?online=1&room= 邀請參數）
