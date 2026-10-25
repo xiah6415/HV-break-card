@@ -4,7 +4,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=req
 (async()=>{const browser=await chromium.launch({executablePath:process.env.PLAYWRIGHT_EXECUTABLE||undefined});
  try{for(const [width,height]of [[1280,900],[375,760],[320,568]]){
   const page=await browser.newPage({viewport:{width,height},isMobile:width<500,hasTouch:width<500}),errors=[];page.on('pageerror',e=>errors.push(e.message));
-  await page.setContent(fs.readFileSync('index.html','utf8'),{waitUntil:'domcontentloaded'});
+  await require('./test-decks.cjs').seed(page);await page.goto(require('node:url').pathToFileURL(path.resolve('index.html')).href,{waitUntil:'domcontentloaded'});
   // A production game must never create the retired mutable Game or bridge.
   await page.evaluate(()=>{BreakEngine.Game=class{constructor(){throw Error('OLD_GAME_USED');}};if(window.BreakRulesLegacy)throw Error('OLD_BRIDGE_BUNDLED');const T=BreakMatchPilot.TableSession;BreakMatchPilot.TableSession=class extends T{constructor(o,c){super({...o,seed:7},c);window.tableTest=this;}};});
   await page.selectOption('#speed','200');await page.click('#startBtn');

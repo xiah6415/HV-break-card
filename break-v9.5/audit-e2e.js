@@ -8,7 +8,7 @@ const path = require('node:path');
     for (const [width, height] of [[1280, 900], [390, 844], [320, 568]]) {
       const page = await browser.newPage({ viewport: { width, height }, isMobile: width < 700, hasTouch: width < 700 });
       const errors = []; page.on('pageerror', error => errors.push(error.message));
-      await page.setContent(fs.readFileSync('index.html', 'utf8'), { waitUntil: 'domcontentloaded' });await page.selectOption('#gameMode','strict');
+      await page.goto(require('node:url').pathToFileURL(path.resolve('index.html')).href, { waitUntil: 'domcontentloaded' });await page.selectOption('#gameMode','strict');
       await page.click('#supportBtn');
       const counts = await page.evaluate(() => BreakCardLibrary.data.counts);
       assert.equal(await page.locator('[data-support-card]').count(), Math.min(60, counts.cards));
@@ -28,7 +28,7 @@ const path = require('node:path');
       await page.click('#editDeck'); await page.click('.imp-json summary');
       await page.fill('#customJSON', JSON.stringify({ n: 'Official bonus code', c: [['HVBP-002', 40]] }));
       await page.click('#saveCustom');
-      assert.equal(await page.locator('#myDeck').inputValue(), 'custom');
+      assert.match(await page.locator('#myDeck').inputValue(), /^my_/);
       await page.locator('#myStrip [data-card="BP-002"]').click();
       assert.match(await page.locator('#sheetBox').textContent(), /HVBP-002/);
       assert.match(await page.locator('#sheetBox').textContent(), /主要技能情境已測試/);

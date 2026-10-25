@@ -548,6 +548,14 @@ body.playing .dock.wait .in { padding-block: 4px; }
 .theme-seg button { border: 0; border-radius: 999px; min-height: 36px; padding: 4px 14px; background: none; color: var(--muted); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
 .theme-seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 4px #0002; }
 a.chip { text-decoration: none; display: inline-flex; align-items: center; color: inherit; }
+#builderName,#builderQuery,#deckName {width:100%;min-height:44px;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink);font:inherit;font-size:16px;}
+.builder-head {display:flex;align-items:center;justify-content:space-between;gap:10px;position:sticky;top:0;background:var(--surface);padding:8px 0;z-index:2;}
+.builder-grid {display:grid;grid-template-columns:repeat(auto-fill,minmax(116px,1fr));gap:10px;min-width:0;margin:10px 0;}
+.builder-card {border:1px solid var(--line);border-radius:10px;padding:7px;background:var(--sunk);min-width:0;}
+.builder-card .ci {width:100%;height:auto;aspect-ratio:5/7;object-fit:contain;}
+.builder-label {font-size:12px;font-weight:700;overflow-wrap:anywhere;}.builder-label small {display:block;color:var(--muted);}
+.builder-controls {display:flex;align-items:center;justify-content:space-between;gap:3px;}.builder-controls .chip {padding:5px 10px;min-height:40px;}
+#sheetBox textarea {width:100%;min-width:0;overflow-wrap:anywhere;background:var(--sunk);color:var(--ink);}
 </style>
 <script>
 /* 外觀：bk_theme = light（預設）｜dark｜auto（跟隨系統）；在繪製前套用避免閃爍 */
@@ -589,15 +597,17 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
     <div class="panel" id="deckPanel">
       <h2>你的牌組</h2>
       <label class="field solo-only" for="gameMode">對戰模式<select id="gameMode"><option value="numeric" selected>數值模式（含手動技能）</option><option value="strict">嚴格模式（已支援卡片）</option></select></label>
-      <label class="field" for="myDeck">牌組<select id="myDeck"><option value="k1014">烏野1014</option><option value="k1014c">1014c（接 6 強化）</option><option value="quick">烏野快攻版</option><option value="k1010">烏野1010</option><option value="seijoh">青葉城西（第四彈）</option><option value="hk_axis">烏野 日向影山軸</option></select></label>
+      <label class="field" for="myDeck">牌組<select id="myDeck"><option value="">尚無牌組</option></select></label>
+      <p class="sub" id="deckHint" role="status">尚無牌組，請先組牌或匯入牌組。</p>
       <div class="deckstrip" id="myStrip"></div>
+      <div class="opts"><button class="chip" type="button" id="newDeck">＋內建組牌器</button><button class="chip" type="button" id="editMyDeck">編輯</button><button class="chip" type="button" id="renameDeck">改名</button><button class="chip" type="button" id="deleteDeck">刪除</button><button class="chip" type="button" id="exportDeck">匯出分享碼</button></div>
       <a class="chip" id="buildDeck" href="../index.html">🃏 到卡牌資料庫組牌</a>
       <button class="chip" type="button" id="editDeck">匯入／編輯自訂牌組</button>
       <button class="chip" type="button" id="supportBtn">卡庫／支援狀態</button>
     </div>
     <div class="panel solo-only">
       <h2>AI 對手</h2>
-      <label class="field" for="aiDeck">牌組<select id="aiDeck"><option value="seijoh">青葉城西（第四彈）</option><option value="hk_axis">烏野 日向影山軸</option><option value="k1014">烏野1014</option><option value="k1014c">1014c（接 6 強化）</option><option value="quick">烏野快攻版</option><option value="k1010">烏野1010</option></select></label>
+      <label class="field" for="aiDeck">牌組<select id="aiDeck"><option value="seijoh">青葉城西（第四彈）</option></select></label>
       <label class="field" for="aiLevel">AI 難度<select id="aiLevel"><option value="easy">簡單（較常失誤、不攔網）</option><option value="normal" selected>普通</option><option value="hard">困難（思考較久）</option></select></label>
       <button class="chip" type="button" id="editAiDeck">匯入 AI 牌組</button>
       <label class="field" for="speed">AI 出牌速度
@@ -617,8 +627,8 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
       <div id="olLobby" class="ol-list" hidden>
         <div class="ol-me"><span class="ol-dot" id="olDot"></span><b id="olWho"></b><span class="ol-sp"></span><button class="chip" type="button" id="olLink" hidden>連結 Google</button><button class="chip" type="button" id="olLogout">登出</button></div>
         <label class="field" for="olOpp">對手<select id="olOpp"><option value="human">邀請朋友</option><option value="AI">策略 AI</option></select></label>
-        <button class="btn wide" type="button" id="olCreate">建立房間</button>
-        <div class="ol-join"><input class="ol-input ol-code-input" id="olCode" maxlength="8" autocomplete="off" placeholder="房號" aria-label="8 碼房號"><button class="btn outline" type="button" id="olJoin">加入</button></div>
+        <button class="btn wide" type="button" id="olCreate" disabled>建立房間</button>
+        <div class="ol-join"><input class="ol-input ol-code-input" id="olCode" maxlength="8" autocomplete="off" placeholder="房號" aria-label="8 碼房號"><button class="btn outline" type="button" id="olJoin" disabled>加入</button></div>
         <h2>房間</h2><div class="ol-list" id="olRooms"></div>
         <h2>在線</h2><div class="ol-people" id="olPeople"></div>
       </div>
@@ -642,7 +652,7 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
       <label class="field" for="turnPromptStyle">回合／發球提示
         <select id="turnPromptStyle"><option value="auto" selected>顯示 1 秒後繼續</option><option value="manual">點擊後繼續</option></select>
       </label>
-      <button class="btn" id="startBtn" type="button">開始對戰</button>
+      <button class="btn" id="startBtn" type="button" disabled>開始對戰</button>
     </div>
   </section>
 
@@ -683,14 +693,16 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
   document.getElementById("runtimeStatus").textContent = "✅ JavaScript 已執行，正在載入牌組及遊戲…";
   const { DEF, DECKS, nm, isC, st } = E;
   const $ = id => document.getElementById(id);
-  const MY_DECKS = ['k1014', 'k1014c', 'quick', 'k1010', 'seijoh', 'hk_axis'];
-  const AI_DECKS = ['seijoh', 'hk_axis', 'k1014', 'k1014c', 'quick', 'k1010'];
+  const MY_DECKS = [];
+  const AI_DECKS = ['seijoh'];
   const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
   if (store.get('bk_game_mode') === 'strict') $('gameMode').value = 'strict';
   if (['easy','normal','hard'].includes(store.get('bk_ai_level'))) $('aiLevel').value = store.get('bk_ai_level');
   $('aiLevel').onchange = () => store.set('bk_ai_level', $('aiLevel').value);
   const modeOptions = () => ({mode:$('gameMode').value});
-  try { const saved = store.get('bk_custom_deck'); if (saved) { DECKS.custom = DT.parseDeck(saved, DEF, {mode:'numeric'}); MY_DECKS.push('custom'); } } catch (e) { console.warn('自訂牌組載入失敗：' + e.message); }
+  const personal = new BreakMyDecks({getItem:k=>localStorage.getItem(k),setItem:(k,v)=>localStorage.setItem(k,v),removeItem:k=>localStorage.removeItem(k)}, DEF);
+  function syncMyDecks() { for(const id of MY_DECKS) delete DECKS[id]; MY_DECKS.splice(0,MY_DECKS.length,...personal.decks.map(d=>d.id)); for(const d of personal.decks) DECKS[d.id]={name:d.name,cards:{...d.cards}}; }
+  syncMyDecks();
   try { const saved = store.get('bk_custom_ai_deck'); if (saved) { DECKS.custom_ai = DT.parseDeck(saved, DEF, {mode:'numeric'}); AI_DECKS.push('custom_ai'); } } catch (e) { console.warn('AI 自訂牌組載入失敗：' + e.message); }
   const STAT = [['srv', '發'], ['blk', '攔'], ['rcv', '接'], ['tos', '舉'], ['atk', '攻']];
   // 牌桌每次重繪都會重建圖片，延遲載入會造成閃白；只在大量卡片的列表（未進入對局時）用 lazy
@@ -701,14 +713,16 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
 
   // ---------- setup
   function usableDeck(k) { try { E.validateDeck(DECKS[k].cards, modeOptions().mode); return true; } catch(e) { return false; } }
-  function fill(sel, keys, saved) { sel.innerHTML = keys.map(k => `<option value="${k}" ${usableDeck(k)?'':'disabled'}>${esc(DECKS[k].name)}${usableDeck(k)?'':'（僅數值模式）'}</option>`).join(''); sel.value = saved && keys.includes(saved) && usableDeck(saved) ? saved : keys.find(usableDeck); }
-  function strip(key) { return Object.entries(DECKS[key].cards).sort((a, b) => (isC(a[0]) === isC(b[0]) ? 0 : isC(a[0]) ? -1 : 1)).map(([c, n]) => `<figure><button class="cbtn" type="button" data-card="${c}">${img(c)}</button><span>×${n}</span></figure>`).join(''); }
+  function fill(sel, keys, saved) { const usable=keys.filter(usableDeck);sel.innerHTML=(sel.id==='myDeck'?'<option value="">'+(keys.length?'請選擇牌組':'尚無牌組')+'</option>':'')+keys.map(k => `<option value="${esc(k)}" ${usableDeck(k)?'':'disabled'}>${esc(DECKS[k].name)}${usableDeck(k)?'':'（此模式不可用）'}</option>`).join('');sel.value=saved&&usable.includes(saved)?saved:usable[0]||''; }
+  let deckConnectionReady=false;
+  function deckButtons(){const valid=MY_DECKS.includes($('myDeck').value)&&usableDeck($('myDeck').value);$('startBtn').disabled=!valid;$('olCreate').disabled=$('olJoin').disabled=!valid||!deckConnectionReady;for(const id of ['editMyDeck','renameDeck','deleteDeck','exportDeck'])$(id).disabled=!MY_DECKS.includes($('myDeck').value);$('deckHint').textContent=personal.error?'牌組讀取失敗：'+personal.error:valid?'已選擇 '+DECKS[$('myDeck').value].name+'・40 張':MY_DECKS.length?'請選擇可用牌組，或先組牌／匯入。':'尚無牌組，請先組牌或匯入牌組。';}
+  function strip(key) { return Object.entries(DECKS[key]?.cards||{}).sort((a, b) => (isC(a[0]) === isC(b[0]) ? 0 : isC(a[0]) ? -1 : 1)).map(([c, n]) => `<figure><button class="cbtn" type="button" data-card="${c}">${img(c)}</button><span>×${n}</span></figure>`).join(''); }
   fill($('myDeck'), MY_DECKS, store.get('bk_my')); fill($('aiDeck'), AI_DECKS, store.get('bk_ai') || 'seijoh');
   if (store.get('bk_speed')) $('speed').value = store.get('bk_speed');
   if (store.get('bk_turn_prompt') === 'manual') $('turnPromptStyle').value = 'manual';
   $('turnPromptStyle').onchange = () => { store.set('bk_turn_prompt', $('turnPromptStyle').value); scheduleTransition(turnNotice); };
-  const refresh = () => { $('myStrip').innerHTML = strip($('myDeck').value); $('aiStrip').innerHTML = strip($('aiDeck').value); };
-  $('myDeck').onchange = $('aiDeck').onchange = refresh; refresh();
+  const refresh = () => { $('myStrip').innerHTML = strip($('myDeck').value); $('aiStrip').innerHTML = strip($('aiDeck').value);deckButtons(); };
+  $('myDeck').onchange = () => {store.set('bk_my',$('myDeck').value);refresh();};$('aiDeck').onchange=()=>{store.set('bk_ai',$('aiDeck').value);refresh();};refresh();
   $('gameMode').onchange = () => { store.set('bk_game_mode', $('gameMode').value); const me=$('myDeck').value, ai=$('aiDeck').value; fill($('myDeck'),MY_DECKS,me);fill($('aiDeck'),AI_DECKS,ai);refresh(); };
 
   // ---------- custom deck importer：查卡網站分享連結＋JSON（Claude 2026-10-20）
@@ -718,10 +732,9 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
   };
   function saveDeck(target, deck) {
     const t = TARGET[target];
-    DECKS[t.key] = deck;
-    store.set(t.store, DT.exportDeck(deck)); store.set(t.pick, t.key);
-    if (!t.list.includes(t.key)) t.list.push(t.key);
-    fill($(t.sel), t.list, t.key); refresh();
+    if(target==='me'){const id=personal.add(deck);syncMyDecks();store.set(t.pick,id);fill($(t.sel),t.list,id);}
+    else {DECKS[t.key]=deck;store.set(t.store,DT.exportDeck(deck));store.set(t.pick,t.key);if(!t.list.includes(t.key))t.list.push(t.key);fill($(t.sel),t.list,t.key);}
+    refresh();
   }
   function sharePreview(target) {
     const box = $('sharePreview');
@@ -739,7 +752,7 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
     return info;
   }
   function openImporter(target, prefill = '') {
-    const t = TARGET[target], source = DECKS[t.key] || DECKS[$(t.sel).value];
+    const t = TARGET[target], source = DECKS[$(t.sel).value] || {name:'新牌組',cards:{}};
     openSheet(`<h3>匯入${t.label}牌組</h3>
       <section class="imp">
         <label class="field" for="shareURL">在卡牌資料庫「牌組構築」按「🏐 對練」可直接帶入；或貼上查卡網站的分享連結（…?deck=…）
@@ -766,10 +779,34 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
   $('editDeck').onclick = () => openImporter('me');
   $('editAiDeck').onclick = () => openImporter('ai');
 
+  // Personal deck management and the in-table builder share the same validator.
+  function selectPersonal(id){syncMyDecks();fill($('myDeck'),MY_DECKS,id);store.set('bk_my',$('myDeck').value);refresh();}
+  function openBuilder(id=null){
+    const original=personal.decks.find(d=>d.id===id),cards={...(original?.cards||{})};let limit=48;
+    openSheet(`<h3>${original?'編輯牌組':'建立牌組'}</h3><label class="field">牌組名稱<input id="builderName" maxlength="60" value="${esc(original?.name||'我的牌組')}"></label><div class="builder-head"><b id="builderCount" role="status"></b><button class="opt primary" type="button" id="builderSave">儲存牌組</button></div><p class="sub" id="builderError" role="alert"></p><details><summary>已選卡片（點 − 移除）</summary><div class="builder-grid" id="builderSelected"></div></details><label class="field">搜尋卡號／名稱／學校<input id="builderQuery" type="search" placeholder="例如 日向、音駒、P04"></label><label class="field">類別<select id="builderKind"><option value="all">全部</option><option value="C">角色</option><option value="E">Event</option></select></label><p class="sub" id="builderFound"></p><div class="builder-grid" id="builderCards"></div><button class="chip" type="button" id="builderMore">顯示更多</button>`);
+    const count=()=>Object.values(cards).reduce((a,n)=>a+n,0),events=()=>Object.entries(cards).reduce((a,[c,n])=>a+(isC(c)?0:n),0);
+    const item=c=>`<article class="builder-card">${img(c)}<div class="builder-label">${esc(nm(c))}<small>${esc(c)}</small></div><div class="builder-controls"><button type="button" class="chip" data-builder-minus="${c}" aria-label="減少 ${esc(nm(c))}" ${(cards[c]||0)?'':'disabled'}>−</button><b>${cards[c]||0}</b><button type="button" class="chip" data-builder-plus="${c}" aria-label="增加 ${esc(nm(c))}" ${count()>=40||(!isC(c)&&events()>=8)?'disabled':''}>＋</button></div></article>`;
+    const renderBuilder=()=>{
+      const total=count(),ev=events(),info=DT.inspectDeck({name:$('builderName').value,cards},DEF,modeOptions());
+      $('builderCount').textContent=`${total}/40・Event ${ev}/8`;$('builderSave').disabled=!info.ok||!$('builderName').value.trim();$('builderError').textContent=info.ok?'':info.problems.join('；');
+      const found=CL.search($('builderQuery').value,modeOptions().mode==='strict'?'playable':'all',modeOptions().mode).filter(c=>$('builderKind').value==='all'||c.kind===$('builderKind').value);
+      $('builderFound').textContent=`${found.length} 種卡・${modeOptions().mode==='strict'?'嚴格模式：可對戰卡':'數值模式：全牌庫'}`;
+      $('builderCards').innerHTML=found.slice(0,limit).map(c=>item(c.code)).join('');$('builderSelected').innerHTML=Object.keys(cards).filter(c=>cards[c]).map(item).join('')||'<p class="sub">尚未選卡</p>';$('builderMore').hidden=found.length<=limit;
+    };
+    $('builderQuery').oninput=$('builderKind').onchange=()=>{limit=48;renderBuilder();};$('builderName').oninput=renderBuilder;$('builderMore').onclick=()=>{limit+=48;renderBuilder();};
+    const box=$('sheetBox');box.onclick=e=>{const plus=e.target.closest('[data-builder-plus]'),minus=e.target.closest('[data-builder-minus]');if(!plus&&!minus)return;const c=(plus||minus).dataset[plus?'builderPlus':'builderMinus'];if(plus&&(count()>=40||(!isC(c)&&events()>=8)))return;cards[c]=Math.max(0,(cards[c]||0)+(plus?1:-1));if(!cards[c])delete cards[c];renderBuilder();};
+    $('builderSave').onclick=()=>{try{const deck=DT.parseDeck({name:$('builderName').value.trim(),cards},DEF,modeOptions()),saved=id?personal.update(id,deck):personal.add(deck);selectPersonal(saved);closeSheet();}catch(e){$('builderError').textContent=e.message;}};
+    renderBuilder();
+  }
+  $('newDeck').onclick=()=>openBuilder();$('editMyDeck').onclick=()=>openBuilder($('myDeck').value);
+  $('renameDeck').onclick=()=>{const id=$('myDeck').value,d=DECKS[id];openSheet(`<h3>牌組改名</h3><label class="field">名稱<input id="deckName" maxlength="60" value="${esc(d.name)}"></label><p id="deckManageError" role="alert"></p><button class="opt primary" id="saveDeckName" type="button">儲存名稱</button>`);$('saveDeckName').onclick=()=>{try{personal.rename(id,$('deckName').value);selectPersonal(id);closeSheet();}catch(e){$('deckManageError').textContent=e.message;}};};
+  $('deleteDeck').onclick=()=>{const id=$('myDeck').value;openSheet(`<h3>刪除 ${esc(DECKS[id].name)}？</h3><p>只刪除這副已儲存的牌組。</p><p id="deckManageError" role="alert"></p><button class="opt danger" id="confirmDeleteDeck" type="button">刪除牌組</button>`);$('confirmDeleteDeck').onclick=()=>{try{personal.remove(id);selectPersonal('');closeSheet();}catch(e){$('deckManageError').textContent=e.message;}};};
+  $('exportDeck').onclick=()=>{const deck=DECKS[$('myDeck').value],code=DT.encodeShare(deck);openSheet(`<h3>匯出 ${esc(deck.name)}</h3><p>分享碼可貼回「匯入牌組」，也可用連結分享。</p><label class="field">分享碼<textarea id="deckShareCode" readonly rows="4"></textarea></label><label class="field">對練台匯入連結<textarea id="deckShareLink" readonly rows="4"></textarea></label><button class="opt primary" id="copyDeckShare" type="button">複製分享碼</button><p id="deckShareStatus" role="status"></p>`);$('deckShareCode').value=code;const url=new URL(location.href);url.search='';url.hash='';url.searchParams.set('deck',code);$('deckShareLink').value=url.href;$('copyDeckShare').onclick=async()=>{try{await navigator.clipboard.writeText(code);$('deckShareStatus').textContent='已複製';}catch{$('deckShareCode').select();$('deckShareStatus').textContent='請複製已選取的分享碼';}};};
+
   // ---------- sheets
   let sheetOnClose = null;
   function openSheet(html, onClose = null) { closeSheet(); clearTimeout(turnTimer); sheetOnClose = onClose; $('sheetBox').innerHTML = html + '<button class="chip closer" type="button" data-close="1">關閉</button>'; $('sheet').hidden = false; $('turnScreen').inert = true; $('sheetBox').querySelector('button')?.focus(); }
-  function closeSheet() { $('sheet').hidden = true; $('turnScreen').inert = false; const callback = sheetOnClose; sheetOnClose = null; callback?.(); scheduleTransition(turnNotice); }
+  function closeSheet() { $('sheetBox').onclick=null;$('sheet').hidden = true; $('turnScreen').inert = false; const callback = sheetOnClose; sheetOnClose = null; callback?.(); scheduleTransition(turnNotice); }
   $('sheet').addEventListener('click', e => { if (e.target.id === 'sheet' || e.target.dataset.close) closeSheet(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
   const libraryView = {query: '', status: 'all', limit: 60};
@@ -1238,6 +1275,7 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
   }
   function start() {
     const my = $('myDeck').value, ai = $('aiDeck').value, speed = +$('speed').value;
+    if(!MY_DECKS.includes(my)||!usableDeck(my))throw Error('請先組牌或匯入並選擇牌組');
     store.set('bk_my', my); store.set('bk_ai', ai); store.set('bk_speed', String(speed));
     session?.stop();
     const expand=key=>Object.entries(DECKS[key].cards).flatMap(([card,count])=>Array(count).fill(card));
@@ -1275,14 +1313,14 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
     store.set('bk_play_mode', mode);
   }
   $('modeSolo').onclick = () => setMode('solo'); $('modeOnline').onclick = () => setMode('online');
-  function olDeck() { const key = $('myDeck').value, cards = Object.entries(DECKS[key].cards).flatMap(([c, n]) => Array(n).fill(c)); new BreakMatchPilot.Match({ decks: [cards, cards], mode: 'strict' }); return { key, cards }; }
+  function olDeck() { const key = $('myDeck').value;if(!MY_DECKS.includes(key)||!usableDeck(key))throw Error('請先組牌或匯入並選擇牌組');const cards = Object.entries(DECKS[key].cards).flatMap(([c, n]) => Array(n).fill(c)); new BreakMatchPilot.Match({ decks: [cards, cards], mode: 'strict' }); return { key, cards }; }
   function olNameOf(uid) { if (uid === 'AI') return '策略 AI'; const conns = OL.presence[uid]; const first = conns && Object.values(conns)[0]; return cleanName(OL.meta?.names?.[uid] || (uid===OL.meta?.p0?OL.meta?.p0Name:OL.meta?.p1Name) || first?.name) || '對手'; }
   function olView() {
     const c = OL.client, signedIn = !!c?.user, inRoom = !!OL.roomId, waiting = inRoom && OL.meta?.status === 'waiting';
     $('olLogin').hidden = signedIn; $('olLobby').hidden = !signedIn || inRoom; $('olWait').hidden = !waiting;
     if (signedIn) { $('olWho').textContent = cleanName(c.name) + (c.user.isAnonymous ? '' : '・Google'); $('olLink').hidden = !c.user.isAnonymous; $('olDot').classList.toggle('on', !!c.online); }
     document.body.dataset.room = inRoom ? '1' : '';
-    $('olCreate').disabled=$('olJoin').disabled=!c?.online;olConnectionChanged();if(OL.inGame&&game?.winner)render();
+    deckConnectionReady=!!c?.online;deckButtons();olConnectionChanged();if(OL.inGame&&game?.winner)render();
     if (waiting) { $('olWaitCode').textContent = OL.roomId; $('olWaitText').textContent = OL.meta.p1 === 'AI' ? '正在準備對局' : '等待朋友加入'; }
   }
   function olCanSend(v=session?.last){const c=OL.client,a=OL.authority;return !!(c?.online&&!c.pending&&OL.meta?.status==='running'&&a?.active&&a.lease.term===v?.term);}
@@ -1342,7 +1380,7 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
   $('olGoogle').onclick = olRun(async () => { if (!OL.client) await olLoad(); await OL.services.A.signInWithPopup(OL.services.auth, new OL.services.A.GoogleAuthProvider()); });
   $('olLink').onclick = olRun(async () => { if (OL.roomId) throw Error('請先離開房間再連結帳號'); await OL.services.A.linkWithPopup(OL.services.auth.currentUser, new OL.services.A.GoogleAuthProvider()); });
   $('olLogout').onclick = olRun(async () => { await OL.client.logout(); await OL.services.A.signOut(OL.services.auth); });
-  $('olCreate').onclick = olRun(async () => { const { cards } = olDeck(); await OL.client.create({ title: cleanName(OL.client.name) + ' 的房間', deck: cards, aiDeck: $('olOpp').value === 'AI' ? cards : null }); });
+  $('olCreate').onclick = olRun(async () => { const { cards } = olDeck(); await OL.client.create({ title: cleanName(OL.client.name) + ' 的房間', deck: cards, aiDeck: $('olOpp').value === 'AI' ? Object.entries(DECKS[$('aiDeck').value].cards).flatMap(([c,n])=>Array(n).fill(c)) : null }); });
   const olJoin = code => olRun(async () => { const id = String(code || '').trim().toUpperCase(); if (!/^[A-Z0-9]{8}$/.test(id)) throw Error('房號是 8 碼英數字'); const { cards } = olDeck(); await OL.client.join(id, cards); });
   $('olJoin').onclick = () => olJoin($('olCode').value)();
   $('olCode').onkeydown = e => { if (e.key === 'Enter') olJoin($('olCode').value)(); };
@@ -1356,7 +1394,7 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
   });
   { const q = new URLSearchParams(location.search); if (q.get('online') === '1' || q.get('room')) { if (q.get('room')) $('olCode').value = q.get('room').toUpperCase(); setTimeout(() => setMode('online'), 0); } else if (store.get('bk_play_mode') === 'online') setTimeout(() => setMode('online'), 0); else document.body.dataset.mode = 'solo'; }
   $('startBtn').onclick = () => { try { start(); document.getElementById('runtimeStatus').hidden = true; } catch (e) { const box = document.getElementById('runtimeStatus'); box.hidden = false; box.textContent = '❌ 遊戲啟動錯誤：' + (e && e.message || e); console.error(e); } };
-  try { const q = location.search + location.hash; if (/[?&#]deck=/.test(q)) { setTimeout(() => openImporter('me', q), 0); history.replaceState(null, '', location.pathname); } } catch (e) { /* 網址參數不可用時略過 */ }
+  try { const q = location.search + location.hash; if (/[?&#]deck=/.test(q)) { setTimeout(() => openImporter('me', q), 0); const clean=new URL(location.href);clean.searchParams.delete('deck');clean.hash=clean.hash.replace(/(^#|&)deck=[^&]*/,'');history.replaceState(null,'',clean.pathname+clean.search+clean.hash); } } catch (e) { /* 網址參數不可用時略過 */ }
   document.getElementById('runtimeStatus').hidden = true;
 })();
 </script>

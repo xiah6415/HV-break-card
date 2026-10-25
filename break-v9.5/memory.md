@@ -1506,3 +1506,8 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 三種組牌方式都要：①對練台內建組牌器（搜尋卡號／名稱／學校、角色／Event 篩選、點卡 +/−、即時顯示 x/40、Event ≤8 與張數檢查，嚴格模式只列可對戰卡、數值模式全 541 張，可編輯既有牌組）②本站卡牌資料庫「🏐 對練」帶入（claude/deck-link 已完成）③外部牌庫分享連結匯入（既有 openImporter）。匯入成功一律存成新的一副牌組
 - 測試影響：e2e.js／mobile-review-e2e.js／share-e2e.js／browser-test-helpers.cjs 會直接按 #startBtn，依賴預設我方牌組；需改成先注入測試牌組（例如 fixture 或預存 bk_my_decks）
 - 託管：改用 Firebase Hosting（haikyuu-playmat），firebase.json 加 hosting（public 為 repo 根目錄，忽略 .git、測試與 node 檔），根目錄資料庫與 break-v9.5 同站部署；Authentication 授權網域確認 haikyuu-playmat.web.app／firebaseapp.com；GitHub Pages 舊網址保留或轉址到新網址（含 ?online=1&room= 邀請參數）
+
+## Codex：多牌組與 Hosting 實作結果
+- b7318b8合併f9985bb；我方僅列bk_my_decks，舊bk_custom_deck遷移一次；空牌組禁開局／登入後建房與加入。支援選擇／編輯／改名／刪除／分享碼；匯入一律新增我方牌組。AI只列青葉城西＋已匯入自訂，線上AI也使用AI所選牌組。
+- 組牌器可搜卡號／名稱／學校、角色／Event篩選、加減及即時40張／Event≤8驗證，嚴格只列可對戰卡、數值全541；持久化先成功才更新清單，失敗保留原檔。測試改顯式注入牌組；模型／三尺寸組牌器、10組單人瀏覽器、規則74項、多人建房／雙房／接手／再戰／隱私、fuzz3000／6×300均通過。
+- 根firebase.json將資料庫與對練台同站發布，排除.git／測試／文件／Node依賴；Hosting兩網域已授權且保留Pages網域，舊Pages保留。牌組仍為各網域本機資料，轉新站可從舊站匯出分享碼再匯入；待公開部署核對。

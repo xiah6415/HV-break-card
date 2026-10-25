@@ -5,7 +5,7 @@ library = write_library()
 runtime = write_runtime()
 subprocess.run(['node', 'rules/build-pilot.js'], check=True)
 native = '\n'.join(open(f).read() for f in ['pilot-runtime.js','host-choice.js','choice-ui.js'])
-ui = open('ui.html').read(); decktools = open('deck-tools.js').read()
+ui = open('ui.html').read(); decktools = open('deck-tools.js').read() + '\n' + open('my-decks.js').read()
 # Legacy engine stays a Node regression oracle; only static presentation data
 # are imported at build time. The public page contains no old Game or bridge.
 table_data = subprocess.check_output(['node','-e',"const E=require('./engine');process.stdout.write(JSON.stringify({DEF:E.DEF,DECKS:E.DECKS}))"], text=True)

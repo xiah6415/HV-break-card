@@ -1,0 +1,58 @@
+{
+  "database": {
+    "rules": "break-v9.5/database.rules.json"
+  },
+  "hosting": {
+    "site": "haikyuu-playmat",
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/.*/**",
+      "**/node_modules/**",
+      "**/__pycache__/**",
+      "**/*.py",
+      "**/*.pyc",
+      "**/*.md",
+      "**/*.cjs",
+      "**/*test*",
+      "**/*e2e*",
+      "**/*fuzz*",
+      "**/*bench*",
+      "**/*debug*",
+      "**/*.log",
+      "**/*.map",
+      "**/package*.json",
+      "break-v9.5/firebase.json",
+      "break-v9.5/database.rules.json",
+      "break-v9.5/rules/**",
+      "break-v9.5/multiplayer/**",
+      "break-v9.5/library/**",
+      "break-v9.5/ui.html",
+      "break-v9.5/engine.js",
+      "break-v9.5/qa-play.js",
+      "ref_index.html",
+      "ref_cards_data.js"
+    ],
+    "headers": [
+      {
+        "source": "**/*.html",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "/break-v9.5/**",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      }
+    ]
+  }
+}

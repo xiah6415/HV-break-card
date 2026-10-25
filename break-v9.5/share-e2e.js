@@ -22,13 +22,13 @@ const site='https://weilun2022.github.io/haikyu-cards/?deck=';
   await page.fill('#shareURL',site+okCode.replace(/\+/g,' '));await page.click('#shareGo');
   assert.match(await page.textContent('#sharePreview'),/可以匯入/);
   assert.ok(await page.evaluate(()=>{const b=document.getElementById('sheetBox');return b.scrollWidth<=b.clientWidth+1;}),'匯入視窗橫向溢出');await page.click('#shareSave');
-  assert.equal(await page.inputValue('#myDeck'),'custom');assert.match(await page.locator('#myDeck option:checked').textContent(),/分享烏野/);
+  assert.match(await page.inputValue('#myDeck'),/^my_/);assert.match(await page.locator('#myDeck option:checked').textContent(),/分享烏野/);
   // 匯入 AI
   await page.click('#editAiDeck');await page.fill('#shareURL',okCode);await page.click('#shareGo');await page.click('#shareSave');
   assert.equal(await page.inputValue('#aiDeck'),'custom_ai');
   const sw=await page.evaluate(()=>document.documentElement.scrollWidth);assert.ok(sw<=width,'橫向溢出 '+sw);
   // 重新載入後保留
-  await page.reload({waitUntil:'domcontentloaded'});await page.selectOption('#gameMode','strict');assert.equal(await page.inputValue('#myDeck'),'custom');assert.equal(await page.inputValue('#aiDeck'),'custom_ai');
+  await page.reload({waitUntil:'domcontentloaded'});await page.selectOption('#gameMode','strict');assert.match(await page.inputValue('#myDeck'),/^my_/);assert.equal(await page.inputValue('#aiDeck'),'custom_ai');
   // ?deck= 自動帶入
   await page.goto(url+'?deck='+okCode,{waitUntil:'domcontentloaded'});await page.waitForSelector('#shareSave');
   assert.ok(!(await page.evaluate(()=>location.search)).includes('deck='));
