@@ -393,6 +393,8 @@ body.playing #game { position: fixed; inset: 0; z-index: 3; background: var(--bg
 body.playing #game .game { margin: 0 auto; max-width: 640px; height: var(--viewh, 100dvh); display: grid; padding: 0 6px; gap: 2px;
   grid-template-rows: auto auto auto auto minmax(var(--dockspace, 64px), 1fr) auto var(--handh);
   grid-template-areas: "ob" "oc" "net" "mc" "." "mb" "hand"; }
+body.playing #olConnectionText {display:none;}
+body.playing[data-takeover="1"] .pbar.opp {padding-right:180px;}
 body.playing .pbar.opp { grid-area: ob; } body.playing .court2.opp { grid-area: oc; } body.playing .net-zone { grid-area: net; }
 body.playing .court2.me { grid-area: mc; } body.playing .pbar.me { grid-area: mb; } body.playing .hand-zone { grid-area: hand; }
 body.playing #oppSide { display: contents; }
@@ -413,7 +415,7 @@ body.playing .side { padding: 0; border-radius: 0; background: none; }
 /* 場地 */
 .court2 { display: grid; grid-template-columns: 30px minmax(0, 1fr) 40px; gap: 4px; align-items: center; min-height: 0; padding: 0 2px; }
 .court2.me { --cw: min(74px, 7.8vh, calc((100vw - 110px) / 3.6)); }
-.court2.opp { --cw: min(60px, 6.2vh, calc((100vw - 110px) / 4.2)); }
+.court2.opp { grid-template-columns:40px minmax(0,1fr) 30px; --cw: min(60px, 6.2vh, calc((100vw - 110px) / 4.2)); }
 .field { display: grid; gap: 4px; min-width: 0; }
 .row { display: grid; gap: 4px; min-width: 0; }
 .row-blk { grid-template-columns: 1fr 1.25fr 1fr; }
@@ -608,7 +610,7 @@ body.playing .dock.wait .in { padding-block: 4px; }
   </section>
 </div>
 
-<div class="dock" id="dock" hidden><div class="in"><div class="dock-head"><div class="dock-summary" id="dockSummary">目前操作</div><button class="chip" id="manualBtn" type="button" hidden>手動</button><button class="chip undo-button" id="undoBtn" type="button" disabled>Undo</button><button class="chip dock-toggle" id="dockToggle" type="button" aria-expanded="true" aria-controls="dockQ dockOpts">收合面板</button></div><div class="q" id="dockQ"></div><div class="opts" id="dockOpts"></div></div></div>
+<div class="dock" id="dock" hidden><div class="in"><div class="dock-head"><div class="dock-summary" id="dockSummary">目前操作</div><button class="chip" id="manualBtn" type="button" hidden>手動</button><button class="chip undo-button" id="undoBtn" type="button" disabled>Undo</button></div><div class="q" id="dockQ"></div><div class="opts" id="dockOpts"></div></div></div>
 <div class="sheet" id="sheet" hidden><div class="box" id="sheetBox"></div></div>
 <div class="turn-screen" id="turnScreen" role="dialog" aria-modal="true" aria-labelledby="turnTitle" aria-describedby="turnDetail" hidden><div class="turn-card" id="turnCard"></div></div>
 
@@ -1000,24 +1002,24 @@ body.playing .dock.wait .in { padding-block: 4px; }
   }
   function courtHTML(p) {
     const mine = p.idx === 0, ack = mine && pending && pending.req.kind === 'ack';
-    const blk = areaHTML(p, 'side:0') + areaHTML(p, 'block') + areaHTML(p, 'side:1');
-    const main = areaHTML(p, 'receive') + areaHTML(p, 'toss') + areaHTML(p, 'attack');
-    const back = areaHTML(p, 'serve') + areaHTML(p, 'ev');
+    const blk = mine ? areaHTML(p, 'side:0') + areaHTML(p, 'block') + areaHTML(p, 'side:1') : areaHTML(p, 'side:1') + areaHTML(p, 'block') + areaHTML(p, 'side:0');
+    const main = mine ? areaHTML(p, 'receive') + areaHTML(p, 'toss') + areaHTML(p, 'attack') : areaHTML(p, 'attack') + areaHTML(p, 'toss') + areaHTML(p, 'receive');
+    const back = mine ? areaHTML(p, 'serve') + areaHTML(p, 'ev') : areaHTML(p, 'ev') + areaHTML(p, 'serve');
     const rows = mine ? [['blk', blk], ['main', main], ['back', back]] : [['back', back], ['main', main], ['blk', blk]];
     const lastDrop = p.drop.at(-1);
     const deck = ack ? `<button class="pile2 tgt" type="button" data-act="ack"><b>${p.deck.length}</b>抽牌</button>` : `<div class="pile2"><b>${p.deck.length}</b>牌庫</div>`;
     const drop = `<button class="pile2" type="button" data-pile="drop" data-p="${p.idx}" ${mine ? 'data-drop="drop"' : ''}>${lastDrop ? `<span class="pthumb">${img(lastDrop)}</span>` : ''}<b>${p.drop.length}</b>棄牌</button>`;
-    return `<div class="court2 ${mine ? 'me' : 'opp'}"><div class="lcol"><div class="setbox">SET<b>${p.sets.length}</b>${sets(p)}</div></div><div class="field">${rows.map(([k, h]) => `<div class="row row-${k}">${h}</div>`).join('')}</div><div class="rcol">${mine ? drop + deck : deck + drop}</div></div>`;
+    const set=`<div class="lcol"><div class="setbox">SET<b>${p.sets.length}</b>${sets(p)}</div></div>`,field=`<div class="field">${rows.map(([k,h])=>`<div class="row row-${k}">${h}</div>`).join('')}</div>`,piles=`<div class="rcol">${mine?drop+deck:deck+drop}</div>`;return `<div class="court2 ${mine?'me':'opp'}">${mine?set+field+piles:piles+field+set}</div>`;
   }
   function barHTML(p, mine) {
     const backs = mine ? '' : `<span class="backs">${'<i></i>'.repeat(Math.min(p.hand.length, 8))}</span>`;
-    return `<div class="pbar ${mine ? 'me' : 'opp'}"><span class="av">${esc((mine ? '你' : oppName).slice(0, 1))}</span><span class="who">${mine ? '你' : esc(oppName)}</span><span class="dk">${esc(DECKS[p.deckKey]?.name || '')}</span><span class="sp"></span>${backs}<span class="hn">手 <b>${p.hand.length}</b></span></div>`;
+    return `<div class="pbar ${mine ? 'me' : 'opp'}"><span class="av">${esc((mine ? '你' : oppName).slice(0, 1))}</span><span class="who">${mine ? '你' : esc(oppName)}</span><span class="dk">${esc(OL.inGame&&mine?(!OL.client?.online?'已離線':!OL.authority?.active?'房主離線':OL.client.pending?'同步中':'已連線'):DECKS[p.deckKey]?.name || '')}</span><span class="sp"></span>${backs}<span class="hn">手 <b>${p.hand.length}</b></span></div>`;
   }
   function fanHTML(p) {
     const req = pending && pending.req, legal = legalCards();
     if (!p.hand.length) return '<div class="hand fan empty-hand"><span class="empty">手牌空了</span></div>';
     return `<div class="hand fan" style="--hn:${p.hand.length}">${p.hand.map((c, i) => {
-      const ref = p.handRefs?.[i], selection = nativeSelection?.picked || [nativeSelection?.value];
+      const ref = p.handRefs?.[i], selection = req?.input.type==='single' ? [nativeSelection?.value] : nativeSelection?.picked || [];
       const cls = req ? selection.includes(ref?.id) ? (req.kind === 'mulligan' ? 'picked' : 'staged') : req.options.some(o => o.value === ref?.id) ? 'sel' : legal.size ? 'dim' : '' : '';
       const ready = req && (req.kind === 'event' && req.options.some(o => o.value === ref?.id) || req.context.entrySkillIds?.includes(ref?.id) || req.kind === 'block' && nativeWidget?.timing?.ids?.includes(ref?.id)) ? ' skill-ready' : '';
       const mid = (p.hand.length - 1) / 2, rot = (i - mid) * Math.min(4, 24 / p.hand.length), drop = Math.abs(i - mid) * Math.min(4, 20 / p.hand.length);
@@ -1032,13 +1034,7 @@ body.playing .dock.wait .in { padding-block: 4px; }
     document.documentElement.style.setProperty('--viewh', (window.visualViewport?.height || window.innerHeight) + 'px');
     requestAnimationFrame(measureDock);
   }
-  function setDockCollapsed(collapsed) {
-    $('dock').classList.toggle('collapsed', collapsed);
-    $('dockToggle').setAttribute('aria-expanded', String(!collapsed));
-    $('dockToggle').textContent = collapsed ? '展開面板' : '收合面板';
-    requestAnimationFrame(measureDock);
-  }
-  $('dockToggle').onclick = () => setDockCollapsed(!$('dock').classList.contains('collapsed'));
+  function setDockCollapsed() { $('dock').classList.remove('collapsed'); requestAnimationFrame(measureDock); }
   window.addEventListener('resize', syncViewport);
   window.visualViewport?.addEventListener('resize', syncViewport);
   if (window.ResizeObserver) new ResizeObserver(() => requestAnimationFrame(measureDock)).observe($('dock'));
@@ -1085,7 +1081,7 @@ body.playing .dock.wait .in { padding-block: 4px; }
       dock.classList.remove('wait');
       $('dockQ').textContent = game.winner.idx === 0 ? '你贏了！' : `${oppName} 贏了`;
       $('dockOpts').innerHTML = '<button class="opt primary" type="button" data-act="again">再打一場</button><button class="opt" type="button" data-act="setup">換牌組</button><button class="opt" type="button" data-act="log">看紀錄</button>';
-      if(OL.inGame){const again=$('dockOpts').querySelector('[data-act="again"]');again.disabled=true;again.title='再戰確認尚未開放';$('dockOpts').querySelector('[data-act="setup"]').textContent='離開房間';}
+      if(OL.inGame){const again=$('dockOpts').querySelector('[data-act="again"]'),voted=OL.meta?.rematch?.[OL.client.user.uid]===session?.last?.view.match.id;again.disabled=voted||!OL.client.online||OL.meta?.status!=='finished';again.textContent=voted?'已確認，等待對手':'再來一局';again.title='雙方確認後在同一房間開始新局';$('dockOpts').querySelector('[data-act="setup"]').textContent='離開房間';}
     } else if (pending) {
       dock.classList.remove('wait');$('dockQ').innerHTML=(skillResults.length?'<div class="skill-results" role="status">'+skillResults.map(e=>'<div>✦ '+esc(publicLogText(e))+'</div>').join('')+'</div>':'')+esc(flashMsg||pending.req.context.reason||'');renderNativeChoice(pending.req,savedSelection);
       $('dockOpts').querySelector('.hc-content').scrollTop=savedScrollTop;
@@ -1102,7 +1098,7 @@ body.playing .dock.wait .in { padding-block: 4px; }
   }
 
   function act(a, b) {
-    if (a === 'again') { if(OL.inGame)return;return start(); }
+    if (a === 'again') { if(OL.inGame)return olRun(()=>OL.client.send({kind:'rematch',matchId:session.last.view.match.id}))();return start(); }
     if (a === 'setup') return OL.inGame?olRun(()=>OL.client.leave())():backToSetup();
     if (a === 'log') return showLog();
     if (!pending) return;
@@ -1215,7 +1211,7 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
     prevTop={};prevVal={};prevBall=null;skillResults=[];flashMsg='';clearTimeout(flashT);
     if(drag?.el)drag.el.remove();if(drag?.over)drag.over.classList.remove('over');drag=null;suppressClick=false;document.body.classList.remove('dragging');
     $('setup').hidden = true; $('modebar').hidden = true; $('game').hidden = false; $('tbtns').hidden = false; document.body.classList.add('playing'); syncViewport();
-    session.start();
+    session.start();if(OL.inGame)olConnectionChanged();
   }
   /* ---------- 多人連線（Claude 2026-10-25）：大廳在選牌頁，開打後沿用同一張正式牌桌 */
   const cleanName = n => String(n || '').replace(/[<>&"'`]/g, '').trim().slice(0, 20);
@@ -1236,15 +1232,16 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
     $('olLogin').hidden = signedIn; $('olLobby').hidden = !signedIn || inRoom; $('olWait').hidden = !waiting;
     if (signedIn) { $('olWho').textContent = cleanName(c.name) + (c.user.isAnonymous ? '' : '・Google'); $('olLink').hidden = !c.user.isAnonymous; $('olDot').classList.toggle('on', !!c.online); }
     document.body.dataset.room = inRoom ? '1' : '';
-    $('olCreate').disabled=$('olJoin').disabled=!c?.online;olConnectionChanged();
+    $('olCreate').disabled=$('olJoin').disabled=!c?.online;olConnectionChanged();if(OL.inGame&&game?.winner)render();
     if (waiting) { $('olWaitCode').textContent = OL.roomId; $('olWaitText').textContent = OL.meta.p1 === 'AI' ? '正在準備對局' : '等待朋友加入'; }
   }
   function olCanSend(v=session?.last){const c=OL.client,a=OL.authority;return !!(c?.online&&!c.pending&&OL.meta?.status==='running'&&a?.active&&a.lease.term===v?.term);}
   function olControls(){if(!OL.inGame)return;const locked=!olCanSend();for(const b of $('dockOpts').querySelectorAll('.hc button')){if(locked){if(!b.hasAttribute('data-ol-disabled'))b.dataset.olDisabled=String(b.disabled);b.disabled=true;}else if(b.hasAttribute('data-ol-disabled')){b.disabled=b.dataset.olDisabled==='true';delete b.dataset.olDisabled;}}}
   function olConnectionChanged(){
+    if(OL.inGame)$('tbtns').prepend($('olConnectionBar'));else if($('olConnectionBar').parentElement===$('tbtns'))$('runtimeStatus').before($('olConnectionBar'));
     $('olConnectionBar').hidden=!OL.roomId;const a=OL.authority,c=OL.client;
     $('olConnectionText').textContent=!c?.online?'連線中斷，恢復後同步對局':!a?.active?'房主離線，等待接手':a.mine?'房主：你':'房主在線';
-    $('olTakeover').hidden=!OL.roomId||!c?.online||!a||a.mine||a.active;
+    $('olTakeover').hidden=!OL.roomId||!c?.online||!a||a.mine||a.active;document.body.dataset.takeover=$('olTakeover').hidden?'0':'1';
     if(OL.inGame){session?.setAvailable?.(olCanSend());olControls();}
   }
   $('olTakeover').onclick=olRun(()=>OL.client.takeover());

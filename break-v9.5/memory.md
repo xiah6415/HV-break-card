@@ -1456,3 +1456,8 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 測試：e2e.js 改驗新行為（無收合鈕、調度為置中對話框、高度≤86%、不捲動）；e2e／choice／audit／share e2e 與 online-session 單元測試通過；390／360／1280 自動點完整局 0 錯誤、0 溢出、提示列不遮我方後排；假連線層多人雙座位正常
 - 既有失敗（master 同樣失敗、錯誤相同，非本次造成）：events／first-service／flow／library／numeric／rename／reveal／skill-targets／undo e2e（舊 Game 類別移除、卡數 541/244 過期、抽牌階段流程改變），待 Codex 更新
 - 交接（2026-10-25）：使用者決定由 Codex 接手後續；本次 fuzz 3000 通過，test.js 300／e2e 最終回歸在交接時尚未跑完，請 Codex 合併前重跑
+
+## Codex：手遊牌桌整合結果（2026-10-25）
+- 合併前build／fuzz3000／6×300／e2e三尺寸各3局／choice三尺寸18契約均通過；31ce7ab合併7a4590c，AI 93ffc87已在主線。補完整對手鏡像、真正移除dockToggle、單選手牌亮框、滿版牌桌接手控制；點牌庫抽牌及bar／hand／modal保留。
+- 同房再戰按鈕已接既有send契約：單方確認等待、雙方確認才開新ID／種子，AI自動同意；meta.names沿用已完成實作，規則無變更。本批未修改卡片規則、技能或AI。
+- 指定9組舊Game測試與mobile-review遷移正式Match／TableSession；多人改用正式入口、扇形手牌與牌庫。合併後170套回歸／規則74項／fuzz3000／6×300／11組瀏覽器測試／choice三尺寸／牌桌四尺寸均通過；雙房、接手刷新、私密拒讀、7次唯讀預演、113步雙人及22步AI、雙人／AI再戰與快照後斷線通過。541可組牌／358自動技能不變；待推送部署及公開頁核對。

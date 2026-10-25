@@ -73,7 +73,7 @@
 | 新核心手動操作 | ±五參數、±來球（含發球）、雙方抽1／棄1；對方棄牌由對方私密選擇，費用選擇中禁止再插入手動命令，保留防降與實體代次驗證；無Event仍有判定前手動窗口，已選回球模式不重問 |
 | 新核心本機Undo | 完整checkpoint還原，撤回當前自己回合的選擇／手動操作；交棒後停用，過期回覆拒絕，只保留可撤回檢查點 |
 | 正式新核心巡檢 | 十校300場／30238決策；0例外、0卡死，80實體與雙方40張守恆 |
-| 正式牌桌UI驗證 | 1280／375／320px各3局，數值＋嚴格；手牌／拖曳／選擇／手動／Undo／Loss／抽牌／重開／無遮擋與溢出；雙方分享匯入通過 |
+| 正式牌桌UI驗證 | 1280／375／320px各3局，數值＋嚴格；9組舊Game測試與mobile-review已遷移；官方三排／完整對手鏡像、扇形手牌、bar／hand／modal、點牌庫抽牌；四尺寸含320直式／844橫式無溢出，無dockToggle |
 | 正式UI舊處理／選取保留 | 已移除舊Game專屬選牌、卡號預覽、攔網組裝與多人悔棋；同一request重繪保留實體選牌／次序／中攔，新request重置 |
 | 查卡與球場顯示 | 選項可獨立查卡、不送出回答；手牌同步中攔標示，球場名稱與數值修正直接讀核心視圖 |
 | 新核心多路徑巡檢 | 十校輪換角色／Event＋固定種子分支：300場／26503決策，617攔網／44觸發排序；Event無效選項導致的37次中斷已修正，重跑0例外／卡死 |
@@ -92,10 +92,10 @@
 | 多人驗證 | Firebase規則74項、170套回歸／fuzz3000／6×300通過；正式牌桌雙座位、雙房隔離、接手／刷新／RNG、雙人及AI整局與再戰、三尺寸無溢出；公開頁驗證見最新memory |
 | Firebase部署／下一階段 | haikyuu-playmat，asia-southeast1，RTDB安全規則已部署；Auth匿名／Google與Pages授權網域已確認；觀戰／戰績／雲端牌組第二階段，雙方同意Undo最後；不使用Functions |
 | 多人公開版本 | 0cab0c3；https://xiah6415.github.io/HV-break-card/break-v9.5/index.html?online=1&v=0cab0c3 ；Pages built／12檔HTTP200及SHA256一致；連線層再戰可用，按鈕等待Claude接線 |
-| 同房再戰連線契約 | send({kind:rematch,matchId:payload.view.match.id})；meta.rematch[uid]為確認的局ID；雙方確認才開新局，AI自動同意；保留房號／牌組／座位，換ID與種子；按鈕由Claude接線 |
-| 雙方暱稱／多人介面分工 | meta.names[uid]＋p0Name／p1Name相容；回房保留原名、本人修改；Claude介面34c98e8已合併，Codex完成連線／規則與整合；再戰按鈕交Claude |
+| 同房再戰連線契約 | send({kind:rematch,matchId:payload.view.match.id})；meta.rematch[uid]為確認的局ID；雙方確認才開新局，AI自動同意；保留房號／牌組／座位，換ID與種子；按鈕已接雙方確認／等待對手狀態 |
+| 雙方暱稱／多人介面分工 | meta.names[uid]＋p0Name／p1Name相容；回房保留原名、本人修改；Claude介面34c98e8及31ce7ab已合併，Codex完成連線／規則與整合；再戰按鈕已完成 |
 | 同房再戰驗證 | 規則74項、單方／重複／同時確認、舊局拒絕、雙人及AI再戰、快照後斷線與接手／刷新均通過；公開正式牌桌雙匿名再戰及私密拒讀通過 |
 | 單人AI難度 | 已合併claude/ai-tune 93ffc87：簡單／普通／困難並保存選擇；多人AI暫維持普通；困難增加預演與耗時，沒有顯著勝率提升保證 |
 | 多人介面整合 | claude/online-ui 34c98e8已合併470fdea；OnlineSession雙座位旋轉、原request送出、同request選取保留、新局過場重置與回房略過舊提示；接手按鈕與斷線送出鎖定已接通 |
 | 暱稱／攔網提示契約 | meta.names[uid]＋p0Name／p1Name相容；send({kind:previewBlock,answer})唯讀，僅本人receipt.preview回傳組合與技能ID，不改Match／RNG、不提供權威快照 |
-| 多人終局介面 | 已阻止再打一場誤啟單人局；可離開／看紀錄；雙方確認再戰連線已完成，按鈕由Claude後續接線 |
+| 多人終局介面 | 已阻止再打一場誤啟單人局；可離開／看紀錄；雙方確認再戰連線與按鈕均已完成，斷線時禁止送出 |
