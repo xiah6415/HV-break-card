@@ -503,7 +503,13 @@ body.playing .dock:not([data-mode="modal"]) .hc-bar { flex: 0 0 auto; display: f
 body.playing .dock:not([data-mode="modal"]) .hc-go, body.playing .dock:not([data-mode="modal"]) .hc-loss { min-height: 42px; padding: 0 14px; }
 body.playing .dock .hc-err:empty { display: none; }
 body.playing .dock[data-mode="bar"] .hc-opts { margin-top: 4px; }
-body.playing .dock[data-mode="hand"] .hc-grid, body.playing .dock[data-mode="hand"] .hc-src { display: none; }
+body.playing .dock[data-mode="hand"] .hc-src, body.playing .dock[data-mode="hand"] .hc-item:not(.hc-nocard) { display: none; }
+body.playing .dock[data-mode="hand"] .hc-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+body.playing .dock[data-mode="hand"] .hc-timing { display: none; }
+body.playing .dock[data-mode="hand"] .hc-grid:not(:has(.hc-nocard)) { display: none; }
+body.playing .dock[data-mode="hand"] .hc-nocard .hc-card { min-height: 40px; padding: 6px 16px; border-radius: 999px; aspect-ratio: auto; width: auto; display: flex; align-items: center; justify-content: center; border: 1.5px solid var(--line); background: var(--sunk); color: var(--ink); cursor: pointer; }
+body.playing .dock[data-mode="hand"] .hc-nocard .hc-card.on { background: var(--court); border-color: var(--court); color: #fff; }
+body.playing .dock[data-mode="hand"] .hc-nocard .hc-nm { position: static; font-size: 13px; font-weight: 700; white-space: nowrap; background: none; color: inherit; padding: 0; }
 body.playing .dock[data-mode="hand"] .hc-content { max-height: 18vh; }
 body.playing .dock[data-mode="bar"] .hc-content { max-height: 22vh; }
 body.playing .dock[data-mode="modal"] { top: 50%; bottom: auto; transform: translateY(-50%); max-height: 82vh; border-radius: 18px; }
@@ -3030,7 +3036,7 @@ function render(rootEl, request, opts = {}) {
         const c = o.card || { cardNo: '', name: o.label };
         const parts=String(c.zone||'').split('.'),zone=parts.length===2?parts[1]:parts[0],labels={hand:'手牌',deck:'牌庫',drop:'棄牌',event:'Event',serve:'發球',block:'中攔',receive:'接球',toss:'舉球',attack:'攻擊','side:0':'側攔','side:1':'側攔'};
         const location=labels[zone]?(parts.length===2?(+parts[0]===request.actor?'我方 ':'對方 '):'')+labels[zone]:'';
-        return `<div class="hc-item"><button type="button" class="hc-card${timing?.active&&timing.candidates&&o.card&&(!timing.ids||timing.ids.includes(o.value))?' hc-ready':''}${on ? ' on' : ''}" aria-pressed="${on}" data-hc-v="${esc(key(o.value))}">${c.cardNo ? cardImg(c) : ''}<span class="hc-nm">${esc(o.label)}</span>${location?`<small class="hc-zone">${esc(location)}</small>`:''}${badge}</button>${o.card&&opts.onCard?`<button type="button" class="hc-info" data-hc-info="${esc(o.id)}" aria-label="查看 ${esc(o.label)} 卡片">查卡</button>`:''}</div>`;
+        return `<div class="hc-item${o.card?'':' hc-nocard'}"><button type="button" class="hc-card${timing?.active&&timing.candidates&&o.card&&(!timing.ids||timing.ids.includes(o.value))?' hc-ready':''}${on ? ' on' : ''}" aria-pressed="${on}" data-hc-v="${esc(key(o.value))}">${c.cardNo ? cardImg(c) : ''}<span class="hc-nm">${esc(o.label)}</span>${location?`<small class="hc-zone">${esc(location)}</small>`:''}${badge}</button>${o.card&&opts.onCard?`<button type="button" class="hc-info" data-hc-info="${esc(o.id)}" aria-label="查看 ${esc(o.label)} 卡片">查卡</button>`:''}</div>`;
       }).join('')}</div>`;
     }
     return `<div class="hc-opts" role="group">${request.options.map(o => `<button type="button" class="hc-opt${t === 'number' ? ' num' : ''}${sel.value !== undefined && key(sel.value) === key(o.value) ? ' on' : ''}" aria-pressed="${sel.value !== undefined && key(sel.value) === key(o.value)}" data-hc-v="${esc(key(o.value))}">${esc(optionLabel(request,o))}</button>`).join('')}</div>`;
