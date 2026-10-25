@@ -1490,3 +1490,7 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 介面驗證：hand-skip、e2e、choice、tcg-layout、events、mobile-review、flow、undo、reveal、skill-targets共10組全通過；1280／390／320的Event跳過實際可點並前進，球場不被遮；320淺深色截圖與實際操作通過。
 - 本機結果：build、fuzz3000、test.js六組各300局與10組瀏覽器回歸全部通過；541可組牌／358自動技能不變。
 - 部署：c6adf64已推送、Pages built／無錯誤；12項資源HTTP200與SHA256一致，公開頁1280／390／320的hand模式跳過可見可點、不遮場地並正常前進。https://xiah6415.github.io/HV-break-card/break-v9.5/?v=c6adf64 。
+
+## Claude：組牌入口與資料庫互通（2026-10-25，分支 claude/deck-link）
+- 使用者要求：對練台多一個組牌入口，連回本站卡牌資料庫（repo 根目錄 index.html）；託管改 Firebase Hosting（交 Codex）
+- 計畫：對練台選牌頁「我的牌組」旁加「組牌」按鈕→ ../（同站資料庫）；匯入面板改指向本站資料庫；資料庫分享視窗加「帶去對練台」→ break-v9.5/index.html?deck=<同一編碼>（對練台既有 ?deck= 匯入流程）、標頭加「對練台」連結；連結皆用相對路徑，GitHub Pages 與 Firebase Hosting 都可用

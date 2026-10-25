@@ -547,6 +547,7 @@ body.playing .dock.wait .in { padding-block: 4px; }
 .theme-seg { display: flex; gap: 4px; padding: 3px; border-radius: 999px; background: var(--sunk); width: fit-content; }
 .theme-seg button { border: 0; border-radius: 999px; min-height: 36px; padding: 4px 14px; background: none; color: var(--muted); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
 .theme-seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 4px #0002; }
+a.chip { text-decoration: none; display: inline-flex; align-items: center; color: inherit; }
 </style>
 <script>
 /* 外觀：bk_theme = light（預設）｜dark｜auto（跟隨系統）；在繪製前套用避免閃爍 */
@@ -590,6 +591,7 @@ body.playing .dock.wait .in { padding-block: 4px; }
       <label class="field solo-only" for="gameMode">對戰模式<select id="gameMode"><option value="numeric" selected>數值模式（含手動技能）</option><option value="strict">嚴格模式（已支援卡片）</option></select></label>
       <label class="field" for="myDeck">牌組<select id="myDeck"><option value="k1014">烏野1014</option><option value="k1014c">1014c（接 6 強化）</option><option value="quick">烏野快攻版</option><option value="k1010">烏野1010</option><option value="seijoh">青葉城西（第四彈）</option><option value="hk_axis">烏野 日向影山軸</option></select></label>
       <div class="deckstrip" id="myStrip"></div>
+      <a class="chip" id="buildDeck" href="../index.html">🃏 到卡牌資料庫組牌</a>
       <button class="chip" type="button" id="editDeck">匯入／編輯自訂牌組</button>
       <button class="chip" type="button" id="supportBtn">卡庫／支援狀態</button>
     </div>
@@ -740,9 +742,9 @@ body.playing .dock.wait .in { padding-block: 4px; }
     const t = TARGET[target], source = DECKS[t.key] || DECKS[$(t.sel).value];
     openSheet(`<h3>匯入${t.label}牌組</h3>
       <section class="imp">
-        <label class="field" for="shareURL">貼上查卡網站的分享連結（牌組 → 📲 分享 → 複製連結，或掃 QR 取得的網址）
-          <input id="shareURL" type="url" inputmode="url" autocomplete="off" placeholder="https://weilun2022.github.io/haikyu-cards/?deck=…"></label>
-        <div class="opts"><button class="opt primary" type="button" id="shareGo">讀取</button><a class="opt quiet" href="https://weilun2022.github.io/haikyu-cards/" target="_blank" rel="noopener">開啟查卡網站組牌</a></div>
+        <label class="field" for="shareURL">在卡牌資料庫「牌組構築」按「🏐 對練」可直接帶入；或貼上查卡網站的分享連結（…?deck=…）
+          <input id="shareURL" type="url" inputmode="url" autocomplete="off" placeholder="貼上分享連結（…?deck=…）"></label>
+        <div class="opts"><button class="opt primary" type="button" id="shareGo">讀取</button><a class="opt quiet" href="../index.html">開啟卡牌資料庫組牌</a></div>
         <div id="sharePreview" aria-live="polite"></div>
       </section>
       <details class="imp-json"><summary>進階：用 JSON 匯入／編輯（可組牌 ${modeOptions().mode==='numeric'?CL.data.counts.cards:CL.data.counts.playable} 種卡）</summary>

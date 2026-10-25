@@ -1229,6 +1229,7 @@
   .sdeck-acts{display:flex;gap:8px;align-items:center}
   .sdbtn{background:#252525;border:1px solid #444;border-radius:8px;color:#ccc;font-size:13px;padding:6px 12px;cursor:pointer;touch-action:manipulation}
   .sdbtn.danger{border-color:#6b2a2a;color:#e07070}
+  .sdbtn.play{border-color:#d96a1f;background:#d96a1f;color:#fff;font-weight:700}
   .sdbtn.close{background:none;border:none;color:#888;font-size:26px;line-height:1;padding:2px 4px}
   .sdeck-body{overflow-y:auto;padding:8px}
   .sdeck-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
@@ -1255,6 +1256,7 @@
     <div class="subtitle">卡牌資料庫 / Card Database</div>
   </div>
   <div class="count">顯示 <span id="count-display">0</span> / <span id="count-total">0</span> 張</div>
+  <a class="filter-toggle-btn" id="play-link" href="break-v9.5/index.html" style="display:flex;text-decoration:none">🏐 對練台</a>
   <button class="filter-toggle-btn" id="filter-toggle" aria-label="篩選">
     ☰ 篩選<span class="filter-badge" id="filter-badge" style="display:none">0</span>
   </button>
@@ -1358,6 +1360,7 @@
     <div class="sdeck-head">
       <div><span class="sdeck-title">牌組構築</span><span class="sdeck-total" id="sdeck-total">0/40 張</span></div>
       <div class="sdeck-acts">
+        <button class="sdbtn play" id="sdeck-play-btn">🏐 對練</button>
         <button class="sdbtn" id="sdeck-export-btn">匯出</button>
         <button class="sdbtn danger" id="sdeck-clear-btn">清空</button>
         <button class="sdbtn close" id="sdeck-close-btn">×</button>
@@ -3857,6 +3860,14 @@ function sBindEvents() {
     sdeck = {}; sSaveDeck(); sUpdateFab(); sRenderPanel(); applyFilters();
   });
   document.getElementById('sdeck-export-btn').addEventListener('click', sOpenExport);
+  // 帶去對練台：與分享連結相同的 LZString 編碼（{n,c:[[image_file,count]]}），對練台以 ?deck= 匯入
+  document.getElementById('sdeck-play-btn').addEventListener('click', () => {
+    const entries = Object.entries(sdeck).filter(([, n]) => n > 0);
+    if (!entries.length) { alert('牌組是空的'); return; }
+    if (sTotal() !== SDECK_MAX && !confirm(`目前 ${sTotal()}/${SDECK_MAX} 張，對練需要剛好 ${SDECK_MAX} 張。仍要帶去對練台檢查嗎？`)) return;
+    const code = LZString.compressToEncodedURIComponent(JSON.stringify({ n: '資料庫牌組', c: entries }));
+    location.href = new URL('break-v9.5/index.html?deck=' + code, location.href).href;
+  });
   document.getElementById('sexport-close-btn').addEventListener('click', sCloseExport);
   document.getElementById('sexport-overlay').addEventListener('click', e => {
     if (e.target === document.getElementById('sexport-overlay')) sCloseExport();
