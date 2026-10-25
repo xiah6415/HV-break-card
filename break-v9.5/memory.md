@@ -1489,3 +1489,4 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 合併e255847為e437bb6；保留雙方memory紀錄。choice-ui以hc-nocard區分非卡片選項，hand模式保留膠囊按鈕、只隱藏卡片格及timing行；主題／規則／AI／連線不變。
 - 介面驗證：hand-skip、e2e、choice、tcg-layout、events、mobile-review、flow、undo、reveal、skill-targets共10組全通過；1280／390／320的Event跳過實際可點並前進，球場不被遮；320淺深色截圖與實際操作通過。
 - 本機結果：build、fuzz3000、test.js六組各300局與10組瀏覽器回歸全部通過；541可組牌／358自動技能不變。
+- 部署：c6adf64已推送、Pages built／無錯誤；12項資源HTTP200與SHA256一致，公開頁1280／390／320的hand模式跳過可見可點、不遮場地並正常前進。https://xiah6415.github.io/HV-break-card/break-v9.5/?v=c6adf64 。
