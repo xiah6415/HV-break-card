@@ -522,7 +522,48 @@ body.playing .dock.wait .in { padding-block: 4px; }
   .court2.me { --cw: min(86px, 7.8vh); } .court2.opp { --cw: min(70px, 6.4vh); }
   body.playing .wrap { max-width: 720px; }
 }
+/* 外觀：data-scheme 為實際生效的深淺（跟隨系統時由 JS 依 matchMedia 設定）；改版牌桌硬寫白色的深色覆寫 */
+:root[data-scheme="dark"] .area { background: #16292cb0; border-color: #2c4448; }
+:root[data-scheme="dark"] .area .nm, :root[data-scheme="dark"] .setbox, :root[data-scheme="dark"] .pile2 { color: #8fa9a7; }
+:root[data-scheme="dark"] .area .rn { background: var(--surface); }
+:root[data-scheme="dark"] .a-blk { background: #1c2329; border-color: #38434e; }
+:root[data-scheme="dark"] .a-rcv { background: #142238; border-color: #2f5590; }
+:root[data-scheme="dark"] .a-tos { background: #13281b; border-color: #2c6b43; }
+:root[data-scheme="dark"] .a-atk { background: #2e1714; border-color: #8a3a31; }
+:root[data-scheme="dark"] .a-srv { background: #2b2412; border-color: #846a2a; }
+:root[data-scheme="dark"] .a-evt { background: #12292c; border-color: #2c6a73; }
+:root[data-scheme="dark"] .area.over, :root[data-scheme="dark"] .pile2.tgt { background: #3a2415; }
+:root[data-scheme="dark"] .pile2 { background: var(--surface); border-color: #2c4448; }
+:root[data-scheme="dark"] body.playing .net-zone::before { border-top-color: #4d6a6d; box-shadow: none; }
+:root[data-scheme="dark"] body.playing .ball { background: var(--surface); box-shadow: 0 3px 10px #0006; }
+:root[data-scheme="dark"] body.playing .dock { background: #142427f5; box-shadow: 0 6px 18px #0008; }
+:root[data-scheme="dark"] .skill-results { color: #f3d88a; background: #2b2412; }
+.theme-seg { display: flex; gap: 4px; padding: 3px; border-radius: 999px; background: var(--sunk); width: fit-content; }
+.theme-seg button { border: 0; border-radius: 999px; min-height: 36px; padding: 4px 14px; background: none; color: var(--muted); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.theme-seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 4px #0002; }
 </style>
+<script>
+/* 外觀：bk_theme = light（預設）｜dark｜auto（跟隨系統）；在繪製前套用避免閃爍 */
+(function(){
+  var mq = window.matchMedia ? matchMedia('(prefers-color-scheme: dark)') : null;
+  function read(){ try { return localStorage.getItem('bk_theme'); } catch (e) { return null; } }
+  function apply(t){
+    if (t !== 'dark' && t !== 'auto') t = 'light';
+    var r = document.documentElement;
+    if (t === 'auto') r.removeAttribute('data-theme'); else r.setAttribute('data-theme', t);
+    r.setAttribute('data-scheme', t === 'auto' ? (mq && mq.matches ? 'dark' : 'light') : t);
+    var m = document.querySelector('meta[name="color-scheme"]'); if (m) m.content = r.getAttribute('data-scheme');
+    window.bkTheme = t;
+    document.querySelectorAll('[data-theme-set]').forEach(function(b){ b.setAttribute('aria-pressed', String(b.dataset.themeSet === t)); });
+  }
+  window.bkSetTheme = function(t){ try { localStorage.setItem('bk_theme', t); } catch (e) {} apply(t); };
+  window.bkThemeSeg = function(){ return '<div class="theme-seg" role="group" aria-label="外觀">' + [['light','淺色'],['dark','深色'],['auto','跟隨系統']].map(function(o){ return '<button type="button" data-theme-set="' + o[0] + '" aria-pressed="' + (window.bkTheme === o[0]) + '">' + o[1] + '</button>'; }).join('') + '</div>'; };
+  if (mq) { var f = function(){ if (window.bkTheme === 'auto') apply('auto'); }; mq.addEventListener ? mq.addEventListener('change', f) : mq.addListener && mq.addListener(f); }
+  document.addEventListener('click', function(e){ var b = e.target.closest && e.target.closest('[data-theme-set]'); if (b) window.bkSetTheme(b.dataset.themeSet); });
+  apply(read());
+  document.addEventListener('DOMContentLoaded', function(){ var t = document.getElementById('themeSlot'); if (t) t.innerHTML = window.bkThemeSeg(); });
+})();
+</script>
 </head>
 <body>
 <div class="wrap">
@@ -554,6 +595,7 @@ body.playing .dock.wait .in { padding-block: 4px; }
       <label class="field" for="speed">AI 出牌速度
         <select id="speed"><option value="200">快</option><option value="550" selected>正常</option><option value="1000">慢</option></select>
       </label>
+      <div class="field">外觀<div id="themeSlot"></div></div>
       <div class="deckstrip" id="aiStrip"></div>
     </div>
     <div class="panel online-only" id="olPanel">
@@ -3567,7 +3609,7 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
     }).join('')}</div>`;
   }
   function measureDock() {
-    const dock = $('dock');
+    const dock = $('dock'); if (!dock) return;
     document.documentElement.style.setProperty('--dockh', (dock.hidden ? 0 : dock.offsetHeight + 16) + 'px');
   }
   function syncViewport() {
@@ -3709,7 +3751,7 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
   document.addEventListener('pointerup', endDrag); document.addEventListener('pointercancel', endDrag);
   function showLog() { openSheet(`<h3>對局紀錄</h3><div class="log" style="max-height:60vh">${logBuf.map(([s, c]) => `<div class="${c || ''}">${esc(s)}</div>`).join('')}</div>`); const l = $('sheetBox').querySelector('.log'); l.scrollTop = l.scrollHeight; }
   $('logBtn').onclick = showLog;
-  $('menuBtn').onclick = () => openSheet(OL.inGame ? '<h3>選單</h3><div class="opts"><button class="opt" type="button" id="mLeave">離開房間（回到大廳）</button></div><p class="sub">離開後可從大廳「回到房間」接續；房主離開時對手可接手。</p>' : '<h3>選單</h3><div class="opts"><button class="opt primary" type="button" id="mRestart">重新開始這場</button><button class="opt" type="button" id="mSetup">回到選牌組</button></div>');
+  $('menuBtn').onclick = () => openSheet(OL.inGame ? '<h3>選單</h3><div class="opts"><button class="opt" type="button" id="mLeave">離開房間（回到大廳）</button></div><p class="sub">離開後可從大廳「回到房間」接續；房主離開時對手可接手。</p>'+'<h3>外觀</h3>'+bkThemeSeg() : '<h3>選單</h3><div class="opts"><button class="opt primary" type="button" id="mRestart">重新開始這場</button><button class="opt" type="button" id="mSetup">回到選牌組</button></div>'+'<h3>外觀</h3>'+bkThemeSeg());
   $('sheet').addEventListener('click', e => { if (e.target.id === 'mRestart') { closeSheet(); start(); } if (e.target.id === 'mSetup') { closeSheet(); backToSetup(); } if (e.target.id === 'mLeave') { closeSheet(); olRun(async () => { await OL.client.leave(); olLeaveGame(); })(); } });
   function backToSetup() { nativeWidget?.destroy();nativeWidget=null;session?.stop(); session = null; game = null; pending = null; turnNotice = null; renderTransition(); $('game').hidden = true; $('dock').hidden = true; $('tbtns').hidden = true; $('setup').hidden = false; $('modebar').hidden = false; document.body.classList.remove('playing'); delete document.body.dataset.dock; }
 

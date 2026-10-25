@@ -1470,3 +1470,7 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 計畫：<head> 內先套用 bk_theme（localStorage，try/catch；預設 light）避免閃爍；:root data-theme=light|dark，跟隨系統時移除屬性並依 matchMedia 設 data-scheme；選牌頁與遊戲中選單都可切換；補齊改版牌桌硬寫白色的深色覆寫（區域、牌庫、球、面板、網）；深淺兩種三尺寸截圖驗收
 - 結果：預設淺色；選牌頁「外觀」與遊戲中選單（單人／多人）皆有三段切換「淺色／深色／跟隨系統」，存 bk_theme，<head> 先套用不閃爍；跟隨系統時依 matchMedia 即時切換並設 data-scheme；改版牌桌各區、牌庫、球、面板、網子補深色覆寫；measureDock 在 #dock 不存在時直接返回（mobile-review 以 setContent 重載時會觸發）
 - 測試：系統深色下預設仍淺色、三種模式切換、跟隨系統隨系統變化、重新整理保留，390／1280 皆無頁面錯誤；fuzz3000、test.js 300、e2e、choice-e2e、tcg-layout-e2e、mobile-review-e2e 通過
+
+## Codex：主題切換整合結果
+- 合併：4abd369合併為9eb22ee，memory衝突保留雙方紀錄；僅ui與建置產物有程式差異，原有牌桌／多人再戰整合保留，規則／AI／連線不變。
+- 介面驗證：1280／390／320下系統深色仍預設淺色、三段選擇、bk_theme重新整理保存、跟隨系統即時變化、選牌與遊戲選單均通過並檢視截圖；e2e三尺寸各3局、choice三尺寸18契約、tcg-layout四尺寸及mobile-review三尺寸全通過，無頁面錯誤或溢出。

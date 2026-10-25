@@ -99,3 +99,4 @@
 | 多人介面整合 | claude/online-ui 34c98e8已合併470fdea；OnlineSession雙座位旋轉、原request送出、同request選取保留、新局過場重置與回房略過舊提示；接手按鈕與斷線送出鎖定已接通 |
 | 暱稱／攔網提示契約 | meta.names[uid]＋p0Name／p1Name相容；send({kind:previewBlock,answer})唯讀，僅本人receipt.preview回傳組合與技能ID，不改Match／RNG、不提供權威快照 |
 | 多人終局介面 | 已阻止再打一場誤啟單人局；可離開／看紀錄；雙方確認再戰連線與按鈕均已完成，斷線時禁止送出 |
+| 外觀主題 | 預設淺色；選牌頁／遊戲選單提供淺色、深色、跟隨系統，bk_theme保存、head預套用；三尺寸切換／系統同步／重新整理驗證通過 |
