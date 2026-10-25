@@ -1422,3 +1422,12 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 結果：rules/online-session.js（OnlineSession：介面同 TableSession，自己坐 1 號位時視圖左右對調，request 原樣送出；不持有權威狀態）打包進 pilot；ui.html 選牌頁加「單人對練／多人連線」切換，多人大廳（暱稱＋免註冊／Google、建立房間、房號加入、房間列表、在線名單）、等待頁（大房號＋分享邀請＋取消），開打沿用正式牌桌；對手名稱取代所有寫死的「AI」；多人隱藏 Undo、選單改「離開房間」；online.html 改為轉址到 index.html?online=1（保留舊邀請連結）
 - 測試：rules/online-session.test.js（1 號座位對調、notices、送出流程、禁止重複送出）；全套回歸 0 失敗、e2e.js／choice-e2e.js 通過；本機假連線層截圖 390／360／1280：建房等待→朋友加入對局、離開→加入別人房間（1 號座位）皆無錯誤、無溢出
 - 待 Codex：連線層補「再來一局」與 meta 暱稱（names[uid]）；multiplayer/online-e2e.cjs 仍針對舊 online.html 元件，需改成 index.html?online=1 的新元件（#olName／#olAnon／#olCreate／#olCode／#olJoin，牌桌為 #dockOpts）；mobile-review-e2e.js 在 master 已因舊 Game 移除而失敗（非本次造成）
+
+## Claude：牌桌改版（手遊 TCG 式，2026-10-25，分支 claude/online-ui 續）
+- 使用者確認：淺色；官方配置直式化——每邊三排（靠網攔網×3 側/中/側；中排 接/舉/攻；後排 發球｜Event），左 SET、右牌庫/棄牌；對手鏡像
+- 互動：整局一個畫面不捲動；移除收合面板；頂端一行提示＋主按鈕；直接點底部扇形手牌／場上卡選擇（可選亮框、不可選變暗）；多選（調度、付 Guts）用置中卡片對話框
+- 範圍：只改 ui.html 牌桌呈現與選擇互動，規則／AI／連線不動；單人與多人共用；完成後 390／360／1280 截圖驗收
+- 結果：ui.html 新增 areaHTML／courtHTML／barHTML／fanHTML（官方三排配置、對手鏡像、數值徽章、Guts 疊在頂牌下、牌庫點擊抽牌、棄牌堆可查看）；牌桌改為固定滿版 grid（不捲動），面板依請求分三態 dock[data-mode]：bar（一行提示＋按鈕）／hand（直接點扇形手牌，亮框可選）／modal（調度、多選、攔網置中對話框＋遮罩）；移除 #dockToggle；卡圖遊戲中改 eager 載入；頂牌 class 改 is-top（避免與 .top 標頭衝突）
+- 測試：e2e.js 改驗新行為（無收合鈕、調度為置中對話框、高度≤86%、不捲動）；e2e／choice／audit／share e2e 與 online-session 單元測試通過；390／360／1280 自動點完整局 0 錯誤、0 溢出、提示列不遮我方後排；假連線層多人雙座位正常
+- 既有失敗（master 同樣失敗、錯誤相同，非本次造成）：events／first-service／flow／library／numeric／rename／reveal／skill-targets／undo e2e（舊 Game 類別移除、卡數 541/244 過期、抽牌階段流程改變），待 Codex 更新
+- 交接（2026-10-25）：使用者決定由 Codex 接手後續；本次 fuzz 3000 通過，test.js 300／e2e 最終回歸在交接時尚未跑完，請 Codex 合併前重跑
