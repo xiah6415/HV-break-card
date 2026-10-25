@@ -1462,3 +1462,9 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 同房再戰按鈕已接既有send契約：單方確認等待、雙方確認才開新ID／種子，AI自動同意；meta.names沿用已完成實作，規則無變更。本批未修改卡片規則、技能或AI。
 - 指定9組舊Game測試與mobile-review遷移正式Match／TableSession；多人改用正式入口、扇形手牌與牌庫。合併後170套回歸／規則74項／fuzz3000／6×300／11組瀏覽器測試／choice三尺寸／牌桌四尺寸均通過；雙房、接手刷新、私密拒讀、7次唯讀預演、113步雙人及22步AI、雙人／AI再戰與快照後斷線通過。541可組牌／358自動技能不變。
 - 部署：6953a62已推送，Pages built／無錯誤，12檔HTTP200及SHA256一致；公開正式Firebase雙匿名10指令、meta.names、座位、實際雙方再戰按鈕／等待狀態、新ID與種子、舊同意拒絕及私密拒讀通過，測試資料清除。舊邀請保留room轉址、390px無溢出與頁面錯誤；https://xiah6415.github.io/HV-break-card/break-v9.5/index.html?online=1&v=6953a62 。
+
+## Claude：外觀切換（2026-10-25，分支 claude/theme-toggle）
+- 使用者要求：牌桌預設淺色；提供三段切換「淺色／深色／跟隨系統」
+- 計畫：<head> 內先套用 bk_theme（localStorage，try/catch；預設 light）避免閃爍；:root data-theme=light|dark，跟隨系統時移除屬性並依 matchMedia 設 data-scheme；選牌頁與遊戲中選單都可切換；補齊改版牌桌硬寫白色的深色覆寫（區域、牌庫、球、面板、網）；深淺兩種三尺寸截圖驗收
+- 結果：預設淺色；選牌頁「外觀」與遊戲中選單（單人／多人）皆有三段切換「淺色／深色／跟隨系統」，存 bk_theme，<head> 先套用不閃爍；跟隨系統時依 matchMedia 即時切換並設 data-scheme；改版牌桌各區、牌庫、球、面板、網子補深色覆寫；measureDock 在 #dock 不存在時直接返回（mobile-review 以 setContent 重載時會觸發）
+- 測試：系統深色下預設仍淺色、三種模式切換、跟隨系統隨系統變化、重新整理保留，390／1280 皆無頁面錯誤；fuzz3000、test.js 300、e2e、choice-e2e、tcg-layout-e2e、mobile-review-e2e 通過
