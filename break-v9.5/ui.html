@@ -503,7 +503,13 @@ body.playing .dock:not([data-mode="modal"]) .hc-bar { flex: 0 0 auto; display: f
 body.playing .dock:not([data-mode="modal"]) .hc-go, body.playing .dock:not([data-mode="modal"]) .hc-loss { min-height: 42px; padding: 0 14px; }
 body.playing .dock .hc-err:empty { display: none; }
 body.playing .dock[data-mode="bar"] .hc-opts { margin-top: 4px; }
-body.playing .dock[data-mode="hand"] .hc-grid, body.playing .dock[data-mode="hand"] .hc-src { display: none; }
+body.playing .dock[data-mode="hand"] .hc-src, body.playing .dock[data-mode="hand"] .hc-item:not(.hc-nocard) { display: none; }
+body.playing .dock[data-mode="hand"] .hc-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+body.playing .dock[data-mode="hand"] .hc-timing { display: none; }
+body.playing .dock[data-mode="hand"] .hc-grid:not(:has(.hc-nocard)) { display: none; }
+body.playing .dock[data-mode="hand"] .hc-nocard .hc-card { min-height: 40px; padding: 6px 16px; border-radius: 999px; aspect-ratio: auto; width: auto; display: flex; align-items: center; justify-content: center; border: 1.5px solid var(--line); background: var(--sunk); color: var(--ink); cursor: pointer; }
+body.playing .dock[data-mode="hand"] .hc-nocard .hc-card.on { background: var(--court); border-color: var(--court); color: #fff; }
+body.playing .dock[data-mode="hand"] .hc-nocard .hc-nm { position: static; font-size: 13px; font-weight: 700; white-space: nowrap; background: none; color: inherit; padding: 0; }
 body.playing .dock[data-mode="hand"] .hc-content { max-height: 18vh; }
 body.playing .dock[data-mode="bar"] .hc-content { max-height: 22vh; }
 body.playing .dock[data-mode="modal"] { top: 50%; bottom: auto; transform: translateY(-50%); max-height: 82vh; border-radius: 18px; }
