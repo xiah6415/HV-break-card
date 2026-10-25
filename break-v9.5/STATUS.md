@@ -91,7 +91,7 @@
 | 多人權威／私密資料 | 房主RoomAuthority持有Match；玩家僅讀自己的view／寫自己的不可覆寫指令；快照與完整紀錄僅當前權威端可讀；斷線接手以term＋連線識別排除舊權威 |
 | 多人驗證 | Firebase規則74項、170套回歸／fuzz3000／6×300通過；正式牌桌雙座位、雙房隔離、接手／刷新／RNG、雙人及AI整局與再戰、三尺寸無溢出；公開頁驗證見最新memory |
 | Firebase部署／下一階段 | haikyuu-playmat，asia-southeast1，RTDB安全規則已部署；Auth匿名／Google與Pages／web.app／firebaseapp.com授權網域已確認；觀戰／戰績／雲端牌組第二階段，雙方同意Undo最後；不使用Functions |
-| 多人公開版本 | c6adf64；https://xiah6415.github.io/HV-break-card/break-v9.5/index.html?online=1&v=c6adf64 ；Pages built／12檔HTTP200及SHA256一致；連線與實際雙方確認按鈕均已公開驗證 |
+| 多人公開版本 | 9c703c2；https://haikyuu-playmat.web.app/break-v9.5/index.html?online=1&v=9c703c2 ；Hosting發布／公開雙人再戰與隱私通過；GitHub Pages舊站保留 |
 | 同房再戰連線契約 | send({kind:rematch,matchId:payload.view.match.id})；meta.rematch[uid]為確認的局ID；雙方確認才開新局，AI自動同意；保留房號／牌組／座位，換ID與種子；按鈕已接雙方確認／等待對手狀態 |
 | 雙方暱稱／多人介面分工 | meta.names[uid]＋p0Name／p1Name相容；回房保留原名、本人修改；Claude介面34c98e8及31ce7ab已合併，Codex完成連線／規則與整合；再戰按鈕已完成 |
 | 同房再戰驗證 | 規則74項、單方／重複／同時確認、舊局拒絕、雙人及AI再戰、快照後斷線與接手／刷新均通過；公開正式牌桌雙匿名實際按鈕再戰／等待對手、新ID與種子及私密拒讀通過 |
@@ -102,4 +102,4 @@
 | 外觀主題 | 預設淺色；選牌頁／遊戲選單提供淺色、深色、跟隨系統，bk_theme保存、head預套用；公開三尺寸切換／系統同步／重新整理驗證通過；fuzz3000／6×300與四組介面回歸通過 |
 | 手牌模式跳過選項 | hc-nocard膠囊按鈕保留「不使用，繼續」，卡片留在扇形手牌；公開三尺寸可點並前進、320淺深色與10組介面回歸通過；fuzz3000／6×300通過 |
 | 個人牌組／內建組牌器 | bk_my_decks多牌組、舊檔遷移、選擇／編輯／改名／刪除／分享碼；匯入新增；我方無內建牌組，AI青葉城西＋自訂；搜尋／角色Event篩選、40張／Event≤8、嚴格可對戰／數值541 |
-| 網站託管 | Firebase Hosting同站資料庫＋break-v9.5；GitHub Pages舊站保留，邀請參數保留；本機牌組跨網域請匯出再匯入 |
+| 網站託管 | https://haikyuu-playmat.web.app/ 資料庫＋break-v9.5；兩網域可用、13資源雜湊一致；GitHub Pages舊站保留與邀請參數保留；本機牌組跨網域請匯出再匯入 |
