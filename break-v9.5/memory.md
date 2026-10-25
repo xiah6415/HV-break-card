@@ -1490,3 +1490,6 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 介面驗證：hand-skip、e2e、choice、tcg-layout、events、mobile-review、flow、undo、reveal、skill-targets共10組全通過；1280／390／320的Event跳過實際可點並前進，球場不被遮；320淺深色截圖與實際操作通過。
 - 本機結果：build、fuzz3000、test.js六組各300局與10組瀏覽器回歸全部通過；541可組牌／358自動技能不變。
 - 部署：c6adf64已推送、Pages built／無錯誤；12項資源HTTP200與SHA256一致，公開頁1280／390／320的hand模式跳過可見可點、不遮場地並正常前進。https://xiah6415.github.io/HV-break-card/break-v9.5/?v=c6adf64 。
+
+## Codex：多牌組／組牌器／Firebase Hosting
+- 計畫：先合併b7318b8，保留資料庫相對連結；我方改為bk_my_decks多牌組及舊檔遷移，空牌組禁開局／建房，AI只列青葉城西與自訂。新增內建組牌器與改名／刪除／分享匯出，匯入一律新增；更新測試注入牌組、完整驗證後部署同站Firebase Hosting並核對授權網域、舊Pages與邀請參數，更新memory／STATUS。
