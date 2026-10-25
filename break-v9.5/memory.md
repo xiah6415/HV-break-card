@@ -1480,3 +1480,5 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 使用者回報：接球後可發 Event 時，沒有「不發／繼續」可選
 - 原因：choice-ui 把 single 請求的非卡片選項（value:null「不使用，繼續」）也放在 .hc-grid 內；牌桌改版 hand 模式把整個 .hc-grid 隱藏，連帶藏掉繼續鈕，只剩停用的「確認」與 Loss
 - 計畫：choice-ui 對無卡片選項的 .hc-item 加 hc-nocard；ui.html hand 模式只藏有卡片的項目、保留 hc-nocard 並以膠囊按鈕顯示；加 e2e 斷言「hand 模式下所有非卡片選項可見」
+- 結果：choice-ui 無卡片選項加 hc-nocard；hand 模式只隱藏卡片格，「不使用，繼續」以膠囊按鈕顯示（選取後按確認），並隱藏 hand 模式的 hc-timing 行以免 320px 面板蓋到我方場地
+- 測試：新增 hand-skip-e2e.js（1280／390／320：Event 時機 hand 模式、繼續鈕可見可點、不遮場地、決策前進）；fuzz3000、test.js 300、e2e、choice、tcg-layout、events、mobile-review、flow、undo、reveal、skill-targets e2e 全通過
