@@ -1475,3 +1475,8 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 合併：4abd369合併為9eb22ee，memory衝突保留雙方紀錄；僅ui與建置產物有程式差異，原有牌桌／多人再戰整合保留，規則／AI／連線不變。
 - 介面驗證：1280／390／320下系統深色仍預設淺色、三段選擇、bk_theme重新整理保存、跟隨系統即時變化、選牌與遊戲選單均通過並檢視截圖；e2e三尺寸各3局、choice三尺寸18契約、tcg-layout四尺寸及mobile-review三尺寸全通過，無頁面錯誤或溢出。
 - 結果／部署：build、fuzz3000、test.js六組各300局均通過；6c41c95已推送且Pages built／無錯誤，12項資源HTTP200與SHA256一致，公開頁1280／390／320主題預設、保存、跟隨系統與遊戲選單實測通過。https://xiah6415.github.io/HV-break-card/break-v9.5/?v=6c41c95 ；541可組牌／358自動技能不變。
+
+## Claude：手牌模式缺「不使用，繼續」（2026-10-25，分支 claude/hand-skip）
+- 使用者回報：接球後可發 Event 時，沒有「不發／繼續」可選
+- 原因：choice-ui 把 single 請求的非卡片選項（value:null「不使用，繼續」）也放在 .hc-grid 內；牌桌改版 hand 模式把整個 .hc-grid 隱藏，連帶藏掉繼續鈕，只剩停用的「確認」與 Loss
+- 計畫：choice-ui 對無卡片選項的 .hc-item 加 hc-nocard；ui.html hand 模式只藏有卡片的項目、保留 hc-nocard 並以膠囊按鈕顯示；加 e2e 斷言「hand 模式下所有非卡片選項可見」
