@@ -1465,3 +1465,8 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 
 ## 主題切換合併部署（2026-10-25）
 - 計畫：審查claude/theme-toggle精確4abd369並合併，保留主線牌桌／再戰整合；驗證預設淺色、深色／系統同步、bk_theme持久化與head預套用，以及measureDock缺節點保護。執行build／fuzz3000／6×300及e2e／choice／tcg-layout／mobile-review，完成後推送Pages、核對公開資源與主題操作，更新memory／STATUS。
+## Claude：外觀切換（2026-10-25，分支 claude/theme-toggle）
+- 使用者要求：牌桌預設淺色；提供三段切換「淺色／深色／跟隨系統」
+- 計畫：<head> 內先套用 bk_theme（localStorage，try/catch；預設 light）避免閃爍；:root data-theme=light|dark，跟隨系統時移除屬性並依 matchMedia 設 data-scheme；選牌頁與遊戲中選單都可切換；補齊改版牌桌硬寫白色的深色覆寫（區域、牌庫、球、面板、網）；深淺兩種三尺寸截圖驗收
+- 結果：預設淺色；選牌頁「外觀」與遊戲中選單（單人／多人）皆有三段切換「淺色／深色／跟隨系統」，存 bk_theme，<head> 先套用不閃爍；跟隨系統時依 matchMedia 即時切換並設 data-scheme；改版牌桌各區、牌庫、球、面板、網子補深色覆寫；measureDock 在 #dock 不存在時直接返回（mobile-review 以 setContent 重載時會觸發）
+- 測試：系統深色下預設仍淺色、三種模式切換、跟隨系統隨系統變化、重新整理保留，390／1280 皆無頁面錯誤；fuzz3000、test.js 300、e2e、choice-e2e、tcg-layout-e2e、mobile-review-e2e 通過
