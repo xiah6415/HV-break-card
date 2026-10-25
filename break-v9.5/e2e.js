@@ -29,9 +29,10 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=req
     const ref=r.options[0].value,index=await page.evaluate(id=>tableTest.match.view(0).players[0].hand.findIndex(c=>c.id===id),ref);
     await click(`.hand [data-hand="${index}"]`);assert.equal(await page.locator('.hand .hc.picked').count(),1);
     await click('#dockOpts .hc-item:has(.hc-card.on) .hc-info');assert(await page.isVisible('#sheet'));await click('#sheet [data-close]');assert.equal(await page.locator('.hand .hc.picked').count(),1);assert.equal(await page.locator('.hc-card.on').count(),1);
-    await click('#dockToggle');assert.equal(await page.isVisible('#dockOpts'),false);await click('#dockToggle');
-    await page.locator('.hand .hc').last().scrollIntoViewIfNeeded();const geometry=await page.evaluate(()=>({dock:document.getElementById('dock').getBoundingClientRect().toJSON(),hand:document.querySelector('.hand').getBoundingClientRect().toJSON()}));
-    if(width<500){assert(geometry.dock.height<=height*.46+1,'dock too tall');assert(geometry.hand.bottom<=geometry.dock.top+1,'hand covered');}
+    // 牌桌改版（Claude 2026-10-25）：無收合鈕；調度以置中卡片框呈現，整局不捲動
+    assert.equal(await page.isVisible('#dockToggle'),false,'no collapse toggle');
+    const geometry=await page.evaluate(()=>({mode:document.getElementById('dock').dataset.mode,dock:document.getElementById('dock').getBoundingClientRect().toJSON(),scroll:document.documentElement.scrollHeight>innerHeight+2}));
+    assert.equal(geometry.mode,'modal','mulligan uses the centred card dialog');assert(geometry.dock.height<=height*.86+1,'dialog too tall');assert(!geometry.scroll,'table must not scroll');
     await click(`.hand [data-hand="${index}"]`);mull=true;
    }
    if(['single','number'].includes(r.input.type)){

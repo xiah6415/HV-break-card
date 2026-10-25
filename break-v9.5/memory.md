@@ -1448,3 +1448,11 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 
 ## 手遊牌桌改版與過期測試遷移（2026-10-25）
 - 計畫：先在主線重跑build／fuzz3000／6×300／e2e／choice-e2e，之後合併claude/online-ui精確31ce7ab；93ffc87與34c98e8、meta.names／再戰send已在主線，不重做。保留正式多人整合、唯讀攔網與接手控制，驗證官方三排鏡像、扇形手牌、bar／hand／modal及點牌庫抽牌；遷移指定舊Game／過期卡數測試及多人測試，補上UI再戰確認接線，回歸與公開實測後部署，僅更新memory與STATUS。
+## Claude：牌桌改版（手遊 TCG 式，2026-10-25，分支 claude/online-ui 續）
+- 使用者確認：淺色；官方配置直式化——每邊三排（靠網攔網×3 側/中/側；中排 接/舉/攻；後排 發球｜Event），左 SET、右牌庫/棄牌；對手鏡像
+- 互動：整局一個畫面不捲動；移除收合面板；頂端一行提示＋主按鈕；直接點底部扇形手牌／場上卡選擇（可選亮框、不可選變暗）；多選（調度、付 Guts）用置中卡片對話框
+- 範圍：只改 ui.html 牌桌呈現與選擇互動，規則／AI／連線不動；單人與多人共用；完成後 390／360／1280 截圖驗收
+- 結果：ui.html 新增 areaHTML／courtHTML／barHTML／fanHTML（官方三排配置、對手鏡像、數值徽章、Guts 疊在頂牌下、牌庫點擊抽牌、棄牌堆可查看）；牌桌改為固定滿版 grid（不捲動），面板依請求分三態 dock[data-mode]：bar（一行提示＋按鈕）／hand（直接點扇形手牌，亮框可選）／modal（調度、多選、攔網置中對話框＋遮罩）；移除 #dockToggle；卡圖遊戲中改 eager 載入；頂牌 class 改 is-top（避免與 .top 標頭衝突）
+- 測試：e2e.js 改驗新行為（無收合鈕、調度為置中對話框、高度≤86%、不捲動）；e2e／choice／audit／share e2e 與 online-session 單元測試通過；390／360／1280 自動點完整局 0 錯誤、0 溢出、提示列不遮我方後排；假連線層多人雙座位正常
+- 既有失敗（master 同樣失敗、錯誤相同，非本次造成）：events／first-service／flow／library／numeric／rename／reveal／skill-targets／undo e2e（舊 Game 類別移除、卡數 541/244 過期、抽牌階段流程改變），待 Codex 更新
+- 交接（2026-10-25）：使用者決定由 Codex 接手後續；本次 fuzz 3000 通過，test.js 300／e2e 最終回歸在交接時尚未跑完，請 Codex 合併前重跑
