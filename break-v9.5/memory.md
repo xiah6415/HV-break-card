@@ -1516,3 +1516,4 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 ## Claude：組牌連結改指外部牌庫（2026-10-25，分支 claude/external-db）
 - 使用者更正：「外部牌庫」指 https://weilun2022.github.io/haikyuu-cards/index.html（非 repo 根目錄的資料庫副本）
 - 計畫：選牌頁「到卡牌資料庫組牌」與匯入面板的連結改指該站（新分頁）；匯入說明改為「在外部牌庫 牌組 → 📲 分享 → 複製連結 後貼上」；分享碼格式相同，既有 decodeShare 不需改
+- 結果＋測試：兩處連結改指 weilun2022/haikyuu-cards（新分頁），匯入說明改為外部牌庫分享流程；fuzz3000、test.js 300、e2e、share-e2e、deck-builder-e2e 通過。repo 根目錄的資料庫副本（含「🏐 對練」）仍在 Firebase Hosting 根網址，是否保留交使用者決定
