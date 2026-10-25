@@ -1462,3 +1462,6 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 同房再戰按鈕已接既有send契約：單方確認等待、雙方確認才開新ID／種子，AI自動同意；meta.names沿用已完成實作，規則無變更。本批未修改卡片規則、技能或AI。
 - 指定9組舊Game測試與mobile-review遷移正式Match／TableSession；多人改用正式入口、扇形手牌與牌庫。合併後170套回歸／規則74項／fuzz3000／6×300／11組瀏覽器測試／choice三尺寸／牌桌四尺寸均通過；雙房、接手刷新、私密拒讀、7次唯讀預演、113步雙人及22步AI、雙人／AI再戰與快照後斷線通過。541可組牌／358自動技能不變。
 - 部署：6953a62已推送，Pages built／無錯誤，12檔HTTP200及SHA256一致；公開正式Firebase雙匿名10指令、meta.names、座位、實際雙方再戰按鈕／等待狀態、新ID與種子、舊同意拒絕及私密拒讀通過，測試資料清除。舊邀請保留room轉址、390px無溢出與頁面錯誤；https://xiah6415.github.io/HV-break-card/break-v9.5/index.html?online=1&v=6953a62 。
+
+## 主題切換合併部署（2026-10-25）
+- 計畫：審查claude/theme-toggle精確4abd369並合併，保留主線牌桌／再戰整合；驗證預設淺色、深色／系統同步、bk_theme持久化與head預套用，以及measureDock缺節點保護。執行build／fuzz3000／6×300及e2e／choice／tcg-layout／mobile-review，完成後推送Pages、核對公開資源與主題操作，更新memory／STATUS。
