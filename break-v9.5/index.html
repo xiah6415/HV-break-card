@@ -528,6 +528,32 @@ body.playing .dock.wait .in { padding-block: 4px; }
   .court2.me { --cw: min(86px, 7.8vh); } .court2.opp { --cw: min(70px, 6.4vh); }
   body.playing .wrap { max-width: 720px; }
 }
+/* 寬螢幕牌桌使用完整視窗；手機橫向仍保留緊湊配置。 */
+@media (min-width: 1000px) and (min-height: 650px) {
+  body.playing .wrap {max-width:none;width:100%;padding:0 32px;}
+  body.playing #game .game {width:calc(100% - 64px);max-width:none;padding:0 8px;gap:4px;}
+  body.playing {--hcw:min(140px,15vh);--handh:calc(var(--hcw) * .95 + 12px);}
+  body.playing .court2 {grid-template-columns:74px minmax(0,1fr) 82px;gap:16px;padding:0 4px;}
+  body.playing .court2.opp {grid-template-columns:82px minmax(0,1fr) 74px;}
+  body.playing .court2.me {--cw:min(96px,7.6vh);}
+  body.playing .court2.opp {--cw:min(88px,6.8vh);}
+  body.playing .field,body.playing .row {gap:8px;}
+  body.playing .area {padding:5px 10px;border-radius:10px;}
+  body.playing .area .nm {font-size:13px;}
+  body.playing .pbar {font-size:14px;padding:7px 4px;}
+  body.playing .pbar .who {font-size:16px;max-width:16em;}
+  body.playing .pbar .dk {font-size:13px;}
+  body.playing .pile2 {width:min(66px,7.5vh);font-size:12px;}
+  body.playing .pile2 b {font-size:20px;}
+  body.playing .setbox {font-size:12px;}
+  body.playing .setbox b {font-size:24px;}
+  body.playing .rally-status strong {font-size:13px;}
+  body.playing .rally-status span {font-size:12px;}
+  body.playing .dock:not([data-mode="modal"]) {left:48px;right:48px;max-width:none;}
+  body.playing .dock:not([data-mode="modal"]) .hc-q {font-size:16px;}
+  body.playing .dock[data-mode="modal"] {max-width:900px;}
+  body.playing .wrap > .top {right:40px;}
+}
 /* 外觀：data-scheme 為實際生效的深淺（跟隨系統時由 JS 依 matchMedia 設定）；改版牌桌硬寫白色的深色覆寫 */
 :root[data-scheme="dark"] .area { background: #16292cb0; border-color: #2c4448; }
 :root[data-scheme="dark"] .area .nm, :root[data-scheme="dark"] .setbox, :root[data-scheme="dark"] .pile2 { color: #8fa9a7; }
