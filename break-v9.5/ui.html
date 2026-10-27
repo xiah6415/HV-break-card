@@ -574,13 +574,78 @@ body.playing .dock.wait .in { padding-block: 4px; }
 .theme-seg button { border: 0; border-radius: 999px; min-height: 36px; padding: 4px 14px; background: none; color: var(--muted); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
 .theme-seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 4px #0002; }
 a.chip { text-decoration: none; display: inline-flex; align-items: center; color: inherit; }
-#builderName,#builderQuery,#deckName {width:100%;min-height:44px;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink);font:inherit;font-size:16px;}
-.builder-head {display:flex;align-items:center;justify-content:space-between;gap:10px;position:sticky;top:0;background:var(--surface);padding:8px 0;z-index:2;}
-.builder-grid {display:grid;grid-template-columns:repeat(auto-fill,minmax(116px,1fr));gap:10px;min-width:0;margin:10px 0;}
-.builder-card {border:1px solid var(--line);border-radius:10px;padding:7px;background:var(--sunk);min-width:0;}
-.builder-card .ci {width:100%;height:auto;aspect-ratio:5/7;object-fit:contain;}
-.builder-label {font-size:12px;font-weight:700;overflow-wrap:anywhere;}.builder-label small {display:block;color:var(--muted);}
-.builder-controls {display:flex;align-items:center;justify-content:space-between;gap:3px;}.builder-controls .chip {padding:5px 10px;min-height:40px;}
+#deckName {width:100%;min-height:44px;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink);font:inherit;font-size:16px;}
+#sheet[data-kind="builder"] {align-items:center;padding:24px;background:rgb(8 22 25 / .56);backdrop-filter:blur(7px);}
+#sheet[data-kind="builder"] .box {display:block;width:min(1440px,100%);height:min(940px,calc(100dvh - 48px));max-height:none;padding:0;overflow:hidden;border:1px solid var(--line);border-radius:22px;box-shadow:0 24px 100px #0003;}
+#sheet[data-kind="builder"] .box>.closer {display:none;}
+.builder-editor {height:100%;display:flex;flex-direction:column;min-height:0;}
+.builder-top {display:flex;align-items:center;gap:22px;padding:20px 24px;border-bottom:1px solid var(--line);}
+.builder-title {flex:0 0 auto;}.builder-title small {display:block;color:var(--teal);font-size:10px;font-weight:800;letter-spacing:.14em;margin-bottom:3px;}
+.builder-title h3 {font-size:21px;letter-spacing:-.03em;}
+.builder-name {flex:1;max-width:400px;display:grid;gap:4px;color:var(--muted);font-size:11px;}
+#builderName,#builderQuery {width:100%;min-height:44px;padding:10px 13px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit;font-size:16px;outline-offset:2px;}
+.builder-close {margin-left:auto;width:40px;height:40px;flex:0 0 40px;border:1px solid var(--line);border-radius:50%;background:var(--surface);color:var(--muted);font-size:23px;cursor:pointer;}
+.builder-tabs {display:none;}
+.builder-workspace {display:grid;grid-template-columns:minmax(0,1fr) 300px;flex:1;min-height:0;}
+.builder-catalog {min-width:0;min-height:0;display:flex;flex-direction:column;}
+.builder-filters {display:flex;gap:12px;padding:16px 22px;border-bottom:1px solid var(--line);align-items:end;}
+.builder-filters label {display:grid;gap:6px;color:var(--muted);font-size:11px;}
+.builder-search {flex:1;min-width:0;}.builder-kind {width:116px;flex:0 0 116px;}
+#builderKind {min-height:44px;padding:8px 12px;border-radius:10px;font-size:14px;}
+.builder-catalog-scroll {flex:1;overflow:auto;overscroll-behavior:contain;padding:0 22px 22px;min-height:0;}
+.builder-results {display:flex;align-items:center;justify-content:space-between;gap:8px;padding:15px 0 12px;font-size:11px;color:var(--muted);}
+.builder-legend {display:flex;align-items:center;gap:5px;white-space:nowrap;}.builder-legend::before {content:'';width:6px;height:6px;border-radius:50%;background:var(--court);}
+.builder-grid {display:grid;grid-template-columns:repeat(auto-fill,minmax(135px,1fr));gap:14px;min-width:0;align-items:start;}
+.builder-card {border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface);min-width:0;transition:border-color .15s,box-shadow .15s;}
+.builder-card.selected {border-color:var(--court);box-shadow:0 0 0 1px var(--court);}
+.builder-art {position:relative;padding:6px 6px 0;background:var(--surface);}
+.builder-art .ci {width:100%;height:auto;aspect-ratio:300/419;object-fit:contain;display:block;border-radius:7px;}
+.builder-qty {position:absolute;top:12px;right:12px;min-width:25px;height:25px;padding:0 6px;display:grid;place-items:center;background:var(--court);color:#fff;font-size:12px;font-weight:800;border-radius:8px;box-shadow:0 2px 5px #0002;}
+.builder-label {padding:9px 10px 5px;min-width:0;}
+.builder-label strong {display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:12px;line-height:1.35;min-height:32px;}
+.builder-label small {display:block;color:var(--muted);font-size:10px;margin-top:3px;}
+.builder-controls {display:flex;align-items:center;justify-content:space-between;gap:4px;padding:5px 8px 8px;}
+.builder-controls button {border:0;width:36px;min-height:36px;background:var(--sunk);color:var(--ink);border-radius:9px;font-size:19px;cursor:pointer;}
+.builder-controls button:disabled {opacity:.3;cursor:default;}.builder-controls b {font-size:13px;font-variant-numeric:tabular-nums;}
+.builder-controls button:last-child:not(:disabled) {background:var(--court-soft);color:var(--court);}
+#builderMore {display:block;margin:20px auto 0;padding:9px 24px;}
+.builder-picked {border-left:1px solid var(--line);background:color-mix(in srgb,var(--bg) 55%,var(--surface));display:flex;flex-direction:column;min-height:0;min-width:0;}
+.builder-picked-head {display:flex;justify-content:space-between;gap:12px;align-items:center;padding:18px 18px 14px;}
+.builder-picked-head h4 {font-size:14px;margin:0;}.builder-picked-head span {font-size:12px;color:var(--muted);}
+.builder-selected-list {overflow:auto;flex:1;min-height:0;padding:0 12px 16px;overscroll-behavior:contain;}
+.builder-selected-card {display:grid;grid-template-columns:36px minmax(0,1fr) auto;align-items:center;gap:8px;padding:9px 5px;border-bottom:1px solid var(--line);}
+.builder-selected-card>.ci {width:36px;height:50px;object-fit:contain;border-radius:4px;}
+.builder-selected-copy {min-width:0;}.builder-selected-copy strong {display:block;font-size:11px;overflow-wrap:anywhere;line-height:1.4;}.builder-selected-copy small {color:var(--muted);font-size:10px;}
+.builder-selected-card .builder-controls {padding:0;gap:3px;}.builder-selected-card .builder-controls button {width:28px;min-height:32px;font-size:16px;}.builder-selected-card .builder-controls b {font-size:12px;min-width:16px;text-align:center;}
+.builder-empty {display:grid;justify-items:center;text-align:center;padding:42px 12px;color:var(--muted);gap:8px;}
+.builder-empty>span {display:grid;place-items:center;width:48px;height:58px;border:1.5px dashed var(--line);border-radius:9px;font-size:24px;color:var(--teal);transform:rotate(-7deg);margin-bottom:8px;}
+.builder-empty strong {color:var(--ink);font-size:13px;}.builder-empty p {font-size:11px;line-height:1.7;margin:0;max-width:190px;}
+.builder-footer {border-top:1px solid var(--line);padding:14px 22px;display:flex;align-items:center;gap:20px;background:var(--surface);}
+.builder-totals {flex:1;min-width:0;}.builder-totals b {font-size:14px;font-variant-numeric:tabular-nums;}.builder-totals p {font-size:11px;color:var(--muted);margin:5px 0 0;}
+.builder-progress {width:min(240px,100%);height:4px;background:var(--sunk);border-radius:4px;margin-top:8px;overflow:hidden;}.builder-progress i {display:block;height:100%;background:var(--court);border-radius:4px;transition:width .15s;}.builder-progress.complete i {background:var(--good);}
+#builderSave {border:0;border-radius:12px;min-height:46px;min-width:140px;font-weight:800;background:var(--court);color:#fff;padding:10px 22px;cursor:pointer;}
+#builderSave:disabled {background:var(--sunk);color:var(--muted);cursor:default;}
+@media (max-width:899px) {
+  #sheet[data-kind="builder"] {padding:0;}
+  #sheet[data-kind="builder"] .box {width:100%;height:100dvh;border:0;border-radius:0;}
+  .builder-top {padding:calc(12px + env(safe-area-inset-top,0px)) 16px 12px;gap:10px;flex-wrap:wrap;}
+  .builder-title h3 {font-size:18px;}.builder-title small {font-size:9px;}.builder-close {order:1;}.builder-name {order:2;flex-basis:100%;max-width:none;flex-direction:row;align-items:center;grid-template-columns:auto minmax(0,1fr);gap:10px;}
+  #builderName {min-height:38px;padding:8px 11px;font-size:16px;}
+  .builder-tabs {display:flex;padding:0 16px;border-bottom:1px solid var(--line);gap:22px;}
+  .builder-tabs button {position:relative;border:0;background:none;min-height:42px;padding:6px 0;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;}
+  .builder-tabs button[aria-selected="true"] {color:var(--court);}.builder-tabs button[aria-selected="true"]::after {content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--court);border-radius:3px 3px 0 0;}
+  .builder-tabs span {font-size:10px;padding:2px 6px;background:var(--sunk);border-radius:8px;margin-left:4px;}
+  .builder-workspace {display:block;position:relative;}
+  .builder-catalog,.builder-picked {height:100%;}.builder-picked {display:none;border-left:0;}
+  .builder-editor[data-pane="selected"] .builder-catalog {display:none;}.builder-editor[data-pane="selected"] .builder-picked {display:flex;}
+  .builder-filters {padding:10px 14px;gap:8px;}.builder-filters label>span {display:none;}.builder-kind {width:94px;flex-basis:94px;}
+  #builderQuery {min-height:40px;font-size:16px;padding:8px 10px;}#builderKind {min-height:40px;font-size:12px;padding:8px;}
+  .builder-catalog-scroll {padding:0 14px 20px;}.builder-results {padding:10px 0;font-size:10px;}.builder-grid {grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;}
+  .builder-label {padding:8px 9px 3px;}.builder-label strong {font-size:12px;min-height:32px;}.builder-controls {padding:5px 8px 8px;}.builder-controls button {width:38px;min-height:38px;}
+  .builder-footer {padding:12px 14px calc(12px + env(safe-area-inset-bottom,0px));gap:12px;}#builderSave {min-width:110px;min-height:44px;padding:10px 16px;font-size:13px;}.builder-totals b {font-size:12px;}.builder-totals p {font-size:10px;}
+  .builder-selected-list {padding:0 16px 16px;}.builder-selected-card {grid-template-columns:44px minmax(0,1fr) auto;padding:12px 0;gap:12px;}.builder-selected-card>.ci {width:44px;height:61px;}.builder-selected-copy strong {font-size:13px;}.builder-selected-copy small {font-size:11px;}.builder-selected-card .builder-controls button {width:34px;min-height:38px;}
+}
+@media (max-height:560px) and (max-width:899px) {.builder-top {padding:8px 14px;flex-wrap:nowrap;}.builder-title small {display:none;}.builder-name {order:0;flex-basis:auto;}.builder-name>span {display:none;}.builder-footer {padding-top:8px;padding-bottom:8px;}.builder-tabs {padding-inline:14px;}}
 #sheetBox textarea {width:100%;min-width:0;overflow-wrap:anywhere;background:var(--sunk);color:var(--ink);}
 </style>
 <script>
@@ -627,7 +692,7 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
       <p class="sub" id="deckHint" role="status">尚無牌組，請先組牌或匯入牌組。</p>
       <div class="deckstrip" id="myStrip"></div>
       <div class="opts"><button class="chip" type="button" id="newDeck">＋內建組牌器</button><button class="chip" type="button" id="editMyDeck">編輯</button><button class="chip" type="button" id="renameDeck">改名</button><button class="chip" type="button" id="deleteDeck">刪除</button><button class="chip" type="button" id="exportDeck">匯出分享碼</button></div>
-      <a class="chip" id="buildDeck" href="../index.html">🃏 到卡牌資料庫組牌</a>
+      <a class="chip" id="buildDeck" href="https://weilun2022.github.io/haikyuu-cards/" target="_blank" rel="noopener noreferrer">🃏 到卡牌資料庫組牌</a>
       <button class="chip" type="button" id="editDeck">匯入／編輯自訂牌組</button>
       <button class="chip" type="button" id="supportBtn">卡庫／支援狀態</button>
     </div>
@@ -781,9 +846,9 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
     const t = TARGET[target], source = DECKS[$(t.sel).value] || {name:'新牌組',cards:{}};
     openSheet(`<h3>匯入${t.label}牌組</h3>
       <section class="imp">
-        <label class="field" for="shareURL">在卡牌資料庫「牌組構築」按「🏐 對練」可直接帶入；或貼上查卡網站的分享連結（…?deck=…）
+        <label class="field" for="shareURL">在卡牌資料庫組好牌組後，複製分享連結貼在這裡（…?deck=…）
           <input id="shareURL" type="url" inputmode="url" autocomplete="off" placeholder="貼上分享連結（…?deck=…）"></label>
-        <div class="opts"><button class="opt primary" type="button" id="shareGo">讀取</button><a class="opt quiet" href="../index.html">開啟卡牌資料庫組牌</a></div>
+        <div class="opts"><button class="opt primary" type="button" id="shareGo">讀取</button><a class="opt quiet" href="https://weilun2022.github.io/haikyuu-cards/" target="_blank" rel="noopener noreferrer">開啟卡牌資料庫組牌</a></div>
         <div id="sharePreview" aria-live="polite"></div>
       </section>
       <details class="imp-json"><summary>進階：用 JSON 匯入／編輯（可組牌 ${modeOptions().mode==='numeric'?CL.data.counts.cards:CL.data.counts.playable} 種卡）</summary>
@@ -809,18 +874,28 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
   function selectPersonal(id){syncMyDecks();fill($('myDeck'),MY_DECKS,id);store.set('bk_my',$('myDeck').value);refresh();}
   function openBuilder(id=null){
     const original=personal.decks.find(d=>d.id===id),cards={...(original?.cards||{})};let limit=48;
-    openSheet(`<h3>${original?'編輯牌組':'建立牌組'}</h3><label class="field">牌組名稱<input id="builderName" maxlength="60" value="${esc(original?.name||'我的牌組')}"></label><div class="builder-head"><b id="builderCount" role="status"></b><button class="opt primary" type="button" id="builderSave">儲存牌組</button></div><p class="sub" id="builderError" role="alert"></p><details><summary>已選卡片（點 − 移除）</summary><div class="builder-grid" id="builderSelected"></div></details><label class="field">搜尋卡號／名稱／學校<input id="builderQuery" type="search" placeholder="例如 日向、音駒、P04"></label><label class="field">類別<select id="builderKind"><option value="all">全部</option><option value="C">角色</option><option value="E">Event</option></select></label><p class="sub" id="builderFound"></p><div class="builder-grid" id="builderCards"></div><button class="chip" type="button" id="builderMore">顯示更多</button>`);
+    openSheet(`<div class="builder-editor" data-pane="browse" role="dialog" aria-modal="true" aria-labelledby="builderTitle">
+      <header class="builder-top"><div class="builder-title"><small>BREAK · DECK BUILDER</small><h3 id="builderTitle">${original?'編輯牌組':'建立我的牌組'}</h3></div><label class="builder-name"><span>牌組名稱</span><input id="builderName" maxlength="60" value="${esc(original?.name||'我的牌組')}"></label><button type="button" class="builder-close" data-close="1" aria-label="關閉組牌器">×</button></header>
+      <nav class="builder-tabs" role="tablist" aria-label="組牌器內容"><button id="builderBrowseTab" type="button" role="tab" aria-selected="true">挑選卡片</button><button id="builderSelectedTab" type="button" role="tab" aria-selected="false">已選牌組 <span id="builderTabCount">0</span></button></nav>
+      <div class="builder-workspace"><section class="builder-catalog" aria-label="卡片列表"><div class="builder-filters"><label class="builder-search"><span>搜尋卡片</span><input id="builderQuery" type="search" placeholder="搜尋卡名、卡號或學校"></label><label class="builder-kind"><span>卡片類別</span><select id="builderKind"><option value="all">全部卡片</option><option value="C">角色</option><option value="E">Event</option></select></label></div><div class="builder-catalog-scroll"><div class="builder-results"><span id="builderFound"></span><span class="builder-legend">已選卡片</span></div><div class="builder-grid" id="builderCards"></div><button class="chip" type="button" id="builderMore">載入更多卡片</button></div></section>
+      <aside class="builder-picked" aria-label="已選牌組"><div class="builder-picked-head"><h4>我的牌組</h4><span id="builderPickedCount">0 張</span></div><div class="builder-selected-list" id="builderSelected"></div></aside></div>
+      <footer class="builder-footer"><div class="builder-totals"><b id="builderCount" role="status"></b><div class="builder-progress" id="builderProgress" role="progressbar" aria-label="牌組張數" aria-valuemin="0" aria-valuemax="40"><i></i></div><p id="builderError" role="status"></p></div><button type="button" id="builderSave">儲存牌組</button></footer>
+    </div>`);
+    $('sheet').dataset.kind='builder';
     const count=()=>Object.values(cards).reduce((a,n)=>a+n,0),events=()=>Object.entries(cards).reduce((a,[c,n])=>a+(isC(c)?0:n),0);
-    const item=c=>`<article class="builder-card">${img(c)}<div class="builder-label">${esc(nm(c))}<small>${esc(c)}</small></div><div class="builder-controls"><button type="button" class="chip" data-builder-minus="${c}" aria-label="減少 ${esc(nm(c))}" ${(cards[c]||0)?'':'disabled'}>−</button><b>${cards[c]||0}</b><button type="button" class="chip" data-builder-plus="${c}" aria-label="增加 ${esc(nm(c))}" ${count()>=40||(!isC(c)&&events()>=8)?'disabled':''}>＋</button></div></article>`;
-    const renderBuilder=()=>{
-      const total=count(),ev=events(),info=DT.inspectDeck({name:$('builderName').value,cards},DEF,modeOptions());
-      $('builderCount').textContent=`${total}/40・Event ${ev}/8`;$('builderSave').disabled=!info.ok||!$('builderName').value.trim();$('builderError').textContent=info.ok?'':info.problems.join('；');
-      const found=CL.search($('builderQuery').value,modeOptions().mode==='strict'?'playable':'all',modeOptions().mode).filter(c=>$('builderKind').value==='all'||c.kind===$('builderKind').value);
-      $('builderFound').textContent=`${found.length} 種卡・${modeOptions().mode==='strict'?'嚴格模式：可對戰卡':'數值模式：全牌庫'}`;
-      $('builderCards').innerHTML=found.slice(0,limit).map(c=>item(c.code)).join('');$('builderSelected').innerHTML=Object.keys(cards).filter(c=>cards[c]).map(item).join('')||'<p class="sub">尚未選卡</p>';$('builderMore').hidden=found.length<=limit;
-    };
-    $('builderQuery').oninput=$('builderKind').onchange=()=>{limit=48;renderBuilder();};$('builderName').oninput=renderBuilder;$('builderMore').onclick=()=>{limit+=48;renderBuilder();};
-    const box=$('sheetBox');box.onclick=e=>{const plus=e.target.closest('[data-builder-plus]'),minus=e.target.closest('[data-builder-minus]');if(!plus&&!minus)return;const c=(plus||minus).dataset[plus?'builderPlus':'builderMinus'];if(plus&&(count()>=40||(!isC(c)&&events()>=8)))return;cards[c]=Math.max(0,(cards[c]||0)+(plus?1:-1));if(!cards[c])delete cards[c];renderBuilder();};
+    const controls=c=>`<div class="builder-controls"><button type="button" data-builder-minus="${c}" aria-label="減少 ${esc(nm(c))}" ${(cards[c]||0)?'':'disabled'}>−</button><b>${cards[c]||0}</b><button type="button" data-builder-plus="${c}" aria-label="增加 ${esc(nm(c))}" ${count()>=40||(!isC(c)&&events()>=8)?'disabled':''}>＋</button></div>`;
+    const item=c=>`<article class="builder-card ${(cards[c]||0)?'selected':''}" data-builder-card="${c}"><div class="builder-art">${img(c)}<span class="builder-qty" ${(cards[c]||0)?'':'hidden'}>×${cards[c]||0}</span></div><div class="builder-label"><strong>${esc(nm(c))}</strong><small>${esc(c)} · ${isC(c)?'角色':'Event'}</small></div>${controls(c)}</article>`;
+    function summary(){const total=count(),ev=events(),info=DT.inspectDeck({name:$('builderName').value,cards},DEF,modeOptions());$('builderCount').textContent=`${total}/40 張 · Event ${ev}/8`;$('builderTabCount').textContent=total;$('builderPickedCount').textContent=`${Object.keys(cards).length} 種 · ${total} 張`;$('builderSave').disabled=!info.ok||!$('builderName').value.trim();$('builderError').textContent=!$('builderName').value.trim()?'幫這副牌組取個名字':total<40?`再選 ${40-total} 張就能儲存`:info.ok?'牌組完成，可以儲存':info.problems.join('；');$('builderProgress').setAttribute('aria-valuenow',total);$('builderProgress').classList.toggle('complete',info.ok);$('builderProgress').firstElementChild.style.width=Math.min(100,total/40*100)+'%';}
+    function renderBuilder(rebuild=true){
+      summary();
+      if(rebuild){const found=CL.search($('builderQuery').value,modeOptions().mode==='strict'?'playable':'all',modeOptions().mode).filter(c=>$('builderKind').value==='all'||c.kind===$('builderKind').value);$('builderFound').textContent=`${found.length} 種卡 · ${modeOptions().mode==='strict'?'嚴格模式':'數值模式'}`;$('builderCards').innerHTML=found.slice(0,limit).map(c=>item(c.code)).join('');$('builderMore').hidden=found.length<=limit;}
+      else for(const node of $('builderCards').children){const c=node.dataset.builderCard,n=cards[c]||0;node.classList.toggle('selected',n>0);node.querySelector('.builder-qty').hidden=!n;node.querySelector('.builder-qty').textContent='×'+n;node.querySelector('.builder-controls b').textContent=n;node.querySelector('[data-builder-minus]').disabled=!n;node.querySelector('[data-builder-plus]').disabled=count()>=40||(!isC(c)&&events()>=8);}
+      $('builderSelected').innerHTML=Object.keys(cards).filter(c=>cards[c]).map(c=>`<article class="builder-selected-card">${img(c)}<div class="builder-selected-copy"><strong>${esc(nm(c))}</strong><small>${esc(c)}</small></div>${controls(c)}</article>`).join('')||'<div class="builder-empty"><span>＋</span><strong>從一張卡開始</strong><p>點卡片下方的 ＋ 加入牌組。<br>選滿 40 張，就能開始對練。</p></div>';
+    }
+    function pane(selected){$('sheetBox').querySelector('.builder-editor').dataset.pane=selected?'selected':'browse';$('builderBrowseTab').setAttribute('aria-selected',String(!selected));$('builderSelectedTab').setAttribute('aria-selected',String(selected));}
+    $('builderBrowseTab').onclick=()=>pane(false);$('builderSelectedTab').onclick=()=>pane(true);
+    $('builderQuery').oninput=$('builderKind').onchange=()=>{limit=48;renderBuilder();};$('builderName').oninput=summary;$('builderMore').onclick=()=>{limit+=48;renderBuilder();};
+    const box=$('sheetBox');box.onclick=e=>{const plus=e.target.closest('[data-builder-plus]'),minus=e.target.closest('[data-builder-minus]');if(!plus&&!minus)return;const c=(plus||minus).dataset[plus?'builderPlus':'builderMinus'];if(plus&&(count()>=40||(!isC(c)&&events()>=8)))return;cards[c]=Math.max(0,(cards[c]||0)+(plus?1:-1));if(!cards[c])delete cards[c];renderBuilder(false);};
     $('builderSave').onclick=()=>{try{const deck=DT.parseDeck({name:$('builderName').value.trim(),cards},DEF,modeOptions()),saved=id?personal.update(id,deck):personal.add(deck);selectPersonal(saved);closeSheet();}catch(e){$('builderError').textContent=e.message;}};
     renderBuilder();
   }
@@ -832,7 +907,7 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
   // ---------- sheets
   let sheetOnClose = null;
   function openSheet(html, onClose = null) { closeSheet(); clearTimeout(turnTimer); sheetOnClose = onClose; $('sheetBox').innerHTML = html + '<button class="chip closer" type="button" data-close="1">關閉</button>'; $('sheet').hidden = false; $('turnScreen').inert = true; $('sheetBox').querySelector('button')?.focus(); }
-  function closeSheet() { $('sheetBox').onclick=null;$('sheet').hidden = true; $('turnScreen').inert = false; const callback = sheetOnClose; sheetOnClose = null; callback?.(); scheduleTransition(turnNotice); }
+  function closeSheet() {delete $('sheet').dataset.kind; $('sheetBox').onclick=null;$('sheet').hidden = true; $('turnScreen').inert = false; const callback = sheetOnClose; sheetOnClose = null; callback?.(); scheduleTransition(turnNotice); }
   $('sheet').addEventListener('click', e => { if (e.target.id === 'sheet' || e.target.dataset.close) closeSheet(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
   const libraryView = {query: '', status: 'all', limit: 60};
