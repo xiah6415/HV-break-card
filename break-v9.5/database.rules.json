@@ -218,6 +218,36 @@
           ".validate": false
         }
       }
+    },
+    "personalDecks": {
+      "$uid": {
+        ".read": "auth != null && auth.uid == $uid && auth.token.firebase.sign_in_provider == 'google.com'",
+        "$deck": {
+          ".write": "auth != null && auth.uid == $uid && auth.token.firebase.sign_in_provider == 'google.com' && (!data.exists() || !newData.exists())",
+          ".validate": "newData.hasChildren(['version','name','cardsJSON','cardCount','eventCount','createdAt'])",
+          "version": {
+            ".validate": "newData.val() == 1"
+          },
+          "name": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 60"
+          },
+          "cardsJSON": {
+            ".validate": "newData.isString() && newData.val().length <= 16000"
+          },
+          "cardCount": {
+            ".validate": "newData.val() == 40"
+          },
+          "eventCount": {
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 8"
+          },
+          "createdAt": {
+            ".validate": "newData.isNumber() && newData.val() == now"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      }
     }
   }
 }

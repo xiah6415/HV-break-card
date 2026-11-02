@@ -14,5 +14,15 @@ class MyDecks {
  rename(id,name){const d=this.decks.find(d=>d.id===id);if(!d)throw Error('找不到牌組');if(!String(name).trim())throw Error('請輸入牌組名稱');return this.update(id,{...d,name:String(name).trim()});}
  remove(id){this._write(this.decks.filter(d=>d.id!==id));}
 }
-if(typeof module!=='undefined'&&module.exports)module.exports=MyDecks;else root.BreakMyDecks=MyDecks;
+class DeckDrafts {
+ constructor(storage,defs){this.storage=storage;this.defs=defs;}
+ _all(){const text=this.storage.getItem('bk_deck_drafts');const rows=text?JSON.parse(text):{};if(!rows||typeof rows!=='object'||Array.isArray(rows))throw Error('草稿資料無法讀取');return rows;}
+ _key(id){if(id!==null&&!/^my_[\w-]+$/.test(id))throw Error('草稿編號無效');return id||'new';}
+ _validate(source){const cards={};let total=0,events=0;for(const [raw,n]of Object.entries(source.cards||{})){const c=DT.normalCode(raw);if(!Object.hasOwn(this.defs,c)||!Number.isSafeInteger(n)||n<1||n>40)throw Error('草稿卡片或張數無效');cards[c]=(cards[c]||0)+n;total+=n;if(this.defs[c][1]==='E')events+=n;}if(total>40||events>8)throw Error('草稿超過牌組上限');return {name:String(source.name||'').slice(0,60),cards};}
+ get(id=null){const row=this._all()[this._key(id)];return row?{...row,...this._validate(row)}:null;}
+ save(id,source){const key=this._key(id),rows=this._all();rows[key]={...this._validate(source),savedAt:Date.now()};this.storage.setItem('bk_deck_drafts',JSON.stringify(rows));}
+ remove(id=null){const key=this._key(id),rows=this._all();delete rows[key];this.storage.setItem('bk_deck_drafts',JSON.stringify(rows));}
+}
+MyDecks.Drafts=DeckDrafts;
+if(typeof module!=='undefined'&&module.exports)module.exports=MyDecks;else {root.BreakMyDecks=MyDecks;root.BreakDeckDrafts=DeckDrafts;}
 })(typeof globalThis!=='undefined'?globalThis:this);

@@ -90,7 +90,7 @@
 | Firebase多人第一階段 | 已整合index.html?online=1正式牌桌；online.html保留邀請轉址；大廳／onDisconnect上線名單／8碼邀請、多房1對1、匿名＋Google、權威端AI |
 | 多人權威／私密資料 | 房主RoomAuthority持有Match；玩家僅讀自己的view／寫自己的不可覆寫指令；快照與完整紀錄僅當前權威端可讀；斷線接手以term＋連線識別排除舊權威 |
 | 多人驗證 | Firebase規則74項、170套回歸／fuzz3000／6×300通過；正式牌桌雙座位、雙房隔離、接手／刷新／RNG、雙人及AI整局與再戰、三尺寸無溢出；公開頁驗證見最新memory |
-| Firebase部署／下一階段 | haikyuu-playmat，asia-southeast1，RTDB安全規則已部署；Auth匿名／Google與Pages／web.app／firebaseapp.com授權網域已確認；觀戰／戰績／雲端牌組第二階段，雙方同意Undo最後；不使用Functions |
+| Firebase部署／下一階段 | haikyuu-playmat，asia-southeast1，RTDB安全規則已部署；Auth匿名／Google與Pages／web.app／firebaseapp.com授權網域已確認；觀戰／戰績與牌組自動同步待做；雲端備份已完成，雙方同意Undo最後；不使用Functions |
 | 多人公開版本 | b1bc7f8；https://haikyuu-playmat.web.app/break-v9.5/index.html?online=1&v=b1bc7f8 ；Hosting發布／公開雙人再戰與隱私通過；GitHub Pages舊站保留 |
 | 同房再戰連線契約 | send({kind:rematch,matchId:payload.view.match.id})；meta.rematch[uid]為確認的局ID；雙方確認才開新局，AI自動同意；保留房號／牌組／座位，換ID與種子；按鈕已接雙方確認／等待對手狀態 |
 | 雙方暱稱／多人介面分工 | meta.names[uid]＋p0Name／p1Name相容；回房保留原名、本人修改；Claude介面34c98e8及31ce7ab已合併，Codex完成連線／規則與整合；再戰按鈕已完成 |
@@ -105,3 +105,5 @@
 | 網站託管 | https://haikyuu-playmat.web.app/ 資料庫＋break-v9.5；兩網域可用、13資源雜湊一致；GitHub Pages舊站保留與邀請參數保留；本機牌組跨網域請匯出再匯入 |
 | 桌機滿版牌桌 | 寬≥1000px／高≥650px使用約94–97%視窗寬；加寬操作列並放大手牌／牌堆，手機維持直式；公開8尺寸配置與點選通過；桌機滿版b1bc7f8已部署 |
 | 組牌器介面／資料庫入口 | 桌機卡庫＋牌組雙欄、手機挑卡／已選分頁，底部固定張數／進度／儲存；加減不重建圖片；公開4尺寸雙主題與3尺寸組牌通過；主頁與匯入入口指向 https://weilun2022.github.io/haikyuu-cards/ |
+| 自動草稿 | bk_deck_drafts依新建／既有牌組分開，名稱與未滿40張自動保留、重開接續／捨棄、正式儲存後清除；三尺寸通過 |
+| 可選登入／雲端牌組 | 主頁Google可選、訪客照常遊玩；personalDecks/uid僅Google本人讀寫，另存備份／下載本機新副本／刪除；不自動覆蓋同步，88項規則與雙裝置Auth模擬流程通過 |

@@ -584,7 +584,8 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
 .builder-title h3 {font-size:21px;letter-spacing:-.03em;}
 .builder-name {flex:1;max-width:400px;display:grid;gap:4px;color:var(--muted);font-size:11px;}
 #builderName,#builderQuery {width:100%;min-height:44px;padding:10px 13px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit;font-size:16px;outline-offset:2px;}
-.builder-close {margin-left:auto;width:40px;height:40px;flex:0 0 40px;border:1px solid var(--line);border-radius:50%;background:var(--surface);color:var(--muted);font-size:23px;cursor:pointer;}
+.builder-draft-discard {order:1;flex:0 0 auto;border:0;background:none;color:var(--muted);font-size:11px;padding:6px;cursor:pointer;}.builder-draft-discard:disabled {opacity:.4;cursor:default;}
+.builder-close {order:2;margin-left:auto;width:40px;height:40px;flex:0 0 40px;border:1px solid var(--line);border-radius:50%;background:var(--surface);color:var(--muted);font-size:23px;cursor:pointer;}
 .builder-tabs {display:none;}
 .builder-workspace {display:grid;grid-template-columns:minmax(0,1fr) 300px;flex:1;min-height:0;}
 .builder-catalog {min-width:0;min-height:0;display:flex;flex-direction:column;}
@@ -621,6 +622,7 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
 .builder-empty>span {display:grid;place-items:center;width:48px;height:58px;border:1.5px dashed var(--line);border-radius:9px;font-size:24px;color:var(--teal);transform:rotate(-7deg);margin-bottom:8px;}
 .builder-empty strong {color:var(--ink);font-size:13px;}.builder-empty p {font-size:11px;line-height:1.7;margin:0;max-width:190px;}
 .builder-footer {border-top:1px solid var(--line);padding:14px 22px;display:flex;align-items:center;gap:20px;background:var(--surface);}
+.builder-draft-status {display:block;margin-top:3px;color:var(--teal);font-size:10px;}
 .builder-totals {flex:1;min-width:0;}.builder-totals b {font-size:14px;font-variant-numeric:tabular-nums;}.builder-totals p {font-size:11px;color:var(--muted);margin:5px 0 0;}
 .builder-progress {width:min(240px,100%);height:4px;background:var(--sunk);border-radius:4px;margin-top:8px;overflow:hidden;}.builder-progress i {display:block;height:100%;background:var(--court);border-radius:4px;transition:width .15s;}.builder-progress.complete i {background:var(--good);}
 #builderSave {border:0;border-radius:12px;min-height:46px;min-width:140px;font-weight:800;background:var(--court);color:#fff;padding:10px 22px;cursor:pointer;}
@@ -647,6 +649,7 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
 }
 @media (max-height:560px) and (max-width:899px) {.builder-top {padding:8px 14px;flex-wrap:nowrap;}.builder-title small {display:none;}.builder-name {order:0;flex-basis:auto;}.builder-name>span {display:none;}.builder-footer {padding-top:8px;padding-bottom:8px;}.builder-tabs {padding-inline:14px;}}
 #sheetBox textarea {width:100%;min-width:0;overflow-wrap:anywhere;background:var(--sunk);color:var(--ink);}
+.account-panel {display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;padding:14px 16px;border:1px solid var(--line);background:var(--surface);border-radius:14px;margin-top:14px;}.account-panel strong {font-size:14px;}.account-panel p {margin:4px 0 0;font-size:11px;color:var(--muted);}.account-panel .opts {gap:6px;margin:0;}.account-panel .chip {min-height:38px;}body.playing #accountPanel {display:none;}.cloud-row {display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:14px 0;border-bottom:1px solid var(--line);}.cloud-row small {display:block;color:var(--muted);font-size:11px;margin-top:4px;}.cloud-row strong {overflow-wrap:anywhere;}.cloud-row .opts {margin:0;gap:6px;}
 </style>
 <script>
 /* 外觀：bk_theme = light（預設）｜dark｜auto（跟隨系統）；在繪製前套用避免閃爍 */
@@ -684,6 +687,7 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
   <div id="olConnectionBar" class="ol-row" hidden><span id="olConnectionText" role="status"></span><button class="chip" id="olTakeover" type="button" hidden>接手房主</button></div>
   <div id="runtimeStatus" role="status" style="margin:10px 0;padding:10px 12px;background:#45251b;color:#fff;border-radius:8px;font-size:13px">⚠️ 尚未啟動 JavaScript。如果此提示一直顯示，代表目前的檔案預覽器不執行遊戲程式。請下載 HTML 後以瀏覽器開啟，或透過 HTTPS 網站遊玩。</div>
   <div class="modebar" role="tablist" aria-label="對戰方式" id="modebar"><button type="button" role="tab" id="modeSolo" aria-selected="true">單人對練</button><button type="button" role="tab" id="modeOnline" aria-selected="false">多人連線</button></div>
+  <div class="account-panel" id="accountPanel"><div><strong id="accountTitle">訪客模式</strong><p id="accountStatus" role="status">不需登入即可遊玩・牌組與草稿保存在此裝置</p></div><div class="opts"><button class="chip" id="accountGoogle" type="button" disabled>Google 登入</button><button class="chip" id="openCloud" type="button" disabled>雲端牌組</button><button class="chip" id="accountLogout" type="button" hidden>登出</button></div></div>
   <section id="setup" class="setup">
     <div class="panel" id="deckPanel">
       <h2>你的牌組</h2>
@@ -793,6 +797,7 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
   const modeOptions = () => ({mode:$('gameMode').value});
   const personal = new BreakMyDecks({getItem:k=>localStorage.getItem(k),setItem:(k,v)=>localStorage.setItem(k,v),removeItem:k=>localStorage.removeItem(k)}, DEF);
   function syncMyDecks() { for(const id of MY_DECKS) delete DECKS[id]; MY_DECKS.splice(0,MY_DECKS.length,...personal.decks.map(d=>d.id)); for(const d of personal.decks) DECKS[d.id]={name:d.name,cards:{...d.cards}}; }
+  const drafts=new BreakDeckDrafts({getItem:k=>localStorage.getItem(k),setItem:(k,v)=>localStorage.setItem(k,v)},DEF);
   syncMyDecks();
   try { const saved = store.get('bk_custom_ai_deck'); if (saved) { DECKS.custom_ai = DT.parseDeck(saved, DEF, {mode:'numeric'}); AI_DECKS.push('custom_ai'); } } catch (e) { console.warn('AI 自訂牌組載入失敗：' + e.message); }
   const STAT = [['srv', '發'], ['blk', '攔'], ['rcv', '接'], ['tos', '舉'], ['atk', '攻']];
@@ -873,15 +878,16 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
   // Personal deck management and the in-table builder share the same validator.
   function selectPersonal(id){syncMyDecks();fill($('myDeck'),MY_DECKS,id);store.set('bk_my',$('myDeck').value);refresh();}
   function openBuilder(id=null){
-    const original=personal.decks.find(d=>d.id===id),cards={...(original?.cards||{})};let limit=48;
+    const original=personal.decks.find(d=>d.id===id);let savedDraft=null,draftError='';try{savedDraft=drafts.get(id);}catch(e){draftError=e.message;}const cards={...(savedDraft?.cards||original?.cards||{})};let limit=48;
     openSheet(`<div class="builder-editor" data-pane="browse" role="dialog" aria-modal="true" aria-labelledby="builderTitle">
-      <header class="builder-top"><div class="builder-title"><small>BREAK · DECK BUILDER</small><h3 id="builderTitle">${original?'編輯牌組':'建立我的牌組'}</h3></div><label class="builder-name"><span>牌組名稱</span><input id="builderName" maxlength="60" value="${esc(original?.name||'我的牌組')}"></label><button type="button" class="builder-close" data-close="1" aria-label="關閉組牌器">×</button></header>
+      <header class="builder-top"><div class="builder-title"><small>BREAK · DECK BUILDER</small><h3 id="builderTitle">${original?'編輯牌組':'建立我的牌組'}</h3></div><label class="builder-name"><span>牌組名稱</span><input id="builderName" maxlength="60" value="${esc(savedDraft?.name??original?.name??'我的牌組')}"></label><button type="button" id="builderDiscardDraft" class="builder-draft-discard">捨棄草稿</button><button type="button" class="builder-close" data-close="1" aria-label="關閉組牌器">×</button></header>
       <nav class="builder-tabs" role="tablist" aria-label="組牌器內容"><button id="builderBrowseTab" type="button" role="tab" aria-selected="true">挑選卡片</button><button id="builderSelectedTab" type="button" role="tab" aria-selected="false">已選牌組 <span id="builderTabCount">0</span></button></nav>
       <div class="builder-workspace"><section class="builder-catalog" aria-label="卡片列表"><div class="builder-filters"><label class="builder-search"><span>搜尋卡片</span><input id="builderQuery" type="search" placeholder="搜尋卡名、卡號或學校"></label><label class="builder-kind"><span>卡片類別</span><select id="builderKind"><option value="all">全部卡片</option><option value="C">角色</option><option value="E">Event</option></select></label></div><div class="builder-catalog-scroll"><div class="builder-results"><span id="builderFound"></span><span class="builder-legend">已選卡片</span></div><div class="builder-grid" id="builderCards"></div><button class="chip" type="button" id="builderMore">載入更多卡片</button></div></section>
       <aside class="builder-picked" aria-label="已選牌組"><div class="builder-picked-head"><h4>我的牌組</h4><span id="builderPickedCount">0 張</span></div><div class="builder-selected-list" id="builderSelected"></div></aside></div>
-      <footer class="builder-footer"><div class="builder-totals"><b id="builderCount" role="status"></b><div class="builder-progress" id="builderProgress" role="progressbar" aria-label="牌組張數" aria-valuemin="0" aria-valuemax="40"><i></i></div><p id="builderError" role="status"></p></div><button type="button" id="builderSave">儲存牌組</button></footer>
+      <footer class="builder-footer"><div class="builder-totals"><b id="builderCount" role="status"></b><div class="builder-progress" id="builderProgress" role="progressbar" aria-label="牌組張數" aria-valuemin="0" aria-valuemax="40"><i></i></div><p id="builderError" role="status"></p><small id="builderDraftStatus" class="builder-draft-status" role="status"></small></div><button type="button" id="builderSave">儲存牌組</button></footer>
     </div>`);
-    $('sheet').dataset.kind='builder';
+    $('sheet').dataset.kind='builder';$('builderDraftStatus').textContent=draftError?'草稿無法讀取：'+draftError:savedDraft?'已接續此裝置的草稿':'編輯時會自動保留草稿於此裝置';
+    const saveDraft=()=>{try{drafts.save(id,{name:$('builderName').value,cards});$('builderDraftStatus').textContent='草稿已自動儲存於此裝置';$('builderDiscardDraft').disabled=false;}catch(e){$('builderDraftStatus').textContent='草稿未儲存：'+e.message;}};
     const count=()=>Object.values(cards).reduce((a,n)=>a+n,0),events=()=>Object.entries(cards).reduce((a,[c,n])=>a+(isC(c)?0:n),0);
     const controls=c=>`<div class="builder-controls"><button type="button" data-builder-minus="${c}" aria-label="減少 ${esc(nm(c))}" ${(cards[c]||0)?'':'disabled'}>−</button><b>${cards[c]||0}</b><button type="button" data-builder-plus="${c}" aria-label="增加 ${esc(nm(c))}" ${count()>=40||(!isC(c)&&events()>=8)?'disabled':''}>＋</button></div>`;
     const item=c=>`<article class="builder-card ${(cards[c]||0)?'selected':''}" data-builder-card="${c}"><div class="builder-art">${img(c)}<span class="builder-qty" ${(cards[c]||0)?'':'hidden'}>×${cards[c]||0}</span></div><div class="builder-label"><strong>${esc(nm(c))}</strong><small>${esc(c)} · ${isC(c)?'角色':'Event'}</small></div>${controls(c)}</article>`;
@@ -894,9 +900,10 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
     }
     function pane(selected){$('sheetBox').querySelector('.builder-editor').dataset.pane=selected?'selected':'browse';$('builderBrowseTab').setAttribute('aria-selected',String(!selected));$('builderSelectedTab').setAttribute('aria-selected',String(selected));}
     $('builderBrowseTab').onclick=()=>pane(false);$('builderSelectedTab').onclick=()=>pane(true);
-    $('builderQuery').oninput=$('builderKind').onchange=()=>{limit=48;renderBuilder();};$('builderName').oninput=summary;$('builderMore').onclick=()=>{limit+=48;renderBuilder();};
-    const box=$('sheetBox');box.onclick=e=>{const plus=e.target.closest('[data-builder-plus]'),minus=e.target.closest('[data-builder-minus]');if(!plus&&!minus)return;const c=(plus||minus).dataset[plus?'builderPlus':'builderMinus'];if(plus&&(count()>=40||(!isC(c)&&events()>=8)))return;cards[c]=Math.max(0,(cards[c]||0)+(plus?1:-1));if(!cards[c])delete cards[c];renderBuilder(false);};
-    $('builderSave').onclick=()=>{try{const deck=DT.parseDeck({name:$('builderName').value.trim(),cards},DEF,modeOptions()),saved=id?personal.update(id,deck):personal.add(deck);selectPersonal(saved);closeSheet();}catch(e){$('builderError').textContent=e.message;}};
+    $('builderQuery').oninput=$('builderKind').onchange=()=>{limit=48;renderBuilder();};$('builderName').oninput=()=>{summary();saveDraft();};$('builderMore').onclick=()=>{limit+=48;renderBuilder();};
+    const box=$('sheetBox');box.onclick=e=>{const plus=e.target.closest('[data-builder-plus]'),minus=e.target.closest('[data-builder-minus]');if(!plus&&!minus)return;const c=(plus||minus).dataset[plus?'builderPlus':'builderMinus'];if(plus&&(count()>=40||(!isC(c)&&events()>=8)))return;cards[c]=Math.max(0,(cards[c]||0)+(plus?1:-1));if(!cards[c])delete cards[c];renderBuilder(false);saveDraft();};
+    $('builderSave').onclick=()=>{try{const deck=DT.parseDeck({name:$('builderName').value.trim(),cards},DEF,modeOptions()),saved=id?personal.update(id,deck):personal.add(deck);selectPersonal(saved);try{drafts.remove(id);}catch{}closeSheet();}catch(e){$('builderError').textContent=e.message;}};
+    $('builderDiscardDraft').disabled=!savedDraft;$('builderDiscardDraft').onclick=()=>{try{drafts.remove(id);for(const c of Object.keys(cards))delete cards[c];Object.assign(cards,original?.cards||{});$('builderName').value=original?.name||'我的牌組';renderBuilder(false);$('builderDraftStatus').textContent=original?'已回復正式儲存的牌組':'已清除草稿';$('builderDiscardDraft').disabled=true;}catch(e){$('builderDraftStatus').textContent='無法清除草稿：'+e.message;}};
     renderBuilder();
   }
   $('newDeck').onclick=()=>openBuilder();$('editMyDeck').onclick=()=>openBuilder($('myDeck').value);
@@ -1407,6 +1414,16 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
   function olToast(msg) { const box = $('runtimeStatus'); box.hidden = !msg; box.textContent = msg ? '⚠️ ' + msg : ''; }
   function olFriendly(e) { const code = e?.code || ''; return ({ 'auth/popup-blocked': '登入視窗被瀏覽器擋下，請允許彈出視窗後再試。', 'auth/popup-closed-by-user': 'Google 登入已取消。', 'auth/unauthorized-domain': '這個網址尚未加入 Google 登入的授權網域。', 'auth/credential-already-in-use': '這個 Google 帳號已被使用，請先登出再用 Google 登入。', 'PERMISSION_DENIED': '權限已變更，請重新加入房間。' })[code] || e?.message || String(e); }
   const olRun = f => async () => { try { olToast(''); await f(); } catch (e) { olToast(olFriendly(e)); } };
+  // Optional account and cloud backups share the multiplayer Firebase session.
+  let accountUser=null,accountReady=false,accountLoadFailed=false,accountBusy=false,accountMessage='',cloudRows=[];
+  function accountRender(){const member=!!accountUser&&!accountUser.isAnonymous&&accountUser.providerData.some(p=>p.providerId==='google.com');$('accountTitle').textContent=member?(accountUser.displayName||'Google 帳號'):'訪客模式';$('accountStatus').textContent=accountMessage||(member?'本機牌組保留於此裝置；可另存雲端備份':'不需登入即可遊玩・牌組與草稿保存在此裝置');$('accountGoogle').hidden=member;$('accountLogout').hidden=!member;$('openCloud').disabled=!member||accountBusy;$('accountGoogle').disabled=accountBusy||(!accountReady&&!accountLoadFailed);$('accountGoogle').textContent=accountLoadFailed&&!accountReady?'重試登入連線':'Google 登入';$('accountLogout').disabled=accountBusy||!!OL.roomId;if($('cloudRows'))renderCloud();}
+  function accountChanged(user){if(accountUser?.uid===user?.uid&&accountUser?.isAnonymous===user?.isAnonymous)return;const wasOpen=!!$('cloudRows');accountUser=user;accountMessage='';if(wasOpen)closeSheet();OL.cloud?.bind(user);accountRender();}
+  function renderCloud(){if(!$('cloudRows'))return;$('cloudUpload').disabled=accountBusy||!OL.client?.online||!usableDeck($('myDeck').value);$('cloudSummary').textContent=`${cloudRows.length} 副雲端備份`;$('cloudMessage').textContent=accountMessage;$('cloudRows').innerHTML=cloudRows.map(d=>`<article class="cloud-row"><div><strong>${esc(d.name)}</strong><small>40 張 · Event ${Object.entries(d.cards).reduce((n,[c,k])=>n+(isC(c)?0:k),0)}</small></div><div class="opts"><button class="chip" type="button" data-cloud-get="${esc(d.id)}" ${accountBusy?'disabled':''}>下載副本</button><button class="chip" type="button" data-cloud-remove="${esc(d.id)}" ${accountBusy?'disabled':''}>刪除</button></div></article>`).join('')||'<p class="sub">還沒有雲端備份。選擇一副本機牌組後，可另存到此帳號。</p>';}
+  async function accountRun(fn){if(accountBusy)return;accountBusy=true;accountRender();try{await fn();}catch(e){accountMessage=olFriendly(e);}finally{accountBusy=false;accountRender();}}
+  $('accountGoogle').onclick=()=>accountRun(async()=>{if(OL.roomId)throw Error('請先離開房間再切換帳號');if(!accountReady){await olLoad();accountMessage='登入已就緒，請再次點 Google 登入';return;}await OL.services.A.signInWithPopup(OL.services.auth,new OL.services.A.GoogleAuthProvider());});
+  $('accountLogout').onclick=()=>accountRun(async()=>{if(OL.roomId)throw Error('請先離開房間再登出');await OL.services.A.signOut(OL.services.auth);});
+  $('openCloud').onclick=()=>{accountMessage='';openSheet('<h3>我的雲端牌組</h3><p class="sub">每次上傳都另存一份備份；下載會新增本機副本，不會覆蓋這台裝置的牌組。</p><button type="button" class="opt primary" id="cloudUpload">將目前所選牌組另存雲端</button><p class="sub" id="cloudSummary"></p><p id="cloudMessage" role="status"></p><div id="cloudRows"></div>');renderCloud();$('cloudUpload').onclick=()=>accountRun(async()=>{const uid=OL.cloud.uid;await OL.cloud.upload(DECKS[$('myDeck').value]);if(OL.cloud.uid===uid)accountMessage='已另存雲端，可在其他裝置登入後下載';});$('cloudRows').onclick=e=>{const get=e.target.closest('[data-cloud-get]'),remove=e.target.closest('[data-cloud-remove]');if(get){try{const d=cloudRows.find(d=>d.id===get.dataset.cloudGet);if(!d)throw Error('牌組已變更，請重新選擇');const id=personal.add(d);selectPersonal(id);accountMessage='已下載為新的本機牌組';accountRender();}catch(err){accountMessage=err.message;accountRender();}}if(remove){if(!remove.dataset.confirm){remove.dataset.confirm='1';remove.textContent='確認刪除';return;}accountRun(async()=>{await OL.cloud.remove(remove.dataset.cloudRemove);accountMessage='雲端備份已刪除，本機牌組保留';});}};};
+
   function setMode(mode) {
     document.body.dataset.mode = mode;
     $('modeSolo').setAttribute('aria-selected', String(mode === 'solo')); $('modeOnline').setAttribute('aria-selected', String(mode === 'online'));
@@ -1421,7 +1438,7 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
     $('olLogin').hidden = signedIn; $('olLobby').hidden = !signedIn || inRoom; $('olWait').hidden = !waiting;
     if (signedIn) { $('olWho').textContent = cleanName(c.name) + (c.user.isAnonymous ? '' : '・Google'); $('olLink').hidden = !c.user.isAnonymous; $('olDot').classList.toggle('on', !!c.online); }
     document.body.dataset.room = inRoom ? '1' : '';
-    deckConnectionReady=!!c?.online;deckButtons();olConnectionChanged();if(OL.inGame&&game?.winner)render();
+    deckConnectionReady=!!c?.online;deckButtons();accountRender();olConnectionChanged();if(OL.inGame&&game?.winner)render();
     if (waiting) { $('olWaitCode').textContent = OL.roomId; $('olWaitText').textContent = OL.meta.p1 === 'AI' ? '正在準備對局' : '等待朋友加入'; }
   }
   function olCanSend(v=session?.last){const c=OL.client,a=OL.authority;return !!(c?.online&&!c.pending&&OL.meta?.status==='running'&&a?.active&&a.lease.term===v?.term);}
@@ -1455,8 +1472,9 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
     OL.loading = (async () => {
       $('olAnon').disabled = $('olGoogle').disabled = true; $('olAnon').textContent = '連線中…';
       await import('./firebase-config.js');
-      const mod = await import('./firebase-room-client.js');
+      const [mod,cloudModule] = await Promise.all([import('./firebase-room-client.js'),import('./cloud-decks.js')]);
       const services = OL.services = await mod.firebaseServices();
+      OL.cloud=new cloudModule.DeckCloud(services,{list:rows=>{cloudRows=rows;accountRender();},error:e=>{accountMessage='雲端牌組讀取失敗：'+olFriendly(e);accountRender();}});
       const c = OL.client = new mod.FirebaseRooms(services, {
         error: e => olToast(olFriendly(e)),
         connection: () => olView(),
@@ -1469,11 +1487,12 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
         sending: () => olConnectionChanged(),
       });
       services.A.onAuthStateChanged(services.auth, user => {
+        accountChanged(user);
         const uid = user?.uid || null; if (uid === OL.lastUid){if(user)c.user=user;return olView();} OL.lastUid = uid;
         OL.authWork=OL.authWork.then(async () => { await c.logout(); if (user) await c.login(user, cleanName($('olName').value) || cleanName(user.displayName) || '玩家'); olView(); olLobby(); }).catch(e => olToast(olFriendly(e)));
       });
-      $('olAnon').disabled = $('olGoogle').disabled = false; $('olAnon').textContent = '開始（免註冊）';
-    })().catch(e => { OL.loading = null; $('olAnon').disabled = $('olGoogle').disabled = false; $('olAnon').textContent = '重試連線'; olToast('多人連線載入失敗：' + olFriendly(e)); throw e; });
+      accountReady=true;accountLoadFailed=false;accountRender();$('olAnon').disabled = $('olGoogle').disabled = false; $('olAnon').textContent = '開始（免註冊）';
+    })().catch(e => { OL.loading = null; $('olAnon').disabled = $('olGoogle').disabled = false; $('olAnon').textContent = '重試連線'; accountLoadFailed=true;accountMessage='登入服務暫時無法連線，仍可在本機使用';accountRender();if(document.body.dataset.mode==='online')olToast('多人連線載入失敗：' + olFriendly(e)); throw e; });
     return OL.loading;
   }
   $('olName').value = store.get('bk_ol_name') || ''; $('olName').onchange = () => store.set('bk_ol_name', cleanName($('olName').value));
@@ -1497,6 +1516,7 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
   $('startBtn').onclick = () => { try { start(); document.getElementById('runtimeStatus').hidden = true; } catch (e) { const box = document.getElementById('runtimeStatus'); box.hidden = false; box.textContent = '❌ 遊戲啟動錯誤：' + (e && e.message || e); console.error(e); } };
   try { const q = location.search + location.hash; if (/[?&#]deck=/.test(q)) { setTimeout(() => openImporter('me', q), 0); const clean=new URL(location.href);clean.searchParams.delete('deck');clean.hash=clean.hash.replace(/(^#|&)deck=[^&]*/,'');history.replaceState(null,'',clean.pathname+clean.search+clean.hash); } } catch (e) { /* 網址參數不可用時略過 */ }
   document.getElementById('runtimeStatus').hidden = true;
+  if(location.protocol==='https:'||location.protocol==='http:')setTimeout(()=>olLoad().catch(()=>{}),0);
 })();
 </script>
 
