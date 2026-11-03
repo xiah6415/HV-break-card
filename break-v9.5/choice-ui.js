@@ -84,6 +84,7 @@ function describePayment(node){
 }
 const quantityActions={draw_count:['抽牌','不抽牌'],move_count:['移動／回收卡片','不移動卡片'],mill_count:['將牌庫頂的牌送到棄牌區','不送出牌庫的牌'],payment_count:['支付費用','不支付此項費用'],entry_count:['讓角色登場','不讓角色登場'],target_count:['選擇效果對象','不選擇對象']};
 function requestPrompt(request){
+ if(request.uiPresentation?.handDiscard)return '請棄掉 '+request.uiPresentation.count+' 張手牌';
  // Preserve card-specific instructions and ordering supplied by the core.
  if(request.prompt&&request.prompt!=='請選擇合法選項')return request.prompt;
  if(request.context?.selectionAction==='exchange')return '是否交換兩側各1張？';

@@ -1173,6 +1173,7 @@ if(typeof module!=='undefined')module.exports=api;else root.BreakRulesCore=api;
 "rules/match.js":function(require,module,exports){
 /* Single-state match core. No legacy Game/import/projection dependency. */
 'use strict';
+const StatusView=require('./status-view');
 const {Kernel,distinctNameOptions}=require('./core');
 const runtime=require('./runtime-data.json');
 const library=require('../card-library');
@@ -1266,8 +1267,9 @@ class Match {
    triggerLabels[value]=(card?card.printed.display_name||card.printed.name:'效果')+' · '+type+(card?'（'+short(card.cardNo)+'）':'');
    if(card)triggerCards[value]={id:card.id,incarnation:card.incarnation,cardNo:card.cardNo,name:card.printed.display_name||card.printed.name,zone:card.zone};
   }
+  const handDiscard=req.kind==='move_cards'&&req.destination?.endsWith('.drop')&&req.options.length>0&&req.options.every(id=>this._kernel.card(id).zone===req.player+'.hand');
   const prompt=req.kind==='drawConfirm'?`請抽 ${req.drawCount} 張牌`:req.kind==='drawResult'?req.drawReason||`已抽 ${req.drawCount} 張牌，請確認本次抽到的卡片，再繼續結算`:['external_action','external_result'].includes(req.kind)?req.actionLabel+(req.kind==='external_action'?'；完成後確認':'；確認結果後結算效果'):req.kind==='reveal'?`點擊查看牌庫頂 ${req.top_count} 張`:req.kind==='revealResult'?req.purpose==='effect'?'公開的牌：確認後依卡片條件結算，再放回牌庫底':req.purpose==='retrieve'?'公開牌：確認後符合條件者加入手牌，未符合則放回牌庫底':req.eligible_count?'確認查看的卡片，再選擇加入手牌':'沒有符合的牌；確認後安排放回牌庫':req.kind==='trigger_order'?'選擇下一個先結算的效果；其餘效果仍會依序處理':req.ordering?`安排放回${placement}的順序（先選的先抽到）`:req.kind==='mode'?req.effectModes?'選擇1項效果':req.keywordOutgoing?'選擇回球進攻值':'其餘牌放回牌庫頂或底？':null;
-  const answer=this._ask(req.kind,req.player,input,options,{...(prompt?{prompt}:{}),...(req.kind==='trigger_order'?{modeLabels:triggerLabels,optionCards:triggerCards}:{}),...(req.ordering?{ordering:true}:{}),...(req.selectionAction==='exchange'?{selectionAction:req.selectionAction,prompt:req.kind==='move_count'?'是否交換兩側各1張？':'選擇交換的卡片'}:{}),...(req.effectDescription?{effectDescription:req.effectDescription,prompt:'是否執行：'+req.effectDescription+'？'}:{}),...(req.effectModes?{effectModes:true,modeLabels:req.modeLabels}:{}),...(req.count!=null?{count:req.count}:{}),...(['drawConfirm','drawResult'].includes(req.kind)?{drawCount:req.drawCount,requestedCount:req.requestedCount,visibility:'private'}:{}),...(req.destination?{destination:req.destination}:{}),...(req.target?{target:req.target}:{}),...(req.payment?{payment:req.payment}:{}),...(req.ineffectiveReason?{ineffectiveReason:req.ineffectiveReason,prompt:req.ineffectiveReason+' 是否仍支付費用？'}:{})},'kernel',req.source?{id:req.source,incarnation:this._kernel.card(req.source).incarnation,cardNo:this._kernel.card(req.source).cardNo}:null,req.kind==='revealResult'?{purpose:req.purpose||null,eligibleCount:req.eligible_count??null}:null);
+  const answer=this._ask(req.kind,req.player,input,options,{...(prompt?{prompt}:{}),...(req.kind==='trigger_order'?{modeLabels:triggerLabels,optionCards:triggerCards}:{}),...(req.ordering?{ordering:true}:{}),...(req.selectionAction==='exchange'?{selectionAction:req.selectionAction,prompt:req.kind==='move_count'?'是否交換兩側各1張？':'選擇交換的卡片'}:{}),...(req.effectDescription?{effectDescription:req.effectDescription,prompt:'是否執行：'+req.effectDescription+'？'}:{}),...(req.effectModes?{effectModes:true,modeLabels:req.modeLabels}:{}),...(req.count!=null?{count:req.count}:{}),...(['drawConfirm','drawResult'].includes(req.kind)?{drawCount:req.drawCount,requestedCount:req.requestedCount,visibility:'private'}:{}),...(req.destination?{destination:req.destination}:{}),...(req.target?{target:req.target}:{}),...(req.payment?{payment:req.payment}:{}),...(req.ineffectiveReason?{ineffectiveReason:req.ineffectiveReason,prompt:req.ineffectiveReason+' 是否仍支付費用？'}:{})},'kernel',req.source?{id:req.source,incarnation:this._kernel.card(req.source).incarnation,cardNo:this._kernel.card(req.source).cardNo}:null,handDiscard?{handDiscard:true,count:req.count}:req.kind==='revealResult'?{purpose:req.purpose||null,eligibleCount:req.eligible_count??null}:null);
   if(this._eventPreview)this._eventPreview.answers.push(copy(answer));return answer;
  }
  _pump(){
@@ -1403,9 +1405,45 @@ class Match {
   if(!m.rng||!snapshot.rng||['algorithm','word','calls'].some(key=>m.rng[key]!==snapshot.rng[key])||m.rng.algorithm!=='mulberry32-v1'||!Number.isSafeInteger(m.rng.calls)||m.rng.calls<0||m.rng.word!==((m.seed>>>0)+Math.imul(m.rng.calls,0x6D2B79F5)>>>0)||m.decisionIndex!==m.history?.length||!['setup','rally','loss','interval','finished'].includes(m.phase)||m.pending&&!host.validateRequest(m.pending))throw Error('Invalid match checkpoint');
   const state=copy(snapshot);delete state.match.rng;this._kernel.restore(state);this.epoch++;if(this._m.pending){this._m.pending.epoch=this.epoch;this._m.pending.requestId=this._m.id+':'+this.epoch+':'+this._m.decisionIndex;}return this;
  }
- view(actor){if(![0,1].includes(actor))throw Error('Unknown viewer');const view=this._kernel.view(actor);for(const p of view.players)for(const c of [...(Array.isArray(p.hand)?p.hand:[]),...p.court])c.incarnation=this._kernel.card(c.id).incarnation;return {...view,match:{id:this._m.id,mode:this._m.mode,phase:this._m.phase,rally:this._m.rally,server:this._m.server,winner:this._m.winner,dice:copy(this._m.dice),decisionIndex:this._m.decisionIndex,notices:copy(this._m.notices)},request:this.request(actor)};}
+ view(actor){if(![0,1].includes(actor))throw Error('Unknown viewer');const view=this._kernel.view(actor);for(const p of view.players)for(const c of [...(Array.isArray(p.hand)?p.hand:[]),...p.court])c.incarnation=this._kernel.card(c.id).incarnation;const pending=this._m.pending,waitingFor=pending?.uiPresentation?.handDiscard?{actor:pending.actor,kind:'discard',count:pending.input.min}:null;return {...view,statuses:StatusView.statuses(this._kernel,actor),waitingFor,match:{id:this._m.id,mode:this._m.mode,phase:this._m.phase,rally:this._m.rally,server:this._m.server,winner:this._m.winner,dice:copy(this._m.dice),decisionIndex:this._m.decisionIndex,notices:copy(this._m.notices)},request:this.request(actor)};}
 }
 module.exports={Match,signature};
+
+},
+"rules/status-view.js":function(require,module,exports){
+/* Read-only, public-safe summaries of existing rules effects. */
+'use strict';
+const words={serve:'發球',receive:'接球',toss:'舉球',attack:'攻擊',block:'攔網',center_blocker:'中攔',side_blocker:'側攔',draw:'抽牌',hand:'手牌',court:'球場',event:'Event',drop:'棄牌區',MB:'MB',S:'S'};
+const zh=x=>words[x]||x,list=a=>(a||[]).map(zh).join('／');
+function scopeText(s={}){const out=[];
+ if(s.phases)out.push(list(s.phases)+'階段');if(s.role)out.push(zh(s.role)+'區');if(s.roles)out.push(list(s.roles)+'區');
+ if(s.entry_origins)out.push('從'+list(s.entry_origins)+'登場');if(s.positions)out.push(list(s.positions)+'角色');if(s.names)out.push(s.names.join('／'));
+ if(s.printed_receive_gte!=null)out.push('印刷接球值 ≥ '+s.printed_receive_gte);if(s.play_icons_any)out.push(list(s.play_icons_any)+'圖示');
+ if(s.type)out.push(s.type==='character'?'角色':'Event');if(s.source_zones)out.push('位於'+list(s.source_zones));if(s.phase_tags)out.push(list(s.phase_tags)+'技能');if(s.keyword_families)out.push('關鍵字：'+s.keyword_families.join('／'));
+ if(s.origins)out.push(s.origins.includes('rule')?'包含規則與技能效果':'僅技能效果（含技能抽牌，規則抽牌仍依規則）');
+ return out.join('；');}
+function description(e){const s=e.scope||{};
+ if(e.kind==='ban'){
+  const labels={add_hand:s.origins?.length===1&&s.origins[0]==='skill'?'禁止技能加手牌':'限制加入手牌',play_event:'限制使用 Event',enter_character:s.max_count!=null?zh(s.role)+'登場上限 '+s.max_count+' 人':'限制角色登場',use_skill:'限制技能發動'};
+  return {label:labels[e.action]||'行動受限',detail:scopeText(s)};
+ }
+ if(e.kind==='invalid'){const scopes=[e.selector,...(e.selector?.union_with?[e.selector.union_with]:[])].map(scopeText).filter(Boolean);return {label:'技能失效',detail:scopes.join('；或 ')};}
+ if(e.kind==='keyword'&&e.keyword==='feint_block_ban')return {label:'禁止攔網',detail:'此來球不能以角色登場攔網'};
+ if(e.kind==='absent')return {label:zh(e.parameter)+'值視為無',detail:zh(e.role)+'區符合效果條件的角色，'+zh(e.parameter)+'數值不存在；以來源卡文為準'};
+ if(e.kind==='judgment_failure')return {label:zh(e.judge)+'判定限制',detail:'符合來源卡指定條件時，'+zh(e.judge)+'判定失敗'};
+ if(e.kind==='numeric'&&e.operation==='add'&&e.value<0)return {label:zh(e.parameter)+' '+e.value,detail:'指定角色的'+zh(e.parameter)+'數值降低 '+Math.abs(e.value)};
+ return null;
+}
+function statuses(k,viewer){return k.state.effects.flatMap(e=>{
+ const text=description(e);if(!text)return [];const waiting=e.duration.kind==='next_opponent_turn'&&e.duration.activeTurn===null,active=k.active(e);if(!active&&!waiting)return [];
+ const target=e.target?.id&&k.state.cards[e.target.id];if(e.target&&!k.current(e.target))return [];
+ const player=e.actor??target?.owner;if(![0,1].includes(player))return [];
+ const card=k.state.cards[e.source?.id],publicSource=card&&(card.owner===viewer||!['hand','deck','sets'].includes(card.zone.split('.').at(-1))||k.state.publicLog.some(l=>(l.source===card.id||l.type==='skill_declared'&&l.cardNo===card.cardNo)));
+ const source=publicSource?{cardNo:card.cardNo,name:card.printed.display_name||card.printed.name}:null;
+ const duration=e.duration.kind,expires=duration==='next_opponent_turn'?(waiting?'受影響玩家的下個回合生效，該回合結束時解除':'本回合結束時解除'):duration==='this_draw_phase'?'本次抽牌階段結束時解除':duration.includes('role_exit')?'本回合結束或對象離開該區時解除':'本回合結束時解除';
+ return [{id:e.id,player,active,scheduled:waiting,...text,detail:text.detail||'依來源卡指定範圍適用',expires,source}];
+ });}
+module.exports={statuses,description,scopeText};
 
 },
 "rules/local-session.js":function(require,module,exports){
@@ -1446,7 +1484,7 @@ function boardView(view,deckKeys){
    court,handRefs:Array.isArray(p.hand)?p.hand:[],top:key=>area[key]?.at(-1)||null,guts:key=>Math.max(0,(area[key]?.length||0)-1),
    ts:{finished:view.match.phase!=='rally',receiver:area.receive.at(-1),setter:area.toss.at(-1),attacker:area.attack.at(-1),rcv:parameter('receive','rcv'),toss:parameter('toss','tos'),atk:parameter('attack','atk'),sides:court.filter(c=>c.role==='side_blocker').map(c=>short(c.cardNo))},parameter};
  });
- return {native:true,mode:view.match.mode,players,rallyNo:view.match.rally,server:view.match.server,firstServer:view.match.server,target:view.ball?1-view.ball.owner:null,turnP:view.match.phase==='rally'?players[view.turn.player]:null,winner:view.match.winner==null?null:players[view.match.winner],ball:view.ball?{type:view.ball.kind,off:view.ball.offense}:null,
+ return {native:true,statuses:view.statuses||[],waitingFor:view.waitingFor||null,mode:view.match.mode,players,rallyNo:view.match.rally,server:view.match.server,firstServer:view.match.server,target:view.ball?1-view.ball.owner:null,turnP:view.match.phase==='rally'?players[view.turn.player]:null,winner:view.match.winner==null?null:players[view.match.winner],ball:view.ball?{type:view.ball.kind,off:view.ball.offense}:null,
   cardName:(p,key)=>p.court.find(c=>c.key===key)?.name||'',parameter:(p,key,param)=>p.parameter(key,param),
   courtTargets:p=>p.court.map(c=>({key:c.key,card:short(c.cardNo)})),roleReference:(p,key)=>{const c=p.court.find(c=>c.key===key);return c?{id:c.id,incarnation:c.incarnation}:null;},cardReference:(p,zone,index)=>zone==='hand'&&p.handRefs[index]?{id:p.handRefs[index].id,incarnation:p.handRefs[index].incarnation}:null};
 }
@@ -1540,6 +1578,7 @@ const flip=(v,actor)=>actor===1&&(v===0||v===1)?1-v:v;
 function rotateView(view,actor){
  const v=copy(view);if(actor!==1)return v;
  v.players=[v.players[1],v.players[0]];
+ for(const s of v.statuses||[])s.player=flip(s.player,actor);if(v.waitingFor)v.waitingFor.actor=flip(v.waitingFor.actor,actor);
  if(v.turn&&'player' in v.turn)v.turn.player=flip(v.turn.player,actor);
  if(v.ball&&'owner' in v.ball)v.ball.owner=flip(v.ball.owner,actor);
  for(const k of ['server','winner','firstServer','loser','diceWinner'])if(v.match&&k in v.match)v.match[k]=flip(v.match[k],actor);

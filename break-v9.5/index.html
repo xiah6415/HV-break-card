@@ -703,6 +703,15 @@ body[data-hints="off"] .skill-ready .cbtn{box-shadow:none}
 body[data-hints="simple"] .hc-step,body[data-hints="simple"] .hc-prog,body[data-hints="off"] .hc-step,body[data-hints="off"] .hc-prog{display:none}
 @media(prefers-reduced-motion:reduce){#tableEffects *{animation:none!important}.fx-card-inner{transform:rotateY(180deg)}.back-only .fx-card-inner{transform:none}}
 
+
+.pbar:has(.status-strip){flex-wrap:wrap}.pbar:has(.status-strip) .dk{flex:1 1 0}.pbar .status-strip{flex:0 0 100%}
+.status-strip{display:flex;gap:5px;overflow-x:auto;max-width:100%;min-width:0;padding:3px 1px;scrollbar-width:thin}
+.status-chip{flex:0 0 auto;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border:1px solid #c23f34;border-radius:99px;background:#ffebe7;color:#8c2219;font:inherit;font-size:11px;font-weight:700;min-height:26px;padding:3px 9px;cursor:pointer}
+.status-chip.scheduled{border-style:dashed;background:var(--surface,#fff);color:var(--ink,#233)}
+[data-scheme="dark"] .status-chip{background:#4b2525;color:#ffd5cd}[data-scheme="dark"] .status-chip.scheduled{background:#273337;color:#ffe4b9}
+.hand.discard-required{outline:2px solid #d04d3c;outline-offset:-3px;border-radius:12px}
+.status-detail{display:grid;gap:10px}.status-detail p{margin:0;overflow-wrap:anywhere}
+
 </style>
 <script>
 /* 外觀：bk_theme = light（預設）｜dark｜auto（跟隨系統）；在繪製前套用避免閃爍 */
@@ -2004,6 +2013,7 @@ if(typeof module!=='undefined')module.exports=api;else root.BreakRulesCore=api;
 "rules/match.js":function(require,module,exports){
 /* Single-state match core. No legacy Game/import/projection dependency. */
 'use strict';
+const StatusView=require('./status-view');
 const {Kernel,distinctNameOptions}=require('./core');
 const runtime=require('./runtime-data.json');
 const library=require('../card-library');
@@ -2097,8 +2107,9 @@ class Match {
    triggerLabels[value]=(card?card.printed.display_name||card.printed.name:'效果')+' · '+type+(card?'（'+short(card.cardNo)+'）':'');
    if(card)triggerCards[value]={id:card.id,incarnation:card.incarnation,cardNo:card.cardNo,name:card.printed.display_name||card.printed.name,zone:card.zone};
   }
+  const handDiscard=req.kind==='move_cards'&&req.destination?.endsWith('.drop')&&req.options.length>0&&req.options.every(id=>this._kernel.card(id).zone===req.player+'.hand');
   const prompt=req.kind==='drawConfirm'?`請抽 ${req.drawCount} 張牌`:req.kind==='drawResult'?req.drawReason||`已抽 ${req.drawCount} 張牌，請確認本次抽到的卡片，再繼續結算`:['external_action','external_result'].includes(req.kind)?req.actionLabel+(req.kind==='external_action'?'；完成後確認':'；確認結果後結算效果'):req.kind==='reveal'?`點擊查看牌庫頂 ${req.top_count} 張`:req.kind==='revealResult'?req.purpose==='effect'?'公開的牌：確認後依卡片條件結算，再放回牌庫底':req.purpose==='retrieve'?'公開牌：確認後符合條件者加入手牌，未符合則放回牌庫底':req.eligible_count?'確認查看的卡片，再選擇加入手牌':'沒有符合的牌；確認後安排放回牌庫':req.kind==='trigger_order'?'選擇下一個先結算的效果；其餘效果仍會依序處理':req.ordering?`安排放回${placement}的順序（先選的先抽到）`:req.kind==='mode'?req.effectModes?'選擇1項效果':req.keywordOutgoing?'選擇回球進攻值':'其餘牌放回牌庫頂或底？':null;
-  const answer=this._ask(req.kind,req.player,input,options,{...(prompt?{prompt}:{}),...(req.kind==='trigger_order'?{modeLabels:triggerLabels,optionCards:triggerCards}:{}),...(req.ordering?{ordering:true}:{}),...(req.selectionAction==='exchange'?{selectionAction:req.selectionAction,prompt:req.kind==='move_count'?'是否交換兩側各1張？':'選擇交換的卡片'}:{}),...(req.effectDescription?{effectDescription:req.effectDescription,prompt:'是否執行：'+req.effectDescription+'？'}:{}),...(req.effectModes?{effectModes:true,modeLabels:req.modeLabels}:{}),...(req.count!=null?{count:req.count}:{}),...(['drawConfirm','drawResult'].includes(req.kind)?{drawCount:req.drawCount,requestedCount:req.requestedCount,visibility:'private'}:{}),...(req.destination?{destination:req.destination}:{}),...(req.target?{target:req.target}:{}),...(req.payment?{payment:req.payment}:{}),...(req.ineffectiveReason?{ineffectiveReason:req.ineffectiveReason,prompt:req.ineffectiveReason+' 是否仍支付費用？'}:{})},'kernel',req.source?{id:req.source,incarnation:this._kernel.card(req.source).incarnation,cardNo:this._kernel.card(req.source).cardNo}:null,req.kind==='revealResult'?{purpose:req.purpose||null,eligibleCount:req.eligible_count??null}:null);
+  const answer=this._ask(req.kind,req.player,input,options,{...(prompt?{prompt}:{}),...(req.kind==='trigger_order'?{modeLabels:triggerLabels,optionCards:triggerCards}:{}),...(req.ordering?{ordering:true}:{}),...(req.selectionAction==='exchange'?{selectionAction:req.selectionAction,prompt:req.kind==='move_count'?'是否交換兩側各1張？':'選擇交換的卡片'}:{}),...(req.effectDescription?{effectDescription:req.effectDescription,prompt:'是否執行：'+req.effectDescription+'？'}:{}),...(req.effectModes?{effectModes:true,modeLabels:req.modeLabels}:{}),...(req.count!=null?{count:req.count}:{}),...(['drawConfirm','drawResult'].includes(req.kind)?{drawCount:req.drawCount,requestedCount:req.requestedCount,visibility:'private'}:{}),...(req.destination?{destination:req.destination}:{}),...(req.target?{target:req.target}:{}),...(req.payment?{payment:req.payment}:{}),...(req.ineffectiveReason?{ineffectiveReason:req.ineffectiveReason,prompt:req.ineffectiveReason+' 是否仍支付費用？'}:{})},'kernel',req.source?{id:req.source,incarnation:this._kernel.card(req.source).incarnation,cardNo:this._kernel.card(req.source).cardNo}:null,handDiscard?{handDiscard:true,count:req.count}:req.kind==='revealResult'?{purpose:req.purpose||null,eligibleCount:req.eligible_count??null}:null);
   if(this._eventPreview)this._eventPreview.answers.push(copy(answer));return answer;
  }
  _pump(){
@@ -2234,9 +2245,45 @@ class Match {
   if(!m.rng||!snapshot.rng||['algorithm','word','calls'].some(key=>m.rng[key]!==snapshot.rng[key])||m.rng.algorithm!=='mulberry32-v1'||!Number.isSafeInteger(m.rng.calls)||m.rng.calls<0||m.rng.word!==((m.seed>>>0)+Math.imul(m.rng.calls,0x6D2B79F5)>>>0)||m.decisionIndex!==m.history?.length||!['setup','rally','loss','interval','finished'].includes(m.phase)||m.pending&&!host.validateRequest(m.pending))throw Error('Invalid match checkpoint');
   const state=copy(snapshot);delete state.match.rng;this._kernel.restore(state);this.epoch++;if(this._m.pending){this._m.pending.epoch=this.epoch;this._m.pending.requestId=this._m.id+':'+this.epoch+':'+this._m.decisionIndex;}return this;
  }
- view(actor){if(![0,1].includes(actor))throw Error('Unknown viewer');const view=this._kernel.view(actor);for(const p of view.players)for(const c of [...(Array.isArray(p.hand)?p.hand:[]),...p.court])c.incarnation=this._kernel.card(c.id).incarnation;return {...view,match:{id:this._m.id,mode:this._m.mode,phase:this._m.phase,rally:this._m.rally,server:this._m.server,winner:this._m.winner,dice:copy(this._m.dice),decisionIndex:this._m.decisionIndex,notices:copy(this._m.notices)},request:this.request(actor)};}
+ view(actor){if(![0,1].includes(actor))throw Error('Unknown viewer');const view=this._kernel.view(actor);for(const p of view.players)for(const c of [...(Array.isArray(p.hand)?p.hand:[]),...p.court])c.incarnation=this._kernel.card(c.id).incarnation;const pending=this._m.pending,waitingFor=pending?.uiPresentation?.handDiscard?{actor:pending.actor,kind:'discard',count:pending.input.min}:null;return {...view,statuses:StatusView.statuses(this._kernel,actor),waitingFor,match:{id:this._m.id,mode:this._m.mode,phase:this._m.phase,rally:this._m.rally,server:this._m.server,winner:this._m.winner,dice:copy(this._m.dice),decisionIndex:this._m.decisionIndex,notices:copy(this._m.notices)},request:this.request(actor)};}
 }
 module.exports={Match,signature};
+
+},
+"rules/status-view.js":function(require,module,exports){
+/* Read-only, public-safe summaries of existing rules effects. */
+'use strict';
+const words={serve:'發球',receive:'接球',toss:'舉球',attack:'攻擊',block:'攔網',center_blocker:'中攔',side_blocker:'側攔',draw:'抽牌',hand:'手牌',court:'球場',event:'Event',drop:'棄牌區',MB:'MB',S:'S'};
+const zh=x=>words[x]||x,list=a=>(a||[]).map(zh).join('／');
+function scopeText(s={}){const out=[];
+ if(s.phases)out.push(list(s.phases)+'階段');if(s.role)out.push(zh(s.role)+'區');if(s.roles)out.push(list(s.roles)+'區');
+ if(s.entry_origins)out.push('從'+list(s.entry_origins)+'登場');if(s.positions)out.push(list(s.positions)+'角色');if(s.names)out.push(s.names.join('／'));
+ if(s.printed_receive_gte!=null)out.push('印刷接球值 ≥ '+s.printed_receive_gte);if(s.play_icons_any)out.push(list(s.play_icons_any)+'圖示');
+ if(s.type)out.push(s.type==='character'?'角色':'Event');if(s.source_zones)out.push('位於'+list(s.source_zones));if(s.phase_tags)out.push(list(s.phase_tags)+'技能');if(s.keyword_families)out.push('關鍵字：'+s.keyword_families.join('／'));
+ if(s.origins)out.push(s.origins.includes('rule')?'包含規則與技能效果':'僅技能效果（含技能抽牌，規則抽牌仍依規則）');
+ return out.join('；');}
+function description(e){const s=e.scope||{};
+ if(e.kind==='ban'){
+  const labels={add_hand:s.origins?.length===1&&s.origins[0]==='skill'?'禁止技能加手牌':'限制加入手牌',play_event:'限制使用 Event',enter_character:s.max_count!=null?zh(s.role)+'登場上限 '+s.max_count+' 人':'限制角色登場',use_skill:'限制技能發動'};
+  return {label:labels[e.action]||'行動受限',detail:scopeText(s)};
+ }
+ if(e.kind==='invalid'){const scopes=[e.selector,...(e.selector?.union_with?[e.selector.union_with]:[])].map(scopeText).filter(Boolean);return {label:'技能失效',detail:scopes.join('；或 ')};}
+ if(e.kind==='keyword'&&e.keyword==='feint_block_ban')return {label:'禁止攔網',detail:'此來球不能以角色登場攔網'};
+ if(e.kind==='absent')return {label:zh(e.parameter)+'值視為無',detail:zh(e.role)+'區符合效果條件的角色，'+zh(e.parameter)+'數值不存在；以來源卡文為準'};
+ if(e.kind==='judgment_failure')return {label:zh(e.judge)+'判定限制',detail:'符合來源卡指定條件時，'+zh(e.judge)+'判定失敗'};
+ if(e.kind==='numeric'&&e.operation==='add'&&e.value<0)return {label:zh(e.parameter)+' '+e.value,detail:'指定角色的'+zh(e.parameter)+'數值降低 '+Math.abs(e.value)};
+ return null;
+}
+function statuses(k,viewer){return k.state.effects.flatMap(e=>{
+ const text=description(e);if(!text)return [];const waiting=e.duration.kind==='next_opponent_turn'&&e.duration.activeTurn===null,active=k.active(e);if(!active&&!waiting)return [];
+ const target=e.target?.id&&k.state.cards[e.target.id];if(e.target&&!k.current(e.target))return [];
+ const player=e.actor??target?.owner;if(![0,1].includes(player))return [];
+ const card=k.state.cards[e.source?.id],publicSource=card&&(card.owner===viewer||!['hand','deck','sets'].includes(card.zone.split('.').at(-1))||k.state.publicLog.some(l=>(l.source===card.id||l.type==='skill_declared'&&l.cardNo===card.cardNo)));
+ const source=publicSource?{cardNo:card.cardNo,name:card.printed.display_name||card.printed.name}:null;
+ const duration=e.duration.kind,expires=duration==='next_opponent_turn'?(waiting?'受影響玩家的下個回合生效，該回合結束時解除':'本回合結束時解除'):duration==='this_draw_phase'?'本次抽牌階段結束時解除':duration.includes('role_exit')?'本回合結束或對象離開該區時解除':'本回合結束時解除';
+ return [{id:e.id,player,active,scheduled:waiting,...text,detail:text.detail||'依來源卡指定範圍適用',expires,source}];
+ });}
+module.exports={statuses,description,scopeText};
 
 },
 "rules/local-session.js":function(require,module,exports){
@@ -2277,7 +2324,7 @@ function boardView(view,deckKeys){
    court,handRefs:Array.isArray(p.hand)?p.hand:[],top:key=>area[key]?.at(-1)||null,guts:key=>Math.max(0,(area[key]?.length||0)-1),
    ts:{finished:view.match.phase!=='rally',receiver:area.receive.at(-1),setter:area.toss.at(-1),attacker:area.attack.at(-1),rcv:parameter('receive','rcv'),toss:parameter('toss','tos'),atk:parameter('attack','atk'),sides:court.filter(c=>c.role==='side_blocker').map(c=>short(c.cardNo))},parameter};
  });
- return {native:true,mode:view.match.mode,players,rallyNo:view.match.rally,server:view.match.server,firstServer:view.match.server,target:view.ball?1-view.ball.owner:null,turnP:view.match.phase==='rally'?players[view.turn.player]:null,winner:view.match.winner==null?null:players[view.match.winner],ball:view.ball?{type:view.ball.kind,off:view.ball.offense}:null,
+ return {native:true,statuses:view.statuses||[],waitingFor:view.waitingFor||null,mode:view.match.mode,players,rallyNo:view.match.rally,server:view.match.server,firstServer:view.match.server,target:view.ball?1-view.ball.owner:null,turnP:view.match.phase==='rally'?players[view.turn.player]:null,winner:view.match.winner==null?null:players[view.match.winner],ball:view.ball?{type:view.ball.kind,off:view.ball.offense}:null,
   cardName:(p,key)=>p.court.find(c=>c.key===key)?.name||'',parameter:(p,key,param)=>p.parameter(key,param),
   courtTargets:p=>p.court.map(c=>({key:c.key,card:short(c.cardNo)})),roleReference:(p,key)=>{const c=p.court.find(c=>c.key===key);return c?{id:c.id,incarnation:c.incarnation}:null;},cardReference:(p,zone,index)=>zone==='hand'&&p.handRefs[index]?{id:p.handRefs[index].id,incarnation:p.handRefs[index].incarnation}:null};
 }
@@ -2371,6 +2418,7 @@ const flip=(v,actor)=>actor===1&&(v===0||v===1)?1-v:v;
 function rotateView(view,actor){
  const v=copy(view);if(actor!==1)return v;
  v.players=[v.players[1],v.players[0]];
+ for(const s of v.statuses||[])s.player=flip(s.player,actor);if(v.waitingFor)v.waitingFor.actor=flip(v.waitingFor.actor,actor);
  if(v.turn&&'player' in v.turn)v.turn.player=flip(v.turn.player,actor);
  if(v.ball&&'owner' in v.ball)v.ball.owner=flip(v.ball.owner,actor);
  for(const k of ['server','winner','firstServer','loser','diceWinner'])if(v.match&&k in v.match)v.match[k]=flip(v.match[k],actor);
@@ -3193,6 +3241,7 @@ function describePayment(node){
 }
 const quantityActions={draw_count:['抽牌','不抽牌'],move_count:['移動／回收卡片','不移動卡片'],mill_count:['將牌庫頂的牌送到棄牌區','不送出牌庫的牌'],payment_count:['支付費用','不支付此項費用'],entry_count:['讓角色登場','不讓角色登場'],target_count:['選擇效果對象','不選擇對象']};
 function requestPrompt(request){
+ if(request.uiPresentation?.handDiscard)return '請棄掉 '+request.uiPresentation.count+' 張手牌';
  // Preserve card-specific instructions and ordering supplied by the core.
  if(request.prompt&&request.prompt!=='請選擇合法選項')return request.prompt;
  if(request.context?.selectionAction==='exchange')return '是否交換兩側各1張？';
@@ -3583,14 +3632,14 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
   const img = c => !CL.card(c)?.playable ? `<span class="card-visual">${cardImage(c)}<span class="skill-pending">技能未自動化</span></span>` : cardImage(c);
 
   const presentation=BreakPresentation.create({root:$('tableEffects'),img,deckRect:p=>document.querySelector((p===0?'#meSide':'#oppSide')+' .rcol .pile2:not([data-pile])')?.getBoundingClientRect()||document.querySelector((p===0?'#meSide':'#oppSide')+' .pile2')?.getBoundingClientRect()});
-  let hintToastTimer=null;
+  let hintToastTimer=null,statusToastUntil=0;
   function hintMode(){return $('hintMode').value;}
   function hintSettings(){return '<h3>效果提示</h3><div class="theme-seg" role="group" aria-label="效果提示">'+[['off','關閉提示'],['simple','簡易提示'],['normal','正常提示']].map(([v,t])=>`<button type="button" data-hint-set="${v}" aria-pressed="${hintMode()===v}">${t}</button>`).join('')+'</div><p class="sub">簡易提示以可用技能亮框為主；必要選擇、抽牌結果與 Loss 仍需確認。</p>';}
   function applyHints(v,initial=false){if(!['off','simple','normal'].includes(v))v='simple';$('hintMode').value=v;document.body.dataset.hints=v;store.set('bk_hint_mode',v);document.querySelectorAll('[data-hint-set]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.hintSet===v)));if(v==='off'){$('hintToast').hidden=true;clearTimeout(hintToastTimer);}if(!initial&&turnNotice&&['turn','serve'].includes(turnNotice.data.type)&&v!=='normal'){const n=turnNotice;turnNotice=null;renderTransition();n.resolve();}}
   $('hintMode').onchange=()=>applyHints($('hintMode').value);
   document.addEventListener('click',e=>{const b=e.target.closest('[data-hint-set]');if(b)applyHints(b.dataset.hintSet);});
   applyHints(store.get('bk_hint_mode')||'simple',true);
-  function briefNotice(n){if(hintMode()!=='simple')return;clearTimeout(hintToastTimer);const who=n.player===0?'你':oppName;$('hintToast').textContent=n.type==='serve'?`${who}發球 · 第 ${n.rally} 球`:`${who}的回合${n.ball?' · 來球 '+n.ball.off:''}`;$('hintToast').hidden=false;hintToastTimer=setTimeout(()=>$('hintToast').hidden=true,1300);}
+  function briefNotice(n){if(hintMode()!=='simple'||Date.now()<statusToastUntil)return;clearTimeout(hintToastTimer);const who=n.player===0?'你':oppName;$('hintToast').textContent=n.type==='serve'?`${who}發球 · 第 ${n.rally} 球`:`${who}的回合${n.ball?' · 來球 '+n.ball.off:''}`;$('hintToast').hidden=false;hintToastTimer=setTimeout(()=>$('hintToast').hidden=true,1300);}
   // ---------- setup
   function usableDeck(k) { try { E.validateDeck(DECKS[k].cards, modeOptions().mode); return true; } catch(e) { return false; } }
   function fill(sel, keys, saved) { const usable=keys.filter(usableDeck);sel.innerHTML=(sel.id==='myDeck'?'<option value="">'+(keys.length?'請選擇牌組':'尚無牌組')+'</option>':'')+keys.map(k => `<option value="${esc(k)}" ${usableDeck(k)?'':'disabled'}>${esc(DECKS[k].name)}${usableDeck(k)?'':'（此模式不可用）'}</option>`).join('');sel.value=saved&&usable.includes(saved)?saved:usable[0]||''; }
@@ -3772,7 +3821,7 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
   function syncNativeHand(selection) {
     nativeSelection=selection;
     nextTop={};nextVal={};
-    const me=game.players[0];$('meSide').innerHTML=courtHTML(me)+barHTML(me,true);$('handZone').innerHTML=fanHTML(me);
+    const me=game.players[0];$('meSide').innerHTML=courtHTML(me)+barHTML(me,true);$('handZone').innerHTML=fanHTML(me);markDiscardHand();
     persistSolo(true);requestAnimationFrame(measureDock);
   }
   function renderNativeChoice(r, selection = null) {
@@ -3992,10 +4041,13 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
     const drop = `<button class="pile2" type="button" data-pile="drop" data-p="${p.idx}" ${mine ? 'data-drop="drop"' : ''}>${lastDrop ? `<span class="pthumb">${img(lastDrop)}</span>` : ''}<b>${p.drop.length}</b>棄牌</button>`;
     const set=`<div class="lcol"><div class="setbox">SET<b>${p.sets.length}</b>${sets(p)}</div></div>`,field=`<div class="field">${rows.map(([k,h])=>`<div class="row row-${k}">${h}</div>`).join('')}</div>`,piles=`<div class="rcol">${mine?drop+deck:deck+drop}</div>`;return `<div class="court2 ${mine?'me':'opp'}">${mine?set+field+piles:piles+field+set}</div>`;
   }
+  function statusStrip(player){const items=(game.statuses||[]).filter(s=>s.player===player);return items.length?`<div class="status-strip" aria-label="${player===0?'你':'對手'}的持續狀態">${items.map(s=>`<button type="button" class="status-chip${s.scheduled?' scheduled':''}" data-status="${esc(s.id)}" aria-label="${esc(s.label)}，${s.scheduled?'尚未生效':'生效中'}，查看詳情">${s.scheduled?'下回合 · ':''}${esc(s.label)}</button>`).join('')}</div>`:'';}
+  document.addEventListener('click',e=>{const b=e.target.closest('[data-status]');if(!b)return;const s=game?.statuses?.find(s=>s.id===b.dataset.status);if(!s)return;openSheet(`<div class="status-detail"><h3>${esc(s.label)}</h3><p><b>${s.player===0?'你':esc(oppName)}</b> · ${s.scheduled?'尚未生效':'生效中'}</p><p>${esc(s.detail)}</p><p><b>解除時機：</b>${esc(s.expires)}</p><p><b>來源：</b>${s.source?esc(s.source.name)+'（'+esc(s.source.cardNo)+'）':'來源卡尚未公開'}</p>${s.source?'<button type="button" class="chip" id="statusSource">查看來源卡完整效果</button>':''}</div>`);if(s.source)$('statusSource').onclick=()=>cardSheet(s.source.cardNo.replace(/^HV-?/,''));});
   function barHTML(p, mine) {
     const backs = mine ? '' : `<span class="backs">${'<i></i>'.repeat(Math.min(p.hand.length, 8))}</span>`;
-    return `<div class="pbar ${mine ? 'me' : 'opp'}"><span class="av">${esc((mine ? '你' : oppName).slice(0, 1))}</span><span class="who">${mine ? '你' : esc(oppName)}</span><span class="hn" aria-label="${mine ? '你的' : '對手'}手牌 ${p.hand.length} 張">手牌 <b>${p.hand.length}</b> 張</span><span class="dk">${esc(OL.inGame&&mine?(!OL.client?.online?'已離線':!OL.authority?.active?'房主離線':OL.client.pending?'同步中':'已連線'):DECKS[p.deckKey]?.name || '')}</span><span class="sp"></span>${backs}</div>`;
+    return `<div class="pbar ${mine ? 'me' : 'opp'}"><span class="av">${esc((mine ? '你' : oppName).slice(0, 1))}</span><span class="who">${mine ? '你' : esc(oppName)}</span><span class="hn" aria-label="${mine ? '你的' : '對手'}手牌 ${p.hand.length} 張">手牌 <b>${p.hand.length}</b> 張</span><span class="dk">${esc(OL.inGame&&mine?(!OL.client?.online?'已離線':!OL.authority?.active?'房主離線':OL.client.pending?'同步中':'已連線'):DECKS[p.deckKey]?.name || '')}</span><span class="sp"></span>${backs}${statusStrip(p.idx)}</div>`;
   }
+  function markDiscardHand(){$('handZone').querySelector('.hand')?.classList.toggle('discard-required',!!pending?.req.uiPresentation?.handDiscard);}
   function fanHTML(p) {
     const req = pending && pending.req, legal = legalCards();
     if (!p.hand.length) return '<div class="hand fan empty-hand"><span class="empty">手牌空了</span></div>';
@@ -4043,7 +4095,7 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
     nextTop = {}; nextVal = {};
     $('oppSide').innerHTML = barHTML(ai, false) + courtHTML(ai);
     $('meSide').innerHTML = courtHTML(me) + barHTML(me, true);
-    $('handZone').innerHTML = fanHTML(me);
+    $('handZone').innerHTML = fanHTML(me);markDiscardHand();
     prevTop = nextTop; prevVal = nextVal;
     $('net').innerHTML = netHTML();
     const server = game.server ?? game.firstServer;
@@ -4070,10 +4122,10 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
       $('dockOpts').querySelector('.hc-content').scrollTop=savedScrollTop;
     } else {
       dock.classList.add('wait');
-      $('dockQ').innerHTML = `<span class="dots">${esc(oppName)} 行動中</span>`;
+      $('dockQ').innerHTML = game.waitingFor?.kind==='discard'?`<span class="dots">等待${game.waitingFor.actor===0?'你':esc(oppName)}棄掉 ${game.waitingFor.count} 張手牌</span>`:`<span class="dots">${esc(oppName)} 行動中</span>`;
       $('dockOpts').innerHTML = '';
     }
-    $('dockSummary').textContent = game.winner ? $('dockQ').textContent : pending ? pending.req.prompt : `${oppName} 行動中`;
+    $('dockSummary').textContent = game.winner ? $('dockQ').textContent : pending ? BreakChoiceUI.requestPrompt(pending.req) : `${oppName} 行動中`;
     updateUndoButton();
     olControls();
     renderTransition();
@@ -4172,7 +4224,7 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
   $('logBtn').onclick = showLog;
   $('menuBtn').onclick = () => openSheet(OL.inGame ? '<h3>選單</h3><div class="opts"><button class="opt" type="button" id="mLeave">離開房間（回到大廳）</button></div><p class="sub">離開後可從大廳「回到房間」接續；房主離開時對手可接手。</p>'+'<h3>外觀</h3>'+bkThemeSeg()+hintSettings() : '<h3>選單</h3><div class="opts"><button class="opt primary" type="button" id="mRestart">重新開始這場</button><button class="opt" type="button" id="mSetup">回到選牌組</button></div>'+'<h3>外觀</h3>'+bkThemeSeg()+hintSettings());
   $('sheet').addEventListener('click', e => { if (e.target.id === 'mRestart') { closeSheet(); restartSolo(); } if (e.target.id === 'mSetup') { closeSheet(); backToSetup(); } if (e.target.id === 'mLeave') { closeSheet(); olRun(async () => { await OL.client.leave(); olLeaveGame(); })(); } });
-  function backToSetup() { presentation.reset();$('hintToast').hidden=true;clearTimeout(hintToastTimer);persistSolo(false);nativeWidget?.destroy();nativeWidget=null;session?.stop(); session = null; game = null; pending = null; turnNotice = null; renderTransition(); $('game').hidden = true; $('dock').hidden = true; $('tbtns').hidden = true; $('setup').hidden = false; $('modebar').hidden = false; document.body.classList.remove('playing'); delete document.body.dataset.dock; }
+  function backToSetup() { presentation.reset();priorStatuses=null;statusToastUntil=0;$('hintToast').hidden=true;clearTimeout(hintToastTimer);persistSolo(false);nativeWidget?.destroy();nativeWidget=null;session?.stop(); session = null; game = null; pending = null; turnNotice = null; renderTransition(); $('game').hidden = true; $('dock').hidden = true; $('tbtns').hidden = true; $('setup').hidden = false; $('modebar').hidden = false; document.body.classList.remove('playing'); delete document.body.dataset.dock; }
 
   function publicLogText(e) {
     const who=e.player===0?'你':oppName;
@@ -4227,12 +4279,18 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
   $('resumeSolo').onclick=resumeSolo;
   $('clearSolo').onclick=()=>{try{localStorage.removeItem(SOLO_SAVE_KEY);soloRecord=null;soloReadError=false;soloSaveToken='';soloPanel();$('runtimeStatus').hidden=true;}catch(e){$('soloSaveText').textContent='目前無法清除存檔，請檢查瀏覽器儲存設定。';}};
   function setLogoSub(t) { const small = document.querySelector('.logo small'); if (small) small.textContent = t; }
+  let priorStatuses=null;
+  function noticeStatuses(board,view){const now=new Set((board.statuses||[]).filter(s=>s.active).map(s=>s.id));
+    if(priorStatuses&&priorStatuses.id===view.match.id&&view.match.decisionIndex>=priorStatuses.at&&hintMode()!=='off'){
+      const added=(board.statuses||[]).filter(s=>s.active&&!priorStatuses.ids.has(s.id));if(added.length){statusToastUntil=Date.now()+2200;clearTimeout(hintToastTimer);$('hintToast').textContent=added.map(s=>(s.player===0?'你':oppName)+'：'+s.label+(hintMode()==='normal'&&s.source?'（'+s.source.name+'）':'')).join('；');$('hintToast').hidden=false;hintToastTimer=setTimeout(()=>$('hintToast').hidden=true,2200);}
+    }priorStatuses={id:view.match.id,at:view.match.decisionIndex,ids:now};
+  }
   function tableCallbacks() {
     return {
       onBoard(board,view) {
         const same=pending&&view.request?.requestId===pending.req.requestId&&view.request?.epoch===pending.req.epoch;game=board;if(!same)pending=null;turnNotice=null;
         skillResults=view.publicLog.filter(e=>e.type==='skill_resolved'&&e.turn===view.turn.id).slice(-2);persistSolo(true);
-        logBuf=view.publicLog.map(e=>[publicLogText(e), '']);render();presentation.observe(view);
+        logBuf=view.publicLog.map(e=>[publicLogText(e), '']);render();presentation.observe(view);noticeStatuses(board,view);
       },
       onRequest(req) {presentation.request(req);pending={req};setDockCollapsed(false);render();soloSelection=null;},
       onNotice(board,data,resolve) {if(hintMode()!=='normal'&&['serve','turn'].includes(data.type)){briefNotice(data);queueMicrotask(resolve);return;}turnNotice={data,resolve,game:board};render();},
@@ -4240,7 +4298,7 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
     };
   }
   function enterTable() {
-    presentation.reset();$('hintToast').hidden=true;clearTimeout(hintToastTimer);
+    presentation.reset();priorStatuses=null;statusToastUntil=0;$('hintToast').hidden=true;clearTimeout(hintToastTimer);
     prevTop={};prevVal={};prevBall=null;skillResults=[];flashMsg='';clearTimeout(flashT);
     if(drag?.el)drag.el.remove();if(drag?.over)drag.over.classList.remove('over');drag=null;suppressClick=false;document.body.classList.remove('dragging');
     $('setup').hidden = true; $('modebar').hidden = true; $('game').hidden = false; $('tbtns').hidden = false; document.body.classList.add('playing'); syncViewport();

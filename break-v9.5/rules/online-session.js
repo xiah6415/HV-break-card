@@ -9,6 +9,7 @@ const flip=(v,actor)=>actor===1&&(v===0||v===1)?1-v:v;
 function rotateView(view,actor){
  const v=copy(view);if(actor!==1)return v;
  v.players=[v.players[1],v.players[0]];
+ for(const s of v.statuses||[])s.player=flip(s.player,actor);if(v.waitingFor)v.waitingFor.actor=flip(v.waitingFor.actor,actor);
  if(v.turn&&'player' in v.turn)v.turn.player=flip(v.turn.player,actor);
  if(v.ball&&'owner' in v.ball)v.ball.owner=flip(v.ball.owner,actor);
  for(const k of ['server','winner','firstServer','loser','diceWinner'])if(v.match&&k in v.match)v.match[k]=flip(v.match[k],actor);

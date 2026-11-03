@@ -703,6 +703,15 @@ body[data-hints="off"] .skill-ready .cbtn{box-shadow:none}
 body[data-hints="simple"] .hc-step,body[data-hints="simple"] .hc-prog,body[data-hints="off"] .hc-step,body[data-hints="off"] .hc-prog{display:none}
 @media(prefers-reduced-motion:reduce){#tableEffects *{animation:none!important}.fx-card-inner{transform:rotateY(180deg)}.back-only .fx-card-inner{transform:none}}
 
+
+.pbar:has(.status-strip){flex-wrap:wrap}.pbar:has(.status-strip) .dk{flex:1 1 0}.pbar .status-strip{flex:0 0 100%}
+.status-strip{display:flex;gap:5px;overflow-x:auto;max-width:100%;min-width:0;padding:3px 1px;scrollbar-width:thin}
+.status-chip{flex:0 0 auto;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border:1px solid #c23f34;border-radius:99px;background:#ffebe7;color:#8c2219;font:inherit;font-size:11px;font-weight:700;min-height:26px;padding:3px 9px;cursor:pointer}
+.status-chip.scheduled{border-style:dashed;background:var(--surface,#fff);color:var(--ink,#233)}
+[data-scheme="dark"] .status-chip{background:#4b2525;color:#ffd5cd}[data-scheme="dark"] .status-chip.scheduled{background:#273337;color:#ffe4b9}
+.hand.discard-required{outline:2px solid #d04d3c;outline-offset:-3px;border-radius:12px}
+.status-detail{display:grid;gap:10px}.status-detail p{margin:0;overflow-wrap:anywhere}
+
 </style>
 <script>
 /* 外觀：bk_theme = light（預設）｜dark｜auto（跟隨系統）；在繪製前套用避免閃爍 */
@@ -863,14 +872,14 @@ body[data-hints="simple"] .hc-step,body[data-hints="simple"] .hc-prog,body[data-
   const img = c => !CL.card(c)?.playable ? `<span class="card-visual">${cardImage(c)}<span class="skill-pending">技能未自動化</span></span>` : cardImage(c);
 
   const presentation=BreakPresentation.create({root:$('tableEffects'),img,deckRect:p=>document.querySelector((p===0?'#meSide':'#oppSide')+' .rcol .pile2:not([data-pile])')?.getBoundingClientRect()||document.querySelector((p===0?'#meSide':'#oppSide')+' .pile2')?.getBoundingClientRect()});
-  let hintToastTimer=null;
+  let hintToastTimer=null,statusToastUntil=0;
   function hintMode(){return $('hintMode').value;}
   function hintSettings(){return '<h3>效果提示</h3><div class="theme-seg" role="group" aria-label="效果提示">'+[['off','關閉提示'],['simple','簡易提示'],['normal','正常提示']].map(([v,t])=>`<button type="button" data-hint-set="${v}" aria-pressed="${hintMode()===v}">${t}</button>`).join('')+'</div><p class="sub">簡易提示以可用技能亮框為主；必要選擇、抽牌結果與 Loss 仍需確認。</p>';}
   function applyHints(v,initial=false){if(!['off','simple','normal'].includes(v))v='simple';$('hintMode').value=v;document.body.dataset.hints=v;store.set('bk_hint_mode',v);document.querySelectorAll('[data-hint-set]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.hintSet===v)));if(v==='off'){$('hintToast').hidden=true;clearTimeout(hintToastTimer);}if(!initial&&turnNotice&&['turn','serve'].includes(turnNotice.data.type)&&v!=='normal'){const n=turnNotice;turnNotice=null;renderTransition();n.resolve();}}
   $('hintMode').onchange=()=>applyHints($('hintMode').value);
   document.addEventListener('click',e=>{const b=e.target.closest('[data-hint-set]');if(b)applyHints(b.dataset.hintSet);});
   applyHints(store.get('bk_hint_mode')||'simple',true);
-  function briefNotice(n){if(hintMode()!=='simple')return;clearTimeout(hintToastTimer);const who=n.player===0?'你':oppName;$('hintToast').textContent=n.type==='serve'?`${who}發球 · 第 ${n.rally} 球`:`${who}的回合${n.ball?' · 來球 '+n.ball.off:''}`;$('hintToast').hidden=false;hintToastTimer=setTimeout(()=>$('hintToast').hidden=true,1300);}
+  function briefNotice(n){if(hintMode()!=='simple'||Date.now()<statusToastUntil)return;clearTimeout(hintToastTimer);const who=n.player===0?'你':oppName;$('hintToast').textContent=n.type==='serve'?`${who}發球 · 第 ${n.rally} 球`:`${who}的回合${n.ball?' · 來球 '+n.ball.off:''}`;$('hintToast').hidden=false;hintToastTimer=setTimeout(()=>$('hintToast').hidden=true,1300);}
   // ---------- setup
   function usableDeck(k) { try { E.validateDeck(DECKS[k].cards, modeOptions().mode); return true; } catch(e) { return false; } }
   function fill(sel, keys, saved) { const usable=keys.filter(usableDeck);sel.innerHTML=(sel.id==='myDeck'?'<option value="">'+(keys.length?'請選擇牌組':'尚無牌組')+'</option>':'')+keys.map(k => `<option value="${esc(k)}" ${usableDeck(k)?'':'disabled'}>${esc(DECKS[k].name)}${usableDeck(k)?'':'（此模式不可用）'}</option>`).join('');sel.value=saved&&usable.includes(saved)?saved:usable[0]||''; }
@@ -1052,7 +1061,7 @@ body[data-hints="simple"] .hc-step,body[data-hints="simple"] .hc-prog,body[data-
   function syncNativeHand(selection) {
     nativeSelection=selection;
     nextTop={};nextVal={};
-    const me=game.players[0];$('meSide').innerHTML=courtHTML(me)+barHTML(me,true);$('handZone').innerHTML=fanHTML(me);
+    const me=game.players[0];$('meSide').innerHTML=courtHTML(me)+barHTML(me,true);$('handZone').innerHTML=fanHTML(me);markDiscardHand();
     persistSolo(true);requestAnimationFrame(measureDock);
   }
   function renderNativeChoice(r, selection = null) {
@@ -1272,10 +1281,13 @@ body[data-hints="simple"] .hc-step,body[data-hints="simple"] .hc-prog,body[data-
     const drop = `<button class="pile2" type="button" data-pile="drop" data-p="${p.idx}" ${mine ? 'data-drop="drop"' : ''}>${lastDrop ? `<span class="pthumb">${img(lastDrop)}</span>` : ''}<b>${p.drop.length}</b>棄牌</button>`;
     const set=`<div class="lcol"><div class="setbox">SET<b>${p.sets.length}</b>${sets(p)}</div></div>`,field=`<div class="field">${rows.map(([k,h])=>`<div class="row row-${k}">${h}</div>`).join('')}</div>`,piles=`<div class="rcol">${mine?drop+deck:deck+drop}</div>`;return `<div class="court2 ${mine?'me':'opp'}">${mine?set+field+piles:piles+field+set}</div>`;
   }
+  function statusStrip(player){const items=(game.statuses||[]).filter(s=>s.player===player);return items.length?`<div class="status-strip" aria-label="${player===0?'你':'對手'}的持續狀態">${items.map(s=>`<button type="button" class="status-chip${s.scheduled?' scheduled':''}" data-status="${esc(s.id)}" aria-label="${esc(s.label)}，${s.scheduled?'尚未生效':'生效中'}，查看詳情">${s.scheduled?'下回合 · ':''}${esc(s.label)}</button>`).join('')}</div>`:'';}
+  document.addEventListener('click',e=>{const b=e.target.closest('[data-status]');if(!b)return;const s=game?.statuses?.find(s=>s.id===b.dataset.status);if(!s)return;openSheet(`<div class="status-detail"><h3>${esc(s.label)}</h3><p><b>${s.player===0?'你':esc(oppName)}</b> · ${s.scheduled?'尚未生效':'生效中'}</p><p>${esc(s.detail)}</p><p><b>解除時機：</b>${esc(s.expires)}</p><p><b>來源：</b>${s.source?esc(s.source.name)+'（'+esc(s.source.cardNo)+'）':'來源卡尚未公開'}</p>${s.source?'<button type="button" class="chip" id="statusSource">查看來源卡完整效果</button>':''}</div>`);if(s.source)$('statusSource').onclick=()=>cardSheet(s.source.cardNo.replace(/^HV-?/,''));});
   function barHTML(p, mine) {
     const backs = mine ? '' : `<span class="backs">${'<i></i>'.repeat(Math.min(p.hand.length, 8))}</span>`;
-    return `<div class="pbar ${mine ? 'me' : 'opp'}"><span class="av">${esc((mine ? '你' : oppName).slice(0, 1))}</span><span class="who">${mine ? '你' : esc(oppName)}</span><span class="hn" aria-label="${mine ? '你的' : '對手'}手牌 ${p.hand.length} 張">手牌 <b>${p.hand.length}</b> 張</span><span class="dk">${esc(OL.inGame&&mine?(!OL.client?.online?'已離線':!OL.authority?.active?'房主離線':OL.client.pending?'同步中':'已連線'):DECKS[p.deckKey]?.name || '')}</span><span class="sp"></span>${backs}</div>`;
+    return `<div class="pbar ${mine ? 'me' : 'opp'}"><span class="av">${esc((mine ? '你' : oppName).slice(0, 1))}</span><span class="who">${mine ? '你' : esc(oppName)}</span><span class="hn" aria-label="${mine ? '你的' : '對手'}手牌 ${p.hand.length} 張">手牌 <b>${p.hand.length}</b> 張</span><span class="dk">${esc(OL.inGame&&mine?(!OL.client?.online?'已離線':!OL.authority?.active?'房主離線':OL.client.pending?'同步中':'已連線'):DECKS[p.deckKey]?.name || '')}</span><span class="sp"></span>${backs}${statusStrip(p.idx)}</div>`;
   }
+  function markDiscardHand(){$('handZone').querySelector('.hand')?.classList.toggle('discard-required',!!pending?.req.uiPresentation?.handDiscard);}
   function fanHTML(p) {
     const req = pending && pending.req, legal = legalCards();
     if (!p.hand.length) return '<div class="hand fan empty-hand"><span class="empty">手牌空了</span></div>';
@@ -1323,7 +1335,7 @@ body[data-hints="simple"] .hc-step,body[data-hints="simple"] .hc-prog,body[data-
     nextTop = {}; nextVal = {};
     $('oppSide').innerHTML = barHTML(ai, false) + courtHTML(ai);
     $('meSide').innerHTML = courtHTML(me) + barHTML(me, true);
-    $('handZone').innerHTML = fanHTML(me);
+    $('handZone').innerHTML = fanHTML(me);markDiscardHand();
     prevTop = nextTop; prevVal = nextVal;
     $('net').innerHTML = netHTML();
     const server = game.server ?? game.firstServer;
@@ -1350,10 +1362,10 @@ body[data-hints="simple"] .hc-step,body[data-hints="simple"] .hc-prog,body[data-
       $('dockOpts').querySelector('.hc-content').scrollTop=savedScrollTop;
     } else {
       dock.classList.add('wait');
-      $('dockQ').innerHTML = `<span class="dots">${esc(oppName)} 行動中</span>`;
+      $('dockQ').innerHTML = game.waitingFor?.kind==='discard'?`<span class="dots">等待${game.waitingFor.actor===0?'你':esc(oppName)}棄掉 ${game.waitingFor.count} 張手牌</span>`:`<span class="dots">${esc(oppName)} 行動中</span>`;
       $('dockOpts').innerHTML = '';
     }
-    $('dockSummary').textContent = game.winner ? $('dockQ').textContent : pending ? pending.req.prompt : `${oppName} 行動中`;
+    $('dockSummary').textContent = game.winner ? $('dockQ').textContent : pending ? BreakChoiceUI.requestPrompt(pending.req) : `${oppName} 行動中`;
     updateUndoButton();
     olControls();
     renderTransition();
@@ -1452,7 +1464,7 @@ body[data-hints="simple"] .hc-step,body[data-hints="simple"] .hc-prog,body[data-
   $('logBtn').onclick = showLog;
   $('menuBtn').onclick = () => openSheet(OL.inGame ? '<h3>選單</h3><div class="opts"><button class="opt" type="button" id="mLeave">離開房間（回到大廳）</button></div><p class="sub">離開後可從大廳「回到房間」接續；房主離開時對手可接手。</p>'+'<h3>外觀</h3>'+bkThemeSeg()+hintSettings() : '<h3>選單</h3><div class="opts"><button class="opt primary" type="button" id="mRestart">重新開始這場</button><button class="opt" type="button" id="mSetup">回到選牌組</button></div>'+'<h3>外觀</h3>'+bkThemeSeg()+hintSettings());
   $('sheet').addEventListener('click', e => { if (e.target.id === 'mRestart') { closeSheet(); restartSolo(); } if (e.target.id === 'mSetup') { closeSheet(); backToSetup(); } if (e.target.id === 'mLeave') { closeSheet(); olRun(async () => { await OL.client.leave(); olLeaveGame(); })(); } });
-  function backToSetup() { presentation.reset();$('hintToast').hidden=true;clearTimeout(hintToastTimer);persistSolo(false);nativeWidget?.destroy();nativeWidget=null;session?.stop(); session = null; game = null; pending = null; turnNotice = null; renderTransition(); $('game').hidden = true; $('dock').hidden = true; $('tbtns').hidden = true; $('setup').hidden = false; $('modebar').hidden = false; document.body.classList.remove('playing'); delete document.body.dataset.dock; }
+  function backToSetup() { presentation.reset();priorStatuses=null;statusToastUntil=0;$('hintToast').hidden=true;clearTimeout(hintToastTimer);persistSolo(false);nativeWidget?.destroy();nativeWidget=null;session?.stop(); session = null; game = null; pending = null; turnNotice = null; renderTransition(); $('game').hidden = true; $('dock').hidden = true; $('tbtns').hidden = true; $('setup').hidden = false; $('modebar').hidden = false; document.body.classList.remove('playing'); delete document.body.dataset.dock; }
 
   function publicLogText(e) {
     const who=e.player===0?'你':oppName;
@@ -1507,12 +1519,18 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
   $('resumeSolo').onclick=resumeSolo;
   $('clearSolo').onclick=()=>{try{localStorage.removeItem(SOLO_SAVE_KEY);soloRecord=null;soloReadError=false;soloSaveToken='';soloPanel();$('runtimeStatus').hidden=true;}catch(e){$('soloSaveText').textContent='目前無法清除存檔，請檢查瀏覽器儲存設定。';}};
   function setLogoSub(t) { const small = document.querySelector('.logo small'); if (small) small.textContent = t; }
+  let priorStatuses=null;
+  function noticeStatuses(board,view){const now=new Set((board.statuses||[]).filter(s=>s.active).map(s=>s.id));
+    if(priorStatuses&&priorStatuses.id===view.match.id&&view.match.decisionIndex>=priorStatuses.at&&hintMode()!=='off'){
+      const added=(board.statuses||[]).filter(s=>s.active&&!priorStatuses.ids.has(s.id));if(added.length){statusToastUntil=Date.now()+2200;clearTimeout(hintToastTimer);$('hintToast').textContent=added.map(s=>(s.player===0?'你':oppName)+'：'+s.label+(hintMode()==='normal'&&s.source?'（'+s.source.name+'）':'')).join('；');$('hintToast').hidden=false;hintToastTimer=setTimeout(()=>$('hintToast').hidden=true,2200);}
+    }priorStatuses={id:view.match.id,at:view.match.decisionIndex,ids:now};
+  }
   function tableCallbacks() {
     return {
       onBoard(board,view) {
         const same=pending&&view.request?.requestId===pending.req.requestId&&view.request?.epoch===pending.req.epoch;game=board;if(!same)pending=null;turnNotice=null;
         skillResults=view.publicLog.filter(e=>e.type==='skill_resolved'&&e.turn===view.turn.id).slice(-2);persistSolo(true);
-        logBuf=view.publicLog.map(e=>[publicLogText(e), '']);render();presentation.observe(view);
+        logBuf=view.publicLog.map(e=>[publicLogText(e), '']);render();presentation.observe(view);noticeStatuses(board,view);
       },
       onRequest(req) {presentation.request(req);pending={req};setDockCollapsed(false);render();soloSelection=null;},
       onNotice(board,data,resolve) {if(hintMode()!=='normal'&&['serve','turn'].includes(data.type)){briefNotice(data);queueMicrotask(resolve);return;}turnNotice={data,resolve,game:board};render();},
@@ -1520,7 +1538,7 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
     };
   }
   function enterTable() {
-    presentation.reset();$('hintToast').hidden=true;clearTimeout(hintToastTimer);
+    presentation.reset();priorStatuses=null;statusToastUntil=0;$('hintToast').hidden=true;clearTimeout(hintToastTimer);
     prevTop={};prevVal={};prevBall=null;skillResults=[];flashMsg='';clearTimeout(flashT);
     if(drag?.el)drag.el.remove();if(drag?.over)drag.over.classList.remove('over');drag=null;suppressClick=false;document.body.classList.remove('dragging');
     $('setup').hidden = true; $('modebar').hidden = true; $('game').hidden = false; $('tbtns').hidden = false; document.body.classList.add('playing'); syncViewport();
