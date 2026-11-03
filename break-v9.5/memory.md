@@ -1564,3 +1564,4 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 ## 效果視窗改版第一批
 - 計畫：使用者同意先做來源卡與當前效果、支付／對象／結果步驟及動詞、手機選牌面板可收起查看球場、翻牌結果逐張說明並移除0／0。只使用核心目前請求與卡文資料，不新增規則判定；保留手動翻牌／Loss、Undo與多人選擇，完成三尺寸實測及必要回歸後部署。
 - 結果／測試：目前來源卡與效果全文入口、步驟標籤／當前提示、具體確認動詞已接共用選擇元件，移除跨效果殘留的結果列；手機多選縮為底部面板並可「查看球場／繼續選擇」，保留已選牌／查卡／Undo。翻牌顯示卡名與核心已算出的符合張數、下一步處理，0／0及誤選已移除；新增uiPresentation僅供顯示、不參與答案簽名或保存雜湊，舊檔回放通過。三尺寸費用／翻牌正反例及舊存檔、e2e／choice／reveal／skill-targets／hand-skip／drag／solo-save／tcg-layout／mobile-review／effect-timing、session／online／host單測及fuzz3000／6×300通過；541／358不變。
+- 部署：404fe25已推送並發布Hosting；web.app／firebaseapp.com的index、runtime、choice-ui均HTTP200且SHA256與本機一致。公開三尺寸付款／查看球場／選牌保留／查卡／Undo、翻牌正反例與舊存檔回放及確認鍵可見通過；新版截圖在任務outputs/effect-ui-update-2026-11-03。https://haikyuu-playmat.web.app/break-v9.5/?v=404fe25 。
