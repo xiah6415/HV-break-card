@@ -972,7 +972,7 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
 
   // ---------- game state
   let game = null, session = null, pending = null, logBuf = [], skillResults = [];
-  const SOLO_SAVE_KEY='bk_solo_match';let soloRecord=null,soloReadError=false,soloSaveError=false,soloSaveToken='',soloSelection=null;
+  const SOLO_SAVE_KEY='bk_solo_match',SOLO_LINK_ROUTE=(()=>{const q=new URLSearchParams(location.search);return q.has('online')||q.has('room')||q.has('deck')||/deck=/.test(location.hash);})();let soloRecord=null,soloReadError=false,soloSaveError=false,soloSaveToken='',soloSelection=null;
   let oppName = 'AI'; // 對手顯示名稱：單人為 AI，多人為對方暱稱
   const OL = { client: null, services: null, meta: null, rooms: {}, presence: {}, loading: null, inGame: false, roomId: null, lastUid: null, authority: null, authWork: Promise.resolve() };
   window.BREAK_ONLINE={get client(){return OL.client;},get current(){return OL.client?.lastView;},get session(){return OL.inGame?session:null;}};
@@ -1565,7 +1565,7 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
   document.getElementById('runtimeStatus').hidden = true;
   try{const raw=localStorage.getItem(SOLO_SAVE_KEY);if(raw){soloRecord=JSON.parse(raw);if(soloRecord?.version!==1)throw Error('SAVE_VERSION');}}catch(e){soloReadError=true;}
   soloPanel();
-  {const q=new URLSearchParams(location.search),invited=q.has('online')||q.has('room')||q.has('deck')||/deck=/.test(location.hash);if(soloRecord?.active&&!soloReadError&&!invited&&store.get('bk_play_mode')!=='online')resumeSolo();}
+  {const q=new URLSearchParams(location.search),invited=q.has('online')||q.has('room')||q.has('deck')||/deck=/.test(location.hash);if(soloRecord?.active&&!soloReadError&&!invited&&!SOLO_LINK_ROUTE&&store.get('bk_play_mode')!=='online')resumeSolo();}
   if(location.protocol==='https:'||location.protocol==='http:')setTimeout(()=>olLoad().catch(()=>{}),0);
 })();
 </script>
