@@ -14,6 +14,7 @@ const CSS = `
 .hc-q small{display:block;font-weight:400;font-size:12px;color:var(--muted,#566b6e);margin-top:2px}
 .hc-heading{min-width:0;flex:1}
 .hc-source-name{display:block;font-size:13px;line-height:1.4;margin-bottom:4px;overflow-wrap:anywhere}
+[data-kind="drawConfirm"] .hc-src,[data-kind="drawConfirm"] .hc-effect-text,[data-kind="drawConfirm"] .hc-timing,[data-kind="drawConfirm"] .hc-step{display:none}
 .hc-step{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;background:var(--sunk,#d9e4e3);color:var(--teal,#0e7175);margin-bottom:5px}
 .hc-current{display:block;background:transparent;color:inherit;border-left:3px solid var(--court,#d96a1f);padding-left:8px}
 .hc-effect-text{font-size:12px;line-height:1.5;color:var(--muted,#566b6e)}
@@ -112,7 +113,7 @@ function requestDetail(request){
 function stepLabel(r){
  if(['activate_payment','optional'].includes(r.kind))return '發動選擇';
  if(['payment_cards','payment_count','guts','gutsCourt','cost'].includes(r.kind))return '支付費用';
- if(r.kind==='reveal')return '公開卡片';
+ if(r.kind==='drawConfirm')return '抽牌效果';if(r.kind==='drawResult')return '本次抽到的卡片';if(r.kind==='reveal')return '公開卡片';
  if(['revealResult','external_result'].includes(r.kind))return '確認結果';
  if(r.kind==='external_action')return '執行指定動作';
  if(r.kind==='trigger_order')return '安排結算順序';
@@ -122,7 +123,7 @@ function stepLabel(r){
 function actionLabel(r,sel){
  const value=H.selectionValue(r,sel),n=Array.isArray(value)?value.length:r.options.some(o=>o.card&&key(o.value)===key(value))?1:0;
  const count=Number.isInteger(value)?value:'所選';
- if(r.kind==='revealResult')return '確認公開結果';
+ if(r.kind==='drawConfirm')return '抽 '+r.context.drawCount+' 張';if(r.kind==='drawResult')return '確認抽牌結果';if(r.kind==='revealResult')return '確認公開結果';
  if(r.kind==='activate_payment')return value===false?'不發動':'支付並發動';
  if(r.kind==='optional')return value===false?'略過此效果':'執行效果';
  if(['payment_cards','guts','gutsCourt'].includes(r.kind))return '支付 '+n+(r.kind==='payment_cards'?' 張牌':' Guts');
@@ -193,6 +194,7 @@ function render(rootEl, request, opts = {}) {
     if (c.ball) { const kind=c.ball.kind || c.ball.type, value=c.ball.offense ?? c.ball.off; out.push(`來球：${esc({ serve: '發球', attack: '攻擊', block: '攔網回球' }[kind] || kind)} ${esc(value)}`); }
     if (c.revealed) out.push(`<span class="hc-rev">${cardImg(c.revealed)}</span><span>翻開：${esc(c.revealed.name || c.revealed.cardNo)}</span>`);
     if (c.dice) out.push(`擲骰 ${esc(c.dice[0])} : ${esc(c.dice[1])}`);
+    if(request.kind==='drawResult'&&hasCards)out.push(`<div class="hc-public-summary">本次抽到：${request.options.filter(o=>o.card).map(o=>esc(optionLabel(request,o))).join('、')}。已加入你的手牌，確認後繼續結算。</div>`);
     if(request.kind==='revealResult'&&hasCards){
       const info=request.uiPresentation,n=info?.eligibleCount;
       const result=Number.isInteger(n)?(n===0?'沒有符合條件的牌。':`符合條件：${n} 張。`):'';

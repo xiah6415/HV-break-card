@@ -70,7 +70,7 @@ export class FirebaseRooms{
  _schedule(){if(this.queued)return;this.queued=true;queueMicrotask(()=>{this.queued=false;this.work=this.work.then(()=>this._drain()).catch(e=>this.error(e));});}
  async _drain(){
   const gen=this.active?.gen;if(!this._current(gen)||!this.meta||this.meta.status==='closed')return;
-  if(!this.core){const players=[this.meta.p0,this.meta.p1];if(!players[1]||!this.settings?.[players[0]]?.ready||!this.settings?.[players[1]]?.ready)return;const decks=players.map(uid=>JSON.parse(this.settings[uid].deckJSON));this.core=new BreakMatchPilot.RoomAuthority({id:'room-'+this.room,players,decks,seed:crypto.getRandomValues(new Uint32Array(1))[0],mode:this.meta.mode});await this._save(gen);if(!this._current(gen))return;await this.D.set(this.ref('rooms/'+this.room+'/meta/status'),'running');await this._publishLobby();}
+  if(!this.core){const players=[this.meta.p0,this.meta.p1];if(!players[1]||!this.settings?.[players[0]]?.ready||!this.settings?.[players[1]]?.ready)return;const decks=players.map(uid=>JSON.parse(this.settings[uid].deckJSON));this.core=new BreakMatchPilot.RoomAuthority({id:'room-'+this.room,players,decks,seed:crypto.getRandomValues(new Uint32Array(1))[0],mode:this.meta.mode,interactiveDraws:true});await this._save(gen);if(!this._current(gen))return;await this.D.set(this.ref('rooms/'+this.room+'/meta/status'),'running');await this._publishLobby();}
   for(let steps=0;steps<100&&this._current(gen);steps++){
    const queued=Object.entries(this.commands||{}).flatMap(([uid,items])=>Object.entries(items||{}).map(([cid,record])=>({uid,cid,record}))).sort((a,b)=>a.cid.localeCompare(b.cid)).find(x=>!this.core.log[x.cid]);
    if(queued){let command;try{if(queued.record.term!==this.lease.term)throw Error('房主已更換，請重新操作');command=JSON.parse(queued.record.body);this.core.apply(queued.uid,queued.cid,command);}catch(e){this.core.log[queued.cid]={cmdId:queued.cid,uid:queued.uid,ok:false,error:String(e.message),command:null};}await this._save(gen);continue;}
@@ -84,7 +84,7 @@ export class FirebaseRooms{
   const old=this.core,id=old.config.id,votes=this.meta.rematch||{};
   if(this.meta.status!=='finished'||!old.players.every(uid=>uid==='AI'||votes[uid]===id))return;
   let seed=crypto.getRandomValues(new Uint32Array(1))[0];if(seed===old.config.seed)seed=(seed+1)>>>0;
-  this.core=new BreakMatchPilot.RoomAuthority({...old.config,id:'room-'+this.room+'-'+connection(),players:old.players,seed,log:old.log});
+  this.core=new BreakMatchPilot.RoomAuthority({...old.config,id:'room-'+this.room+'-'+connection(),players:old.players,seed,log:old.log,interactiveDraws:true});
   await this._save(gen);if(!this._current(gen))return;
   await this.D.set(this.ref('rooms/'+this.room+'/meta/status'),'running');await this._publishLobby();this._schedule();
  }

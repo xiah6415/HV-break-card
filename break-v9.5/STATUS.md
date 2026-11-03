@@ -53,6 +53,8 @@
 | external_action 形態／依賴卡／新增開放 | 5／5／4（系統擲幣並確認結果、口號／動作確認、共用亂數checkpoint、預覽不耗亂數；P02-027已隨parameter_absent開放） |
 | external_action | 動作確認：沿用ack，合法回答true；拒絕在前一層發動選項，本機Undo重演 |
 | external_result | 擲幣結果確認：沿用ack，合法回答true；結果由共用RNG產生且不可指定，Undo與預覽不重抽 |
+| drawConfirm | 技能抽牌確認：ack，回答true；context.drawCount為可抽張數、requestedCount為效果要求張數，確認前不讀取／公開牌面；新對局啟用 |
+| drawResult | 本次抽牌結果：cards 0..0，回答[]；options僅給抽牌本人，含實際加入手牌的卡；空牌庫／禁加手牌顯示原因，支援Undo與重連 |
 | shuffle 形態／依賴卡／新增開放 | 2／4／4（自己／對手、實體牌Fisher-Yates、先回牌再洗再抽、可選／所屬條件、共用亂數與Undo；0或1張不消耗亂數） |
 | reveal_top／move_result 形態／依賴卡／新增開放 | 1＋1／3／3（先按翻牌、公開實際卡、結果確認、同目標加值／選參數、條件與回底提示、空牌庫／失效／期限；全程不耗亂數） |
 | 累計路徑下一步預估 | 48節點與8入口全完成，原池297／297；原297池與歷史7張均已接通；正式入口已切換單一核心；後續由Codex負責多人連線、Claude負責AI強化，持續依實戰回報修正 |

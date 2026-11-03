@@ -12,16 +12,33 @@ const prompts={firstService:'擲骰勝者：選擇先發或先接',roll:'確認�
 const CORE_VERSION='break.match.local.3';
 const signature=r=>JSON.stringify({actor:r.actor,origin:r.origin,kind:r.kind,input:r.input,options:r.options,context:r.context,source:r.source,canLoss:r.canLoss,canManual:r.canManual});
 class Boundary extends Error {constructor(request,state){super('Decision boundary');this.request=request;this.state=state;}}
+// Presentation boundaries wrap the unchanged rules draw. Existing catalog fingerprints
+// and saves remain valid; only explicitly enabled new matches add these decisions.
+class InteractiveKernel extends Kernel {
+ _draw(player,n,ctx,origin='skill',operation='draw'){
+  const interactive=origin==='skill'&&n>0&&this.state.match?.interactiveDraws&&this.state.match.wantsAck[player];
+  if(!interactive)return super._draw(player,n,ctx,origin,operation);
+  const allowed=this._handAllowed(player,ctx,origin),available=allowed?Math.min(n,this.zone(player,'deck').length):0;
+  if(available&&this._decide('drawConfirm',ctx,[true],{player,drawCount:available,requestedCount:n})!==true)throw Error('Confirm skill draw');
+  const ids=super._draw(player,n,ctx,origin,operation);
+  const result=this._decide('drawResult',ctx,ids,{player,count:0,drawCount:ids.length,requestedCount:n,...(!ids.length?{drawReason:allowed?'牌庫已空，沒有抽到牌':'目前效果禁止將牌加入手牌'}:{}),visibility:'private'});
+  if(!Array.isArray(result)||result.length)throw Error('Confirm draw result');return ids;
+ }
+ _run(node,ctx){
+  if(node.kind==='draw'&&this.state.match?.interactiveDraws){const player=this.owner(node.actor,ctx);if(!this._handAllowed(player,ctx)){ctx.bind.drawn=this._draw(player,node.count,ctx);return false;}}
+  return super._run(node,ctx);
+ }
+}
 class Match {
- constructor({id='pilot',seed=1,decks,mode='strict',wantsAck=[true,true]}={}) {
+ constructor({id='pilot',seed=1,decks,mode='strict',wantsAck=[true,true],interactiveDraws=false}={}) {
   if(!['strict','numeric'].includes(mode))throw Error('UNSUPPORTED_MODE');
   if(!Array.isArray(decks)||decks.length!==2)throw Error('Two decks required');
   for(const deck of decks){if(deck.length!==40)throw Error('Deck requires 40 cards');if(deck.filter(c=>library.card(c)?.kind==='E').length>8)throw Error('At most 8 Events');for(const c of deck){const grant=library.permission(c);if(!['basic','shared'].includes(grant?.kind))throw Error('PILOT_UNSUPPORTED_SKILL: '+c);}}
-  this._kernel=new Kernel({catalog:runtime.catalog,ruleIds:runtime.ruleIds,fingerprint:runtime.fingerprint,mode:'live',practiceDrawBeforeReceive:true});
+  this._kernel=new InteractiveKernel({catalog:runtime.catalog,ruleIds:runtime.ruleIds,fingerprint:runtime.fingerprint,mode:'live',practiceDrawBeforeReceive:true});
   this._kernel.state.rng={algorithm:'mulberry32-v1',word:seed>>>0,calls:0};
   this.epoch=1;
   this._kernel.state.match={contractVersion:'break.state.v1',hostVersion:'break.host.v1',id,mode,rulesVersion:runtime.fingerprint,catalogFingerprint:runtime.fingerprint,phase:'setup',seed:seed>>>0,pc:'firstService',rally:0,turnNo:0,server:null,firstServer:null,dice:null,diceWinner:null,firstServiceChoice:null,loser:null,lossReason:null,winner:null,outgoing:null,roleTotals:[{},{}],pending:null,decisionIndex:0,history:[],notices:[],continuation:null,wantsAck:[...wantsAck],setupIndex:0};
-  this._m.coreVersion=CORE_VERSION;
+  this._m.coreVersion=CORE_VERSION;if(interactiveDraws)this._m.interactiveDraws=true;
   // Same shuffle/dice consumption as old Game; IDs assigned after initial shuffle.
   for(let p=0;p<2;p++){const cards=decks[p].map(c=>library.requirePlayable(c,mode));this._shuffleArray(cards);for(const c of cards)this._kernel.addCard(full(c),p,'deck');}
   this._identity=identity(this._kernel.state.cards);
@@ -48,7 +65,7 @@ class Match {
   throw new Boundary(r,copy(this._kernel.state));
  }
  _eventChoicePossible(answer){
-  const probe=new Kernel({catalog:runtime.catalog,ruleIds:runtime.ruleIds,fingerprint:runtime.fingerprint,mode:'live',practiceDrawBeforeReceive:true}),base=this._eventPreview.base,id=this._eventPreview.id,prefix=[...this._eventPreview.answers,copy(answer)],budget={left:256};
+  const probe=new InteractiveKernel({catalog:runtime.catalog,ruleIds:runtime.ruleIds,fingerprint:runtime.fingerprint,mode:'live',practiceDrawBeforeReceive:true}),base=this._eventPreview.base,id=this._eventPreview.id,prefix=[...this._eventPreview.answers,copy(answer)],budget={left:256};
   class NeedChoice extends Error{constructor(request){super('Preview boundary');this.request=request;}}
   function* choices(r){
    if(r.count!=null){const pick=[];function* walk(start){if(pick.length===r.count){yield [...pick];return;}for(let i=start;i<=r.options.length-(r.count-pick.length);i++){pick.push(r.options[i]);yield* walk(i+1);pick.pop();}}yield* walk(0);return;}
@@ -62,9 +79,9 @@ class Match {
   return possible(prefix);
  }
  _native(req){
-  const cards=['target','payment_cards','move_cards','guts','entry','revealResult'].includes(req.kind);
+  const cards=['target','payment_cards','move_cards','guts','entry','revealResult','drawResult'].includes(req.kind);
   const numbers=['target_count','payment_count','move_count','draw_count','mill_count','entry_count'].includes(req.kind);
-  const input=['external_action','external_result'].includes(req.kind)?{type:'ack'}:cards?{type:'cards',min:req.count,max:req.count,ordered:!!req.ordering}:numbers?{type:'number'}:{type:'single'};
+  const input=['external_action','external_result','drawConfirm'].includes(req.kind)?{type:'ack'}:cards?{type:'cards',min:req.count,max:req.count,ordered:!!req.ordering}:numbers?{type:'number'}:{type:'single'};
   const options=this._eventPreview?req.options.filter(value=>(value!==0&&value!==false)||this._eventChoicePossible(value)):req.options;
   const destinations={deck_top:'牌庫頂',deck_bottom:'牌庫底',hand:'手牌',drop:'棄牌區',event:'Event區'};
   const destination=String(req.destination||'').split('.').at(-1),placement=destinations[destination]||'指定位置';
@@ -75,8 +92,8 @@ class Match {
    triggerLabels[value]=(card?card.printed.display_name||card.printed.name:'效果')+' · '+type+(card?'（'+short(card.cardNo)+'）':'');
    if(card)triggerCards[value]={id:card.id,incarnation:card.incarnation,cardNo:card.cardNo,name:card.printed.display_name||card.printed.name,zone:card.zone};
   }
-  const prompt=['external_action','external_result'].includes(req.kind)?req.actionLabel+(req.kind==='external_action'?'；完成後確認':'；確認結果後結算效果'):req.kind==='reveal'?`點擊查看牌庫頂 ${req.top_count} 張`:req.kind==='revealResult'?req.purpose==='effect'?'公開的牌：確認後依卡片條件結算，再放回牌庫底':req.purpose==='retrieve'?'公開牌：確認後符合條件者加入手牌，未符合則放回牌庫底':req.eligible_count?'確認查看的卡片，再選擇加入手牌':'沒有符合的牌；確認後安排放回牌庫':req.kind==='trigger_order'?'選擇下一個先結算的效果；其餘效果仍會依序處理':req.ordering?`安排放回${placement}的順序（先選的先抽到）`:req.kind==='mode'?req.effectModes?'選擇1項效果':req.keywordOutgoing?'選擇回球進攻值':'其餘牌放回牌庫頂或底？':null;
-  const answer=this._ask(req.kind,req.player,input,options,{...(prompt?{prompt}:{}),...(req.kind==='trigger_order'?{modeLabels:triggerLabels,optionCards:triggerCards}:{}),...(req.ordering?{ordering:true}:{}),...(req.selectionAction==='exchange'?{selectionAction:req.selectionAction,prompt:req.kind==='move_count'?'是否交換兩側各1張？':'選擇交換的卡片'}:{}),...(req.effectDescription?{effectDescription:req.effectDescription,prompt:'是否執行：'+req.effectDescription+'？'}:{}),...(req.effectModes?{effectModes:true,modeLabels:req.modeLabels}:{}),...(req.count!=null?{count:req.count}:{}),...(req.destination?{destination:req.destination}:{}),...(req.target?{target:req.target}:{}),...(req.payment?{payment:req.payment}:{}),...(req.ineffectiveReason?{ineffectiveReason:req.ineffectiveReason,prompt:req.ineffectiveReason+' 是否仍支付費用？'}:{})},'kernel',req.source?{id:req.source,incarnation:this._kernel.card(req.source).incarnation,cardNo:this._kernel.card(req.source).cardNo}:null,req.kind==='revealResult'?{purpose:req.purpose||null,eligibleCount:req.eligible_count??null}:null);
+  const prompt=req.kind==='drawConfirm'?`請抽 ${req.drawCount} 張牌`:req.kind==='drawResult'?req.drawReason||`已抽 ${req.drawCount} 張牌，請確認本次抽到的卡片，再繼續結算`:['external_action','external_result'].includes(req.kind)?req.actionLabel+(req.kind==='external_action'?'；完成後確認':'；確認結果後結算效果'):req.kind==='reveal'?`點擊查看牌庫頂 ${req.top_count} 張`:req.kind==='revealResult'?req.purpose==='effect'?'公開的牌：確認後依卡片條件結算，再放回牌庫底':req.purpose==='retrieve'?'公開牌：確認後符合條件者加入手牌，未符合則放回牌庫底':req.eligible_count?'確認查看的卡片，再選擇加入手牌':'沒有符合的牌；確認後安排放回牌庫':req.kind==='trigger_order'?'選擇下一個先結算的效果；其餘效果仍會依序處理':req.ordering?`安排放回${placement}的順序（先選的先抽到）`:req.kind==='mode'?req.effectModes?'選擇1項效果':req.keywordOutgoing?'選擇回球進攻值':'其餘牌放回牌庫頂或底？':null;
+  const answer=this._ask(req.kind,req.player,input,options,{...(prompt?{prompt}:{}),...(req.kind==='trigger_order'?{modeLabels:triggerLabels,optionCards:triggerCards}:{}),...(req.ordering?{ordering:true}:{}),...(req.selectionAction==='exchange'?{selectionAction:req.selectionAction,prompt:req.kind==='move_count'?'是否交換兩側各1張？':'選擇交換的卡片'}:{}),...(req.effectDescription?{effectDescription:req.effectDescription,prompt:'是否執行：'+req.effectDescription+'？'}:{}),...(req.effectModes?{effectModes:true,modeLabels:req.modeLabels}:{}),...(req.count!=null?{count:req.count}:{}),...(['drawConfirm','drawResult'].includes(req.kind)?{drawCount:req.drawCount,requestedCount:req.requestedCount,visibility:'private'}:{}),...(req.destination?{destination:req.destination}:{}),...(req.target?{target:req.target}:{}),...(req.payment?{payment:req.payment}:{}),...(req.ineffectiveReason?{ineffectiveReason:req.ineffectiveReason,prompt:req.ineffectiveReason+' 是否仍支付費用？'}:{})},'kernel',req.source?{id:req.source,incarnation:this._kernel.card(req.source).incarnation,cardNo:this._kernel.card(req.source).cardNo}:null,req.kind==='revealResult'?{purpose:req.purpose||null,eligibleCount:req.eligible_count??null}:null);
   if(this._eventPreview)this._eventPreview.answers.push(copy(answer));return answer;
  }
  _pump(){

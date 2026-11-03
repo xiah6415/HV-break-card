@@ -1029,7 +1029,7 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
       onAnswer:a=>nativeCommand({kind:'answer',answer:a}),onLoss:()=>nativeAnswer({__loss:true}),onSelection:s=>{syncNativeHand(s);olControls();}
     });
     if(labels[r.kind])$('dockOpts').querySelector('[data-hc-act="go"]').textContent=labels[r.kind];
-    if(r.kind==='ack')$('dockOpts').querySelector('[data-hc-act="go"]').classList.add('draw-action');
+    if(['ack','drawConfirm'].includes(r.kind))$('dockOpts').querySelector('[data-hc-act="go"]').classList.add('draw-action');
     syncNativeHand(nativeWidget.selection);
   }
 
@@ -1141,7 +1141,7 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
   let nextTop = {}, nextVal = {};
   const sets = p => `<span class="sets" title="セットカード ${p.sets.length}">${[0, 1].map(i => `<i class="${i < p.sets.length ? '' : 'off'}"></i>`).join('')}</span>`;
   function stripHTML(p, mine) {
-    const ack = mine && pending && pending.req.kind === 'ack';
+    const ack = mine && pending && ['ack','drawConfirm'].includes(pending.req.kind);
     return `<div class="strip"><span class="who">${mine ? '你' : esc(oppName)}</span><span class="dk">${esc(DECKS[p.deckKey]?.name||'')}</span>${sets(p)}<span class="sp"></span>
       <span>手 <b>${p.hand.length}</b></span>${ack ? `<button class="deckbtn tgt" type="button" data-act="ack">牌庫 <b>${p.deck.length}</b>　點我抽牌</button>` : `<span>庫 <b>${p.deck.length}</b></span>`}
       </div>`;
@@ -1226,7 +1226,7 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
       + `</div>`;
   }
   function courtHTML(p) {
-    const mine = p.idx === 0, ack = mine && pending && pending.req.kind === 'ack';
+    const mine = p.idx === 0, ack = mine && pending && ['ack','drawConfirm'].includes(pending.req.kind);
     const blk = mine ? areaHTML(p, 'side:0') + areaHTML(p, 'block') + areaHTML(p, 'side:1') : areaHTML(p, 'side:1') + areaHTML(p, 'block') + areaHTML(p, 'side:0');
     const main = mine ? areaHTML(p, 'receive') + areaHTML(p, 'toss') + areaHTML(p, 'attack') : areaHTML(p, 'attack') + areaHTML(p, 'toss') + areaHTML(p, 'receive');
     const back = mine ? areaHTML(p, 'serve') + areaHTML(p, 'ev') : areaHTML(p, 'ev') + areaHTML(p, 'serve');
@@ -1300,7 +1300,7 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
     const dock = $('dock'); dock.hidden = false;
     // 面板模式：hand＝只留提示列，直接點手牌／場地；modal＝置中卡片框（手牌以外的卡、調度、攔網組合）；bar＝精簡按鈕列
     { const r = pending?.req, cardOpts = r ? r.options.filter(o => o.card) : [], handIds = new Set(me.handRefs.map(c => c.id));
-      const mode = !r || game.winner ? 'bar' : !cardOpts.length ? 'bar' : (cardOpts.every(o => handIds.has(o.value)) && !['mulligan'].includes(r.kind) && r.input.type !== 'block' && !(r.input.type === 'cards' && r.input.max > 1)) ? 'hand' : 'modal';
+      const mode = !r || game.winner ? 'bar' : !cardOpts.length ? 'bar' : (cardOpts.every(o => handIds.has(o.value)) && !['mulligan','drawResult'].includes(r.kind) && r.input.type !== 'block' && !(r.input.type === 'cards' && r.input.max > 1)) ? 'hand' : 'modal';
       dock.dataset.mode = mode; document.body.dataset.dock = mode;dock.dataset.effect=r?.source?'1':'0';$('choicePeek').hidden=mode!=='modal';if(!sameRequest||mode!=='modal')peekChoice(false); }
     $('dockOpts').classList.toggle('native-choice',!!pending&&!game.winner);
     $('manualBtn').hidden = !(game.mode==='numeric' && pending?.req.canManual);
@@ -1329,12 +1329,13 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
     if (a === 'setup') return OL.inGame?olRun(()=>OL.client.leave())():backToSetup();
     if (a === 'log') return showLog();
     if (!pending) return;
-    if (a === 'ack') return answer(true);
+    if (a === 'ack' && ['ack','drawConfirm'].includes(pending.req.kind)) return answer(true);
   }
   $('dockOpts').addEventListener('click', e => {
     const b = e.target.closest('[data-act]'); if (b && !b.disabled) act(b.dataset.act);
   });
   function onHandPick(c, handIndex) {
+    if(pending?.req.input.type==='cards'&&pending.req.input.max===0)return false;
     const ref=game.players[0].handRefs[handIndex];
     if(!pending?.req.options.some(o=>o.value===ref?.id))return false;
     nativeWidget.select(ref.id);return true;
@@ -1428,7 +1429,7 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
     store.set('bk_my', my); store.set('bk_ai', ai); store.set('bk_speed', String(speed));
     session?.stop();soloSaveToken='';soloSelection=null;
     const expand=key=>Object.entries(DECKS[key].cards).flatMap(([card,count])=>Array(count).fill(card));
-session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableSequence),seed:Date.now()>>>0,decks:[expand(my),expand(ai)],deckKeys:[my,ai],mode:modeOptions().mode,aiLevel:$('aiLevel').value,delay:speed,wantsAck:[true,false]}, tableCallbacks());
+session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableSequence),seed:Date.now()>>>0,decks:[expand(my),expand(ai)],deckKeys:[my,ai],mode:modeOptions().mode,aiLevel:$('aiLevel').value,delay:speed,interactiveDraws:true,wantsAck:[true,false]}, tableCallbacks());
     oppName='AI';setLogoSub('你 vs AI');enterTable();
   }
   function restartSolo(){
