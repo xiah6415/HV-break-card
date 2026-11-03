@@ -286,6 +286,25 @@
           ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 20"
         }
       }
+    },
+    "playerProfiles": {
+      "$uid": {
+        ".read": true,
+        ".write": "auth != null && auth.uid == $uid && auth.token.firebase.sign_in_provider == 'google.com'",
+        ".validate": "newData.hasChildren(['name','avatar','updatedAt'])",
+        "name": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 20"
+        },
+        "avatar": {
+          ".validate": "newData.isString() && (newData.val() == '' || (newData.val().length <= 24000 && newData.val().matches(/^data:image\\/jpeg;base64,[A-Za-z0-9+\\/]+={0,2}$/)))"
+        },
+        "updatedAt": {
+          ".validate": "newData.isNumber() && newData.val() == now"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
     }
   }
 }

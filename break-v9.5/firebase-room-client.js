@@ -17,6 +17,12 @@ export class FirebaseRooms{
   this.stops.push(this.D.onValue(this.ref('.info/connected'),snap=>{this.online=snap.val()===true;this.cb.connection?.(this.online);if(this.online)this._connected().catch(e=>this.error(e));else{this.generation++;this.core=null;}}));
   this.stops.push(this.D.onValue(this.ref('lobby'),s=>this.cb.lobby?.(s.val()||{}),e=>this.error(e)),this.D.onValue(this.ref('presence'),s=>this.cb.presence?.(s.val()||{}),e=>this.error(e)));
  }
+ async updateName(name){
+  name=String(name||'').trim().slice(0,20);if(!name||!this.user||!this.online)return;
+  const uid=this.user.uid,updates={};if(this.connection)updates['presence/'+uid+'/'+this.connection+'/name']=name;
+  if(this.room){updates['rooms/'+this.room+'/presence/'+uid+'/'+this.connection+'/name']=name;updates['rooms/'+this.room+'/meta/names/'+uid]=name;updates['rooms/'+this.room+'/meta/'+(this.meta?.p0===uid?'p0Name':'p1Name')]=name;}
+  if(Object.keys(updates).length)await this.D.update(this.D.ref(this.db),updates);this.name=name;
+ }
  async _connected(){
   this.connection=connection();const path='presence/'+this.user.uid+'/'+this.connection;await this.D.onDisconnect(this.ref(path)).remove();await this.D.set(this.ref(path),{name:this.name,at:this.D.serverTimestamp()});
   if(this.room){await this._roomPresence();await this._inspectLease();}
