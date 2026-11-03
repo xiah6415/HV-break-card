@@ -696,6 +696,7 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
   <div class="modebar" role="tablist" aria-label="對戰方式" id="modebar"><button type="button" role="tab" id="modeSolo" aria-selected="true">單人對練</button><button type="button" role="tab" id="modeOnline" aria-selected="false">多人連線</button></div>
   <div class="account-panel" id="accountPanel"><div><strong id="accountTitle">訪客模式</strong><p id="accountStatus" role="status">不需登入即可遊玩・牌組與草稿保存在此裝置</p></div><div class="opts"><button class="chip" id="accountGoogle" type="button" disabled>Google 登入</button><button class="chip" id="openCloud" type="button" disabled>雲端牌組</button><button class="chip" id="accountLogout" type="button" hidden>登出</button></div></div>
   <section id="setup" class="setup">
+    <div class="panel solo-only" id="soloResume" hidden><h2>上次的對局</h2><p class="sub" id="soloSaveText"></p><div class="opts"><button class="btn" id="resumeSolo" type="button">繼續對局</button><button class="chip" id="clearSolo" type="button">清除對局存檔</button></div></div>
     <div class="panel" id="deckPanel">
       <h2>你的牌組</h2>
       <label class="field solo-only" for="gameMode">對戰模式<select id="gameMode"><option value="numeric" selected>數值模式（含手動技能）</option><option value="strict">嚴格模式（已支援卡片）</option></select></label>
@@ -971,6 +972,7 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
 
   // ---------- game state
   let game = null, session = null, pending = null, logBuf = [], skillResults = [];
+  const SOLO_SAVE_KEY='bk_solo_match';let soloRecord=null,soloReadError=false,soloSaveError=false,soloSaveToken='',soloSelection=null;
   let oppName = 'AI'; // 對手顯示名稱：單人為 AI，多人為對方暱稱
   const OL = { client: null, services: null, meta: null, rooms: {}, presence: {}, loading: null, inGame: false, roomId: null, lastUid: null, authority: null, authWork: Promise.resolve() };
   window.BREAK_ONLINE={get client(){return OL.client;},get current(){return OL.client?.lastView;},get session(){return OL.inGame?session:null;}};
@@ -995,7 +997,7 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
     nativeSelection=selection;
     nextTop={};nextVal={};
     const me=game.players[0];$('meSide').innerHTML=courtHTML(me)+barHTML(me,true);$('handZone').innerHTML=fanHTML(me);
-    requestAnimationFrame(measureDock);
+    persistSolo(true);requestAnimationFrame(measureDock);
   }
   function renderNativeChoice(r, selection = null) {
     const labels={ack:'抽 1 張',turnEnd:'結束回合',lossConfirm:'喊 Loss',roll:'開始調度',reveal:'翻開牌庫頂',revealResult:'看完了，繼續',mulligan:'保留／重抽選取的牌'};
@@ -1255,7 +1257,7 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
   function render() {
     if (!game) return;
     const sameRequest=pending&&nativeWidget&&nativeWidgetKey===pending.req.requestId+':'+pending.req.epoch;
-    const savedSelection = sameRequest ? nativeWidget.selection : null;
+    const savedSelection = sameRequest ? nativeWidget.selection : soloSelection&&soloSelection.at===pending?.req.decisionIndex ? soloSelection.value : null;
     const savedScrollTop = sameRequest ? $('dockOpts').querySelector('.hc-content')?.scrollTop||0 : 0;
     nativeWidget?.destroy();nativeWidget=null;nativeSelection=null;
     const [me, ai] = game.players;
@@ -1300,7 +1302,7 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
   }
 
   function act(a, b) {
-    if (a === 'again') { if(OL.inGame)return olRun(()=>OL.client.send({kind:'rematch',matchId:session.last.view.match.id}))();return start(); }
+    if (a === 'again') { if(OL.inGame)return olRun(()=>OL.client.send({kind:'rematch',matchId:session.last.view.match.id}))();return restartSolo(); }
     if (a === 'setup') return OL.inGame?olRun(()=>OL.client.leave())():backToSetup();
     if (a === 'log') return showLog();
     if (!pending) return;
@@ -1380,8 +1382,8 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
   function showLog() { openSheet(`<h3>對局紀錄</h3><div class="log" style="max-height:60vh">${logBuf.map(([s, c]) => `<div class="${c || ''}">${esc(s)}</div>`).join('')}</div>`); const l = $('sheetBox').querySelector('.log'); l.scrollTop = l.scrollHeight; }
   $('logBtn').onclick = showLog;
   $('menuBtn').onclick = () => openSheet(OL.inGame ? '<h3>選單</h3><div class="opts"><button class="opt" type="button" id="mLeave">離開房間（回到大廳）</button></div><p class="sub">離開後可從大廳「回到房間」接續；房主離開時對手可接手。</p>'+'<h3>外觀</h3>'+bkThemeSeg() : '<h3>選單</h3><div class="opts"><button class="opt primary" type="button" id="mRestart">重新開始這場</button><button class="opt" type="button" id="mSetup">回到選牌組</button></div>'+'<h3>外觀</h3>'+bkThemeSeg());
-  $('sheet').addEventListener('click', e => { if (e.target.id === 'mRestart') { closeSheet(); start(); } if (e.target.id === 'mSetup') { closeSheet(); backToSetup(); } if (e.target.id === 'mLeave') { closeSheet(); olRun(async () => { await OL.client.leave(); olLeaveGame(); })(); } });
-  function backToSetup() { nativeWidget?.destroy();nativeWidget=null;session?.stop(); session = null; game = null; pending = null; turnNotice = null; renderTransition(); $('game').hidden = true; $('dock').hidden = true; $('tbtns').hidden = true; $('setup').hidden = false; $('modebar').hidden = false; document.body.classList.remove('playing'); delete document.body.dataset.dock; }
+  $('sheet').addEventListener('click', e => { if (e.target.id === 'mRestart') { closeSheet(); restartSolo(); } if (e.target.id === 'mSetup') { closeSheet(); backToSetup(); } if (e.target.id === 'mLeave') { closeSheet(); olRun(async () => { await OL.client.leave(); olLeaveGame(); })(); } });
+  function backToSetup() { persistSolo(false);nativeWidget?.destroy();nativeWidget=null;session?.stop(); session = null; game = null; pending = null; turnNotice = null; renderTransition(); $('game').hidden = true; $('dock').hidden = true; $('tbtns').hidden = true; $('setup').hidden = false; $('modebar').hidden = false; document.body.classList.remove('playing'); delete document.body.dataset.dock; }
 
   function publicLogText(e) {
     const who=e.player===0?'你':oppName;
@@ -1400,20 +1402,50 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
     const my = $('myDeck').value, ai = $('aiDeck').value, speed = +$('speed').value;
     if(!MY_DECKS.includes(my)||!usableDeck(my))throw Error('請先組牌或匯入並選擇牌組');
     store.set('bk_my', my); store.set('bk_ai', ai); store.set('bk_speed', String(speed));
-    session?.stop();
+    session?.stop();soloSaveToken='';soloSelection=null;
     const expand=key=>Object.entries(DECKS[key].cards).flatMap(([card,count])=>Array(count).fill(card));
 session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableSequence),seed:Date.now()>>>0,decks:[expand(my),expand(ai)],deckKeys:[my,ai],mode:modeOptions().mode,aiLevel:$('aiLevel').value,delay:speed,wantsAck:[true,false]}, tableCallbacks());
     oppName='AI';setLogoSub('你 vs AI');enterTable();
   }
+  function restartSolo(){
+    if(!session?.options)return start();const options={...session.options,id:'table-'+Date.now()+'-'+(++tableSequence),seed:Date.now()>>>0,deckKeys:session.deckKeys};
+    session.stop();soloSaveToken='';soloSelection=null;session=new BreakMatchPilot.TableSession(options,tableCallbacks());oppName='AI';setLogoSub('你 vs AI');enterTable();
+  }
+  function soloPanel(){
+    $('soloResume').hidden=!soloRecord&&!soloReadError;$('resumeSolo').disabled=soloReadError||!soloRecord;
+    $('soloSaveText').textContent=soloReadError?'上次存檔無法讀取或版本不相容，原檔仍保留；可清除後開始新局。':soloRecord?`第 ${soloRecord.rally||0} 球・保存在此瀏覽器，重整可接續` :'';
+  }
+  function persistSolo(active){
+    if(OL.inGame||!session?.checkpoint)return;
+    try{
+      const m=session.match,s=m._kernel.state,token=[m._m.id,m.epoch,s.revision,m._m.decisionIndex,session.noticeIndex].join(':');
+      const checkpoint=soloSaveToken===token&&soloRecord?soloRecord.game:session.checkpoint();
+      const r=session.request(),selection=r&&pending?.req.requestId===r.requestId&&nativeSelection?{at:r.decisionIndex,value:nativeSelection}:null;
+      const record={version:1,active,savedAt:Date.now(),rally:m._m.rally,game:checkpoint,selection,deckNames:session.deckKeys.map(k=>DECKS[k]?.name||'保存的牌組')};
+      localStorage.setItem(SOLO_SAVE_KEY,JSON.stringify(record));soloRecord=record;soloSaveToken=token;soloReadError=false;soloSaveError=false;soloPanel();
+    }catch(e){soloSaveError=true;$('runtimeStatus').hidden=false;$('runtimeStatus').textContent='⚠️ 無法自動保存對局；請勿重整，以免失去這次進度。';}
+  }
+  function resumeSolo(){
+    try{
+      if(!soloRecord||soloRecord.version!==1)throw Error('INVALID_SOLO_SAVE');
+      const restored=BreakMatchPilot.TableSession.fromCheckpoint(soloRecord.game,tableCallbacks());
+      session?.stop();session=restored;soloSaveToken='';soloSelection=soloRecord.selection;
+      const keys=['__saved_me','__saved_ai'];keys.forEach((key,p)=>{const cards={};for(const c of restored.options.decks[p])cards[c]=(cards[c]||0)+1;DECKS[key]={name:soloRecord.deckNames?.[p]||'保存的牌組',cards};});session.deckKeys=keys;
+      $('gameMode').value=restored.options.mode||'strict';$('aiLevel').value=restored.aiLevel;$('speed').value=String(restored.delay);setMode('solo');
+      oppName='AI';setLogoSub('你 vs AI');$('runtimeStatus').hidden=true;enterTable();
+    }catch(e){soloReadError=true;soloPanel();$('runtimeStatus').hidden=false;$('runtimeStatus').textContent='⚠️ 上次對局無法接續，存檔仍保留。可清除存檔後開始新局。';}
+  }
+  $('resumeSolo').onclick=resumeSolo;
+  $('clearSolo').onclick=()=>{try{localStorage.removeItem(SOLO_SAVE_KEY);soloRecord=null;soloReadError=false;soloSaveToken='';soloPanel();$('runtimeStatus').hidden=true;}catch(e){$('soloSaveText').textContent='目前無法清除存檔，請檢查瀏覽器儲存設定。';}};
   function setLogoSub(t) { const small = document.querySelector('.logo small'); if (small) small.textContent = t; }
   function tableCallbacks() {
     return {
       onBoard(board,view) {
         const same=pending&&view.request?.requestId===pending.req.requestId&&view.request?.epoch===pending.req.epoch;game=board;if(!same)pending=null;turnNotice=null;
-        skillResults=view.publicLog.filter(e=>e.type==='skill_resolved'&&e.turn===view.turn.id).slice(-2);
+        skillResults=view.publicLog.filter(e=>e.type==='skill_resolved'&&e.turn===view.turn.id).slice(-2);persistSolo(true);
         logBuf=view.publicLog.map(e=>[publicLogText(e), '']);render();
       },
-      onRequest(req) {pending={req};setDockCollapsed(false);render();},
+      onRequest(req) {pending={req};setDockCollapsed(false);render();soloSelection=null;},
       onNotice(board,data,resolve) {turnNotice={data,resolve,game:board};render();},
       onError(err) {pending=null;turnNotice=null;logBuf.push(['發生錯誤：'+err.message,'lost']);render();$('runtimeStatus').hidden=false;$('runtimeStatus').textContent='❌ '+err.message;console.error(err);}
     };
@@ -1528,9 +1560,12 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
     await navigator.clipboard.writeText(text + '\n' + u.href); olToast('');$('olWaitText').textContent = '邀請連結已複製，貼給朋友就能加入';
   });
   { const q = new URLSearchParams(location.search); if (q.get('online') === '1' || q.get('room')) { if (q.get('room')) $('olCode').value = q.get('room').toUpperCase(); setTimeout(() => setMode('online'), 0); } else if (store.get('bk_play_mode') === 'online') setTimeout(() => setMode('online'), 0); else document.body.dataset.mode = 'solo'; }
-  $('startBtn').onclick = () => { try { start(); document.getElementById('runtimeStatus').hidden = true; } catch (e) { const box = document.getElementById('runtimeStatus'); box.hidden = false; box.textContent = '❌ 遊戲啟動錯誤：' + (e && e.message || e); console.error(e); } };
+  $('startBtn').onclick = () => { try { start(); if(!soloSaveError)document.getElementById('runtimeStatus').hidden = true; } catch (e) { const box = document.getElementById('runtimeStatus'); box.hidden = false; box.textContent = '❌ 遊戲啟動錯誤：' + (e && e.message || e); console.error(e); } };
   try { const q = location.search + location.hash; if (/[?&#]deck=/.test(q)) { setTimeout(() => openImporter('me', q), 0); const clean=new URL(location.href);clean.searchParams.delete('deck');clean.hash=clean.hash.replace(/(^#|&)deck=[^&]*/,'');history.replaceState(null,'',clean.pathname+clean.search+clean.hash); } } catch (e) { /* 網址參數不可用時略過 */ }
   document.getElementById('runtimeStatus').hidden = true;
+  try{const raw=localStorage.getItem(SOLO_SAVE_KEY);if(raw){soloRecord=JSON.parse(raw);if(soloRecord?.version!==1)throw Error('SAVE_VERSION');}}catch(e){soloReadError=true;}
+  soloPanel();
+  {const q=new URLSearchParams(location.search),invited=q.has('online')||q.has('room')||q.has('deck')||/deck=/.test(location.hash);if(soloRecord?.active&&!soloReadError&&!invited&&store.get('bk_play_mode')!=='online')resumeSolo();}
   if(location.protocol==='https:'||location.protocol==='http:')setTimeout(()=>olLoad().catch(()=>{}),0);
 })();
 </script>

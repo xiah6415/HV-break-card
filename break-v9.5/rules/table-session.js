@@ -3,6 +3,8 @@
 const {LocalSession}=require('./local-session');
 const H=require('../host-choice'),AI=require('../match-ai');
 const short=c=>c.replace(/^HV-?/,'');
+const copy=x=>JSON.parse(JSON.stringify(x));
+function checkpointStamp(state){let n=2166136261;const json=JSON.stringify(state,(key,value)=>['epoch','requestId'].includes(key)?undefined:value);for(let i=0;i<json.length;i++){n^=json.charCodeAt(i);n=Math.imul(n,16777619);}return (n>>>0).toString(16);}
 const fields={srv:'serve',blk:'block',rcv:'receive',tos:'toss',atk:'attack'};
 function boardView(view,deckKeys){
  const players=view.players.map((p,idx)=>{
@@ -18,11 +20,26 @@ function boardView(view,deckKeys){
   courtTargets:p=>p.court.map(c=>({key:c.key,card:short(c.cardNo)})),roleReference:(p,key)=>{const c=p.court.find(c=>c.key===key);return c?{id:c.id,incarnation:c.incarnation}:null;},cardReference:(p,zone,index)=>zone==='hand'&&p.handRefs[index]?{id:p.handRefs[index].id,incarnation:p.handRefs[index].incarnation}:null};
 }
 class TableSession {
- constructor(options,callbacks={}){this.local=new LocalSession(options);this.match=this.local.match;this.callbacks=callbacks;this.deckKeys=options.deckKeys;this.aiLevel=options.aiLevel||'normal';this.delay=options.delay??200;this.token=0;this.timer=null;this.noticeIndex=0;this.stopped=true;this.waiting=null;}
+ constructor(options,callbacks={}){this.options=copy(options);this.saveBase=null;this.local=new LocalSession(options);this.match=this.local.match;this.callbacks=callbacks;this.deckKeys=options.deckKeys;this.aiLevel=options.aiLevel||'normal';this.delay=options.delay??200;this.token=0;this.timer=null;this.noticeIndex=0;this.stopped=true;this.waiting=null;}
+ checkpoint(){
+  if(!this.saveBase)this.saveBase=this.match.snapshot();const state=this.match.snapshot(),offset=this.saveBase.match.history.length;
+  if(state.match.history.length<offset)throw Error('SAVE_BASE_DIVERGED');
+  return {version:1,options:copy(this.options),base:copy(this.saveBase),journal:state.match.history.slice(offset).map(e=>({kind:e.kind,actor:e.actor,value:copy(e.value)})),stamp:checkpointStamp(state),noticeIndex:this.noticeIndex};
+ }
+ static fromCheckpoint(record,callbacks={}){
+  if(record?.version!==1||!Array.isArray(record.journal)||record.journal.length>50000||!Number.isInteger(record.noticeIndex))throw Error('INVALID_SOLO_SAVE');
+  const s=new this(record.options,callbacks);s.match.restore(record.base);s.saveBase=copy(record.base);
+  for(const e of record.journal){const r=s.match.request(0)||s.match.request(1);if(!r||r.actor!==e.actor)throw Error('SOLO_REPLAY_DIVERGED');
+   if(e.kind==='manual'||e.kind==='loss')s.local.command({kind:e.kind,matchId:r.matchId,requestId:r.requestId,epoch:r.epoch,actor:r.actor,...(e.kind==='manual'?{action:copy(e.value)}:{})});
+   else{if(r.kind!==e.kind)throw Error('SOLO_REPLAY_DIVERGED');s.local.command({kind:'answer',answer:H.makeAnswer(r,e.value)});}
+  }
+  if(checkpointStamp(s.match.snapshot())!==record.stamp||record.noticeIndex<0||record.noticeIndex>s.match._m.notices.length)throw Error('SOLO_SAVE_MISMATCH');
+  s.noticeIndex=record.noticeIndex;return s;
+ }
  board(){return boardView(this.match.view(0),this.deckKeys);}
  status(){return this.local.status();}
  request(){return this.match.request(0);}
- start(){this.stopped=false;this._drive();}
+ start(){if(!this.saveBase)this.saveBase=this.match.snapshot();this.stopped=false;this._drive();}
  stop(){this.stopped=true;this.token++;clearTimeout(this.timer);this.waiting=null;}
  _guard(token,fn){return (...args)=>{if(!this.stopped&&token===this.token)return fn(...args);};}
  _drive(){
