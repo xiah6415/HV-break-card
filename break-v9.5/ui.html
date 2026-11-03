@@ -946,13 +946,13 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
   $('sheet').addEventListener('click', e => { if (e.target.id === 'sheet' || e.target.dataset.close) closeSheet(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
   const libraryView = {query: '', status: 'all', limit: 60};
-  function cardSheet(c, fromLibrary = false) {
+  function cardSheet(c, fromLibrary = false, fromHand = false) {
     const meta = CL.card(c); if (!meta) return;
     const support = window.BREAK_SUPPORT.cards[c] || {...meta, gaps: []};
     const stats = meta.kind === 'C' ? `<div class="statrow">${STAT.map(([, z], i) => `<span><b>${meta.stats[i] == null ? '－' : meta.stats[i]}</b>${z}</span>`).join('')}</div>` : '';
-    const text = esc(DEF[c]?.[10] || meta.skill || '沒有技能（白板）。').replace(/\n/g, '<br>');
+    const text = esc((meta.skill || DEF[c]?.[10] || '沒有技能（白板）。').replace(/\[=([^\]]+)\]/g,'【$1】')).replace(/\n/g, '<br>');
     const variants = meta.versions.length > 1 ? `<p class="sub">此卡有 ${meta.versions.length} 組卡文資料，尚待確認版本。</p>${meta.versions.map((v, i) => `<details><summary>卡文版本 ${i + 1}</summary><p>${esc(v.skill).replace(/\n/g, '<br>')}</p></details>`).join('')}` : '';
-    openSheet(`${fromLibrary ? '<button class="chip" type="button" id="backLibrary">返回卡庫</button>' : ''}<div class="detail"><div>${img(c)}</div><div style="display:grid;gap:8px;min-width:0;overflow-wrap:anywhere"><h3>${esc(meta.name)}</h3><div class="sub">${esc(meta.number)}・${esc(meta.affiliation)}${meta.kind === 'C' ? '' : '・EVENT'}</div>${stats}<div>${text}</div>${variants}<div class="sub"><b>${supportLabel(support)}</b>${!meta.playable ? `<p>技能未自動化。${modeOptions().mode==='numeric'?'可按印刷數值組牌，效果請手動處理。':'嚴格模式尚未開放此卡。'}</p>` : ''}${support.gaps.map(x => `<p>${esc(x)}</p>`).join('')}<p><a href="${esc(meta.source)}" target="_blank" rel="noopener noreferrer">查看官方卡片</a></p></div></div></div>`);
+    openSheet(`${fromHand ? '<p class="sub" id="handCardInfoHint">查看資訊不會直接出牌。關閉後可繼續選牌或按確認。</p>' : ''}${fromLibrary ? '<button class="chip" type="button" id="backLibrary">返回卡庫</button>' : ''}<div class="detail"><div>${img(c)}</div><div style="display:grid;gap:8px;min-width:0;overflow-wrap:anywhere"><h3>${esc(meta.name)}</h3><div class="sub">${esc(meta.number)}・${esc(meta.affiliation)}${meta.kind === 'C' ? '' : '・EVENT'}</div>${stats}<div>${text}</div>${variants}<div class="sub"><b>${supportLabel(support)}</b>${!meta.playable ? `<p>技能未自動化。${modeOptions().mode==='numeric'?'可按印刷數值組牌，效果請手動處理。':'嚴格模式尚未開放此卡。'}</p>` : ''}${support.gaps.map(x => `<p>${esc(x)}</p>`).join('')}<p><a href="${esc(meta.source)}" target="_blank" rel="noopener noreferrer">查看官方卡片</a></p></div></div></div>`);
     if (fromLibrary) $('backLibrary').onclick = openLibrary;
   }
   function supportLabel(card) { return { basic: '無技能卡：數值已核對', 'scenario-tested': '主要技能情境已測試', partial: '部分技能待補', locked: '技能未自動化' }[card.status]; }
@@ -1351,9 +1351,10 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
     const da = e.target.closest('[data-act]'); if (da && !da.closest('#dock')) return act(da.dataset.act, da);
     const dz = e.target.closest('#meSide [data-drop]'); if (dz && onZonePick(dz.dataset.drop)) return;
     const b = e.target.closest('.cbtn, .pile, .pile2[data-pile], .pilebox, .aux, .glist[data-zone]'); if (!b || b.closest('#dock')) return;
-    if (b.dataset.hand != null && pending) {
+    if (b.dataset.hand != null) {
       const i = +b.dataset.hand, c = b.dataset.card;
-      if (onHandPick(c,i)) return;
+      if (pending) onHandPick(c,i);
+      cardSheet(c,false,true); return;
     }
     if (b.dataset.pile) { const p = game.players[+b.dataset.p]; return pileSheet(`${p.idx === 0 ? '你的' : esc(oppName) + ' 的'}${b.dataset.pile === 'ev' ? ' Event 區' : '棄牌區'}（最新的在前）`, (b.dataset.pile === 'ev' ? p.ev : p.drop).slice().reverse()); }
     if (b.dataset.zone) { const p = game.players[+b.dataset.p], s = p.area[b.dataset.zone]; if (!s.length) return; return pileSheet(`${p.idx === 0 ? '你的' : esc(oppName) + ' 的'}${E.AREA_ZH[b.dataset.zone]}區（第 1 張是角色，後面是 Guts，越後面越早放；付 Guts 時從最下面開始付）`, s.slice().reverse()); }
