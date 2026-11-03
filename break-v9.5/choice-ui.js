@@ -193,6 +193,8 @@ function render(rootEl, request, opts = {}) {
     if(detail)out.push(`<span class="hc-detail">${esc(detail)}</span>`);
     if (c.ball) { const kind=c.ball.kind || c.ball.type, value=c.ball.offense ?? c.ball.off; out.push(`來球：${esc({ serve: '發球', attack: '攻擊', block: '攔網回球' }[kind] || kind)} ${esc(value)}`); }
     if (c.revealed) out.push(`<span class="hc-rev">${cardImg(c.revealed)}</span><span>翻開：${esc(c.revealed.name || c.revealed.cardNo)}</span>`);
+    if(c.coin){const face=v=>v==='heads'?'正面':'反面',who=p=>p===request.actor?'你':'對手';out.push(`<strong class="hc-coin-result">硬幣：${face(c.coin.result)} · ${who(c.coin.guesser)}猜${face(c.coin.guess)} · ${who(c.coin.winner)}獲得先發／先接選擇權</strong>`);}
+    if(request.kind==='mulligan'&&c.role)out.push(`<strong class="hc-opening-server">首球發球：${c.role==='serve'?'你':'對手'} · 調度完成後開始</strong>`);
     if (c.dice) out.push(`擲骰 ${esc(c.dice[0])} : ${esc(c.dice[1])}`);
     if(request.kind==='drawResult'&&hasCards)out.push(`<div class="hc-public-summary">本次抽到：${request.options.filter(o=>o.card).map(o=>esc(optionLabel(request,o))).join('、')}。已加入你的手牌，確認後繼續結算。</div>`);
     if(request.kind==='revealResult'&&hasCards){

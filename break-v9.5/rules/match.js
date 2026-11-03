@@ -30,7 +30,7 @@ class InteractiveKernel extends Kernel {
  }
 }
 class Match {
- constructor({id='pilot',seed=1,decks,mode='strict',wantsAck=[true,true],interactiveDraws=false}={}) {
+ constructor({id='pilot',seed=1,decks,mode='strict',wantsAck=[true,true],interactiveDraws=false,openingCoin=false}={}) {
   if(!['strict','numeric'].includes(mode))throw Error('UNSUPPORTED_MODE');
   if(!Array.isArray(decks)||decks.length!==2)throw Error('Two decks required');
   for(const deck of decks){if(deck.length!==40)throw Error('Deck requires 40 cards');if(deck.filter(c=>library.card(c)?.kind==='E').length>8)throw Error('At most 8 Events');for(const c of deck){const grant=library.permission(c);if(!['basic','shared'].includes(grant?.kind))throw Error('PILOT_UNSUPPORTED_SKILL: '+c);}}
@@ -44,6 +44,7 @@ class Match {
   this._identity=identity(this._kernel.state.cards);
   let a,b;do{a=1+Math.floor(this._random()*6);b=1+Math.floor(this._random()*6);}while(a===b);
   this._m.dice=[a,b];this._m.diceWinner=a>b?0:1;
+  if(openingCoin){this._m.openingCoin=true;this._m.coin=null;this._m.dice=null;this._m.diceWinner=null;this._m.pc='coinGuess';}
   this._pump();
  }
  get _m(){return this._kernel.state.match;}
@@ -53,7 +54,7 @@ class Match {
  _code(id){return short(this._kernel.card(id).cardNo);}
  _cards(p,role){const k=this._kernel;return this._zone(p,'hand').filter(id=>k.card(id).printed.type==='character'&&k.card(id).printed.parameters[role]!=='dash'&&this._canEnter(p,id,role));}
  _canEnter(p,id,role){const k=this._kernel,c=k.card(id),other=role==='toss'?k.top(p,'receive'):role==='attack'?k.top(p,'toss'):null;return k.entryNames(id).some(name=>(!other||k.effectiveName(other)!==name)&&k.permission({action:'enter_character',player:p,origin:'rule',role:role==='block'?'center_blocker':role,entryOrigin:'hand',entryCount:role==='block'?(k.state.turn.blockEntries?.[p]||0)+1:1,entryCounts:k._entryCounts(p,'hand'),name,printed:c.printed}).allowed);}
- _options(values){return values.map((value,i)=>{const c=typeof value==='string'?this._kernel.state.cards[value]:null,labels={serve:'發球',receive:'接球',block:'攔網',toss:'舉球',attack:'攻擊',true:'確認／發動',false:'不發動',null:'不使用，繼續',deck_top:'放回牌庫頂',deck_bottom:'放回牌庫底'};return {id:c?value:'option-'+i,value,label:c?c.printed.display_name||c.printed.name:labels[String(value)]||String(value),...(c?{card:{id:value,incarnation:c.incarnation,cardNo:c.cardNo,name:c.printed.display_name||c.printed.name,effectiveName:this._kernel.effectiveName(value),entryNames:this._kernel.entryNames(value),zone:c.zone}}:{})};});}
+ _options(values){return values.map((value,i)=>{const c=typeof value==='string'?this._kernel.state.cards[value]:null,labels={serve:'發球',receive:'接球',block:'攔網',toss:'舉球',attack:'攻擊',heads:'正面',tails:'反面',true:'確認／發動',false:'不發動',null:'不使用，繼續',deck_top:'放回牌庫頂',deck_bottom:'放回牌庫底'};return {id:c?value:'option-'+i,value,label:c?c.printed.display_name||c.printed.name:labels[String(value)]||String(value),...(c?{card:{id:value,incarnation:c.incarnation,cardNo:c.cardNo,name:c.printed.display_name||c.printed.name,effectiveName:this._kernel.effectiveName(value),entryNames:this._kernel.entryNames(value),zone:c.zone}}:{})};});}
  _ask(kind,actor,input,values,context={},origin='game',source=null,uiPresentation=null){
   const r={protocol:'break.host.v1',matchId:this._m.id,requestId:this._m.id+':'+this.epoch+':'+this._m.decisionIndex,epoch:this.epoch,revision:this._kernel.state.revision,decisionIndex:this._m.decisionIndex,actor,origin,kind,prompt:context.prompt||prompts[kind]||'請選擇合法選項',input,options:this._options(values).map(o=>({...o,...(context.modeLabels?{label:context.modeLabels[o.value]||o.label}:{}),...(context.optionCards?.[o.value]?{card:context.optionCards[o.value]}:{})})),context,source,timing:this._kernel.state.turn.phase,canLoss:this._m.phase==='rally'&&this._kernel.state.stage==='rally'&&actor===this._kernel.state.turn.player&&!['roll','mulligan','lossConfirm'].includes(kind),canManual:false};
   if(uiPresentation)r.uiPresentation=uiPresentation;
@@ -160,8 +161,9 @@ class Match {
     });
     const pc=this._m.manualReturnPc;delete this._m.manualAction;delete this._m.manualReturnPc;this._next(pc);break;
    }
-   case 'firstService': {const w=this._m.diceWinner,c=this._ask('firstService',w,{type:'single'},['serve','receive'],{dice:this._m.dice,winner:w});this._m.firstServiceChoice=c;this._m.server=this._m.firstServer=c==='serve'?w:1-w;this._m.rollIndex=0;this._next('roll');break;}
-   case 'roll': {const i=this._m.rollIndex;if(i<2){if(this._m.wantsAck[i])this._ask('roll',i,{type:'ack'},[true],{dice:this._m.dice,winner:this._m.diceWinner,choice:this._m.firstServiceChoice,server:this._m.server});this._m.rollIndex++;}else this._next('setupDraw');break;}
+   case 'coinGuess': {const guess=this._ask('coinGuess',0,{type:'single'},['heads','tails'],{prompt:'猜硬幣正面或反面；猜中可選先發或先接'}),result=this._random()<0.5?'heads':'tails';this._m.coin={guess,result,guesser:0,winner:guess===result?0:1};this._m.diceWinner=this._m.coin.winner;this._next('firstService');break;}
+   case 'firstService': {const w=this._m.diceWinner,c=this._ask('firstService',w,{type:'single'},['serve','receive'],{...(this._m.openingCoin?{coin:this._m.coin,prompt:'猜硬幣勝方：選擇先發或先接'}:{dice:this._m.dice}),winner:w});this._m.firstServiceChoice=c;this._m.server=this._m.firstServer=c==='serve'?w:1-w;this._m.rollIndex=0;this._next('roll');break;}
+   case 'roll': {const i=this._m.rollIndex;if(i<2){if(this._m.wantsAck[i])this._ask('roll',i,{type:'ack'},[true],{...(this._m.openingCoin?{coin:this._m.coin}:{dice:this._m.dice}),winner:this._m.diceWinner,choice:this._m.firstServiceChoice,server:this._m.server});this._m.rollIndex++;}else this._next('setupDraw');break;}
    case 'setupDraw': {const q=this._m.setupIndex===0?this._m.server:1-this._m.server;k.drawRule(q,6);this._m.setupPlayer=q;this._next('mulligan');break;}
    case 'mulligan': {const q=this._m.setupPlayer,hand=[...this._zone(q,'hand')],ids=this._ask('mulligan',q,{type:'cards',min:0,max:hand.length,ordered:false},hand,{role:q===this._m.server?'serve':'receive'});if(ids.length){for(const id of [...ids].sort((a,b)=>hand.indexOf(b)-hand.indexOf(a)))this._move(id,q,'deck');this._shuffleArray(this._zone(q,'deck'));k.drawRule(q,ids.length);}for(let i=0;i<2;i++)this._move(k.top(q,'deck'),q,'sets');this._m.setupIndex++;this._next(this._m.setupIndex<2?'setupDraw':'rallyStart');break;}
    case 'rallyStart': this._m.phase='rally';this._m.rally++;this._begin(this._m.server,'serve');this._notice('serve',{player:this._m.server});this._next('serve');break;

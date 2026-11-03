@@ -3,12 +3,12 @@
 const {Match}=require('./match'),AI=require('../match-ai'),H=require('../host-choice');
 const copy=x=>JSON.parse(JSON.stringify(x));
 class RoomAuthority{
- constructor({id,decks,players,seed=1,mode='strict',checkpoint,log={},interactiveDraws=false}){
+ constructor({id,decks,players,seed=1,mode='strict',checkpoint,log={},interactiveDraws=false,openingCoin=false}){
   if(!Array.isArray(players)||players.length!==2||players[0]===players[1])throw Error('INVALID_PLAYERS');
   this.players=[...players];this.log=copy(log);
-  const c=checkpoint||{id,decks,seed,mode,...(interactiveDraws?{interactiveDraws:true}:{})};
+  const c=checkpoint||{id,decks,seed,mode,...(openingCoin?{openingCoin:true}:{}),...(interactiveDraws?{interactiveDraws:true}:{})};
   if(checkpoint&&(c.schema!==1||JSON.stringify(c.players)!==JSON.stringify(players)))throw Error('CHECKPOINT_PLAYERS_MISMATCH');
-  this.config={id:c.id,decks:copy(c.decks),seed:c.seed,mode:c.mode,...(c.interactiveDraws?{interactiveDraws:true}:{})};
+  this.config={id:c.id,decks:copy(c.decks),seed:c.seed,mode:c.mode,...(c.openingCoin?{openingCoin:true}:{}),...(c.interactiveDraws?{interactiveDraws:true}:{})};
   this.match=new Match({...this.config,wantsAck:[true,true]});
   if(checkpoint){this.match.epoch=c.epoch;this.match.restore(c.snapshot);}
  }

@@ -952,7 +952,7 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
     const stats = meta.kind === 'C' ? `<div class="statrow">${STAT.map(([, z], i) => `<span><b>${meta.stats[i] == null ? '－' : meta.stats[i]}</b>${z}</span>`).join('')}</div>` : '';
     const text = esc((meta.skill || DEF[c]?.[10] || '沒有技能（白板）。').replace(/\[=([^\]]+)\]/g,'【$1】')).replace(/\n/g, '<br>');
     const variants = meta.versions.length > 1 ? `<p class="sub">此卡有 ${meta.versions.length} 組卡文資料，尚待確認版本。</p>${meta.versions.map((v, i) => `<details><summary>卡文版本 ${i + 1}</summary><p>${esc(v.skill).replace(/\n/g, '<br>')}</p></details>`).join('')}` : '';
-    openSheet(`${fromHand ? '<p class="sub" id="handCardInfoHint">查看資訊不會直接出牌。關閉後可繼續選牌或按確認。</p>' : ''}${fromLibrary ? '<button class="chip" type="button" id="backLibrary">返回卡庫</button>' : ''}<div class="detail"><div>${img(c)}</div><div style="display:grid;gap:8px;min-width:0;overflow-wrap:anywhere"><h3>${esc(meta.name)}</h3><div class="sub">${esc(meta.number)}・${esc(meta.affiliation)}${meta.kind === 'C' ? '' : '・EVENT'}</div>${stats}<div>${text}</div>${variants}<div class="sub"><b>${supportLabel(support)}</b>${!meta.playable ? `<p>技能未自動化。${modeOptions().mode==='numeric'?'可按印刷數值組牌，效果請手動處理。':'嚴格模式尚未開放此卡。'}</p>` : ''}${support.gaps.map(x => `<p>${esc(x)}</p>`).join('')}<p><a href="${esc(meta.source)}" target="_blank" rel="noopener noreferrer">查看官方卡片</a></p></div></div></div>`);
+    openSheet(`${fromHand ? '<p class="sub" id="handCardInfoHint">第二次點擊查看資訊，不會改變原選取。關閉後可繼續選牌或按確認。</p>' : ''}${fromLibrary ? '<button class="chip" type="button" id="backLibrary">返回卡庫</button>' : ''}<div class="detail"><div>${img(c)}</div><div style="display:grid;gap:8px;min-width:0;overflow-wrap:anywhere"><h3>${esc(meta.name)}</h3><div class="sub">${esc(meta.number)}・${esc(meta.affiliation)}${meta.kind === 'C' ? '' : '・EVENT'}</div>${stats}<div>${text}</div>${variants}<div class="sub"><b>${supportLabel(support)}</b>${!meta.playable ? `<p>技能未自動化。${modeOptions().mode==='numeric'?'可按印刷數值組牌，效果請手動處理。':'嚴格模式尚未開放此卡。'}</p>` : ''}${support.gaps.map(x => `<p>${esc(x)}</p>`).join('')}<p><a href="${esc(meta.source)}" target="_blank" rel="noopener noreferrer">查看官方卡片</a></p></div></div></div>`);
     if (fromLibrary) $('backLibrary').onclick = openLibrary;
   }
   function supportLabel(card) { return { basic: '無技能卡：數值已核對', 'scenario-tested': '主要技能情境已測試', partial: '部分技能待補', locked: '技能未自動化' }[card.status]; }
@@ -1175,7 +1175,7 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
     return `<div class="handhead"><span>手牌 ${p.hand.length} 張</span>${hint}</div><div class="hand" style="--hn:${p.hand.length <= 6 ? p.hand.length : Math.ceil(p.hand.length / 2)}">${p.hand.map((c, i) => {
       const ref=p.handRefs?.[i], selection=nativeSelection?.picked||[nativeSelection?.value];
       const nativeClass=req ? selection.includes(ref?.id)?(req.kind==='mulligan'?'picked':'staged'):req.options.some(o=>o.value===ref?.id)?'sel':legal.size?'dim':'' : '';
-      return `<div class="hc ${nativeClass}${req&&(req.kind==='event'&&req.options.some(o=>o.value===ref?.id)||req.context.entrySkillIds?.includes(ref?.id)||req.kind==='block'&&nativeWidget?.timing?.ids?.includes(ref?.id))?' skill-ready':''}">${nativeSelection?.center===ref?.id?'<span class="newb ctr">中攔</span>':''}<button class="cbtn" type="button" data-hand="${i}" data-card="${c}">${img(c)}</button></div>`;
+      return `<div class="hc ${nativeClass}${req&&(req.kind==='event'&&req.options.some(o=>o.value===ref?.id)||req.context.entrySkillIds?.includes(ref?.id)||req.kind==='block'&&nativeWidget?.timing?.ids?.includes(ref?.id))?' skill-ready':''}">${nativeSelection?.center===ref?.id?'<span class="newb ctr">中攔</span>':''}<button class="cbtn" type="button" data-hand="${i}" data-card="${c}" title="點一下選取，再點查看資訊">${img(c)}</button></div>`;
     }).join('')}</div>`;
   }
   function netHTML() {
@@ -1248,7 +1248,7 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
       const cls = req ? selection.includes(ref?.id) ? (req.kind === 'mulligan' ? 'picked' : 'staged') : req.options.some(o => o.value === ref?.id) ? 'sel' : legal.size ? 'dim' : '' : '';
       const ready = req && (req.kind === 'event' && req.options.some(o => o.value === ref?.id) || req.context.entrySkillIds?.includes(ref?.id) || req.kind === 'block' && nativeWidget?.timing?.ids?.includes(ref?.id)) ? ' skill-ready' : '';
       const mid = (p.hand.length - 1) / 2, rot = (i - mid) * Math.min(4, 24 / p.hand.length), drop = Math.abs(i - mid) * Math.min(4, 20 / p.hand.length);
-      return `<div class="hc ${cls}${ready}" style="--r:${rot.toFixed(1)}deg;--d:${drop.toFixed(1)}px">${nativeSelection?.center === ref?.id ? '<span class="newb ctr">中攔</span>' : ''}<button class="cbtn" type="button" data-hand="${i}" data-card="${c}">${img(c)}</button></div>`;
+      return `<div class="hc ${cls}${ready}" style="--r:${rot.toFixed(1)}deg;--d:${drop.toFixed(1)}px">${nativeSelection?.center === ref?.id ? '<span class="newb ctr">中攔</span>' : ''}<button class="cbtn" type="button" data-hand="${i}" data-card="${c}" title="點一下選取，再點查看資訊">${img(c)}</button></div>`;
     }).join('')}</div>`;
   }
   function measureDock() {
@@ -1293,8 +1293,8 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
     const server = game.server ?? game.firstServer;
     const owner = game.turnP?.idx;
     const who = owner === 0 ? '你' : oppName;
-    const state = game.winner ? '對局結束' : pending?.req.kind === 'lossConfirm' ? '你的回合 · 等待你喊 Loss' : pending?.req.kind === 'turnEnd' ? '你的回合 · 等待結束或 Loss' : owner == null ? '準備／交接中' : !game.ball ? `${who}正在發球` : `${who}的回合`;
-    $('rallyStatus').innerHTML = `<strong>${game.rallyNo ? `第 ${game.rallyNo} 球 · 本球發球：${server === 0 ? '你' : esc(oppName)}` : '準備對局'}</strong><span>${state}</span>`;
+    const state = !game.rallyNo && server != null ? '調度中 · 確認手牌後開始對局' : game.winner ? '對局結束' : pending?.req.kind === 'lossConfirm' ? '你的回合 · 等待你喊 Loss' : pending?.req.kind === 'turnEnd' ? '你的回合 · 等待結束或 Loss' : owner == null ? '準備／交接中' : !game.ball ? `${who}正在發球` : `${who}的回合`;
+    $('rallyStatus').innerHTML = `<strong>${game.rallyNo ? `第 ${game.rallyNo} 球 · 本球發球：${server === 0 ? '你' : esc(oppName)}` : server != null ? `首球發球：${server === 0 ? '你' : esc(oppName)}` : '準備對局'}</strong><span>${state}</span>`;
     const logHTML = logBuf.slice(-200).map(([s, c]) => `<div class="${c || ''}">${esc(s)}</div>`).join('');
     $('logSide').innerHTML = logHTML; $('logSide').scrollTop = $('logSide').scrollHeight;
     const dock = $('dock'); dock.hidden = false;
@@ -1334,6 +1334,7 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
   $('dockOpts').addEventListener('click', e => {
     const b = e.target.closest('[data-act]'); if (b && !b.disabled) act(b.dataset.act);
   });
+  let handTap = null;
   function onHandPick(c, handIndex) {
     if(pending?.req.input.type==='cards'&&pending.req.input.max===0)return false;
     const ref=game.players[0].handRefs[handIndex];
@@ -1348,14 +1349,21 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
     return false;
   }
   document.addEventListener('click', e => {
+    if(!e.target.closest('[data-hand]'))handTap=null;
     if (suppressClick) { suppressClick = false; e.preventDefault(); e.stopPropagation(); return; }
     const da = e.target.closest('[data-act]'); if (da && !da.closest('#dock')) return act(da.dataset.act, da);
     const dz = e.target.closest('#meSide [data-drop]'); if (dz && onZonePick(dz.dataset.drop)) return;
     const b = e.target.closest('.cbtn, .pile, .pile2[data-pile], .pilebox, .aux, .glist[data-zone]'); if (!b || b.closest('#dock')) return;
     if (b.dataset.hand != null) {
       const i = +b.dataset.hand, c = b.dataset.card;
-      if (pending) onHandPick(c,i);
-      cardSheet(c,false,true); return;
+      const ref=game.players[0].handRefs[i]?.id, tapKey=JSON.stringify([ref,pending?.req.requestId,pending?.req.epoch]);
+      const value=pending&&nativeWidget?BreakHostChoice.selectionValue(pending.req,nativeWidget.selection):null;
+      const selected=Array.isArray(value)?value.includes(ref):value?.cards?value.cards.includes(ref):value===ref;
+      if(handTap===tapKey||selected){
+        handTap=null;cardSheet(c,false,true);
+        if(selected){const btn=document.createElement('button');btn.type='button';btn.className='chip';btn.id='handDeselect';btn.textContent='取消選取這張牌';$('handCardInfoHint').append(document.createElement('br'),btn);btn.onclick=()=>{if(['single','number'].includes(pending.req.input.type)){nativeWidget.destroy();renderNativeChoice(pending.req,BreakHostChoice.createSelection(pending.req));}else onHandPick(c,i);closeSheet();};}
+      }else{handTap=tapKey;if(pending)onHandPick(c,i);}
+      return;
     }
     if (b.dataset.pile) { const p = game.players[+b.dataset.p]; return pileSheet(`${p.idx === 0 ? '你的' : esc(oppName) + ' 的'}${b.dataset.pile === 'ev' ? ' Event 區' : '棄牌區'}（最新的在前）`, (b.dataset.pile === 'ev' ? p.ev : p.drop).slice().reverse()); }
     if (b.dataset.zone) { const p = game.players[+b.dataset.p], s = p.area[b.dataset.zone]; if (!s.length) return; return pileSheet(`${p.idx === 0 ? '你的' : esc(oppName) + ' 的'}${E.AREA_ZH[b.dataset.zone]}區（第 1 張是角色，後面是 Guts，越後面越早放；付 Guts 時從最下面開始付）`, s.slice().reverse()); }
@@ -1372,7 +1380,7 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
     if (!drag || e.pointerId !== drag.id) return;
     if (!drag.on) {
       if (Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 10) return;
-      drag.on = true; document.body.classList.add('dragging');
+      handTap = null; drag.on = true; document.body.classList.add('dragging');
       const r = drag.b.getBoundingClientRect();
       drag.el = document.createElement('div'); drag.el.className = 'dragcard'; drag.el.style.width = r.width + 'px'; drag.el.innerHTML = img(drag.c);
       document.body.appendChild(drag.el); drag.w = r.width; drag.h = r.height;
@@ -1429,7 +1437,7 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
     store.set('bk_my', my); store.set('bk_ai', ai); store.set('bk_speed', String(speed));
     session?.stop();soloSaveToken='';soloSelection=null;
     const expand=key=>Object.entries(DECKS[key].cards).flatMap(([card,count])=>Array(count).fill(card));
-session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableSequence),seed:Date.now()>>>0,decks:[expand(my),expand(ai)],deckKeys:[my,ai],mode:modeOptions().mode,aiLevel:$('aiLevel').value,delay:speed,interactiveDraws:true,wantsAck:[true,false]}, tableCallbacks());
+session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableSequence),seed:Date.now()>>>0,decks:[expand(my),expand(ai)],deckKeys:[my,ai],mode:modeOptions().mode,aiLevel:$('aiLevel').value,delay:speed,interactiveDraws:true,openingCoin:true,wantsAck:[true,false]}, tableCallbacks());
     oppName='AI';setLogoSub('你 vs AI');enterTable();
   }
   function restartSolo(){
