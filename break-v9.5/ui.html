@@ -712,6 +712,18 @@ body[data-hints="simple"] .hc-step,body[data-hints="simple"] .hc-prog,body[data-
 .hand.discard-required{outline:2px solid #d04d3c;outline-offset:-3px;border-radius:12px}
 .status-detail{display:grid;gap:10px}.status-detail p{margin:0;overflow-wrap:anywhere}
 
+
+body.playing .dock[data-mode="court"] .hc-grid,body.playing .dock[data-mode="court"] [data-kind="parameter"] .hc-opts{display:none}
+body.playing .dock[data-mode="court"] .hc-src,body.playing .dock[data-mode="court"] .hc-step,body.playing .dock[data-mode="court"] .hc-effect-text{display:none}
+body.playing .dock[data-mode="court"] [data-kind="parameter"] .hc-go{display:none}
+.area.court-target{outline:3px solid #d79213;outline-offset:1px;box-shadow:0 0 12px #e9ad2780}
+.area.court-picked{outline:3px solid #21865f;outline-offset:1px}.area.court-target .stack{cursor:pointer}
+#courtParamPicker{position:fixed;z-index:110;max-width:calc(100vw - 16px);width:280px;padding:10px;border:2px solid var(--court);border-radius:14px;background:var(--surface);color:var(--ink);box-shadow:0 8px 30px #0005}
+#courtParamPicker .param-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:13px}#courtParamPicker .param-head strong{flex:1;overflow-wrap:anywhere}
+#courtParamPicker .param-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+#courtParamPicker [data-court-param]{font:inherit;color:var(--ink);background:var(--sunk);border:1px solid var(--line);border-radius:9px;min-height:46px;padding:6px;cursor:pointer;font-size:13px}
+#courtParamPicker [data-court-param] b{display:block;font-size:17px;color:var(--court)}
+
 </style>
 <script>
 /* 外觀：bk_theme = light（預設）｜dark｜auto（跟隨系統）；在繪製前套用避免閃爍 */
@@ -829,6 +841,7 @@ body[data-hints="simple"] .hc-step,body[data-hints="simple"] .hc-prog,body[data-
 </div>
 
 <div class="dock" id="dock" hidden><div class="in"><div class="dock-head"><div class="dock-summary" id="dockSummary">目前操作</div><button class="chip" id="choicePeek" type="button" aria-expanded="true" aria-controls="dockOpts" hidden>查看球場</button><button class="chip" id="manualBtn" type="button" hidden>手動</button><button class="chip undo-button" id="undoBtn" type="button" disabled>Undo</button></div><div class="q" id="dockQ"></div><div class="opts" id="dockOpts"></div></div></div>
+<div id="courtParamPicker" role="group" aria-label="選擇此卡的調整數值" hidden></div>
 <div id="tableEffects" aria-live="polite"></div><div id="hintToast" role="status" hidden></div>
 <div class="sheet" id="sheet" hidden><div class="box" id="sheetBox"></div></div>
 <div class="turn-screen" id="turnScreen" role="dialog" aria-modal="true" aria-labelledby="turnTitle" aria-describedby="turnDetail" hidden><div class="turn-card" id="turnCard"></div></div>
@@ -1061,8 +1074,34 @@ body[data-hints="simple"] .hc-step,body[data-hints="simple"] .hc-prog,body[data-
   function syncNativeHand(selection) {
     nativeSelection=selection;
     nextTop={};nextVal={};
-    const me=game.players[0];$('meSide').innerHTML=courtHTML(me)+barHTML(me,true);$('handZone').innerHTML=fanHTML(me);markDiscardHand();
+    const me=game.players[0];if(courtRequest(pending?.req)==='target')$('oppSide').innerHTML=barHTML(game.players[1],false)+courtHTML(game.players[1]);$('meSide').innerHTML=courtHTML(me)+barHTML(me,true);$('handZone').innerHTML=fanHTML(me);markDiscardHand();
     persistSolo(true);requestAnimationFrame(measureDock);
+  }
+  let courtParamOpen=null,courtNextTarget=null,courtUndoing=false;
+  function courtRequest(r){
+    if(!r||!game)return null;const cards=game.players.flatMap(p=>p.court);
+    if(r.kind==='target'&&r.input.type==='cards'&&r.input.min>0&&r.options.length&&r.options.every(o=>cards.some(c=>c.id===o.value&&c.incarnation===o.card?.incarnation)))return 'target';
+    if(r.kind==='parameter'&&r.input.type==='single'&&r.context.target&&cards.some(c=>c.id===r.context.target.id&&c.incarnation===r.context.target.incarnation))return 'parameter';
+    return null;
+  }
+  function courtEligible(card){const r=pending?.req,kind=courtRequest(r);return !!card&&(kind==='target'?r.options.some(o=>o.value===card.id&&o.card?.incarnation===card.incarnation):kind==='parameter'&&r.context.target.id===card.id&&r.context.target.incarnation===card.incarnation);}
+  function renderCourtParam(){
+    const box=$('courtParamPicker'),r=pending?.req,key=r&&r.requestId+':'+r.epoch;
+    if(courtRequest(r)!=='parameter'||courtParamOpen!==key){box.hidden=true;courtParamOpen=null;return;}
+    const target=game.players.flatMap(p=>p.court).find(c=>c.id===r.context.target.id),names={serve:'發球',block:'攔網',receive:'接球',toss:'舉球',attack:'攻擊'};
+    box.innerHTML=`<div class="param-head"><strong>${esc(target.name||nm(target.cardNo.replace(/^HV-?/,'')))} · 選擇數值</strong><button type="button" class="chip" id="courtParamClose" aria-label="收起數值選擇">✕</button></div><div class="param-options">${r.options.map(o=>`<button type="button" data-court-param="${esc(o.value)}">${esc(names[o.value]||o.label)}<b>${esc(target.parameters[o.value])}</b></button>`).join('')}</div>`;
+    box.hidden=false;const anchor=document.querySelector('[data-court-id="'+r.context.target.id+'"]'),rect=anchor?.getBoundingClientRect(),w=Math.min(280,innerWidth-16),h=box.getBoundingClientRect().height;
+    box.style.left=Math.max(8,Math.min(innerWidth-w-8,(rect?.left||0)+(rect?.width||w)/2-w/2))+'px';
+    box.style.top=Math.max(8,Math.min(innerHeight-h-8,rect&&rect.bottom+h+8<innerHeight?rect.bottom+6:(rect?.top||innerHeight/2)-h-6))+'px';
+    $('courtParamClose').onclick=()=>{courtParamOpen=null;box.hidden=true;anchor?.focus({preventScroll:true});};
+    for(const b of box.querySelectorAll('[data-court-param]'))b.onclick=()=>{if(pending?.req.requestId===r.requestId&&pending.req.epoch===r.epoch)nativeAnswer(b.dataset.courtParam);};olControls();
+  }
+  function onCourtPick(button){
+    const r=pending?.req,kind=courtRequest(r),ref=button.dataset.courtId,card=game.players.flatMap(p=>p.court).find(c=>c.id===ref);
+    if(!kind||!courtEligible(card)||String(card.incarnation)!==button.dataset.courtIncarnation)return false;
+    if(kind==='target'){if(r.input.min===1&&r.input.max===1){courtNextTarget={id:ref,matchId:r.matchId};nativeAnswer([ref]);}else nativeWidget.select(ref);}
+    else{courtParamOpen=r.requestId+':'+r.epoch;renderCourtParam();}
+    return true;
   }
   function renderNativeChoice(r, selection = null) {
     const labels={ack:'抽 1 張',turnEnd:'結束回合',lossConfirm:'喊 Loss',roll:'開始調度',reveal:'翻開牌庫頂',mulligan:'保留／重抽選取的牌'};
@@ -1260,10 +1299,11 @@ body[data-hints="simple"] .hc-step,body[data-hints="simple"] .hc-prog,body[data-
     const resolved = card && skillResults.some(e => e.source === card.id) ? ' skill-resolved' : '';
     const name = top && !key.startsWith('side:') ? game.cardName(p, key) : '', renamed = name && name.replace(/\s/g, '') !== nm(top).replace(/\s/g, '');
     const shown = stack.slice(-4), more = stack.length - shown.length;
+    const courtAttrs=card?` data-court-id="${esc(card.id)}" data-court-incarnation="${card.incarnation}"`:'';
     const clickAttr = key === 'ev' ? `data-pile="ev" data-p="${p.idx}"` : key.startsWith('side:') ? (top ? `data-card="${top}"` : '') : `data-zone="${key}" data-p="${p.idx}"`;
     const imgs = shown.map((c, i) => `<span class="st${i === shown.length - 1 && key !== 'ev' ? ' is-top' : ''}">${img(c)}</span>`).join('');
-    return `<div class="area ${AREA_CLS[key]}${tgt}${ready}${resolved}${enter ? ' enter' : ''}" ${mine ? `data-drop="${key.startsWith('side:') ? 'block' : key}"` : ''}>`
-      + (stack.length ? `<button class="cbtn stack" type="button" ${clickAttr} aria-label="${AREA_LABEL[key]} ${stack.length} 張">${imgs}</button>` : '')
+    return `<div class="area ${AREA_CLS[key]}${courtEligible(card)?' court-target':''}${courtRequest(pending?.req)==='target'&&nativeSelection?.picked?.includes(card?.id)?' court-picked':''}${tgt}${ready}${resolved}${enter ? ' enter' : ''}" ${mine ? `data-drop="${key.startsWith('side:') ? 'block' : key}"` : ''}>`
+      + (stack.length ? `<button class="cbtn stack" type="button" ${clickAttr}${courtAttrs} aria-label="${AREA_LABEL[key]} ${stack.length} 張">${imgs}</button>` : '')
       + `<span class="nm">${AREA_LABEL[key]}${more > 0 ? ` +${more}` : ''}</span>`
       + (key !== 'ev' && stack.length > 1 ? `<span class="gcount">G${stack.length - 1}</span>` : '')
       + (renamed ? `<span class="rn">${esc(name)}</span>` : '')
@@ -1310,7 +1350,7 @@ body[data-hints="simple"] .hc-step,body[data-hints="simple"] .hc-prog,body[data-
   function setDockCollapsed() { $('dock').classList.remove('collapsed'); requestAnimationFrame(measureDock); }
   function peekChoice(value) { $('dock').classList.toggle('peek-court',value);document.body.dataset.peek=value?'1':'0';$('choicePeek').textContent=value?'繼續選擇':'查看球場';$('choicePeek').setAttribute('aria-expanded',String(!value));requestAnimationFrame(measureDock); }
   $('choicePeek').onclick=()=>peekChoice(!$('dock').classList.contains('peek-court'));
-  window.addEventListener('resize', syncViewport);
+  window.addEventListener('resize', syncViewport);window.addEventListener('resize',()=>{if(courtParamOpen)renderCourtParam();});
   window.visualViewport?.addEventListener('resize', syncViewport);
   if (window.ResizeObserver) new ResizeObserver(() => requestAnimationFrame(measureDock)).observe($('dock'));
   syncViewport();
@@ -1322,7 +1362,7 @@ body[data-hints="simple"] .hc-step,body[data-hints="simple"] .hc-prog,body[data-
   }
   $('undoBtn').onclick = () => {
     if (!session?.status().enabled) return;
-    closeSheet();session.undo();
+    closeSheet();courtUndoing=true;try{session.undo();while(courtRequest(pending?.req)==='target'&&pending.req.input.min===1&&pending.req.input.max===1&&pending.req.options.length===1&&session.status().enabled){if(!session.undo())break;}}finally{courtUndoing=false;}
   };
 
   function render() {
@@ -1348,7 +1388,7 @@ body[data-hints="simple"] .hc-step,body[data-hints="simple"] .hc-prog,body[data-
     const dock = $('dock'); dock.hidden = false;
     // 面板模式：hand＝只留提示列，直接點手牌／場地；modal＝置中卡片框（手牌以外的卡、調度、攔網組合）；bar＝精簡按鈕列
     { const r = pending?.req, cardOpts = r ? r.options.filter(o => o.card) : [], handIds = new Set(me.handRefs.map(c => c.id));
-      const mode = !r || game.winner ? 'bar' : !cardOpts.length ? 'bar' : (cardOpts.every(o => handIds.has(o.value)) && !['mulligan','drawResult'].includes(r.kind) && r.input.type !== 'block' && !(r.input.type === 'cards' && r.input.max > 1)) ? 'hand' : 'modal';
+      const mode = !r || game.winner ? 'bar' : courtRequest(r) ? 'court' : !cardOpts.length ? 'bar' : (cardOpts.every(o => handIds.has(o.value)) && !['mulligan','drawResult'].includes(r.kind) && r.input.type !== 'block' && !(r.input.type === 'cards' && r.input.max > 1)) ? 'hand' : 'modal';
       dock.dataset.mode = mode; document.body.dataset.dock = mode;dock.dataset.effect=r?.source?'1':'0';$('choicePeek').hidden=mode!=='modal';if(!sameRequest||mode!=='modal')peekChoice(false); }
     $('dockOpts').classList.toggle('native-choice',!!pending&&!game.winner);
     $('manualBtn').hidden = !(game.mode==='numeric' && pending?.req.canManual);
@@ -1365,8 +1405,9 @@ body[data-hints="simple"] .hc-step,body[data-hints="simple"] .hc-prog,body[data-
       $('dockQ').innerHTML = game.waitingFor?.kind==='discard'?`<span class="dots">等待${game.waitingFor.actor===0?'你':esc(oppName)}棄掉 ${game.waitingFor.count} 張手牌</span>`:`<span class="dots">${esc(oppName)} 行動中</span>`;
       $('dockOpts').innerHTML = '';
     }
-    $('dockSummary').textContent = game.winner ? $('dockQ').textContent : pending ? BreakChoiceUI.requestPrompt(pending.req) : `${oppName} 行動中`;
+    $('dockSummary').textContent = game.winner ? $('dockQ').textContent : pending ? courtRequest(pending.req)==='parameter'?'點場上亮框卡，選擇要調整的數值':BreakChoiceUI.requestPrompt(pending.req) : `${oppName} 行動中`;
     updateUndoButton();
+    renderCourtParam();
     olControls();
     renderTransition();
     requestAnimationFrame(measureDock);
@@ -1399,6 +1440,7 @@ body[data-hints="simple"] .hc-step,body[data-hints="simple"] .hc-prog,body[data-
   document.addEventListener('click', e => {
     if(!e.target.closest('[data-hand]'))handTap=null;
     if (suppressClick) { suppressClick = false; e.preventDefault(); e.stopPropagation(); return; }
+    const court=e.target.closest('[data-court-id]');if(court&&onCourtPick(court))return;
     const da = e.target.closest('[data-act]'); if (da && !da.closest('#dock')) return act(da.dataset.act, da);
     const dz = e.target.closest('#meSide [data-drop]'); if (dz && onZonePick(dz.dataset.drop)) return;
     const b = e.target.closest('.cbtn, .pile, .pile2[data-pile], .pilebox, .aux, .glist[data-zone]'); if (!b || b.closest('#dock')) return;
@@ -1464,7 +1506,7 @@ body[data-hints="simple"] .hc-step,body[data-hints="simple"] .hc-prog,body[data-
   $('logBtn').onclick = showLog;
   $('menuBtn').onclick = () => openSheet(OL.inGame ? '<h3>選單</h3><div class="opts"><button class="opt" type="button" id="mLeave">離開房間（回到大廳）</button></div><p class="sub">離開後可從大廳「回到房間」接續；房主離開時對手可接手。</p>'+'<h3>外觀</h3>'+bkThemeSeg()+hintSettings() : '<h3>選單</h3><div class="opts"><button class="opt primary" type="button" id="mRestart">重新開始這場</button><button class="opt" type="button" id="mSetup">回到選牌組</button></div>'+'<h3>外觀</h3>'+bkThemeSeg()+hintSettings());
   $('sheet').addEventListener('click', e => { if (e.target.id === 'mRestart') { closeSheet(); restartSolo(); } if (e.target.id === 'mSetup') { closeSheet(); backToSetup(); } if (e.target.id === 'mLeave') { closeSheet(); olRun(async () => { await OL.client.leave(); olLeaveGame(); })(); } });
-  function backToSetup() { presentation.reset();priorStatuses=null;statusToastUntil=0;$('hintToast').hidden=true;clearTimeout(hintToastTimer);persistSolo(false);nativeWidget?.destroy();nativeWidget=null;session?.stop(); session = null; game = null; pending = null; turnNotice = null; renderTransition(); $('game').hidden = true; $('dock').hidden = true; $('tbtns').hidden = true; $('setup').hidden = false; $('modebar').hidden = false; document.body.classList.remove('playing'); delete document.body.dataset.dock; }
+  function backToSetup() { courtParamOpen=null;courtNextTarget=null;$('courtParamPicker').hidden=true;presentation.reset();priorStatuses=null;statusToastUntil=0;$('hintToast').hidden=true;clearTimeout(hintToastTimer);persistSolo(false);nativeWidget?.destroy();nativeWidget=null;session?.stop(); session = null; game = null; pending = null; turnNotice = null; renderTransition(); $('game').hidden = true; $('dock').hidden = true; $('tbtns').hidden = true; $('setup').hidden = false; $('modebar').hidden = false; document.body.classList.remove('playing'); delete document.body.dataset.dock; }
 
   function publicLogText(e) {
     const who=e.player===0?'你':oppName;
@@ -1532,13 +1574,13 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
         skillResults=view.publicLog.filter(e=>e.type==='skill_resolved'&&e.turn===view.turn.id).slice(-2);persistSolo(true);
         logBuf=view.publicLog.map(e=>[publicLogText(e), '']);render();presentation.observe(view);noticeStatuses(board,view);
       },
-      onRequest(req) {presentation.request(req);pending={req};setDockCollapsed(false);render();soloSelection=null;},
+      onRequest(req) {presentation.request(req);pending={req};if(req.kind==='parameter'&&courtNextTarget?.id===req.context.target?.id&&courtNextTarget.matchId===req.matchId)courtParamOpen=req.requestId+':'+req.epoch;courtNextTarget=null;setDockCollapsed(false);render();soloSelection=null;if(!courtUndoing&&courtRequest(req)==='target'&&req.input.min===1&&req.input.max===1&&req.options.length===1){queueMicrotask(()=>{if(pending?.req.requestId===req.requestId&&pending.req.epoch===req.epoch)nativeAnswer([req.options[0].value]);});}},
       onNotice(board,data,resolve) {if(hintMode()!=='normal'&&['serve','turn'].includes(data.type)){briefNotice(data);queueMicrotask(resolve);return;}turnNotice={data,resolve,game:board};render();},
       onError(err) {pending=null;turnNotice=null;logBuf.push(['發生錯誤：'+err.message,'lost']);render();$('runtimeStatus').hidden=false;$('runtimeStatus').textContent='❌ '+err.message;console.error(err);}
     };
   }
   function enterTable() {
-    presentation.reset();priorStatuses=null;statusToastUntil=0;$('hintToast').hidden=true;clearTimeout(hintToastTimer);
+    courtParamOpen=null;courtNextTarget=null;$('courtParamPicker').hidden=true;presentation.reset();priorStatuses=null;statusToastUntil=0;$('hintToast').hidden=true;clearTimeout(hintToastTimer);
     prevTop={};prevVal={};prevBall=null;skillResults=[];flashMsg='';clearTimeout(flashT);
     if(drag?.el)drag.el.remove();if(drag?.over)drag.over.classList.remove('over');drag=null;suppressClick=false;document.body.classList.remove('dragging');
     $('setup').hidden = true; $('modebar').hidden = true; $('game').hidden = false; $('tbtns').hidden = false; document.body.classList.add('playing'); syncViewport();
@@ -1635,7 +1677,7 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
     if (waiting) { $('olWaitCode').textContent = OL.roomId; $('olWaitText').textContent = OL.meta.p1 === 'AI' ? '正在準備對局' : '等待朋友加入'; }
   }
   function olCanSend(v=session?.last){const c=OL.client,a=OL.authority;return !!(c?.online&&!c.pending&&OL.meta?.status==='running'&&a?.active&&a.lease.term===v?.term);}
-  function olControls(){if(!OL.inGame)return;const locked=!olCanSend();for(const b of $('dockOpts').querySelectorAll('.hc button')){if(locked){if(!b.hasAttribute('data-ol-disabled'))b.dataset.olDisabled=String(b.disabled);b.disabled=true;}else if(b.hasAttribute('data-ol-disabled')){b.disabled=b.dataset.olDisabled==='true';delete b.dataset.olDisabled;}}}
+  function olControls(){if(!OL.inGame)return;const locked=!olCanSend();for(const b of document.querySelectorAll('#dockOpts .hc button,#courtParamPicker [data-court-param]')){if(locked){if(!b.hasAttribute('data-ol-disabled'))b.dataset.olDisabled=String(b.disabled);b.disabled=true;}else if(b.hasAttribute('data-ol-disabled')){b.disabled=b.dataset.olDisabled==='true';delete b.dataset.olDisabled;}}}
   function olConnectionChanged(){
     if(OL.inGame)$('tbtns').prepend($('olConnectionBar'));else if($('olConnectionBar').parentElement===$('tbtns'))$('runtimeStatus').before($('olConnectionBar'));
     $('olConnectionBar').hidden=!OL.roomId;const a=OL.authority,c=OL.client;
