@@ -677,6 +677,32 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
 .account-panel {display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;padding:14px 16px;border:1px solid var(--line);background:var(--surface);border-radius:14px;margin-top:14px;}.account-panel strong {font-size:14px;}.account-panel p {margin:4px 0 0;font-size:11px;color:var(--muted);}.account-panel .opts {gap:6px;margin:0;}.account-panel .chip {min-height:38px;}body.playing #accountPanel {display:none;}.cloud-row {display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:14px 0;border-bottom:1px solid var(--line);}.cloud-row small {display:block;color:var(--muted);font-size:11px;margin-top:4px;}.cloud-row strong {overflow-wrap:anywhere;}.cloud-row .opts {margin:0;gap:6px;}
 .public-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:12px;margin-top:16px}.public-cards figure{margin:0;min-width:0}.public-cards img{width:100%;border-radius:8px}.public-cards figcaption{font-size:12px;overflow-wrap:anywhere;margin-top:5px}#sheet[data-kind="public"] .box{display:block}#sheet[data-kind="public"] h3{padding:6px 0 12px}#sheet[data-kind="public"] .opts{margin:12px 0}#sheet[data-kind="public"] .closer{margin-top:16px}.public-close{float:right;margin-left:12px}#publicSearch{min-width:0;width:100%;padding:10px 12px;min-height:42px;background:var(--sunk);color:var(--ink);border:1px solid var(--line);border-radius:10px}
 .account-person{display:flex;align-items:center;gap:12px}.player-avatar,.player-avatar-img,.player-avatar-fallback{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;flex-shrink:0;border-radius:50%;object-fit:cover;vertical-align:middle;background:var(--sunk)}.player-avatar>.player-avatar-img{width:36px;height:36px}.cloud-row .player-avatar-img,.cloud-row .player-avatar-fallback{width:24px;height:24px}.profile-preview{width:96px;height:96px;display:grid;place-items:center;border-radius:50%;overflow:hidden;background:var(--sunk);font-size:40px}.profile-preview img{width:96px;height:96px;object-fit:cover}#profileName{width:100%;min-width:0;padding:10px;background:var(--sunk);color:var(--ink);border:1px solid var(--line);border-radius:8px}#profileFile{width:100%;min-width:0}
+
+/* Non-blocking, local presentation: no commands are dispatched by these effects. */
+#tableEffects{position:fixed;inset:0;z-index:150;pointer-events:none;overflow:hidden}
+.fx-draw{position:absolute;top:62%;left:50%;display:flex;justify-content:center;gap:5px;transform:translate(-50%,-50%);max-width:94vw}
+.fx-draw>strong{position:absolute;bottom:calc(100% + 12px);left:50%;transform:translateX(-50%);white-space:nowrap;border-radius:99px;background:#102d32ed;color:white;padding:8px 16px;font-size:14px}
+.fx-card{flex:0 0 clamp(36px,calc((90vw - 25px)/var(--cards)),96px);width:clamp(36px,calc((90vw - 25px)/var(--cards)),96px);aspect-ratio:63/88;perspective:700px;animation:fx-draw-flight 1.15s calc(var(--i)*45ms) both}
+.fx-card-inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;animation:fx-draw-flip 1s calc(var(--i)*45ms) both}
+.fx-back,.fx-front{position:absolute;inset:0;border-radius:7px;backface-visibility:hidden;overflow:hidden;box-shadow:0 5px 18px #0006}
+.fx-back{border:3px solid #f8d07f;background:repeating-linear-gradient(135deg,#17343b 0 8px,#224953 8px 16px);color:#f8d07f;display:grid;place-items:center;font-weight:900;font-size:10px}
+.fx-front{transform:rotateY(180deg);background:#fff}.fx-front img{width:100%;height:100%;object-fit:contain}.back-only .fx-card-inner{animation:none}
+@keyframes fx-draw-flight{0%{transform:translate(var(--from-x),var(--from-y)) scale(.35);opacity:0}25%,70%{opacity:1}40%,75%{transform:translate(0,0) scale(1)}100%{transform:translateY(80px) scale(.7);opacity:0}}
+@keyframes fx-draw-flip{0%,35%{transform:rotateY(0)}65%,100%{transform:rotateY(180deg)}}
+.fx-coin-wrap{position:absolute;top:34%;left:50%;transform:translate(-50%,-50%);perspective:700px;display:grid;justify-items:center;gap:18px}
+.fx-coin{width:110px;height:110px;position:relative;transform-style:preserve-3d;transform:rotateY(var(--coin-end));animation:fx-coin-spin 1.2s cubic-bezier(.16,.7,.22,1) both}
+.fx-face{position:absolute;inset:0;border:7px double #fff3b4;border-radius:50%;background:linear-gradient(135deg,#ffdc66,#c18518);backface-visibility:hidden;display:grid;place-items:center;font-size:48px;font-weight:900;color:#613c08;box-shadow:0 8px 28px #0005}
+.fx-tail{transform:rotateY(180deg);background:linear-gradient(135deg,#ffeab0,#c89843)}
+.fx-coin-caption{white-space:nowrap;background:#102d32ed;color:white;padding:8px 16px;border-radius:99px;animation:fx-caption 1.2s both}
+@keyframes fx-coin-spin{from{transform:translateY(-90px) rotateY(-1440deg) rotateZ(-20deg)}to{transform:translateY(0) rotateY(var(--coin-end)) rotateZ(0)}}
+@keyframes fx-caption{0%,75%{opacity:0}100%{opacity:1}}
+#hintToast{position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:145;pointer-events:none;background:#102d32ee;color:#fff;padding:9px 18px;border-radius:99px;max-width:92vw;font-size:14px;text-align:center}
+body[data-hints="simple"] .hc-timing,body[data-hints="off"] .hc-timing{display:none}
+body[data-hints="off"] .skill-ready .ci,body[data-hints="off"] .slot.skill-ready,body[data-hints="off"] .hc-ready,body[data-hints="off"] .hc-ready img{outline:none;box-shadow:none;animation:none}
+body[data-hints="off"] .skill-ready .cbtn{box-shadow:none}
+body[data-hints="simple"] .hc-step,body[data-hints="simple"] .hc-prog,body[data-hints="off"] .hc-step,body[data-hints="off"] .hc-prog{display:none}
+@media(prefers-reduced-motion:reduce){#tableEffects *{animation:none!important}.fx-card-inner{transform:rotateY(180deg)}.back-only .fx-card-inner{transform:none}}
+
 </style>
 <script>
 /* 外觀：bk_theme = light（預設）｜dark｜auto（跟隨系統）；在繪製前套用避免閃爍 */
@@ -736,7 +762,7 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
       <label class="field" for="speed">AI 出牌速度
         <select id="speed"><option value="200">快</option><option value="550" selected>正常</option><option value="1000">慢</option></select>
       </label>
-      <div class="field">外觀<div id="themeSlot"></div></div>
+      <div class="field">外觀<div id="themeSlot"></div></div><label class="field">效果提示<select id="hintMode"><option value="off">關閉提示</option><option value="simple" selected>簡易提示（亮框為主）</option><option value="normal">正常提示</option></select></label>
       <div class="deckstrip" id="aiStrip"></div>
     </div>
     <div class="panel online-only" id="olPanel">
@@ -770,9 +796,9 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
         <li>接球回合：抽 1 → 接球 → 舉球 → 攻擊；舉球不能和接球同名，攻擊不能和舉球同名。</li>
         <li>對手攻擊過來可以改攔網（不抽牌）；發球和攔網回球只能接。</li>
         <li>沒有セットカード時再失分就輸。</li>
-        <li>亮橘框的手牌可以直接點來出牌；點場上或手上的卡看完整效果。</li>
+        <li>亮橘框的手牌可以直接點來出牌；手牌選取後再點可看完整效果。</li>
       </ul>
-      <label class="field" for="turnPromptStyle">回合／發球提示
+      <label class="field" for="turnPromptStyle">正常提示的回合／發球過場
         <select id="turnPromptStyle"><option value="auto" selected>顯示 1 秒後繼續</option><option value="manual">點擊後繼續</option></select>
       </label>
       <button class="btn" id="startBtn" type="button" disabled>開始對戰</button>
@@ -794,6 +820,7 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
 </div>
 
 <div class="dock" id="dock" hidden><div class="in"><div class="dock-head"><div class="dock-summary" id="dockSummary">目前操作</div><button class="chip" id="choicePeek" type="button" aria-expanded="true" aria-controls="dockOpts" hidden>查看球場</button><button class="chip" id="manualBtn" type="button" hidden>手動</button><button class="chip undo-button" id="undoBtn" type="button" disabled>Undo</button></div><div class="q" id="dockQ"></div><div class="opts" id="dockOpts"></div></div></div>
+<div id="tableEffects" aria-live="polite"></div><div id="hintToast" role="status" hidden></div>
 <div class="sheet" id="sheet" hidden><div class="box" id="sheetBox"></div></div>
 <div class="turn-screen" id="turnScreen" role="dialog" aria-modal="true" aria-labelledby="turnTitle" aria-describedby="turnDetail" hidden><div class="turn-card" id="turnCard"></div></div>
 
@@ -3336,6 +3363,55 @@ const api = { render, CSS, describePayment, requestDetail, requestPrompt, option
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.BreakChoiceUI = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
 
+/* Presentation only: consumes private player views; never answers a rules request. */
+(function(root){
+ 'use strict';
+ function drawChanges(previous,view){
+  if(!previous||previous.match.id!==view.match.id||view.publicLog.length<=previous.publicLog.length)return [];
+  const logs=view.publicLog.slice(previous.publicLog.length),out=[];
+  for(const player of [0,1]){const count=logs.filter(e=>e.type==='draw'&&e.player===player).reduce((n,e)=>n+e.count,0);if(!count)continue;
+   // Only the local seat has an array of card identities. Opponent draws remain backs.
+   const hand=view.players[player].hand,old=previous.players[player].hand;
+   const before=new Set(Array.isArray(old)?old.map(c=>c.id):[]);
+   const exact=view.request?.kind==='drawResult'&&player===0?view.request.options.filter(o=>o.card).map(o=>o.card):null;
+   const cards=player===0&&Array.isArray(hand)?exact||hand.filter(c=>!before.has(c.id)).slice(0,count):[];
+   out.push({player,count,cards});
+  }return out;
+ }
+ function create({root:el,img,deckRect}){
+  let previous=null,coinKey=null,timers=[];
+  const later=(fn,ms)=>{const id=setTimeout(()=>{timers=timers.filter(t=>t!==id);fn();},ms);timers.push(id);};
+  const reduced=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function reset(){for(const id of timers)clearTimeout(id);timers=[];el.replaceChildren();previous=null;coinKey=null;}
+  function showDraw(d){
+   const box=document.createElement('div');box.className='fx-draw';box.dataset.player=d.player;box.style.setProperty('--cards',Math.min(d.count,6));box.setAttribute('role','status');
+   const text=document.createElement('strong');text.textContent=(d.player===0?'你':'對手')+'抽了 '+d.count+' 張牌';box.append(text);
+   const rect=deckRect(d.player),x=rect?rect.x+rect.width/2-innerWidth/2:0,y=rect?rect.y+rect.height/2-innerHeight*.62:0;
+   for(let i=0;i<Math.min(d.count,6);i++){const card=document.createElement('div');card.className='fx-card';card.style.setProperty('--i',i);card.style.setProperty('--from-x',x+'px');card.style.setProperty('--from-y',y+'px');
+    card.innerHTML='<div class="fx-card-inner"><div class="fx-back">BREAK</div><div class="fx-front"></div></div>';
+    // Faces come exclusively from cards already visible in the local player's hand.
+    if(d.player===0&&d.cards[i])card.querySelector('.fx-front').innerHTML=img(d.cards[i].cardNo.replace(/^HV-?/,''));
+    else card.classList.add('back-only');box.append(card);
+   }
+   el.append(box);later(()=>box.remove(),reduced()?300:1500);
+  }
+  function observe(view){
+   if(previous&&(previous.match.id!==view.match.id||view.publicLog.length<previous.publicLog.length||view.match.decisionIndex<previous.match.decisionIndex))reset();
+   const draws=drawChanges(previous,view);previous=view;for(const d of draws)showDraw(d);
+  }
+  function request(req){
+   if(req.kind==='coinGuess'){coinKey=null;return;}
+   const c=req.context?.coin;if(!c)return;const key=req.matchId+':'+JSON.stringify(c);if(key===coinKey)return;coinKey=key;
+   el.querySelector('.fx-coin-wrap')?.remove();const box=document.createElement('div');box.className='fx-coin-wrap';box.setAttribute('role','status');box.dataset.result=c.result;
+   box.style.setProperty('--coin-end',c.result==='tails'?'180deg':'0deg');
+   box.innerHTML='<div class="fx-coin"><div class="fx-face">正</div><div class="fx-face fx-tail">反</div></div><strong class="fx-coin-caption"></strong>';
+   box.querySelector('strong').textContent='硬幣結果：'+(c.result==='heads'?'正面':'反面');el.append(box);later(()=>box.remove(),reduced()?500:1800);
+  }
+  return {observe,request,reset};
+ }
+ const api={drawChanges,create};if(typeof module==='object'&&module.exports)module.exports=api;else root.BreakPresentation=api;
+})(typeof window==='object'?window:globalThis);
+
 </script>
 <script>
 /* BREAK v9: deck input/validation. UMD, pinned library admission. */
@@ -3506,6 +3582,15 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
 
   const img = c => !CL.card(c)?.playable ? `<span class="card-visual">${cardImage(c)}<span class="skill-pending">技能未自動化</span></span>` : cardImage(c);
 
+  const presentation=BreakPresentation.create({root:$('tableEffects'),img,deckRect:p=>document.querySelector((p===0?'#meSide':'#oppSide')+' .rcol .pile2:not([data-pile])')?.getBoundingClientRect()||document.querySelector((p===0?'#meSide':'#oppSide')+' .pile2')?.getBoundingClientRect()});
+  let hintToastTimer=null;
+  function hintMode(){return $('hintMode').value;}
+  function hintSettings(){return '<h3>效果提示</h3><div class="theme-seg" role="group" aria-label="效果提示">'+[['off','關閉提示'],['simple','簡易提示'],['normal','正常提示']].map(([v,t])=>`<button type="button" data-hint-set="${v}" aria-pressed="${hintMode()===v}">${t}</button>`).join('')+'</div><p class="sub">簡易提示以可用技能亮框為主；必要選擇、抽牌結果與 Loss 仍需確認。</p>';}
+  function applyHints(v,initial=false){if(!['off','simple','normal'].includes(v))v='simple';$('hintMode').value=v;document.body.dataset.hints=v;store.set('bk_hint_mode',v);document.querySelectorAll('[data-hint-set]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.hintSet===v)));if(v==='off'){$('hintToast').hidden=true;clearTimeout(hintToastTimer);}if(!initial&&turnNotice&&['turn','serve'].includes(turnNotice.data.type)&&v!=='normal'){const n=turnNotice;turnNotice=null;renderTransition();n.resolve();}}
+  $('hintMode').onchange=()=>applyHints($('hintMode').value);
+  document.addEventListener('click',e=>{const b=e.target.closest('[data-hint-set]');if(b)applyHints(b.dataset.hintSet);});
+  applyHints(store.get('bk_hint_mode')||'simple',true);
+  function briefNotice(n){if(hintMode()!=='simple')return;clearTimeout(hintToastTimer);const who=n.player===0?'你':oppName;$('hintToast').textContent=n.type==='serve'?`${who}發球 · 第 ${n.rally} 球`:`${who}的回合${n.ball?' · 來球 '+n.ball.off:''}`;$('hintToast').hidden=false;hintToastTimer=setTimeout(()=>$('hintToast').hidden=true,1300);}
   // ---------- setup
   function usableDeck(k) { try { E.validateDeck(DECKS[k].cards, modeOptions().mode); return true; } catch(e) { return false; } }
   function fill(sel, keys, saved) { const usable=keys.filter(usableDeck);sel.innerHTML=(sel.id==='myDeck'?'<option value="">'+(keys.length?'請選擇牌組':'尚無牌組')+'</option>':'')+keys.map(k => `<option value="${esc(k)}" ${usableDeck(k)?'':'disabled'}>${esc(DECKS[k].name)}${usableDeck(k)?'':'（此模式不可用）'}</option>`).join('');sel.value=saved&&usable.includes(saved)?saved:usable[0]||''; }
@@ -4085,9 +4170,9 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
   document.addEventListener('pointerup', endDrag); document.addEventListener('pointercancel', endDrag);
   function showLog() { openSheet(`<h3>對局紀錄</h3><div class="log" style="max-height:60vh">${logBuf.map(([s, c]) => `<div class="${c || ''}">${esc(s)}</div>`).join('')}</div>`); const l = $('sheetBox').querySelector('.log'); l.scrollTop = l.scrollHeight; }
   $('logBtn').onclick = showLog;
-  $('menuBtn').onclick = () => openSheet(OL.inGame ? '<h3>選單</h3><div class="opts"><button class="opt" type="button" id="mLeave">離開房間（回到大廳）</button></div><p class="sub">離開後可從大廳「回到房間」接續；房主離開時對手可接手。</p>'+'<h3>外觀</h3>'+bkThemeSeg() : '<h3>選單</h3><div class="opts"><button class="opt primary" type="button" id="mRestart">重新開始這場</button><button class="opt" type="button" id="mSetup">回到選牌組</button></div>'+'<h3>外觀</h3>'+bkThemeSeg());
+  $('menuBtn').onclick = () => openSheet(OL.inGame ? '<h3>選單</h3><div class="opts"><button class="opt" type="button" id="mLeave">離開房間（回到大廳）</button></div><p class="sub">離開後可從大廳「回到房間」接續；房主離開時對手可接手。</p>'+'<h3>外觀</h3>'+bkThemeSeg()+hintSettings() : '<h3>選單</h3><div class="opts"><button class="opt primary" type="button" id="mRestart">重新開始這場</button><button class="opt" type="button" id="mSetup">回到選牌組</button></div>'+'<h3>外觀</h3>'+bkThemeSeg()+hintSettings());
   $('sheet').addEventListener('click', e => { if (e.target.id === 'mRestart') { closeSheet(); restartSolo(); } if (e.target.id === 'mSetup') { closeSheet(); backToSetup(); } if (e.target.id === 'mLeave') { closeSheet(); olRun(async () => { await OL.client.leave(); olLeaveGame(); })(); } });
-  function backToSetup() { persistSolo(false);nativeWidget?.destroy();nativeWidget=null;session?.stop(); session = null; game = null; pending = null; turnNotice = null; renderTransition(); $('game').hidden = true; $('dock').hidden = true; $('tbtns').hidden = true; $('setup').hidden = false; $('modebar').hidden = false; document.body.classList.remove('playing'); delete document.body.dataset.dock; }
+  function backToSetup() { presentation.reset();$('hintToast').hidden=true;clearTimeout(hintToastTimer);persistSolo(false);nativeWidget?.destroy();nativeWidget=null;session?.stop(); session = null; game = null; pending = null; turnNotice = null; renderTransition(); $('game').hidden = true; $('dock').hidden = true; $('tbtns').hidden = true; $('setup').hidden = false; $('modebar').hidden = false; document.body.classList.remove('playing'); delete document.body.dataset.dock; }
 
   function publicLogText(e) {
     const who=e.player===0?'你':oppName;
@@ -4147,14 +4232,15 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
       onBoard(board,view) {
         const same=pending&&view.request?.requestId===pending.req.requestId&&view.request?.epoch===pending.req.epoch;game=board;if(!same)pending=null;turnNotice=null;
         skillResults=view.publicLog.filter(e=>e.type==='skill_resolved'&&e.turn===view.turn.id).slice(-2);persistSolo(true);
-        logBuf=view.publicLog.map(e=>[publicLogText(e), '']);render();
+        logBuf=view.publicLog.map(e=>[publicLogText(e), '']);render();presentation.observe(view);
       },
-      onRequest(req) {pending={req};setDockCollapsed(false);render();soloSelection=null;},
-      onNotice(board,data,resolve) {turnNotice={data,resolve,game:board};render();},
+      onRequest(req) {presentation.request(req);pending={req};setDockCollapsed(false);render();soloSelection=null;},
+      onNotice(board,data,resolve) {if(hintMode()!=='normal'&&['serve','turn'].includes(data.type)){briefNotice(data);queueMicrotask(resolve);return;}turnNotice={data,resolve,game:board};render();},
       onError(err) {pending=null;turnNotice=null;logBuf.push(['發生錯誤：'+err.message,'lost']);render();$('runtimeStatus').hidden=false;$('runtimeStatus').textContent='❌ '+err.message;console.error(err);}
     };
   }
   function enterTable() {
+    presentation.reset();$('hintToast').hidden=true;clearTimeout(hintToastTimer);
     prevTop={};prevVal={};prevBall=null;skillResults=[];flashMsg='';clearTimeout(flashT);
     if(drag?.el)drag.el.remove();if(drag?.over)drag.over.classList.remove('over');drag=null;suppressClick=false;document.body.classList.remove('dragging');
     $('setup').hidden = true; $('modebar').hidden = true; $('game').hidden = false; $('tbtns').hidden = false; document.body.classList.add('playing'); syncViewport();
