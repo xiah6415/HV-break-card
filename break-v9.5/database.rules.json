@@ -248,6 +248,44 @@
           }
         }
       }
+    },
+    "publicDecks": {
+      ".read": "query.orderByChild == 'createdAt' && query.limitToLast != null && query.limitToLast <= 30",
+      ".indexOn": [
+        "createdAt"
+      ],
+      "$deck": {
+        ".write": "auth != null && auth.token.firebase.sign_in_provider == 'google.com' && ((!data.exists() && newData.child('owner').val() == auth.uid) || (data.child('owner').val() == auth.uid && !newData.exists()))",
+        ".validate": "newData.hasChildren(['version','owner','author','name','cardsJSON','cardCount','eventCount','createdAt'])",
+        "version": {
+          ".validate": "newData.val() == 1"
+        },
+        "name": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 60"
+        },
+        "cardsJSON": {
+          ".validate": "newData.isString() && newData.val().length <= 16000"
+        },
+        "cardCount": {
+          ".validate": "newData.val() == 40"
+        },
+        "eventCount": {
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 8"
+        },
+        "createdAt": {
+          ".validate": "newData.isNumber() && newData.val() == now"
+        },
+        "$other": {
+          ".validate": false
+        },
+        ".read": true,
+        "owner": {
+          ".validate": "newData.isString() && newData.val() == auth.uid"
+        },
+        "author": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 20"
+        }
+      }
     }
   }
 }

@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import {initializeTestEnvironment,assertFails,assertSucceeds} from '@firebase/rules-unit-testing';
-import {ref,set,get,update,remove,runTransaction} from 'firebase/database';
+import {ref,set,get,update,remove,runTransaction,query,orderByChild,limitToLast,endBefore} from 'firebase/database';
 const env=await initializeTestEnvironment({projectId:'demo-break-multi',database:{host:'127.0.0.1',port:9000,rules:fs.readFileSync(new URL('../database.rules.json',import.meta.url),'utf8')}});
 let count=0;const ok=async p=>{await assertSucceeds(p);count++;},no=async p=>{await assertFails(p);count++;};
 try{
@@ -9,6 +9,25 @@ try{
  const backup={version:1,name:'私有牌組',cardsJSON:'{"D01-009":40}',cardCount:40,eventCount:0,createdAt:Date.now()};
  await no(get(ref(anon,'personalDecks/member')));await no(get(ref(other,'personalDecks/member')));await no(set(ref(other,'personalDecks/member/forged'),backup));await no(set(ref(anon,'personalDecks/anonymous/d1'),backup));
  await ok(set(ref(google,'personalDecks/member/d1'),{...backup,createdAt:{'.sv':'timestamp'}}));await ok(get(ref(google,'personalDecks/member')));await no(get(ref(other,'personalDecks/member/d1/cardsJSON')));await no(set(ref(google,'personalDecks/member/d1'),{...backup,name:'覆蓋',createdAt:{'.sv':'timestamp'}}));await no(set(ref(google,'personalDecks/member/bad'),{...backup,eventCount:9,createdAt:{'.sv':'timestamp'}}));await no(set(ref(google,'personalDecks/member/bad'),{...backup,secret:1,createdAt:{'.sv':'timestamp'}}));await no(set(ref(google,'personalDecks/member/bad'),{...backup,cardCount:39,createdAt:{'.sv':'timestamp'}}));await no(set(ref(google,'personalDecks/member/bad'),{...backup,createdAt:1}));await no(remove(ref(other,'personalDecks/member/d1')));await ok(remove(ref(google,'personalDecks/member/d1')));
+ const publicDeck={...backup,owner:'member',author:'公開作者',createdAt:{'.sv':'timestamp'}};
+ const guest=env.unauthenticatedContext().database();
+ await no(set(ref(anon,'publicDecks/pub_a'),{...publicDeck,owner:'anonymous'}));
+ await no(set(ref(other,'publicDecks/pub_a'),publicDeck));
+ await ok(set(ref(google,'publicDecks/pub_a'),publicDeck));
+ await ok(get(query(ref(guest,'publicDecks'),orderByChild('createdAt'),limitToLast(30))));
+ await ok(get(ref(guest,'publicDecks/pub_a')));
+ await no(get(ref(guest,'publicDecks')));
+ await no(get(query(ref(guest,'publicDecks'),orderByChild('createdAt'),limitToLast(31))));
+ await no(set(ref(other,'publicDecks/pub_a/author'),'冒名'));
+ await no(set(ref(google,'publicDecks/pub_a/author'),'改寫'));
+ await no(remove(ref(other,'publicDecks/pub_a')));
+ await no(set(ref(google,'publicDecks/pub_bad'),{...publicDeck,cardCount:39}));
+ await no(set(ref(google,'publicDecks/pub_bad'),{...publicDeck,eventCount:9}));
+ await no(set(ref(google,'publicDecks/pub_bad'),{...publicDeck,author:'x'.repeat(21)}));
+ await no(set(ref(google,'publicDecks/pub_bad'),{...publicDeck,email:'private@example.test'}));
+ await no(set(ref(google,'publicDecks/pub_bad'),{...publicDeck,createdAt:1}));
+ await no(get(ref(guest,'personalDecks/member')));
+ await ok(remove(ref(google,'publicDecks/pub_a')));
  await env.clearDatabase();const a=env.authenticatedContext('host').database(),b=env.authenticatedContext('guest').database(),x=env.authenticatedContext('stranger').database(),u=env.unauthenticatedContext().database(),room='ROOM0001';
  const at=Date.now(),meta={id:room,title:'test',p0:'host',status:'waiting',mode:'strict',createdAt:at};
  await no(get(ref(u,'lobby')));await no(set(ref(u,'presence/host/c1'),{name:'fake',at}));
