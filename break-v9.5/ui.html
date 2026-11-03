@@ -522,6 +522,24 @@ body.playing .dock[data-mode="bar"] .hc-content { max-height: 22vh; }
 body.playing .dock[data-mode="modal"] { top: 50%; bottom: auto; transform: translateY(-50%); max-height: 82vh; border-radius: 18px; }
 body.playing .dock[data-mode="modal"] .hc-content { max-height: 58vh; }
 body.playing .dock[data-mode="modal"] .dock-head { position: static; padding: 2px 0 0; }
+body.playing .dock[data-effect="1"]:not([data-mode="modal"]) .native-choice > .hc { display: grid; }
+body.playing .dock[data-effect="1"]:not([data-mode="modal"]) .hc-content { overflow-y: auto; max-height: 30vh; }
+body.playing .dock .hc-source-name small { font-weight: 400; color: var(--muted); font-size: 10px; }
+body.playing .dock.peek-court { top: auto; bottom: calc(var(--handh) + 30px + env(safe-area-inset-bottom, 0px)); transform: none; }
+body.playing .dock.peek-court .opts, body.playing .dock.peek-court .q { display: none !important; }
+body.playing .dock.peek-court .dock-summary { display: block; margin-right: auto; font-size: 12px; overflow-wrap: anywhere; }
+body.playing .dock.peek-court .dock-head { position: static; align-items: center; }
+body.playing[data-peek="1"] .game::after { opacity: 0; pointer-events: none; }
+@media (max-width: 699px) {
+  body.playing .dock[data-mode="modal"] { top: auto; bottom: calc(var(--handh) + 30px + env(safe-area-inset-bottom, 0px)); transform: none; max-height: 62vh; border-radius: 16px; }
+  body.playing .dock[data-mode="modal"] .hc-content { max-height: 40vh; }
+  body.playing .dock .hc-source-name { font-size: 12px; }
+  body.playing .dock[data-mode="modal"] .hc-grid { grid-template-columns: repeat(auto-fill,minmax(58px,1fr)); }
+}
+@media (max-height: 499px) {
+  body.playing .dock[data-mode="modal"] { bottom: 8px; max-height: 88vh; }
+  body.playing .dock[data-mode="modal"] .hc-content { max-height: 48vh; }
+}
 body.playing[data-dock="modal"] .game::after { content: ""; position: fixed; inset: 0; background: #172e3299; z-index: 15; }
 body.playing .dock.wait { border-color: var(--line); }
 body.playing .dock.wait .in { padding-block: 4px; }
@@ -773,7 +791,7 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
   </section>
 </div>
 
-<div class="dock" id="dock" hidden><div class="in"><div class="dock-head"><div class="dock-summary" id="dockSummary">目前操作</div><button class="chip" id="manualBtn" type="button" hidden>手動</button><button class="chip undo-button" id="undoBtn" type="button" disabled>Undo</button></div><div class="q" id="dockQ"></div><div class="opts" id="dockOpts"></div></div></div>
+<div class="dock" id="dock" hidden><div class="in"><div class="dock-head"><div class="dock-summary" id="dockSummary">目前操作</div><button class="chip" id="choicePeek" type="button" aria-expanded="true" aria-controls="dockOpts" hidden>查看球場</button><button class="chip" id="manualBtn" type="button" hidden>手動</button><button class="chip undo-button" id="undoBtn" type="button" disabled>Undo</button></div><div class="q" id="dockQ"></div><div class="opts" id="dockOpts"></div></div></div>
 <div class="sheet" id="sheet" hidden><div class="box" id="sheetBox"></div></div>
 <div class="turn-screen" id="turnScreen" role="dialog" aria-modal="true" aria-labelledby="turnTitle" aria-describedby="turnDetail" hidden><div class="turn-card" id="turnCard"></div></div>
 
@@ -1000,9 +1018,10 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
     persistSolo(true);requestAnimationFrame(measureDock);
   }
   function renderNativeChoice(r, selection = null) {
-    const labels={ack:'抽 1 張',turnEnd:'結束回合',lossConfirm:'喊 Loss',roll:'開始調度',reveal:'翻開牌庫頂',revealResult:'看完了，繼續',mulligan:'保留／重抽選取的牌'};
+    const labels={ack:'抽 1 張',turnEnd:'結束回合',lossConfirm:'喊 Loss',roll:'開始調度',reveal:'翻開牌庫頂',mulligan:'保留／重抽選取的牌'};
     nativeWidgetKey=r.requestId+':'+r.epoch;
     nativeWidget=BreakChoiceUI.render($('dockOpts'),r,{goLabel:labels[r.kind],selection,
+      sourceInfo:ref=>{const c=CL.card(ref.cardNo);return {name:ref.name||c?.name||ref.cardNo,skill:c?(DEF[c.code]?.[10]||c.skill):''};},
       previewBlockSkills:a=>session.match.previewBlockSkills(a),
       imgSrc:no=>IMG[no.replace(/^HV-?/,'')]||'',onCard:c=>cardSheet(c.cardNo.replace(/^HV-?/,'')),
       onAnswer:a=>nativeCommand({kind:'answer',answer:a}),onLoss:()=>nativeAnswer({__loss:true}),onSelection:s=>{syncNativeHand(s);olControls();}
@@ -1239,6 +1258,8 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
     requestAnimationFrame(measureDock);
   }
   function setDockCollapsed() { $('dock').classList.remove('collapsed'); requestAnimationFrame(measureDock); }
+  function peekChoice(value) { $('dock').classList.toggle('peek-court',value);document.body.dataset.peek=value?'1':'0';$('choicePeek').textContent=value?'繼續選擇':'查看球場';$('choicePeek').setAttribute('aria-expanded',String(!value));requestAnimationFrame(measureDock); }
+  $('choicePeek').onclick=()=>peekChoice(!$('dock').classList.contains('peek-court'));
   window.addEventListener('resize', syncViewport);
   window.visualViewport?.addEventListener('resize', syncViewport);
   if (window.ResizeObserver) new ResizeObserver(() => requestAnimationFrame(measureDock)).observe($('dock'));
@@ -1278,7 +1299,7 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
     // 面板模式：hand＝只留提示列，直接點手牌／場地；modal＝置中卡片框（手牌以外的卡、調度、攔網組合）；bar＝精簡按鈕列
     { const r = pending?.req, cardOpts = r ? r.options.filter(o => o.card) : [], handIds = new Set(me.handRefs.map(c => c.id));
       const mode = !r || game.winner ? 'bar' : !cardOpts.length ? 'bar' : (cardOpts.every(o => handIds.has(o.value)) && !['mulligan'].includes(r.kind) && r.input.type !== 'block' && !(r.input.type === 'cards' && r.input.max > 1)) ? 'hand' : 'modal';
-      dock.dataset.mode = mode; document.body.dataset.dock = mode; }
+      dock.dataset.mode = mode; document.body.dataset.dock = mode;dock.dataset.effect=r?.source?'1':'0';$('choicePeek').hidden=mode!=='modal';if(!sameRequest||mode!=='modal')peekChoice(false); }
     $('dockOpts').classList.toggle('native-choice',!!pending&&!game.winner);
     $('manualBtn').hidden = !(game.mode==='numeric' && pending?.req.canManual);
     if (game.winner) {
@@ -1287,7 +1308,7 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
       $('dockOpts').innerHTML = '<button class="opt primary" type="button" data-act="again">再打一場</button><button class="opt" type="button" data-act="setup">換牌組</button><button class="opt" type="button" data-act="log">看紀錄</button>';
       if(OL.inGame){const again=$('dockOpts').querySelector('[data-act="again"]'),voted=OL.meta?.rematch?.[OL.client.user.uid]===session?.last?.view.match.id;again.disabled=voted||!OL.client.online||OL.meta?.status!=='finished';again.textContent=voted?'已確認，等待對手':'再來一局';again.title='雙方確認後在同一房間開始新局';$('dockOpts').querySelector('[data-act="setup"]').textContent='離開房間';}
     } else if (pending) {
-      dock.classList.remove('wait');$('dockQ').innerHTML=(skillResults.length?'<div class="skill-results" role="status">'+skillResults.map(e=>'<div>✦ '+esc(publicLogText(e))+'</div>').join('')+'</div>':'')+esc(flashMsg||pending.req.context.reason||'');renderNativeChoice(pending.req,savedSelection);
+      dock.classList.remove('wait');$('dockQ').textContent=flashMsg||pending.req.context.reason||'';renderNativeChoice(pending.req,savedSelection);
       $('dockOpts').querySelector('.hc-content').scrollTop=savedScrollTop;
     } else {
       dock.classList.add('wait');

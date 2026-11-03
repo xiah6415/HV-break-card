@@ -12,6 +12,14 @@ const CSS = `
 .hc-head .hc-src{flex:0 0 44px;width:44px}
 .hc-q{font-weight:700;font-size:15px;line-height:1.4;min-width:0;overflow-wrap:anywhere}
 .hc-q small{display:block;font-weight:400;font-size:12px;color:var(--muted,#566b6e);margin-top:2px}
+.hc-heading{min-width:0;flex:1}
+.hc-source-name{display:block;font-size:13px;line-height:1.4;margin-bottom:4px;overflow-wrap:anywhere}
+.hc-step{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;background:var(--sunk,#d9e4e3);color:var(--teal,#0e7175);margin-bottom:5px}
+.hc-current{display:block;background:transparent;color:inherit;border-left:3px solid var(--court,#d96a1f);padding-left:8px}
+.hc-effect-text{font-size:12px;line-height:1.5;color:var(--muted,#566b6e)}
+.hc-effect-text summary{cursor:pointer}.hc-effect-text p{white-space:pre-line;margin:6px 0}
+.hc-public-summary{padding:8px 10px;border-radius:8px;background:var(--sunk,#d9e4e3);font-size:13px;overflow-wrap:anywhere}
+.hc-card:disabled{cursor:default}.hc-card:disabled img{opacity:1}
 .hc-ctx{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--muted,#566b6e);flex-wrap:wrap}
 .hc-ctx .hc-rev{width:56px}
 .hc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px;min-width:0}
@@ -101,6 +109,40 @@ function requestDetail(request){
  return '';
 }
 
+function stepLabel(r){
+ if(['activate_payment','optional'].includes(r.kind))return '發動選擇';
+ if(['payment_cards','payment_count','guts','gutsCourt','cost'].includes(r.kind))return '支付費用';
+ if(r.kind==='reveal')return '公開卡片';
+ if(['revealResult','external_result'].includes(r.kind))return '確認結果';
+ if(r.kind==='external_action')return '執行指定動作';
+ if(r.kind==='trigger_order')return '安排結算順序';
+ if(r.source)return r.input.ordered?'安排卡片順序':'選擇效果內容';
+ return '';
+}
+function actionLabel(r,sel){
+ const value=H.selectionValue(r,sel),n=Array.isArray(value)?value.length:r.options.some(o=>o.card&&key(o.value)===key(value))?1:0;
+ const count=Number.isInteger(value)?value:'所選';
+ if(r.kind==='revealResult')return '確認公開結果';
+ if(r.kind==='activate_payment')return value===false?'不發動':'支付並發動';
+ if(r.kind==='optional')return value===false?'略過此效果':'執行效果';
+ if(['payment_cards','guts','gutsCourt'].includes(r.kind))return '支付 '+n+(r.kind==='payment_cards'?' 張牌':' Guts');
+ if(r.kind==='payment_count')return '確認支付 '+count+' 張';
+ if(r.kind==='draw_count')return value===0?'不抽牌':'抽 '+count+' 張';
+ if(r.kind==='mill_count')return value===0?'不送出牌庫的牌':'送出 '+count+' 張';
+ if(r.kind==='move_count')return r.context?.selectionAction==='exchange'?(value===0?'不交換':'交換兩側各 1 張'):value===0?'不移動卡片':'選擇要移動的 '+count+' 張';
+ if(r.kind==='entry_count')return value===0?'不讓角色登場':'選擇登場的 '+count+' 人';
+ if(r.kind==='target_count')return '選擇 '+count+' 個對象';
+ if(r.kind==='mode')return '確認所選效果／模式';
+ if(['move_cards','retrieve','discard'].includes(r.kind))return r.input.ordered?'確認放回順序':(r.kind==='discard'?'棄掉':r.kind==='retrieve'?'回收':'移動')+' '+n+' 張';
+ if(r.kind==='target')return '選定效果對象';
+ if(r.kind==='parameter')return '選定'+({receive:'接球',toss:'舉球',attack:'攻擊',serve:'發球',block:'攔網'}[value]||'調整數值');
+ if(r.kind==='name')return '確認角色名稱';
+ if(r.kind==='trigger_order')return '先結算此效果';
+ if(r.kind==='external_action')return '已完成，繼續';
+ if(r.kind==='external_result')return '確認結果';
+ return GO_LABEL[r.input.type];
+}
+
 function timingHint(request){
  const c=request.context||{};
  if(['receiver','setter','attacker','serve'].includes(request.kind)&&c.entrySkillIds?.length)return {label:'登場技能可觸發',active:true,candidates:true,ids:c.entrySkillIds};
@@ -119,6 +161,8 @@ function render(rootEl, request, opts = {}) {
   let sel = H.restoreSelection(request, opts.selection), lossArm = false, done = false;
   const byKey = new Map(request.options.map(o => [key(o.value), o]));
   const hasCards = request.options.some(o => o.card);
+  const readOnlyCards=t==='cards'&&request.input.max===0;
+  const sourceInfo=request.source ? opts.sourceInfo?.(request.source)||request.source : null;
 
   function body() {
     if (t === 'ack') return '';
@@ -133,7 +177,7 @@ function render(rootEl, request, opts = {}) {
         const c = o.card || { cardNo: '', name: o.label };
         const parts=String(c.zone||'').split('.'),zone=parts.length===2?parts[1]:parts[0],labels={hand:'手牌',deck:'牌庫',drop:'棄牌',event:'Event',serve:'發球',block:'中攔',receive:'接球',toss:'舉球',attack:'攻擊','side:0':'側攔','side:1':'側攔'};
         const location=labels[zone]?(parts.length===2?(+parts[0]===request.actor?'我方 ':'對方 '):'')+labels[zone]:'';
-        return `<div class="hc-item${o.card?'':' hc-nocard'}"><button type="button" class="hc-card${timing?.active&&timing.candidates&&o.card&&(!timing.ids||timing.ids.includes(o.value))?' hc-ready':''}${on ? ' on' : ''}" aria-pressed="${on}" data-hc-v="${esc(key(o.value))}">${c.cardNo ? cardImg(c) : ''}<span class="hc-nm${o.card?.effectiveName&&optionLabel(request,o)!==o.label?' renamed':''}">${esc(optionLabel(request,o))}</span>${location?`<small class="hc-zone">${esc(location)}</small>`:''}${badge}</button>${o.card&&opts.onCard?`<button type="button" class="hc-info" data-hc-info="${esc(o.id)}" aria-label="查看 ${esc(optionLabel(request,o))} 卡片">查卡</button>`:''}</div>`;
+        return `<div class="hc-item${o.card?'':' hc-nocard'}"><button type="button" class="hc-card${timing?.active&&timing.candidates&&o.card&&(!timing.ids||timing.ids.includes(o.value))?' hc-ready':''}${on ? ' on' : ''}" aria-pressed="${on}" ${readOnlyCards?'disabled':''} data-hc-v="${esc(key(o.value))}">${c.cardNo ? cardImg(c) : ''}<span class="hc-nm${o.card?.effectiveName&&optionLabel(request,o)!==o.label?' renamed':''}">${esc(optionLabel(request,o))}</span>${location?`<small class="hc-zone">${esc(location)}</small>`:''}${badge}</button>${o.card&&opts.onCard?`<button type="button" class="hc-info" data-hc-info="${esc(o.id)}" aria-label="查看 ${esc(optionLabel(request,o))} 卡片">查卡</button>`:''}</div>`;
       }).join('')}</div>`;
     }
     return `<div class="hc-opts" role="group">${request.options.map(o => `<button type="button" class="hc-opt${t === 'number' ? ' num' : ''}${sel.value !== undefined && key(sel.value) === key(o.value) ? ' on' : ''}" aria-pressed="${sel.value !== undefined && key(sel.value) === key(o.value)}" data-hc-v="${esc(key(o.value))}">${esc(optionLabel(request,o))}</button>`).join('')}</div>`;
@@ -149,22 +193,32 @@ function render(rootEl, request, opts = {}) {
     if (c.ball) { const kind=c.ball.kind || c.ball.type, value=c.ball.offense ?? c.ball.off; out.push(`來球：${esc({ serve: '發球', attack: '攻擊', block: '攔網回球' }[kind] || kind)} ${esc(value)}`); }
     if (c.revealed) out.push(`<span class="hc-rev">${cardImg(c.revealed)}</span><span>翻開：${esc(c.revealed.name || c.revealed.cardNo)}</span>`);
     if (c.dice) out.push(`擲骰 ${esc(c.dice[0])} : ${esc(c.dice[1])}`);
+    if(request.kind==='revealResult'&&hasCards){
+      const info=request.uiPresentation,n=info?.eligibleCount;
+      const result=Number.isInteger(n)?(n===0?'沒有符合條件的牌。':`符合條件：${n} 張。`):'';
+      const next=info?.purpose==='retrieve'?(n===0?'確認後放回牌庫底。':'確認後依規則回收符合條件的牌，其餘放回牌庫底。'):'';
+      out.push(`<div class="hc-public-summary">已公開 ${request.options.filter(o=>o.card).length} 張：${request.options.filter(o=>o.card).map(o=>esc(optionLabel(request,o))).join('、')}。${result}${next}${readOnlyCards?'這一步只確認結果，不需選牌。':'請依提示選擇卡片。'}</div>`);
+    }
     return out.length ? `<div class="hc-ctx">${out.join('')}</div>` : '';
   }
   function draw() {
     const scrollTop=rootEl.querySelector('.hc-content')?.scrollTop||0;
+    const effectOpen=rootEl.querySelector('.hc-effect-text')?.open;
     if(t==='block'&&opts.previewBlockSkills){const ids=opts.previewBlockSkills(H.selectionValue(request,sel));timing=ids.length?{label:'此攔網組合可觸發技能',active:true,candidates:true,ids}:null;}
-    const ok = t === 'ack' || H.canSubmit(request, sel), prog = H.progress(request, sel);
+    const ok = t === 'ack' || H.canSubmit(request, sel), prog = readOnlyCards?'':H.progress(request, sel);
+    const step=stepLabel(request),sourceName=sourceInfo?.name||request.source?.cardNo;
     const src = request.source ? `<button type="button" class="hc-card hc-src${timing?.active?' hc-ready':''}" data-hc-src="1" aria-label="查看 ${esc(request.source.name || request.source.cardNo)}">${cardImg(request.source)}</button>` : '';
     const loss = request.canLoss && opts.onLoss ? (lossArm
       ? `<button type="button" class="hc-loss" data-hc-act="lossyes">確定 Loss</button><button type="button" class="hc-quiet" data-hc-act="lossno">不要</button>`
       : `<button type="button" class="hc-loss" data-hc-act="loss">喊 Loss</button>`) : '';
     rootEl.innerHTML = `<div class="hc" data-kind="${esc(request.kind)}" data-input="${t}">
-      <div class="hc-content"><div class="hc-head">${src}<div class="hc-q">${esc(requestPrompt(request))}${prog ? `<small class="hc-prog">${esc(prog)}</small>` : ''}</div></div>
+      <div class="hc-content"><div class="hc-head">${src}<div class="hc-heading">${sourceName?`<strong class="hc-source-name">${esc(sourceName)} <small>${esc(request.source.cardNo)}</small></strong>`:''}${step?`<span class="hc-step">${esc(step)}</span>`:''}<div class="hc-q"><mark class="hc-current">${esc(requestPrompt(request))}</mark>${prog ? `<small class="hc-prog">${esc(prog)}</small>` : ''}</div></div></div>
+      ${sourceInfo?.skill?`<details class="hc-effect-text"><summary>查看卡片效果全文</summary><p>${esc(sourceInfo.skill)}</p></details>`:''}
       ${timing?`<div class="hc-timing${timing.active?' ready':''}" role="status">✦ ${esc(timing.label)}</div>`:''}${ctx()}${body()}${chips()}
       <div class="hc-err" role="alert">${esc(sel.error || '')}</div></div>
-      <div class="hc-bar"><button type="button" class="hc-go" data-hc-act="go" ${ok ? '' : 'disabled'}>${esc(opts.goLabel || GO_LABEL[t])}</button>${(t === 'cards' || t === 'block') && sel.picked.length ? '<button type="button" class="hc-quiet" data-hc-act="clear">清除</button>' : ''}${loss}</div></div>`;
+      <div class="hc-bar"><button type="button" class="hc-go" data-hc-act="go" ${ok ? '' : 'disabled'}>${esc(opts.goLabel || actionLabel(request,sel))}</button>${(t === 'cards' || t === 'block') && sel.picked.length ? '<button type="button" class="hc-quiet" data-hc-act="clear">清除</button>' : ''}${loss}</div></div>`;
     rootEl.querySelector('.hc-content').scrollTop=scrollTop;
+    if(effectOpen&&rootEl.querySelector('.hc-effect-text'))rootEl.querySelector('.hc-effect-text').open=true;
   }
   function choose(value) { if (done) return; sel = H.toggle(request, sel, value); draw(); opts.onSelection && opts.onSelection(sel); }
   function onClick(e) {
@@ -192,6 +246,6 @@ function render(rootEl, request, opts = {}) {
   draw();
   return { destroy() { rootEl.removeEventListener('click', onClick); rootEl.innerHTML = ''; }, select: choose, get selection() { return sel; }, get timing() { return timing; } };
 }
-const api = { render, CSS, describePayment, requestDetail, requestPrompt, optionLabel, timingHint };
+const api = { render, CSS, describePayment, requestDetail, requestPrompt, optionLabel, timingHint, stepLabel, actionLabel };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.BreakChoiceUI = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

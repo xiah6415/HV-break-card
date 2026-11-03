@@ -522,6 +522,24 @@ body.playing .dock[data-mode="bar"] .hc-content { max-height: 22vh; }
 body.playing .dock[data-mode="modal"] { top: 50%; bottom: auto; transform: translateY(-50%); max-height: 82vh; border-radius: 18px; }
 body.playing .dock[data-mode="modal"] .hc-content { max-height: 58vh; }
 body.playing .dock[data-mode="modal"] .dock-head { position: static; padding: 2px 0 0; }
+body.playing .dock[data-effect="1"]:not([data-mode="modal"]) .native-choice > .hc { display: grid; }
+body.playing .dock[data-effect="1"]:not([data-mode="modal"]) .hc-content { overflow-y: auto; max-height: 30vh; }
+body.playing .dock .hc-source-name small { font-weight: 400; color: var(--muted); font-size: 10px; }
+body.playing .dock.peek-court { top: auto; bottom: calc(var(--handh) + 30px + env(safe-area-inset-bottom, 0px)); transform: none; }
+body.playing .dock.peek-court .opts, body.playing .dock.peek-court .q { display: none !important; }
+body.playing .dock.peek-court .dock-summary { display: block; margin-right: auto; font-size: 12px; overflow-wrap: anywhere; }
+body.playing .dock.peek-court .dock-head { position: static; align-items: center; }
+body.playing[data-peek="1"] .game::after { opacity: 0; pointer-events: none; }
+@media (max-width: 699px) {
+  body.playing .dock[data-mode="modal"] { top: auto; bottom: calc(var(--handh) + 30px + env(safe-area-inset-bottom, 0px)); transform: none; max-height: 62vh; border-radius: 16px; }
+  body.playing .dock[data-mode="modal"] .hc-content { max-height: 40vh; }
+  body.playing .dock .hc-source-name { font-size: 12px; }
+  body.playing .dock[data-mode="modal"] .hc-grid { grid-template-columns: repeat(auto-fill,minmax(58px,1fr)); }
+}
+@media (max-height: 499px) {
+  body.playing .dock[data-mode="modal"] { bottom: 8px; max-height: 88vh; }
+  body.playing .dock[data-mode="modal"] .hc-content { max-height: 48vh; }
+}
 body.playing[data-dock="modal"] .game::after { content: ""; position: fixed; inset: 0; background: #172e3299; z-index: 15; }
 body.playing .dock.wait { border-color: var(--line); }
 body.playing .dock.wait .in { padding-block: 4px; }
@@ -773,7 +791,7 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
   </section>
 </div>
 
-<div class="dock" id="dock" hidden><div class="in"><div class="dock-head"><div class="dock-summary" id="dockSummary">目前操作</div><button class="chip" id="manualBtn" type="button" hidden>手動</button><button class="chip undo-button" id="undoBtn" type="button" disabled>Undo</button></div><div class="q" id="dockQ"></div><div class="opts" id="dockOpts"></div></div></div>
+<div class="dock" id="dock" hidden><div class="in"><div class="dock-head"><div class="dock-summary" id="dockSummary">目前操作</div><button class="chip" id="choicePeek" type="button" aria-expanded="true" aria-controls="dockOpts" hidden>查看球場</button><button class="chip" id="manualBtn" type="button" hidden>手動</button><button class="chip undo-button" id="undoBtn" type="button" disabled>Undo</button></div><div class="q" id="dockQ"></div><div class="opts" id="dockOpts"></div></div></div>
 <div class="sheet" id="sheet" hidden><div class="box" id="sheetBox"></div></div>
 <div class="turn-screen" id="turnScreen" role="dialog" aria-modal="true" aria-labelledby="turnTitle" aria-describedby="turnDetail" hidden><div class="turn-card" id="turnCard"></div></div>
 
@@ -1994,8 +2012,9 @@ class Match {
  _cards(p,role){const k=this._kernel;return this._zone(p,'hand').filter(id=>k.card(id).printed.type==='character'&&k.card(id).printed.parameters[role]!=='dash'&&this._canEnter(p,id,role));}
  _canEnter(p,id,role){const k=this._kernel,c=k.card(id),other=role==='toss'?k.top(p,'receive'):role==='attack'?k.top(p,'toss'):null;return k.entryNames(id).some(name=>(!other||k.effectiveName(other)!==name)&&k.permission({action:'enter_character',player:p,origin:'rule',role:role==='block'?'center_blocker':role,entryOrigin:'hand',entryCount:role==='block'?(k.state.turn.blockEntries?.[p]||0)+1:1,entryCounts:k._entryCounts(p,'hand'),name,printed:c.printed}).allowed);}
  _options(values){return values.map((value,i)=>{const c=typeof value==='string'?this._kernel.state.cards[value]:null,labels={serve:'發球',receive:'接球',block:'攔網',toss:'舉球',attack:'攻擊',true:'確認／發動',false:'不發動',null:'不使用，繼續',deck_top:'放回牌庫頂',deck_bottom:'放回牌庫底'};return {id:c?value:'option-'+i,value,label:c?c.printed.display_name||c.printed.name:labels[String(value)]||String(value),...(c?{card:{id:value,incarnation:c.incarnation,cardNo:c.cardNo,name:c.printed.display_name||c.printed.name,effectiveName:this._kernel.effectiveName(value),entryNames:this._kernel.entryNames(value),zone:c.zone}}:{})};});}
- _ask(kind,actor,input,values,context={},origin='game',source=null){
+ _ask(kind,actor,input,values,context={},origin='game',source=null,uiPresentation=null){
   const r={protocol:'break.host.v1',matchId:this._m.id,requestId:this._m.id+':'+this.epoch+':'+this._m.decisionIndex,epoch:this.epoch,revision:this._kernel.state.revision,decisionIndex:this._m.decisionIndex,actor,origin,kind,prompt:context.prompt||prompts[kind]||'請選擇合法選項',input,options:this._options(values).map(o=>({...o,...(context.modeLabels?{label:context.modeLabels[o.value]||o.label}:{}),...(context.optionCards?.[o.value]?{card:context.optionCards[o.value]}:{})})),context,source,timing:this._kernel.state.turn.phase,canLoss:this._m.phase==='rally'&&this._kernel.state.stage==='rally'&&actor===this._kernel.state.turn.player&&!['roll','mulligan','lossConfirm'].includes(kind),canManual:false};
+  if(uiPresentation)r.uiPresentation=uiPresentation;
   r.canManual=this._m.mode==='numeric'&&origin==='game'&&r.canLoss&&this._m.pc!=='manualApply';
   const sig=signature(r);
   if(this._cursor<this._answers.length){const a=this._answers[this._cursor++];if(a.signature!==sig)throw Error('Replay decision diverged: '+kind);return copy(a.value);}
@@ -2032,7 +2051,7 @@ class Match {
    if(card)triggerCards[value]={id:card.id,incarnation:card.incarnation,cardNo:card.cardNo,name:card.printed.display_name||card.printed.name,zone:card.zone};
   }
   const prompt=['external_action','external_result'].includes(req.kind)?req.actionLabel+(req.kind==='external_action'?'；完成後確認':'；確認結果後結算效果'):req.kind==='reveal'?`點擊查看牌庫頂 ${req.top_count} 張`:req.kind==='revealResult'?req.purpose==='effect'?'公開的牌：確認後依卡片條件結算，再放回牌庫底':req.purpose==='retrieve'?'公開牌：確認後符合條件者加入手牌，未符合則放回牌庫底':req.eligible_count?'確認查看的卡片，再選擇加入手牌':'沒有符合的牌；確認後安排放回牌庫':req.kind==='trigger_order'?'選擇下一個先結算的效果；其餘效果仍會依序處理':req.ordering?`安排放回${placement}的順序（先選的先抽到）`:req.kind==='mode'?req.effectModes?'選擇1項效果':req.keywordOutgoing?'選擇回球進攻值':'其餘牌放回牌庫頂或底？':null;
-  const answer=this._ask(req.kind,req.player,input,options,{...(prompt?{prompt}:{}),...(req.kind==='trigger_order'?{modeLabels:triggerLabels,optionCards:triggerCards}:{}),...(req.ordering?{ordering:true}:{}),...(req.selectionAction==='exchange'?{selectionAction:req.selectionAction,prompt:req.kind==='move_count'?'是否交換兩側各1張？':'選擇交換的卡片'}:{}),...(req.effectDescription?{effectDescription:req.effectDescription,prompt:'是否執行：'+req.effectDescription+'？'}:{}),...(req.effectModes?{effectModes:true,modeLabels:req.modeLabels}:{}),...(req.count!=null?{count:req.count}:{}),...(req.destination?{destination:req.destination}:{}),...(req.target?{target:req.target}:{}),...(req.payment?{payment:req.payment}:{}),...(req.ineffectiveReason?{ineffectiveReason:req.ineffectiveReason,prompt:req.ineffectiveReason+' 是否仍支付費用？'}:{})},'kernel',req.source?{id:req.source,incarnation:this._kernel.card(req.source).incarnation,cardNo:this._kernel.card(req.source).cardNo}:null);
+  const answer=this._ask(req.kind,req.player,input,options,{...(prompt?{prompt}:{}),...(req.kind==='trigger_order'?{modeLabels:triggerLabels,optionCards:triggerCards}:{}),...(req.ordering?{ordering:true}:{}),...(req.selectionAction==='exchange'?{selectionAction:req.selectionAction,prompt:req.kind==='move_count'?'是否交換兩側各1張？':'選擇交換的卡片'}:{}),...(req.effectDescription?{effectDescription:req.effectDescription,prompt:'是否執行：'+req.effectDescription+'？'}:{}),...(req.effectModes?{effectModes:true,modeLabels:req.modeLabels}:{}),...(req.count!=null?{count:req.count}:{}),...(req.destination?{destination:req.destination}:{}),...(req.target?{target:req.target}:{}),...(req.payment?{payment:req.payment}:{}),...(req.ineffectiveReason?{ineffectiveReason:req.ineffectiveReason,prompt:req.ineffectiveReason+' 是否仍支付費用？'}:{})},'kernel',req.source?{id:req.source,incarnation:this._kernel.card(req.source).incarnation,cardNo:this._kernel.card(req.source).cardNo}:null,req.kind==='revealResult'?{purpose:req.purpose||null,eligibleCount:req.eligible_count??null}:null);
   if(this._eventPreview)this._eventPreview.answers.push(copy(answer));return answer;
  }
  _pump(){
@@ -2199,7 +2218,7 @@ const {LocalSession}=require('./local-session');
 const H=require('../host-choice'),AI=require('../match-ai');
 const short=c=>c.replace(/^HV-?/,'');
 const copy=x=>JSON.parse(JSON.stringify(x));
-function checkpointStamp(state){let n=2166136261;const json=JSON.stringify(state,(key,value)=>['epoch','requestId'].includes(key)?undefined:value);for(let i=0;i<json.length;i++){n^=json.charCodeAt(i);n=Math.imul(n,16777619);}return (n>>>0).toString(16);}
+function checkpointStamp(state){let n=2166136261;const json=JSON.stringify(state,(key,value)=>['epoch','requestId','uiPresentation'].includes(key)?undefined:value);for(let i=0;i<json.length;i++){n^=json.charCodeAt(i);n=Math.imul(n,16777619);}return (n>>>0).toString(16);}
 const fields={srv:'serve',blk:'block',rcv:'receive',tos:'toss',atk:'attack'};
 function boardView(view,deckKeys){
  const players=view.players.map((p,idx)=>{
@@ -3054,6 +3073,14 @@ const CSS = `
 .hc-head .hc-src{flex:0 0 44px;width:44px}
 .hc-q{font-weight:700;font-size:15px;line-height:1.4;min-width:0;overflow-wrap:anywhere}
 .hc-q small{display:block;font-weight:400;font-size:12px;color:var(--muted,#566b6e);margin-top:2px}
+.hc-heading{min-width:0;flex:1}
+.hc-source-name{display:block;font-size:13px;line-height:1.4;margin-bottom:4px;overflow-wrap:anywhere}
+.hc-step{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;background:var(--sunk,#d9e4e3);color:var(--teal,#0e7175);margin-bottom:5px}
+.hc-current{display:block;background:transparent;color:inherit;border-left:3px solid var(--court,#d96a1f);padding-left:8px}
+.hc-effect-text{font-size:12px;line-height:1.5;color:var(--muted,#566b6e)}
+.hc-effect-text summary{cursor:pointer}.hc-effect-text p{white-space:pre-line;margin:6px 0}
+.hc-public-summary{padding:8px 10px;border-radius:8px;background:var(--sunk,#d9e4e3);font-size:13px;overflow-wrap:anywhere}
+.hc-card:disabled{cursor:default}.hc-card:disabled img{opacity:1}
 .hc-ctx{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--muted,#566b6e);flex-wrap:wrap}
 .hc-ctx .hc-rev{width:56px}
 .hc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px;min-width:0}
@@ -3143,6 +3170,40 @@ function requestDetail(request){
  return '';
 }
 
+function stepLabel(r){
+ if(['activate_payment','optional'].includes(r.kind))return '發動選擇';
+ if(['payment_cards','payment_count','guts','gutsCourt','cost'].includes(r.kind))return '支付費用';
+ if(r.kind==='reveal')return '公開卡片';
+ if(['revealResult','external_result'].includes(r.kind))return '確認結果';
+ if(r.kind==='external_action')return '執行指定動作';
+ if(r.kind==='trigger_order')return '安排結算順序';
+ if(r.source)return r.input.ordered?'安排卡片順序':'選擇效果內容';
+ return '';
+}
+function actionLabel(r,sel){
+ const value=H.selectionValue(r,sel),n=Array.isArray(value)?value.length:r.options.some(o=>o.card&&key(o.value)===key(value))?1:0;
+ const count=Number.isInteger(value)?value:'所選';
+ if(r.kind==='revealResult')return '確認公開結果';
+ if(r.kind==='activate_payment')return value===false?'不發動':'支付並發動';
+ if(r.kind==='optional')return value===false?'略過此效果':'執行效果';
+ if(['payment_cards','guts','gutsCourt'].includes(r.kind))return '支付 '+n+(r.kind==='payment_cards'?' 張牌':' Guts');
+ if(r.kind==='payment_count')return '確認支付 '+count+' 張';
+ if(r.kind==='draw_count')return value===0?'不抽牌':'抽 '+count+' 張';
+ if(r.kind==='mill_count')return value===0?'不送出牌庫的牌':'送出 '+count+' 張';
+ if(r.kind==='move_count')return r.context?.selectionAction==='exchange'?(value===0?'不交換':'交換兩側各 1 張'):value===0?'不移動卡片':'選擇要移動的 '+count+' 張';
+ if(r.kind==='entry_count')return value===0?'不讓角色登場':'選擇登場的 '+count+' 人';
+ if(r.kind==='target_count')return '選擇 '+count+' 個對象';
+ if(r.kind==='mode')return '確認所選效果／模式';
+ if(['move_cards','retrieve','discard'].includes(r.kind))return r.input.ordered?'確認放回順序':(r.kind==='discard'?'棄掉':r.kind==='retrieve'?'回收':'移動')+' '+n+' 張';
+ if(r.kind==='target')return '選定效果對象';
+ if(r.kind==='parameter')return '選定'+({receive:'接球',toss:'舉球',attack:'攻擊',serve:'發球',block:'攔網'}[value]||'調整數值');
+ if(r.kind==='name')return '確認角色名稱';
+ if(r.kind==='trigger_order')return '先結算此效果';
+ if(r.kind==='external_action')return '已完成，繼續';
+ if(r.kind==='external_result')return '確認結果';
+ return GO_LABEL[r.input.type];
+}
+
 function timingHint(request){
  const c=request.context||{};
  if(['receiver','setter','attacker','serve'].includes(request.kind)&&c.entrySkillIds?.length)return {label:'登場技能可觸發',active:true,candidates:true,ids:c.entrySkillIds};
@@ -3161,6 +3222,8 @@ function render(rootEl, request, opts = {}) {
   let sel = H.restoreSelection(request, opts.selection), lossArm = false, done = false;
   const byKey = new Map(request.options.map(o => [key(o.value), o]));
   const hasCards = request.options.some(o => o.card);
+  const readOnlyCards=t==='cards'&&request.input.max===0;
+  const sourceInfo=request.source ? opts.sourceInfo?.(request.source)||request.source : null;
 
   function body() {
     if (t === 'ack') return '';
@@ -3175,7 +3238,7 @@ function render(rootEl, request, opts = {}) {
         const c = o.card || { cardNo: '', name: o.label };
         const parts=String(c.zone||'').split('.'),zone=parts.length===2?parts[1]:parts[0],labels={hand:'手牌',deck:'牌庫',drop:'棄牌',event:'Event',serve:'發球',block:'中攔',receive:'接球',toss:'舉球',attack:'攻擊','side:0':'側攔','side:1':'側攔'};
         const location=labels[zone]?(parts.length===2?(+parts[0]===request.actor?'我方 ':'對方 '):'')+labels[zone]:'';
-        return `<div class="hc-item${o.card?'':' hc-nocard'}"><button type="button" class="hc-card${timing?.active&&timing.candidates&&o.card&&(!timing.ids||timing.ids.includes(o.value))?' hc-ready':''}${on ? ' on' : ''}" aria-pressed="${on}" data-hc-v="${esc(key(o.value))}">${c.cardNo ? cardImg(c) : ''}<span class="hc-nm${o.card?.effectiveName&&optionLabel(request,o)!==o.label?' renamed':''}">${esc(optionLabel(request,o))}</span>${location?`<small class="hc-zone">${esc(location)}</small>`:''}${badge}</button>${o.card&&opts.onCard?`<button type="button" class="hc-info" data-hc-info="${esc(o.id)}" aria-label="查看 ${esc(optionLabel(request,o))} 卡片">查卡</button>`:''}</div>`;
+        return `<div class="hc-item${o.card?'':' hc-nocard'}"><button type="button" class="hc-card${timing?.active&&timing.candidates&&o.card&&(!timing.ids||timing.ids.includes(o.value))?' hc-ready':''}${on ? ' on' : ''}" aria-pressed="${on}" ${readOnlyCards?'disabled':''} data-hc-v="${esc(key(o.value))}">${c.cardNo ? cardImg(c) : ''}<span class="hc-nm${o.card?.effectiveName&&optionLabel(request,o)!==o.label?' renamed':''}">${esc(optionLabel(request,o))}</span>${location?`<small class="hc-zone">${esc(location)}</small>`:''}${badge}</button>${o.card&&opts.onCard?`<button type="button" class="hc-info" data-hc-info="${esc(o.id)}" aria-label="查看 ${esc(optionLabel(request,o))} 卡片">查卡</button>`:''}</div>`;
       }).join('')}</div>`;
     }
     return `<div class="hc-opts" role="group">${request.options.map(o => `<button type="button" class="hc-opt${t === 'number' ? ' num' : ''}${sel.value !== undefined && key(sel.value) === key(o.value) ? ' on' : ''}" aria-pressed="${sel.value !== undefined && key(sel.value) === key(o.value)}" data-hc-v="${esc(key(o.value))}">${esc(optionLabel(request,o))}</button>`).join('')}</div>`;
@@ -3191,22 +3254,32 @@ function render(rootEl, request, opts = {}) {
     if (c.ball) { const kind=c.ball.kind || c.ball.type, value=c.ball.offense ?? c.ball.off; out.push(`來球：${esc({ serve: '發球', attack: '攻擊', block: '攔網回球' }[kind] || kind)} ${esc(value)}`); }
     if (c.revealed) out.push(`<span class="hc-rev">${cardImg(c.revealed)}</span><span>翻開：${esc(c.revealed.name || c.revealed.cardNo)}</span>`);
     if (c.dice) out.push(`擲骰 ${esc(c.dice[0])} : ${esc(c.dice[1])}`);
+    if(request.kind==='revealResult'&&hasCards){
+      const info=request.uiPresentation,n=info?.eligibleCount;
+      const result=Number.isInteger(n)?(n===0?'沒有符合條件的牌。':`符合條件：${n} 張。`):'';
+      const next=info?.purpose==='retrieve'?(n===0?'確認後放回牌庫底。':'確認後依規則回收符合條件的牌，其餘放回牌庫底。'):'';
+      out.push(`<div class="hc-public-summary">已公開 ${request.options.filter(o=>o.card).length} 張：${request.options.filter(o=>o.card).map(o=>esc(optionLabel(request,o))).join('、')}。${result}${next}${readOnlyCards?'這一步只確認結果，不需選牌。':'請依提示選擇卡片。'}</div>`);
+    }
     return out.length ? `<div class="hc-ctx">${out.join('')}</div>` : '';
   }
   function draw() {
     const scrollTop=rootEl.querySelector('.hc-content')?.scrollTop||0;
+    const effectOpen=rootEl.querySelector('.hc-effect-text')?.open;
     if(t==='block'&&opts.previewBlockSkills){const ids=opts.previewBlockSkills(H.selectionValue(request,sel));timing=ids.length?{label:'此攔網組合可觸發技能',active:true,candidates:true,ids}:null;}
-    const ok = t === 'ack' || H.canSubmit(request, sel), prog = H.progress(request, sel);
+    const ok = t === 'ack' || H.canSubmit(request, sel), prog = readOnlyCards?'':H.progress(request, sel);
+    const step=stepLabel(request),sourceName=sourceInfo?.name||request.source?.cardNo;
     const src = request.source ? `<button type="button" class="hc-card hc-src${timing?.active?' hc-ready':''}" data-hc-src="1" aria-label="查看 ${esc(request.source.name || request.source.cardNo)}">${cardImg(request.source)}</button>` : '';
     const loss = request.canLoss && opts.onLoss ? (lossArm
       ? `<button type="button" class="hc-loss" data-hc-act="lossyes">確定 Loss</button><button type="button" class="hc-quiet" data-hc-act="lossno">不要</button>`
       : `<button type="button" class="hc-loss" data-hc-act="loss">喊 Loss</button>`) : '';
     rootEl.innerHTML = `<div class="hc" data-kind="${esc(request.kind)}" data-input="${t}">
-      <div class="hc-content"><div class="hc-head">${src}<div class="hc-q">${esc(requestPrompt(request))}${prog ? `<small class="hc-prog">${esc(prog)}</small>` : ''}</div></div>
+      <div class="hc-content"><div class="hc-head">${src}<div class="hc-heading">${sourceName?`<strong class="hc-source-name">${esc(sourceName)} <small>${esc(request.source.cardNo)}</small></strong>`:''}${step?`<span class="hc-step">${esc(step)}</span>`:''}<div class="hc-q"><mark class="hc-current">${esc(requestPrompt(request))}</mark>${prog ? `<small class="hc-prog">${esc(prog)}</small>` : ''}</div></div></div>
+      ${sourceInfo?.skill?`<details class="hc-effect-text"><summary>查看卡片效果全文</summary><p>${esc(sourceInfo.skill)}</p></details>`:''}
       ${timing?`<div class="hc-timing${timing.active?' ready':''}" role="status">✦ ${esc(timing.label)}</div>`:''}${ctx()}${body()}${chips()}
       <div class="hc-err" role="alert">${esc(sel.error || '')}</div></div>
-      <div class="hc-bar"><button type="button" class="hc-go" data-hc-act="go" ${ok ? '' : 'disabled'}>${esc(opts.goLabel || GO_LABEL[t])}</button>${(t === 'cards' || t === 'block') && sel.picked.length ? '<button type="button" class="hc-quiet" data-hc-act="clear">清除</button>' : ''}${loss}</div></div>`;
+      <div class="hc-bar"><button type="button" class="hc-go" data-hc-act="go" ${ok ? '' : 'disabled'}>${esc(opts.goLabel || actionLabel(request,sel))}</button>${(t === 'cards' || t === 'block') && sel.picked.length ? '<button type="button" class="hc-quiet" data-hc-act="clear">清除</button>' : ''}${loss}</div></div>`;
     rootEl.querySelector('.hc-content').scrollTop=scrollTop;
+    if(effectOpen&&rootEl.querySelector('.hc-effect-text'))rootEl.querySelector('.hc-effect-text').open=true;
   }
   function choose(value) { if (done) return; sel = H.toggle(request, sel, value); draw(); opts.onSelection && opts.onSelection(sel); }
   function onClick(e) {
@@ -3234,7 +3307,7 @@ function render(rootEl, request, opts = {}) {
   draw();
   return { destroy() { rootEl.removeEventListener('click', onClick); rootEl.innerHTML = ''; }, select: choose, get selection() { return sel; }, get timing() { return timing; } };
 }
-const api = { render, CSS, describePayment, requestDetail, requestPrompt, optionLabel, timingHint };
+const api = { render, CSS, describePayment, requestDetail, requestPrompt, optionLabel, timingHint, stepLabel, actionLabel };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.BreakChoiceUI = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
 
@@ -3593,9 +3666,10 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
     persistSolo(true);requestAnimationFrame(measureDock);
   }
   function renderNativeChoice(r, selection = null) {
-    const labels={ack:'抽 1 張',turnEnd:'結束回合',lossConfirm:'喊 Loss',roll:'開始調度',reveal:'翻開牌庫頂',revealResult:'看完了，繼續',mulligan:'保留／重抽選取的牌'};
+    const labels={ack:'抽 1 張',turnEnd:'結束回合',lossConfirm:'喊 Loss',roll:'開始調度',reveal:'翻開牌庫頂',mulligan:'保留／重抽選取的牌'};
     nativeWidgetKey=r.requestId+':'+r.epoch;
     nativeWidget=BreakChoiceUI.render($('dockOpts'),r,{goLabel:labels[r.kind],selection,
+      sourceInfo:ref=>{const c=CL.card(ref.cardNo);return {name:ref.name||c?.name||ref.cardNo,skill:c?(DEF[c.code]?.[10]||c.skill):''};},
       previewBlockSkills:a=>session.match.previewBlockSkills(a),
       imgSrc:no=>IMG[no.replace(/^HV-?/,'')]||'',onCard:c=>cardSheet(c.cardNo.replace(/^HV-?/,'')),
       onAnswer:a=>nativeCommand({kind:'answer',answer:a}),onLoss:()=>nativeAnswer({__loss:true}),onSelection:s=>{syncNativeHand(s);olControls();}
@@ -3832,6 +3906,8 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
     requestAnimationFrame(measureDock);
   }
   function setDockCollapsed() { $('dock').classList.remove('collapsed'); requestAnimationFrame(measureDock); }
+  function peekChoice(value) { $('dock').classList.toggle('peek-court',value);document.body.dataset.peek=value?'1':'0';$('choicePeek').textContent=value?'繼續選擇':'查看球場';$('choicePeek').setAttribute('aria-expanded',String(!value));requestAnimationFrame(measureDock); }
+  $('choicePeek').onclick=()=>peekChoice(!$('dock').classList.contains('peek-court'));
   window.addEventListener('resize', syncViewport);
   window.visualViewport?.addEventListener('resize', syncViewport);
   if (window.ResizeObserver) new ResizeObserver(() => requestAnimationFrame(measureDock)).observe($('dock'));
@@ -3871,7 +3947,7 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
     // 面板模式：hand＝只留提示列，直接點手牌／場地；modal＝置中卡片框（手牌以外的卡、調度、攔網組合）；bar＝精簡按鈕列
     { const r = pending?.req, cardOpts = r ? r.options.filter(o => o.card) : [], handIds = new Set(me.handRefs.map(c => c.id));
       const mode = !r || game.winner ? 'bar' : !cardOpts.length ? 'bar' : (cardOpts.every(o => handIds.has(o.value)) && !['mulligan'].includes(r.kind) && r.input.type !== 'block' && !(r.input.type === 'cards' && r.input.max > 1)) ? 'hand' : 'modal';
-      dock.dataset.mode = mode; document.body.dataset.dock = mode; }
+      dock.dataset.mode = mode; document.body.dataset.dock = mode;dock.dataset.effect=r?.source?'1':'0';$('choicePeek').hidden=mode!=='modal';if(!sameRequest||mode!=='modal')peekChoice(false); }
     $('dockOpts').classList.toggle('native-choice',!!pending&&!game.winner);
     $('manualBtn').hidden = !(game.mode==='numeric' && pending?.req.canManual);
     if (game.winner) {
@@ -3880,7 +3956,7 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
       $('dockOpts').innerHTML = '<button class="opt primary" type="button" data-act="again">再打一場</button><button class="opt" type="button" data-act="setup">換牌組</button><button class="opt" type="button" data-act="log">看紀錄</button>';
       if(OL.inGame){const again=$('dockOpts').querySelector('[data-act="again"]'),voted=OL.meta?.rematch?.[OL.client.user.uid]===session?.last?.view.match.id;again.disabled=voted||!OL.client.online||OL.meta?.status!=='finished';again.textContent=voted?'已確認，等待對手':'再來一局';again.title='雙方確認後在同一房間開始新局';$('dockOpts').querySelector('[data-act="setup"]').textContent='離開房間';}
     } else if (pending) {
-      dock.classList.remove('wait');$('dockQ').innerHTML=(skillResults.length?'<div class="skill-results" role="status">'+skillResults.map(e=>'<div>✦ '+esc(publicLogText(e))+'</div>').join('')+'</div>':'')+esc(flashMsg||pending.req.context.reason||'');renderNativeChoice(pending.req,savedSelection);
+      dock.classList.remove('wait');$('dockQ').textContent=flashMsg||pending.req.context.reason||'';renderNativeChoice(pending.req,savedSelection);
       $('dockOpts').querySelector('.hc-content').scrollTop=savedScrollTop;
     } else {
       dock.classList.add('wait');

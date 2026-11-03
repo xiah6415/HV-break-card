@@ -4,7 +4,7 @@ const {LocalSession}=require('./local-session');
 const H=require('../host-choice'),AI=require('../match-ai');
 const short=c=>c.replace(/^HV-?/,'');
 const copy=x=>JSON.parse(JSON.stringify(x));
-function checkpointStamp(state){let n=2166136261;const json=JSON.stringify(state,(key,value)=>['epoch','requestId'].includes(key)?undefined:value);for(let i=0;i<json.length;i++){n^=json.charCodeAt(i);n=Math.imul(n,16777619);}return (n>>>0).toString(16);}
+function checkpointStamp(state){let n=2166136261;const json=JSON.stringify(state,(key,value)=>['epoch','requestId','uiPresentation'].includes(key)?undefined:value);for(let i=0;i<json.length;i++){n^=json.charCodeAt(i);n=Math.imul(n,16777619);}return (n>>>0).toString(16);}
 const fields={srv:'serve',blk:'block',rcv:'receive',tos:'toss',atk:'attack'};
 function boardView(view,deckKeys){
  const players=view.players.map((p,idx)=>{
