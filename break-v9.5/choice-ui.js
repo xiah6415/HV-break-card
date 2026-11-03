@@ -20,6 +20,7 @@ const CSS = `
 .hc-card{position:relative;border:0;padding:0;background:none;cursor:pointer;display:grid;gap:3px;min-width:0;text-align:center;color:inherit;font:inherit;border-radius:7px}
 .hc-card img,.hc-src img,.hc-rev img{display:block;width:100%;aspect-ratio:300/419;object-fit:cover;border-radius:6px;background:var(--sunk,#d9e4e3)}
 .hc-card span.hc-nm{font-size:11px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hc .hc-nm.renamed{white-space:normal;overflow:visible;overflow-wrap:anywhere}
 .hc[data-kind="trigger_order"] .hc-nm{white-space:normal;overflow:visible;overflow-wrap:anywhere}
 .hc-zone{font-size:10px;color:var(--muted,#566b6e)}
 .hc-card.on img{box-shadow:0 0 0 3px var(--court,#d96a1f)}
@@ -89,6 +90,8 @@ function optionLabel(request,option){
   return option.value+unit+(option.value===0?'（'+zero+'）':'');
  }
  if(request.kind==='guts_destination'&&zoneNames[option.value])return zoneText(option.value);
+ const current=option.card?.effectiveName,printed=option.card?.name,normalize=s=>String(s||'').normalize('NFKC').replace(/\s/g,'');
+ if(current&&printed&&normalize(current)!==normalize(printed))return current+'（'+option.label+'）';
  return option.label;
 }
 function requestDetail(request){
@@ -130,7 +133,7 @@ function render(rootEl, request, opts = {}) {
         const c = o.card || { cardNo: '', name: o.label };
         const parts=String(c.zone||'').split('.'),zone=parts.length===2?parts[1]:parts[0],labels={hand:'手牌',deck:'牌庫',drop:'棄牌',event:'Event',serve:'發球',block:'中攔',receive:'接球',toss:'舉球',attack:'攻擊','side:0':'側攔','side:1':'側攔'};
         const location=labels[zone]?(parts.length===2?(+parts[0]===request.actor?'我方 ':'對方 '):'')+labels[zone]:'';
-        return `<div class="hc-item${o.card?'':' hc-nocard'}"><button type="button" class="hc-card${timing?.active&&timing.candidates&&o.card&&(!timing.ids||timing.ids.includes(o.value))?' hc-ready':''}${on ? ' on' : ''}" aria-pressed="${on}" data-hc-v="${esc(key(o.value))}">${c.cardNo ? cardImg(c) : ''}<span class="hc-nm">${esc(o.label)}</span>${location?`<small class="hc-zone">${esc(location)}</small>`:''}${badge}</button>${o.card&&opts.onCard?`<button type="button" class="hc-info" data-hc-info="${esc(o.id)}" aria-label="查看 ${esc(o.label)} 卡片">查卡</button>`:''}</div>`;
+        return `<div class="hc-item${o.card?'':' hc-nocard'}"><button type="button" class="hc-card${timing?.active&&timing.candidates&&o.card&&(!timing.ids||timing.ids.includes(o.value))?' hc-ready':''}${on ? ' on' : ''}" aria-pressed="${on}" data-hc-v="${esc(key(o.value))}">${c.cardNo ? cardImg(c) : ''}<span class="hc-nm${o.card?.effectiveName&&optionLabel(request,o)!==o.label?' renamed':''}">${esc(optionLabel(request,o))}</span>${location?`<small class="hc-zone">${esc(location)}</small>`:''}${badge}</button>${o.card&&opts.onCard?`<button type="button" class="hc-info" data-hc-info="${esc(o.id)}" aria-label="查看 ${esc(optionLabel(request,o))} 卡片">查卡</button>`:''}</div>`;
       }).join('')}</div>`;
     }
     return `<div class="hc-opts" role="group">${request.options.map(o => `<button type="button" class="hc-opt${t === 'number' ? ' num' : ''}${sel.value !== undefined && key(sel.value) === key(o.value) ? ' on' : ''}" aria-pressed="${sel.value !== undefined && key(sel.value) === key(o.value)}" data-hc-v="${esc(key(o.value))}">${esc(optionLabel(request,o))}</button>`).join('')}</div>`;
@@ -138,7 +141,7 @@ function render(rootEl, request, opts = {}) {
   function chips() {
     if (t !== 'block' || !sel.picked.length) return '';
     return `<div class="hc-chips">${sel.picked.map(v => { const o = byKey.get(key(v)), ctr = key(sel.center) === key(v);
-      return `<span class="hc-chip${ctr ? ' ctr' : ''}">${ctr ? '中攔' : '側攔'}・${esc(o.label)}${ctr ? '' : `<button type="button" data-hc-ctr="${esc(key(v))}">設為中攔</button>`}<button type="button" data-hc-rm="${esc(key(v))}" aria-label="移除">✕</button></span>`; }).join('')}</div>`;
+      return `<span class="hc-chip${ctr ? ' ctr' : ''}">${ctr ? '中攔' : '側攔'}・${esc(optionLabel(request,o))}${ctr ? '' : `<button type="button" data-hc-ctr="${esc(key(v))}">設為中攔</button>`}<button type="button" data-hc-rm="${esc(key(v))}" aria-label="移除">✕</button></span>`; }).join('')}</div>`;
   }
   function ctx() {
     const c = request.context || {}, out = [], detail=requestDetail(request);

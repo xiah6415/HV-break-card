@@ -1,0 +1,10 @@
+'use strict';
+const T=require('./browser-test-helpers.cjs');
+(async()=>{const b=await T.browser();try{for(const size of T.sizes)for(const code of ['P02-077','PR-036','PR-040']){
+ const f=T.fixture({name:'miya-087-'+code,phase:'attack',pc:'attack',hand:[code,'P02-087'],court:{receive:['D01-009'],toss:['P01-063']}}),p=await T.load(b,size,{fixture:f,pauseAI:true});
+ await T.answer(p,f.refs.hand[0]);T.assert.equal((await T.ready(p)).kind,'name');await T.answer(p,'宮治');const before=await p.evaluate(id=>tableTest.match._kernel.parameter(id,'attack'),f.refs.hand[0]);await T.answer(p,f.refs.hand[1]);
+ let r=await T.ready(p);while(r.kind==='entry_count'){await T.answer(p,0);r=await T.ready(p);}T.assert.equal(r.kind,'target','Miya counts as Osamu and enables the +1 choice');
+ const target=p.locator('#dockOpts [data-hc-v]').filter({has:p.locator('.hc-nm',{hasText:'宮治（宮兄弟）'})});T.assert.equal(await target.count(),1,'choice shows effective name and original identity');T.assert(await target.isVisible());T.assert(await target.locator('.hc-nm').evaluate(e=>e.scrollWidth<=e.clientWidth+1),'current and printed name fit without clipping');if(size[0]===320&&code==='P02-077')await p.screenshot({path:'/tmp/break-miya-087-320.png'});T.assert.equal(r.options.find(o=>o.value===f.refs.hand[0]).card.cardNo,'HV-'+code);
+ await T.answer(p,[f.refs.hand[0]]);T.assert.equal((await T.ready(p)).kind,'parameter');await T.answer(p,'attack');T.assert.equal((await T.ready(p)).kind,'turnEnd');T.assert.equal(await p.evaluate(id=>tableTest.match._kernel.parameter(id,'attack'),f.refs.hand[0]),before+1);
+ await T.undo(p);T.assert.equal((await T.ready(p)).kind,'parameter');await T.answer(p,'attack');T.assert.equal(await p.evaluate(id=>tableTest.match._kernel.parameter(id,'attack'),f.refs.hand[0]),before+1,'Undo/replay does not double the bonus');await T.check(p);await p.close();console.log('P02-087 UI',size[0],code,'named top attacker, effective-name label, +1 and Undo passed');
+}}finally{await b.close();}})().catch(e=>{console.error(e);process.exitCode=1;});
