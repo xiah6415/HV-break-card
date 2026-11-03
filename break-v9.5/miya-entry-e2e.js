@@ -1,0 +1,10 @@
+'use strict';
+const T=require('./browser-test-helpers.cjs');
+(async()=>{const b=await T.browser();try{for(const size of T.sizes)for(const guts of [2,3])for(const cross of [false,true]){
+ const rows=cross?{toss:[...Array(guts-1).fill('D01-009'),'P01-063'],attack:[...Array(guts-1).fill('D01-009'),'P01-064'],serve:['P02-016','D01-009'],receive:['P02-020','D01-009']}:{toss:['P02-016',...Array(guts-1).fill('D01-009'),'P01-063'],attack:['P02-020',...Array(guts-1).fill('D01-009'),'P01-064']};
+ const f=T.fixture({name:'miya-entry-'+guts+'-'+cross,phase:'attack',pc:'attackEvent',hand:['P02-087'],court:rows}),p=await T.load(b,size,{fixture:f,pauseAI:true});
+ await T.answer(p,f.refs.hand[0]);await T.answer(p,1);await T.answer(p);await T.answer(p,1);await T.answer(p);let r=await T.ready(p);T.assert.equal(r.kind,'target');await T.answer(p);await T.answer(p,'serve');r=await T.ready(p);T.assert.equal(r.kind,'trigger_order');T.assert.deepEqual(r.options.map(o=>o.card.cardNo).sort(),['HV-P02-016','HV-P02-020']);await T.answer(p,r.options[cross?1:0].value);
+ let paid=0;for(let n=0;n<5;n++){r=await T.ready(p);if(r.kind==='turnEnd')break;T.assert(['activate_payment','guts'].includes(r.kind));if(r.kind==='activate_payment'){T.assert.match(await p.textContent('.hc-source-name'),/宮/);await T.answer(p,true);}else{await T.answer(p);paid++;}}
+ T.assert.equal((await T.ready(p)).kind,'turnEnd');T.assert.equal(paid,guts===3?2:0);const s=await T.snapshot(p),logs=s.publicLog.filter(e=>e.type==='skill_resolved');T.assert(logs.some(e=>e.cardNo==='HV-P02-087'));for(const code of ['HV-P02-016','HV-P02-020'])T.assert.equal(logs.some(e=>e.cardNo===code),guts===3);
+ if(guts===3){await T.undo(p);T.assert.equal((await T.ready(p)).kind,'guts');await T.answer(p);T.assert.deepEqual((await T.snapshot(p)).effects,s.effects,'Undo replays the same entry bonus once');}await T.check(p);await p.close();console.log('Miya effect entry UI',size[0],guts,cross?'cross-area':'same-area','Event bonus → order → affordable entry skills/Undo passed');
+}}finally{await b.close();}})().catch(e=>{console.error(e);process.exitCode=1;});
