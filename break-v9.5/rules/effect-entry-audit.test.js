@@ -38,6 +38,16 @@ for(const setter of ['P02-016','P02-017','P03-021','D03-001'])for(const attacker
  const ids=[];for(const [code,area,top]of [[setter,'toss','P01-063'],[attacker,'attack','P01-064']]){ids.push(k.addCard('HV-'+code,0,area));for(let i=0;i<6;i++)k.addCard('HV-D01-009',0,area);k.addCard('HV-'+top,0,area);}
  k.playEvent(event);for(const id of ids)assert(k.state.publicLog.some(e=>e.type==='skill_resolved'&&e.source===id),setter+' / '+attacker+' should perform both affordable entry skills');assert.equal(k.state.queue.length,0);k.assertState();versions++;
 }
+// User screenshot: P02-016 + P03-041. Osamu uses a hand-size condition,
+// not a Guts payment. Atsumu resolving first may change that condition.
+let pictured=0;
+for(const guts of [2,3])for(const hand of [2,3,5])for(const atsumuFirst of [false,true]){
+ const k=make();k.state.turn.phase='attack';const event=k.addCard('HV-P02-087',0,'hand');for(let i=1;i<hand;i++)k.addCard('HV-D01-009',0,'hand');for(let i=0;i<8;i++)k.addCard('HV-D01-009',0,'deck');
+ const ids=[];for(const [code,area,top]of [['P02-016','toss','P01-063'],['P03-041','attack','P01-064']]){ids.push(k.addCard('HV-'+code,0,area));for(let i=1;i<guts;i++)k.addCard('HV-D01-009',0,area);k.addCard('HV-'+top,0,area);}
+ const requests=[];k.choose=r=>{requests.push(r);if(r.kind==='trigger_order')return atsumuFirst?r.options[0]:r.options.at(-1);if(r.kind==='target')return [ids[0]];if(r.kind==='parameter')return 'serve';return F.choose(r);};k.playEvent(event);
+ const drew=guts===3,osamuWorks=hand+(atsumuFirst&&drew?1:0)<=3;assert.equal(k.parameter(ids[0],'toss'),1+(drew?2:0));assert.equal(k.parameter(ids[1],'attack'),2+(osamuWorks?2:0));assert.equal(requests.filter(r=>r.kind==='activate_payment').length,drew?1:0,'Only P02-016 asks for Guts');assert.equal(k.zone(0,'hand').length,hand+(drew?1:0));k.assertState();pictured++;
+}
+console.log('Screenshot pair: '+pictured+' hand-size/Guts/trigger-order cases passed');
 console.log('Miya versions: '+versions+' full P02-087 setter/attacker combinations performed both entry skills');
 console.log('effect entry: '+profiles.size+' live profiles / '+cases+' legal hand/drop/Guts routes; '+excluded.length+' illegal routes excluded; '+twins+' P02-087 order/cross-area/payment/decline cases passed');
 if(excluded.length)console.log('Excluded: '+excluded.join(', '));
