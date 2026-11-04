@@ -785,7 +785,7 @@ body.playing .dock[data-mode="court"] [data-kind="parameter"] .hc-go{display:non
   <div id="olConnectionBar" class="ol-row" hidden><span id="olConnectionText" role="status"></span><button class="chip" id="olTakeover" type="button" hidden>接手房主</button></div>
   <div id="runtimeStatus" role="status" style="margin:10px 0;padding:10px 12px;background:#45251b;color:#fff;border-radius:8px;font-size:13px">⚠️ 尚未啟動 JavaScript。如果此提示一直顯示，代表目前的檔案預覽器不執行遊戲程式。請下載 HTML 後以瀏覽器開啟，或透過 HTTPS 網站遊玩。</div>
   <div class="modebar" role="tablist" aria-label="對戰方式" id="modebar"><button type="button" role="tab" id="modeSolo" aria-selected="true">單人對練</button><button type="button" role="tab" id="modeOnline" aria-selected="false">多人連線</button></div>
-  <div class="account-panel" id="accountPanel"><div class="account-person"><span id="accountAvatar" class="player-avatar" aria-label="個人頭像">🏐</span><div><strong id="accountTitle">訪客模式</strong><p id="accountStatus" role="status">不需登入即可遊玩・牌組與草稿保存在此裝置</p></div></div><div class="opts"><button class="chip" id="accountGoogle" type="button" disabled>Google 登入</button><button class="chip" id="editProfile" type="button" hidden>編輯個人資料</button><button class="chip" id="openPublic" type="button">瀏覽公開牌組</button><button class="chip" id="openCloud" type="button" disabled>雲端牌組</button><button class="chip" id="accountLogout" type="button" hidden>登出</button></div></div>
+  <div class="account-panel" id="accountPanel"><div class="account-person"><span id="accountAvatar" class="player-avatar" aria-label="個人頭像">🏐</span><div><strong id="accountTitle">訪客模式</strong><p id="accountStatus" role="status">不需登入即可遊玩・牌組與草稿保存在此裝置</p></div></div><div class="opts"><button class="chip" id="accountGoogle" type="button" disabled>Google 登入</button><button class="chip" id="editProfile" type="button" hidden>編輯個人資料</button><button class="chip" id="openRecords" type="button">對局紀錄</button><button class="chip" id="openPublic" type="button">瀏覽公開牌組</button><button class="chip" id="openCloud" type="button" disabled>雲端牌組</button><button class="chip" id="accountLogout" type="button" hidden>登出</button></div></div>
   <section id="setup" class="setup">
     <div class="panel solo-only" id="soloResume" hidden><h2>上次的對局</h2><p class="sub" id="soloSaveText"></p><div class="opts"><button class="btn" id="resumeSolo" type="button">繼續對局</button><button class="chip" id="clearSolo" type="button">清除對局存檔</button></div></div>
     <div class="panel" id="deckPanel">
@@ -1096,6 +1096,7 @@ body.playing .dock[data-mode="court"] [data-kind="parameter"] .hc-go{display:non
   // ---------- game state
   let game = null, session = null, pending = null, logBuf = [], skillResults = [];
   const SOLO_SAVE_KEY='bk_solo_match',SOLO_LINK_ROUTE=(()=>{const q=new URLSearchParams(location.search);return q.has('online')||q.has('room')||q.has('deck')||/deck=/.test(location.hash);})();let soloRecord=null,soloReadError=false,soloSaveError=false,soloSaveToken='',soloSelection=null;
+  const matchRecords=new BreakMatchRecords({getItem:k=>localStorage.getItem(k),setItem:(k,v)=>localStorage.setItem(k,v),removeItem:k=>localStorage.removeItem(k)});let archiveToken='',archiveMessage=matchRecords.error;
   let oppName = 'AI'; // 對手顯示名稱：單人為 AI，多人為對方暱稱
   const OL = { client: null, services: null, meta: null, rooms: {}, presence: {}, loading: null, inGame: false, roomId: null, lastUid: null, authority: null, authWork: Promise.resolve() };
   window.BREAK_ONLINE={get client(){return OL.client;},get current(){return OL.client?.lastView;},get session(){return OL.inGame?session:null;}};
@@ -1547,10 +1548,30 @@ body.playing .dock[data-mode="court"] [data-kind="parameter"] .hc-go{display:non
     else flash(`${nm(d.c)} 這時候要放到「${E.AREA_ZH[want] || { ev: 'Event 區', drop: '棄牌區' }[want] || '?'}」`);
   }
   document.addEventListener('pointerup', endDrag); document.addEventListener('pointercancel', endDrag);
+  function captureMatchRecord(view,checkpoint){
+    const kind=OL.inGame?'online':'solo',id=kind+':'+(OL.inGame?(OL.roomId||'')+':'+(session.last?.actor??0)+':':'')+view.match.id;
+    const token=[id,view.revision,view.match.decisionIndex,checkpoint?.stamp].join(':');if(token===archiveToken)return;
+    try{matchRecords.save({id,kind,view,checkpoint,names:['你',oppName],deckNames:session.deckKeys.map(k=>DECKS[k]?.name||'自訂牌組'),logs:logBuf.map(([s])=>s)});archiveToken=token;archiveMessage='';}catch(e){archiveMessage=e.message;}
+    if($('archiveStatus'))$('archiveStatus').textContent=archiveMessage||'此場對局紀錄自動保存在本機';
+  }
+  function downloadRecord(name,content){const a=document.createElement('a'),url=URL.createObjectURL(new Blob([content],{type:'application/json'}));a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+  function openMatchRecords(){
+    matchRecords.refresh();openSheet(`<h3>歷史對局紀錄</h3><p class="sub">保存在此瀏覽器，最多10場；容量不足時先移除最舊紀錄。可匯出備份，清除網站資料也會清除紀錄。重演播放尚未開放。</p><p id="recordMessage" role="status">${esc(archiveMessage||matchRecords.error)}</p><div class="record-list">${matchRecords.rows.map((r,i)=>`<article class="cloud-row"><div><strong>${r.kind==='solo'?'單人':'多人'} · ${esc(r.names?.[1]||'對手')} · ${r.status==='finished'?(r.result==='win'?'勝利':'落敗'):'未完成'}</strong><small>${esc(new Date(r.startedAt).toLocaleString('zh-TW'))} · 第${r.rally}球 · ${r.decisionIndex}次操作</small></div><button class="chip" type="button" data-record-open="${i}">查看</button></article>`).join('')||'<p class="sub">尚無對局紀錄，開始對局後會自動保存。</p>'}</div>${matchRecords.error?'<div class="opts"><button class="chip" id="recordRaw">下載原始備份</button><button class="chip" id="recordReset">清除損毀紀錄</button></div>':''}`);
+    document.querySelectorAll('[data-record-open]').forEach(b=>b.onclick=()=>showMatchRecord(matchRecords.rows[+b.dataset.recordOpen]?.id));
+    if($('recordRaw'))$('recordRaw').onclick=()=>{try{downloadRecord('break-records-backup.json',matchRecords.raw());}catch{$('recordMessage').textContent='無法讀取原始備份，請檢查瀏覽器儲存權限。';}};
+    if($('recordReset'))$('recordReset').onclick=()=>{openSheet('<h3>清除損毀紀錄？</h3><p>只清除歷史對局紀錄，無法復原；建議先下載原始備份。</p><button class="opt danger" id="recordResetYes">確認清除</button>');$('recordResetYes').onclick=()=>{try{matchRecords.clear();archiveMessage='';archiveToken='';openMatchRecords();}catch(e){$('recordResetYes').textContent='清除失敗，請檢查儲存權限';}};};
+  }
+  function showMatchRecord(id){
+    const r=matchRecords.rows.find(r=>r.id===id);if(!r)return openMatchRecords();
+    openSheet(`<h3>對局紀錄</h3><p>${esc(r.names.join(' vs '))} · ${r.status==='finished'?(r.result==='win'?'勝利':'落敗'):'未完成'} · 第${r.rally}球</p><p class="sub">${esc(r.deckNames.join(' vs '))}</p><p class="sub">${r.replay?'已保存種子、雙方牌組與操作順序，供後續相同核心版本重演；匯出包含完整牌組與隱藏牌資訊，請於對局結束後分享。':'多人僅保存你可見的文字與結果；不含對手隱藏手牌、牌庫順序或權威端快照。中途加入者只記錄收到的內容。'}</p><p id="recordDetailMessage" role="status"></p><div class="opts"><button class="chip" id="recordExport">匯出紀錄</button><button class="chip" id="recordDelete">刪除</button><button class="chip" id="recordBack">回清單</button></div><div class="log" style="max-height:50vh">${r.logs.map(s=>`<div>${esc(s)}</div>`).join('')||'<p>尚無文字紀錄</p>'}</div>`);
+    $('recordBack').onclick=openMatchRecords;$('recordExport').onclick=()=>{try{downloadRecord('break-'+r.kind+'-'+r.startedAt+'.json',matchRecords.export(id));}catch{$('recordDetailMessage').textContent='無法下載紀錄，請檢查瀏覽器下載權限。';}};
+    $('recordDelete').onclick=()=>{openSheet('<h3>刪除此場紀錄？</h3><p>刪除歷史紀錄不會影響目前牌桌或續玩存檔。</p><button class="opt danger" id="recordDeleteYes">確認刪除</button><button class="opt" id="recordDeleteNo">保留</button>');$('recordDeleteNo').onclick=()=>showMatchRecord(id);$('recordDeleteYes').onclick=()=>{try{matchRecords.remove(id);openMatchRecords();}catch(e){$('recordDeleteYes').textContent=e.message;}};};
+  }
+  $('openRecords').onclick=openMatchRecords;
   function showLog() { openSheet(`<h3>對局紀錄</h3><div class="log" style="max-height:60vh">${logBuf.map(([s, c]) => `<div class="${c || ''}">${esc(s)}</div>`).join('')}</div>`); const l = $('sheetBox').querySelector('.log'); l.scrollTop = l.scrollHeight; }
   $('logBtn').onclick = showLog;
   function openGameMenu(){
-    openSheet('<h3>對局選單</h3><div class="opts"><button class="opt danger" type="button" id="mSurrender" '+(game?.winner?'disabled':'')+'>投降</button><button class="opt" type="button" id="mHome">回到主頁</button>'+(OL.inGame?'':'<button class="opt" type="button" id="mRestart">重新開始這場</button>')+'</div><h3>外觀</h3>'+bkThemeSeg()+hintSettings());
+    openSheet('<h3>對局選單</h3><p class="sub" id="archiveStatus">'+esc(archiveMessage||'此場對局紀錄自動保存在本機')+'</p><div class="opts"><button class="opt" type="button" id="mRecords">歷史對局紀錄</button><button class="opt danger" type="button" id="mSurrender" '+(game?.winner?'disabled':'')+'>投降</button><button class="opt" type="button" id="mHome">回到主頁</button>'+(OL.inGame?'':'<button class="opt" type="button" id="mRestart">重新開始這場</button>')+'</div><h3>外觀</h3>'+bkThemeSeg()+hintSettings());
   }
   function confirmGameAction(kind){
     const surrender=kind==='surrender',current=session,id=OL.inGame?session?.last?.view.match.id:session?.match?._m.id;
@@ -1564,7 +1585,7 @@ body.playing .dock[data-mode="court"] [data-kind="parameter"] .hc-go{display:non
     }catch(e){if($('exitMessage'))$('exitMessage').textContent=e.message;button.disabled=false;}};
   }
   $('menuBtn').onclick=openGameMenu;
-  $('sheet').addEventListener('click',e=>{if(e.target.id==='mRestart'){closeSheet();restartSolo();}if(e.target.id==='mSurrender')confirmGameAction('surrender');if(e.target.id==='mHome'||e.target.id==='mSetup'||e.target.id==='mLeave')confirmGameAction('home');});
+  $('sheet').addEventListener('click',e=>{if(e.target.id==='mRecords')openMatchRecords();if(e.target.id==='mRestart'){closeSheet();restartSolo();}if(e.target.id==='mSurrender')confirmGameAction('surrender');if(e.target.id==='mHome'||e.target.id==='mSetup'||e.target.id==='mLeave')confirmGameAction('home');});
 
   function backToSetup() { courtParamOpen=null;courtNextTarget=null;$('courtParamPicker').hidden=true;presentation.reset();priorStatuses=null;statusToastUntil=0;$('hintToast').hidden=true;clearTimeout(hintToastTimer);persistSolo(false);nativeWidget?.destroy();nativeWidget=null;session?.stop(); session = null; game = null; pending = null; turnNotice = null; renderTransition(); $('game').hidden = true; $('dock').hidden = true; $('tbtns').hidden = true; $('setup').hidden = false; $('modebar').hidden = false; document.body.classList.remove('playing'); delete document.body.dataset.dock; }
 
@@ -1601,13 +1622,13 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
   }
   function persistSolo(active){
     if(OL.inGame||!session?.checkpoint)return;
-    try{
+    let checkpoint;try{
       const m=session.match,s=m._kernel.state,token=[m._m.id,m.epoch,s.revision,m._m.decisionIndex,session.noticeIndex].join(':');
-      const checkpoint=soloSaveToken===token&&soloRecord?soloRecord.game:session.checkpoint();
+      checkpoint=soloSaveToken===token&&soloRecord?soloRecord.game:session.checkpoint();
       const r=session.request(),selection=r&&pending?.req.requestId===r.requestId&&nativeSelection?{at:r.decisionIndex,value:nativeSelection}:null;
       const record={version:1,active,savedAt:Date.now(),rally:m._m.rally,game:checkpoint,selection,deckNames:session.deckKeys.map(k=>DECKS[k]?.name||'保存的牌組')};
-      localStorage.setItem(SOLO_SAVE_KEY,JSON.stringify(record));soloRecord=record;soloSaveToken=token;soloReadError=false;soloSaveError=false;soloPanel();
-    }catch(e){soloSaveError=true;$('runtimeStatus').hidden=false;$('runtimeStatus').textContent='⚠️ 無法自動保存對局；請勿重整，以免失去這次進度。';}
+      localStorage.setItem(SOLO_SAVE_KEY,JSON.stringify(record));soloRecord=record;soloSaveToken=token;soloReadError=false;soloSaveError=false;soloPanel();return checkpoint;
+    }catch(e){soloSaveError=true;$('runtimeStatus').hidden=false;$('runtimeStatus').textContent='⚠️ 無法自動保存對局；請勿重整，以免失去這次進度。';return checkpoint;}
   }
   function resumeSolo(){
     try{
@@ -1633,8 +1654,8 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
     return {
       onBoard(board,view) {
         const same=pending&&view.request?.requestId===pending.req.requestId&&view.request?.epoch===pending.req.epoch;game=board;if(!same)pending=null;turnNotice=null;
-        skillResults=view.publicLog.filter(e=>e.type==='skill_resolved'&&e.turn===view.turn.id).slice(-2);persistSolo(true);
-        logBuf=view.publicLog.map(e=>[publicLogText(e), '']);render();presentation.observe(view);noticeStatuses(board,view);
+        skillResults=view.publicLog.filter(e=>e.type==='skill_resolved'&&e.turn===view.turn.id).slice(-2);const checkpoint=persistSolo(true);
+        logBuf=view.publicLog.map(e=>[publicLogText(e), '']);captureMatchRecord(view,checkpoint);render();presentation.observe(view);noticeStatuses(board,view);
       },
       onRequest(req) {presentation.request(req);pending={req};if(req.kind==='parameter')courtParamOpen=null;courtNextTarget=null;setDockCollapsed(false);render();soloSelection=null;if(!courtUndoing&&courtRequest(req)==='target'&&req.input.min===1&&req.input.max===1&&req.options.length===1){queueMicrotask(()=>{if(pending?.req.requestId===req.requestId&&pending.req.epoch===req.epoch)nativeAnswer([req.options[0].value]);});}},
       onNotice(board,data,resolve) {if(hintMode()!=='normal'&&['serve','turn'].includes(data.type)){briefNotice(data);queueMicrotask(resolve);return;}turnNotice={data,resolve,game:board};render();},
