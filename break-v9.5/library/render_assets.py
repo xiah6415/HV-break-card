@@ -3,7 +3,6 @@ import hashlib
 import json
 from io import BytesIO
 from pathlib import Path
-from PIL import Image, ImageOps
 ROOT = Path(__file__).resolve().parent.parent
 TRANSFORM = 'webp-320-q76-m6-v1'
 def digest(data):
@@ -30,6 +29,9 @@ def build_render_assets(root=ROOT):
                 and thumb.is_file() and digest(thumb.read_bytes()) == old.get('thumb_sha256')):
             output[code] = old
             continue
+        # Existing committed assets can be rebuilt without image libraries.
+        # Pillow is needed only when generating a new thumbnail.
+        from PIL import Image, ImageOps
         with Image.open(BytesIO(data)) as original:
             image = ImageOps.exif_transpose(original).convert('RGB')
             image.thumbnail((320, 10000), Image.Resampling.LANCZOS)
