@@ -769,6 +769,19 @@ body.playing .dock:not([data-mode="modal"]) .in{max-height:22vh}
 }
 
 .replay-controls{display:flex;flex-wrap:wrap;gap:6px}.replay-controls select{width:auto;min-width:80px}.replay-side{border:1px solid var(--line);padding:8px;border-radius:12px;margin:8px 0}.replay-side h4{margin:2px 0 8px}.replay-court{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.replay-area{min-width:0;border:1px solid var(--line);border-radius:8px;padding:4px;display:grid;justify-items:center}.replay-area>b,.replay-area>small{font-size:11px;overflow-wrap:anywhere}.replay-hand{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}.replay-card{width:70px;max-width:100%;padding:2px;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:7px}.replay-card img{width:100%;height:auto}.replay-card small{display:block;font-size:10px}.replay-card-detail{position:fixed;inset:5vh 8vw;background:var(--card);overflow:auto;z-index:400;border:2px solid var(--line);padding:12px;border-radius:12px}.replay-card-detail img{display:block;max-width:100%;max-height:60vh;margin:auto}#replayImport{max-width:180px}#replayPlayer [data-r-range]{width:100%}
+/* 中線：回合數／行動方／接球點數，窄螢幕分兩行保留左右操作。 */
+body.playing .net-zone:has(#rallyActions:not([hidden])){justify-content:center}
+body.playing .net-zone:has(#rallyActions:not([hidden])) .rally-status{flex:0 1 auto}
+@media(max-width:600px){
+ body.playing .net-zone{flex-direction:column;gap:2px;min-height:54px}
+ body.playing .rally-status,body.playing .net-zone:has(#rallyActions:not([hidden])) .rally-status{max-width:100%;flex:none;gap:4px;padding:2px 5px}
+ body.playing .rally-status strong,body.playing .rally-status span{font-size:10px}
+ body.playing .rally-status strong{flex:none}
+ body.playing .net-zone .ball{padding:1px 5px;gap:3px;max-width:100%}
+ body.playing .net-zone .ball .k{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ body.playing .net-zone .ball .v{font-size:20px;flex:none}
+ body.playing .net-zone .net{max-width:100%}
+}
 </style>
 <script>
 /* 外觀：bk_theme = light（預設）｜dark｜auto（跟隨系統）；在繪製前套用避免閃爍 */
@@ -1331,14 +1344,12 @@ body.playing .dock:not([data-mode="modal"]) .in{max-height:22vh}
     }).join('')}</div>`;
   }
   function netHTML() {
-    const b = game.ball, last = logBuf.length ? logBuf[logBuf.length - 1][0] : '';
-    let ball = '<div class="ball"><span class="k">等待發球</span></div>';
-    if (b) {
-      const z = { serve: '發球', attack: '攻擊', block: '攔網回球' }[b.type];
-      const toMe = game.target === 0, sig = b.type + b.off + game.target, pop = sig !== prevBall; prevBall = sig;
-      ball = `<div class="ball ${toMe ? 'toMe' : 'toOpp'}${pop ? ' pop' : ''}"><span class="k">${z}${toMe ? '→你' : '→' + esc(oppName)}</span><span class="v">${b.off}</span></div>`;
-    }
-    return `<span class="ticker">第 ${game.rallyNo} 球</span>${ball}<span class="ticker">${esc(last)}</span>`;
+    if(game.winner)return '<div class="ball"><span class="k">'+(game.winner.idx===0?'你':esc(oppName))+'獲勝</span></div>';
+    if(['loss','interval'].includes(game.matchPhase))return '<div class="ball"><span class="k">準備下一球</span></div>';
+    const b=game.ball;
+    if(!b)return '<div class="ball"><span class="k">'+(game.turnP?(game.turnP.idx===0?'你':esc(oppName))+'發球中':'等待開始')+'</span></div>';
+    const toMe=game.target===0,sig=b.type+b.off+game.target,pop=sig!==prevBall;prevBall=sig;
+    return `<div class="ball ${toMe?'toMe':'toOpp'}${pop?' pop':''}"><span class="k">${toMe?'你':esc(oppName)}需要接</span><span class="v">${b.off}</span><span class="k">點</span></div>`;
   }
 
 
@@ -1451,8 +1462,9 @@ body.playing .dock:not([data-mode="modal"]) .in{max-height:22vh}
     const server = game.server ?? game.firstServer;
     const owner = game.turnP?.idx;
     const who = owner === 0 ? '你' : oppName;
-    const state = !game.rallyNo && server != null ? '調度中 · 確認手牌後開始對局' : game.winner ? '對局結束' : pending?.req.kind === 'lossConfirm' ? '你的回合 · 等待你確認失分' : pending?.req.kind === 'turnEnd' ? '你的回合 · 等待結束或選擇失分' : owner == null ? '準備／交接中' : !game.ball ? `${who}正在發球` : `${who}的回合`;
-    $('rallyStatus').innerHTML = `<strong>${game.rallyNo ? `第 ${game.rallyNo} 球 · 本球發球：${server === 0 ? '你' : esc(oppName)}` : server != null ? `首球發球：${server === 0 ? '你' : esc(oppName)}` : '準備對局'}</strong><span>${state}</span>`;
+    const state=game.winner?'對局結束':!game.rallyNo?'調度中':game.matchPhase==='loss'?'本球結束':game.matchPhase==='interval'?'局間準備':owner==null?'準備／交接中':`${who}的回合`;
+    $('rallyStatus').innerHTML=`<strong>${game.rallyNo?'第 '+game.turnNo+' 回合':server!=null?'首球發球：'+(server===0?'你':esc(oppName)):'準備對局'}</strong><span>${esc(state)}</span>`;
+    $('rallyStatus').title=game.rallyNo?`第${game.rallyNo}球・本球發球：${server===0?'你':oppName}`:'';
     const logHTML = logBuf.slice(-200).map(([s, c]) => `<div class="${c || ''}">${esc(s)}</div>`).join('');
     $('logSide').innerHTML = logHTML; $('logSide').scrollTop = $('logSide').scrollHeight;
     const dock = $('dock'); dock.hidden = false;
