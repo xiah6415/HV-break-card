@@ -1,0 +1,4 @@
+'use strict';
+const A=require('node:assert/strict'),T=require('../browser-test-helpers.cjs'),{Match}=require('./match'),H=require('../host-choice');
+for(const pick of [0,1]){const f=T.fixture({hand:['P01-088','P01-088'],court:{receive:['P01-063']}}),m=new Match(f.options);m.restore(f.snapshot);let r=m.request(0),opts=r.options.filter(o=>o.card?.cardNo==='HV-P01-088');A.equal(opts.length,2,'both physical Event copies can be chosen');const other=opts[1-pick].value;m.command({kind:'answer',answer:H.makeAnswer(r,opts[pick].value)});for(let i=0;i<15;i++){r=m.request(0);A(r);if(r.kind==='event')break;m.command({kind:'answer',answer:H.aiAnswer(r)});}A.equal(r.kind,'event');A(r.options.some(o=>o.value===other),'remaining copy stays playable after first resolves');}
+console.log('P01-088 both physical copies selectable, either copy resolves, remaining copy playable');

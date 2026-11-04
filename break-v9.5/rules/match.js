@@ -117,7 +117,7 @@ class Match {
  _next(pc){this._m.pc=pc;}
  _move(id,p,z){this._kernel._atomic(()=>this._kernel._move(id,p,z,this._kernel._context(id,p),'rule'));}
  _setPhase(phase){if(this._kernel.state.turn.phase!==phase||this._kernel.state.turn.step!=='free')this._kernel.advancePhase(phase);}
- _notice(type,payload){this._m.notices.push({type,rally:this._m.rally,...payload});}
+ _notice(type,payload){this._m.notices.push({type,rally:this._m.rally,...payload});if(['serve','turn','loss'].includes(type))this._kernel._logPublic({type:'rally_notice',notice:type,player:payload.player??this._m.actor,reason:payload.reason||'',offense:payload.ball?.offense??payload.ball?.off??null});}
  _begin(p,phase){
   delete this._m.outgoingResolution;
   if(!this._m.turnNo){this._kernel.state.turn={id:1,player:p,phase,step:'free'};}
@@ -127,7 +127,7 @@ class Match {
  _lose(reason){this._m.loser=this._m.actor;this._m.lossReason=reason;this._next(this._m.wantsAck[this._m.actor]?'lossConfirm':'lossResolve');}
  _param(p,area){const id=this._kernel.top(p,area);return id?this._kernel.parameter(id,area):0;}
  _probe(fn){const saved=this._kernel.snapshot(),choose=this._kernel.choose;this._kernel.choose=r=>r.count!=null?r.options.slice(0,r.count):r.options.includes(true)?true:r.options.length&&r.options.every(Number.isInteger)?Math.max(...r.options):r.options[0];try{return fn();}catch(e){if(e.code==='ILLEGAL_ACTION'||e.code==='REQUIRES_REVIEW'&&e.message==='OPEN-EVENT-NO-CHANGE')return false;throw e;}finally{this._kernel.restore(saved);this._kernel.choose=choose;}}
- _playable(p){const k=this._kernel,phase=k.state.turn.phase;return this._zone(p,'hand').filter(id=>{const pr=k.profile(id),a=pr.activation;if(!pr.runtime_approved||!['event','active'].includes(a?.skill_type))return false;if(a.skill_type==='active'&&pr.limit&&k.state.locks.some(l=>l.player===p&&l.turn===k.state.turn.id&&l.name===k.effectiveName(id)))return false;if(!a.activation_phases.includes(phase)&&!(phase==='receive'&&pr.practice_override?.extra_window==='before_receive_judgment'))return false;const result=this._probe(()=>k.card(id).printed.type==='event'?k.playEvent(id):k.useSkill(id));return !!result&&(result.performed||result.invalid&&k.card(id).printed.type==='event');});}
+ _playable(p){const k=this._kernel,phase=k.state.turn.phase;return [...this._zone(p,'hand')].filter(id=>{const pr=k.profile(id),a=pr.activation;if(!pr.runtime_approved||!['event','active'].includes(a?.skill_type))return false;if(a.skill_type==='active'&&pr.limit&&k.state.locks.some(l=>l.player===p&&l.turn===k.state.turn.id&&l.name===k.effectiveName(id)))return false;if(!a.activation_phases.includes(phase)&&!(phase==='receive'&&pr.practice_override?.extra_window==='before_receive_judgment'))return false;const result=this._probe(()=>k.card(id).printed.type==='event'?k.playEvent(id):k.useSkill(id));return !!result&&(result.performed||result.invalid&&k.card(id).printed.type==='event');});}
  _event(next){const p=this._m.actor,opts=this._playable(p);if(!opts.length){
   // Consume an already-recorded empty numeric window from a pre-update snapshot,
   // without creating that window for new play or replay.
@@ -202,7 +202,7 @@ class Match {
   if(command?.kind==='surrender'){
    const actor=command.actor;if(![0,1].includes(actor)||command.matchId!==this._m.id||command.epoch!==this.epoch||this._m.phase==='finished')throw Error('INVALID_OR_STALE_COMMAND');
    this._m.history.push({kind:'surrender',actor,origin:'game',signature:'surrender',value:true});this._m.decisionIndex++;
-   this._m.loser=actor;this._m.winner=1-actor;this._m.endReason='surrender';this._m.surrendered=actor;this._m.phase='finished';this._m.pc='done';this._m.pending=null;this._m.continuation=null;delete this._m.manualAction;delete this._m.manualReturnPc;this._kernel.state.queue=[];this._kernel.state.publicLog.push({type:'surrender',player:actor});this._kernel.state.revision++;return this.view(actor);
+   this._m.loser=actor;this._m.winner=1-actor;this._m.endReason='surrender';this._m.surrendered=actor;this._m.phase='finished';this._m.pc='done';this._m.pending=null;this._m.continuation=null;delete this._m.manualAction;delete this._m.manualReturnPc;this._kernel.state.queue=[];this._kernel._logPublic({type:'surrender',player:actor});this._kernel.state.revision++;return this.view(actor);
   }
   if(command?.kind==='manual'){if(this._m.mode!=='numeric')throw Error('UNSUPPORTED_COMMAND');return this._manual(command);}
   if(command?.kind!=='loss')throw Error('UNSUPPORTED_COMMAND');

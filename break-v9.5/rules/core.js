@@ -299,6 +299,7 @@ class Kernel {
     }
     return {allowed:true,layer:action.action==='use_skill'?'use_skill':'resolve_step'};
   }
+  _logPublic(event){this.state.publicLog.push({turn:this.state.turn.id,phase:this.state.match?.phase==='setup'?'setup':this.state.turn.phase,rally:this.state.match?.rally??0,...event});}
   _handAllowed(player,ctx,origin='skill') { return this.permission({action:'add_hand',player,origin}).allowed; }
   _move(id,player,destination,ctx,reason='effect',asGuts=false) {
     const card=this.card(id), from=card.zone, [fromPlayer,fromArea]=from.split('.');
@@ -314,6 +315,7 @@ class Kernel {
     else this.zone(player,destination).push(id);
     if (areaIsCourt && !staysCharacter && !asGuts) card.incarnation++;
     this.state.events.push({type:'move',id,from,to:card.zone,reason});
+    if(destination==='drop'||destination==='event'||areaIsCourt&&reason==='explicit_entry')this._logPublic({type:'card_move',player,cardNo:card.cardNo,from:fromArea,to:destination,guts:COURT.includes(fromArea)&&!wasCharacter,payment:!!ctx?.inPayment,reason});
     this._emit({type:'source_moved',player,card:id,from_zone:fromArea,to_zone:destination,phase:this.state.turn.phase});
     return id;
   }
@@ -409,7 +411,7 @@ class Kernel {
       const id=this.top(player,'deck'); this._move(id,player,'hand',ctx); ids.push(id);
       this._emit({type:'hand_added',player,card:id,operation});
     }
-    if (ids.length) this.state.publicLog.push({type:'draw',player,count:ids.length});
+    if (ids.length) this._logPublic({type:'draw',player,count:ids.length});
     return ids;
   }
   _deckSelection(node,ctx,{initiated=false,automaticSingle=false}={}) {
@@ -424,7 +426,7 @@ class Kernel {
     legal(Array.isArray(viewed)&&viewed.length===0,'Confirm revealed cards');
     const log={type:'deck_view',player,count:shown.length,visibility:node.visibility};
     if(node.visibility==='reveal')log.cards=shown.map(id=>({id,cardNo:this.card(id).cardNo}));
-    this.state.publicLog.push(log);
+    this._logPublic(log);
     const retrieved=[],remaining=[...shown];
     const select=selection=>{
       const options=remaining.filter(id=>this.matches(id,selection.filters,ctx));
@@ -443,7 +445,7 @@ class Kernel {
       for(const id of chosen){
         remaining.splice(remaining.indexOf(id),1);this._move(id,player,'hand',ctx,'deck_selection');
         retrieved.push(id);this._emit({type:'hand_added',player,card:id,operation:'add_hand'});
-        if(selection.reveal_selected!==false)this.state.publicLog.push({type:'deck_selected',player,card:id,cardNo:this.card(id).cardNo});
+        if(selection.reveal_selected!==false)this._logPublic({type:'deck_selected',player,card:id,cardNo:this.card(id).cardNo});
       }
       return chosen;
     };
@@ -463,7 +465,7 @@ class Kernel {
     }
     for(const id of remaining)deck.splice(deck.indexOf(id),1);
     if(destination==='deck_top')deck.push(...ordered.reverse());else deck.unshift(...ordered.reverse());
-    this.state.publicLog.push({type:'deck_remainder',player,count:remaining.length,destination,result:retrieved.length?'added':'no_matching_card_added'});
+    this._logPublic({type:'deck_remainder',player,count:remaining.length,destination,result:retrieved.length?'added':'no_matching_card_added'});
     return true; // Viewing and arranging cards is an effect even without a match.
   }
   _fact(field,ctx) {
@@ -635,7 +637,7 @@ class Kernel {
   _run(node,ctx) {
     switch (node.kind) {
       case 'sequence': { let yes=false;for (const step of node.steps) yes=this._run(step,ctx)||yes;return yes; }
-      case 'conditional': { const matched=this._predicate(node.condition,ctx);let revealCondition=false;walk(node.condition,n=>{if(n.kind==='all_result_cards_match'&&n.result==='revealed'||n.kind==='compare'&&n.field?.startsWith('revealed.'))revealCondition=true;});if(revealCondition)this.state.publicLog.push({type:'reveal_condition',player:ctx.controller,available:!!ctx.bind.revealed?.length,matched,...(ctx.bind.revealPurpose?{purpose:ctx.bind.revealPurpose}:{}),...(ctx.bind.revealDeclined?{declined:true}:{})});return matched?this._run(node.then,ctx):false; }
+      case 'conditional': { const matched=this._predicate(node.condition,ctx);let revealCondition=false;walk(node.condition,n=>{if(n.kind==='all_result_cards_match'&&n.result==='revealed'||n.kind==='compare'&&n.field?.startsWith('revealed.'))revealCondition=true;});if(revealCondition)this._logPublic({type:'reveal_condition',player:ctx.controller,available:!!ctx.bind.revealed?.length,matched,...(ctx.bind.revealPurpose?{purpose:ctx.bind.revealPurpose}:{}),...(ctx.bind.revealDeclined?{declined:true}:{})});return matched?this._run(node.then,ctx):false; }
       case 'deck_selection': return this._deckSelection(node,ctx);
       case 'reveal_and_retrieve': {
         ctx.bind[node.bind]=[];ctx.bind[node.retrieved_bind]=[];ctx.bind.revealPurpose='retrieve';ctx.bind.revealDeclined=false;
@@ -742,7 +744,7 @@ class Kernel {
         if(!shown.length)return false;
         legal(this._decide('reveal',ctx,[true],{player,visibility:'reveal',top_count:shown.length,purpose:'effect'})===true,'Confirm deck view');
         const viewed=this._decide('revealResult',ctx,shown,{player,count:0,visibility:'reveal',purpose:'effect'});legal(Array.isArray(viewed)&&viewed.length===0,'Confirm revealed cards');
-        this.state.publicLog.push({type:'deck_view',player,count:shown.length,visibility:'reveal',cards:shown.map(id=>({id,cardNo:this.card(id).cardNo}))});return true;
+        this._logPublic({type:'deck_view',player,count:shown.length,visibility:'reveal',cards:shown.map(id=>({id,cardNo:this.card(id).cardNo}))});return true;
       }
       case 'move_result': {
         const ids=[...new Set(ctx.bind[node.result]||[])].filter(id=>this.state.cards[id]&&this.card(id).zone===this.card(id).owner+'.deck'),ordered=[];
@@ -750,21 +752,21 @@ class Kernel {
         for(const id of ids){const deck=this.zone(this.card(id).owner,'deck');deck.splice(deck.indexOf(id),1);}
         for(const id of ordered){const c=this.card(id);this.zone(c.owner,'deck').unshift(id);}
         ctx.bind.moved=ordered;
-        for(const player of [...new Set(ordered.map(id=>this.card(id).owner))])this.state.publicLog.push({type:'revealed_returned',player,count:ordered.filter(id=>this.card(id).owner===player).length,destination:'deck_bottom'});
+        for(const player of [...new Set(ordered.map(id=>this.card(id).owner))])this._logPublic({type:'revealed_returned',player,count:ordered.filter(id=>this.card(id).owner===player).length,destination:'deck_bottom'});
         return ordered.length>0;
       }
       case 'shuffle': {
         const player=this.owner(node.actor,ctx),ids=this.zone(player,'deck');if(ids.length<2)return false;
         for(let i=ids.length-1;i>0;i--){const j=Math.floor(this._random()*(i+1));[ids[i],ids[j]]=[ids[j],ids[i]];}
-        this.state.publicLog.push({type:'deck_shuffled',player,count:ids.length});return true;
+        this._logPublic({type:'deck_shuffled',player,count:ids.length});return true;
       }
       case 'external_action': {
         legal(this._decide('external_action',ctx,[true],{action:node.action,actionLabel:EXTERNAL_ACTIONS[node.action]})===true,'Confirm external action');
         if(node.action==='coin'){
           const result=this._random()<0.5?'heads':'tails';ctx.bind[node.bind]={result};
           legal(this._decide('external_result',ctx,[true],{action:'coin',result,actionLabel:result==='heads'?'硬幣結果：正面':'硬幣結果：反面'})===true,'Confirm coin result');
-          this.state.publicLog.push({type:'coin_result',player:ctx.controller,result});
-        }else{ctx.bind[node.bind]={performed:true,action:node.action};this.state.publicLog.push({type:'external_action',player:ctx.controller,action:node.action});}
+          this._logPublic({type:'coin_result',player:ctx.controller,result});
+        }else{ctx.bind[node.bind]={performed:true,action:node.action};this._logPublic({type:'external_action',player:ctx.controller,action:node.action});}
         if(ctx.inPayment)ctx.externalPaid=true;return true;
       }
       case 'phase_jump': this._jump(node.destination);return true;
@@ -984,7 +986,7 @@ class Kernel {
     if(result&&visible){
       const draws=this.state.publicLog.slice(logStart).filter(e=>e.type==='draw').map(e=>({player:e.player,count:e.count}));
       const numeric=this.state.effects.slice(effectStart).filter(e=>e.kind==='numeric'&&e.source?.id===ctx.source.id).map(e=>({parameter:e.parameter,operation:e.operation,value:e.value}));
-      this.state.publicLog.push({type:'skill_resolved',player:ctx.controller,turn:this.state.turn.id,source:ctx.source.id,cardNo:source.cardNo,draws,numeric});
+      this._logPublic({type:'skill_resolved',player:ctx.controller,turn:this.state.turn.id,source:ctx.source.id,cardNo:source.cardNo,draws,numeric});
     }
     return result;
   }
@@ -1005,7 +1007,7 @@ class Kernel {
       legal(this._phaseAllowed(p),'Skill phase mismatch');
       legal(event || a.source_zones.includes(this.card(id).zone.split('.')[1]),'Skill source zone mismatch');}
     if(!this._skillAllowed(ctx,p))return {performed:false,invalid:true};
-    if(a.reveal_source_on_declaration)this.state.publicLog.push({type:'skill_declared',player:controller,cardNo:this.card(id).cardNo});
+    if(a.reveal_source_on_declaration)this._logPublic({type:'skill_declared',player:controller,cardNo:this.card(id).cardNo});
     const performed=this._resolveSkill(p,ctx);
     if(!event)this._drain();return {performed,invalid:false};
   }

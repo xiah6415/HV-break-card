@@ -57,7 +57,7 @@ export class FirebaseRooms{
  async _takeover(){if(!this.room||!this.online)throw Error('目前未連線');await this._roomPresence();const uid=this.user.uid,conn=this.connection;
   const result=await this.D.runTransaction(this.ref('rooms/'+this.room+'/authority'),a=>{if(!a||this.roomOnline[a.uid]?.[a.connection])return;return {uid,connection:conn,term:a.term+1};},{applyLocally:false});if(!result.committed)throw Error('原權威端仍在線，或已有玩家接手');
  }
- _stopAuthority(){for(const stop of this.authorityStops||[])stop();this.authorityStops=[];this.commands={};}
+ _stopAuthority(){clearTimeout(this.undoTimer);this.undoTimer=null;for(const stop of this.authorityStops||[])stop();this.authorityStops=[];this.commands={};}
  async _activate(){
   this._stopAuthority();const gen=++this.generation,id=this.room,term=this.lease.term,conn=this.connection;this.active={gen,id,term,conn};
   const raw=await new Promise((resolve,reject)=>{let first=true;const stop=this.D.onValue(this.ref('rooms/'+id+'/bundle'),snap=>{if(first){first=false;resolve(snap.val());}},error=>{if(first)reject(error);});this.authorityStops.push(stop);});if(!this._current(gen))return;
@@ -70,14 +70,15 @@ export class FirebaseRooms{
  _schedule(){if(this.queued)return;this.queued=true;queueMicrotask(()=>{this.queued=false;this.work=this.work.then(()=>this._drain()).catch(e=>this.error(e));});}
  async _drain(){
   const gen=this.active?.gen;if(!this._current(gen)||!this.meta||this.meta.status==='closed')return;
+  clearTimeout(this.undoTimer);this.undoTimer=null;if(this.core?.expireUndo())await this._save(gen);
   if(!this.core){const players=[this.meta.p0,this.meta.p1];if(!players[1]||!this.settings?.[players[0]]?.ready||!this.settings?.[players[1]]?.ready)return;const decks=players.map(uid=>JSON.parse(this.settings[uid].deckJSON));this.core=new BreakMatchPilot.RoomAuthority({id:'room-'+this.room,players,decks,seed:crypto.getRandomValues(new Uint32Array(1))[0],mode:this.meta.mode,interactiveDraws:true,openingCoin:true});await this._save(gen);if(!this._current(gen))return;await this.D.set(this.ref('rooms/'+this.room+'/meta/status'),'running');await this._publishLobby();}
   for(let steps=0;steps<100&&this._current(gen);steps++){
    const queued=Object.entries(this.commands||{}).flatMap(([uid,items])=>Object.entries(items||{}).map(([cid,record])=>({uid,cid,record}))).sort((a,b)=>a.cid.localeCompare(b.cid)).find(x=>!this.core.log[x.cid]);
    if(queued){let command;try{if(queued.record.term!==this.lease.term)throw Error('房主已更換，請重新操作');command=JSON.parse(queued.record.body);this.core.apply(queued.uid,queued.cid,command);}catch(e){this.core.log[queued.cid]={cmdId:queued.cid,uid:queued.uid,ok:false,error:String(e.message),command:null};}await this._save(gen);continue;}
    if(this.core.match._m.phase!=='finished'&&this.meta.status==='finished'){await this.D.set(this.ref('rooms/'+this.room+'/meta/status'),'running');await this._publishLobby();}
-   const command=this.core.aiCommand();if(command){const cid='AI_'+this.core.config.id+'_'+this.lease.term+'_'+this.core.match._m.decisionIndex;const receipt=this.core.apply('AI',cid,command);await this._save(gen);if(!receipt.ok)throw Error('AI操作未完成：'+receipt.error);await new Promise(r=>setTimeout(r,150));continue;}
+   const command=this.core.aiCommand();if(command){const cid='AI_'+this.core.config.id+'_'+this.lease.term+'_'+this.core.match.epoch+'_'+this.core.match._m.decisionIndex;const receipt=this.core.apply('AI',cid,command);await this._save(gen);if(!receipt.ok)throw Error('AI操作未完成：'+receipt.error);await new Promise(r=>setTimeout(r,150));continue;}
    if(this.core.match._m.phase==='finished'&&this.meta.status!=='finished'){await this.D.set(this.ref('rooms/'+this.room+'/meta/status'),'finished');await this._publishLobby();}
-   if(this.core.match._m.phase==='finished')await this._rematch(gen);break;
+   if(this.core.match._m.phase==='finished')await this._rematch(gen);if(this.core.undoPending)this.undoTimer=setTimeout(()=>this._schedule(),Math.max(1,this.core.undoPending.expiresAt-Date.now()));break;
   }
  }
  async _rematch(gen){

@@ -33,14 +33,18 @@ class OnlineSession{
   if(this.stopped||!this.available||this.client.pending||this.previewFlight)return [];
   this.previewFlight=key;queueMicrotask(()=>{if(this.stopped||this.previewFlight!==key)return;Promise.resolve().then(()=>this.client.send({kind:'previewBlock',answer:H.makeAnswer(r,value)})).catch(e=>{this.previewCache.set(key,[]);this.previewFlight=null;this.callbacks.onSendError?.(e);this.refresh();});});return [];
  }
- status(){return {enabled:false,reason:'多人對戰暫不提供 Undo'};}
- undo(){return false;}
+ status(){return {enabled:!!(!this.stopped&&this.available&&!this.client.pending&&this.last?.undo?.canRequest),reason:'需對手同意後撤回上一個操作'};}
+ _undoSend(kind,extra={}){if(this.stopped||!this.available||this.client.pending||!this.last)return false;const v=this.last;return this.client.send({kind,actor:v.actor,matchId:v.view.match.id,epoch:v.epoch,...extra});}
+ undo(){if(!this.status().enabled)return false;return this._undoSend('undoRequest',{decisionIndex:this.last.view.match.decisionIndex});}
+ respondUndo(approve){return this._undoSend('undoReply',{undoId:this.last.undo?.pending?.id,approve});}
+ cancelUndo(){return this._undoSend('undoCancel',{undoId:this.last.undo?.pending?.id});}
  request(){return this.waiting;}
  // FirebaseRooms 的 view 回呼直接交給這裡
  handle(v){
   if(!v||!v.view)return;
   if(this.last&&(v.term<this.last.term||v.term===this.last.term&&v.revision<this.last.revision))return;
   const newMatch=this.last?.view.match.id!==v.view.match.id;
+  if(this.last&&(v.epoch!==this.last.epoch||v.undo?.pending)){this.resume=null;this.noticeIndex=v.view.match.notices?.length||0;this.previewCache.clear();this.previewFlight=null;}
   if(newMatch){this.noticeIndex=this.last?0:Math.max(0,(v.view.match.notices?.length||0)-1);this.resume=null;this.previewCache.clear();this.previewFlight=null;}
   if(this.last?.view.request?.requestId!==v.view.request?.requestId){this.previewCache.clear();this.previewFlight=null;}
   if(v.receipt?.preview){const p=v.receipt.preview;this.previewCache.set(previewKey(p.requestId,p.value),p.ids);this.previewFlight=null;}else if(v.receipt?.ok===false&&this.previewFlight){this.previewCache.set(this.previewFlight,[]);this.previewFlight=null;}
@@ -51,7 +55,9 @@ class OnlineSession{
   if(this.stopped||!this.last)return;
   const v=this.last,view=rotateView(v.view,v.actor),board=boardView(view,this.deckKeys);this.waiting=null;
   try{
+   if(v.undo?.pending)view.request=null;
    this.callbacks.onBoard?.(board,view);
+   if(v.undo?.pending)return;
    const notices=view.match?.notices||[];
    if(this.noticeIndex>notices.length)this.noticeIndex=notices.length;
    if(this.noticeIndex<notices.length){

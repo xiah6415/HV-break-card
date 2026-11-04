@@ -748,6 +748,26 @@ body.playing .dock[data-mode="court"] [data-kind="parameter"] .hc-go{display:non
 #courtParamPicker [data-court-param]{font:inherit;color:var(--ink);background:var(--sunk);border:1px solid var(--line);border-radius:9px;min-height:46px;padding:6px;cursor:pointer;font-size:13px}
 #courtParamPicker [data-court-param] b{display:block;font-size:17px;color:var(--court)}
 
+
+/* 實戰回饋：中線左右分開，普通提示列使用牌桌保留空間。 */
+body.playing .net-zone:has(#rallyActions:not([hidden])){padding-left:84px;padding-right:84px;min-height:58px}
+#rallyActions{inset:0;transform:none;width:auto;display:block;pointer-events:none}
+#rallyActions button{position:absolute;top:50%;transform:translateY(-50%);width:76px;min-height:36px;pointer-events:auto}
+#rallyActions .hc-loss{left:0}#rallyActions .hc-go,#rallyActions .hc-quiet{right:0}
+body.playing #game .game{grid-template-areas:"ob" "oc" "net" "mc" "actions" "mb" "hand";grid-template-rows:auto auto auto auto minmax(min-content,1fr) auto var(--handh)}
+body.playing .dock:not([data-mode="modal"]){position:relative;grid-area:actions;left:auto;right:auto;bottom:auto;align-self:center;width:100%;max-height:22vh;margin:4px auto;transform:none}
+body.playing .dock:not([data-mode="modal"]) .dock-head{position:static;min-height:30px}
+body.playing .dock:not([data-mode="modal"]) .hc-content{max-height:calc(22vh - 48px);overflow-y:auto}
+body.playing .dock:not([data-mode="modal"]) .hc-q{font-size:12px;line-height:1.25}
+body.playing .dock:not([data-mode="modal"]) .in{max-height:22vh}
+@media(min-width:1000px) and (min-height:650px){
+ body.playing .court2.me .row-main .area{--ah:14.8vh}body.playing .court2.opp .row-main .area{--ah:13vh}
+ body.playing .court2.me .row-blk .area{--ah:6vh}body.playing .court2.opp .row-blk .area{--ah:4.6vh}
+ body.playing .court2.me .row-back .area{--ah:8.4vh}body.playing .court2.opp .row-back .area{--ah:6.4vh}
+ body.playing .net-zone:has(#rallyActions:not([hidden])){padding-left:120px;padding-right:120px}
+ #rallyActions button{width:106px;font-size:14px}
+}
+
 </style>
 <script>
 /* 外觀：bk_theme = light（預設）｜dark｜auto（跟隨系統）；在繪製前套用避免閃爍 */
@@ -1078,7 +1098,8 @@ body.playing .dock[data-mode="court"] [data-kind="parameter"] .hc-go{display:non
   $('supportBtn').onclick = openLibrary;
   $('sheet').addEventListener('click', e => { const button = e.target.closest('[data-support-card]'); if (button) cardSheet(button.dataset.supportCard, true); });
   function pileSheet(title, cards) {
-    openSheet(`<h3>${title}（${cards.length}）</h3>${cards.length ? `<div class="grid6">${cards.map(c => `<button class="cbtn" type="button" data-card="${c}">${img(c)}</button>`).join('')}</div>` : '<div class="sub">沒有卡片</div>'}`);
+    const original=[...cards];openSheet(`<h3>${esc(title)}（${cards.length}）</h3><label>排列方式<select id="pileSort"><option value="newest">進入順序：最新在前</option><option value="oldest">進入順序：最早在前</option><option value="name">卡片名稱</option></select></label><div class="grid6" id="pileCards"></div>`);
+    const renderPile=()=>{const rows=original.map((c,i)=>({c,i}));if($('pileSort').value==='newest')rows.reverse();if($('pileSort').value==='name')rows.sort((a,b)=>nm(a.c).localeCompare(nm(b.c),'zh-Hant')||a.i-b.i);$('pileCards').innerHTML=rows.map(({c,i})=>`<button class="cbtn" type="button" data-card="${c}" title="${esc(nm(c))} · 第${i+1}張"><span>${img(c)}</span><small>${esc(nm(c))}<br>第${i+1}張</small></button>`).join('')||'<p>沒有卡片</p>';};$('pileSort').onchange=renderPile;renderPile();
   }
 
   $('manualBtn').onclick = () => {
@@ -1403,12 +1424,13 @@ body.playing .dock[data-mode="court"] [data-kind="parameter"] .hc-go{display:non
   syncViewport();
 
   function updateUndoButton() {
-    $('undoBtn').disabled = !session?.status().enabled; $('undoBtn').hidden = OL.inGame;
-    $('undoBtn').textContent = 'Undo';
-    $('undoBtn').title = '撤回本回合上一個已確認操作';
+    $('undoBtn').disabled = !session?.status().enabled; $('undoBtn').hidden = false;
+    $('undoBtn').textContent = OL.inGame?'申請 Undo':'Undo';
+    $('undoBtn').title = OL.inGame?'需對手同意後，撤回你上一個已確認操作':'撤回本回合上一個已確認操作';
   }
   $('undoBtn').onclick = () => {
     if (!session?.status().enabled) return;
+    if(OL.inGame){olRun(()=>session.undo())();return;}
     closeSheet();courtUndoing=true;try{session.undo();while(courtRequest(pending?.req)==='target'&&pending.req.input.min===1&&pending.req.input.max===1&&pending.req.options.length===1&&session.status().enabled){if(!session.undo())break;}}finally{courtUndoing=false;}
   };
 
@@ -1444,6 +1466,13 @@ body.playing .dock[data-mode="court"] [data-kind="parameter"] .hc-go{display:non
       $('dockQ').textContent = game.endReason==='surrender'?(game.surrendered===0?`你已投降・${oppName} 獲勝`:`${oppName} 已投降・你獲勝！`):game.winner.idx === 0 ? '你贏了！' : `${oppName} 贏了`;
       $('dockOpts').innerHTML = '<button class="opt primary" type="button" data-act="again">再打一場</button><button class="opt" type="button" data-act="setup">換牌組</button><button class="opt" type="button" data-act="log">看紀錄</button>';
       if(OL.inGame){const again=$('dockOpts').querySelector('[data-act="again"]'),voted=OL.meta?.rematch?.[OL.client.user.uid]===session?.last?.view.match.id;again.disabled=voted||!OL.client.online||OL.meta?.status!=='finished';again.textContent=voted?'已確認，等待對手':'再來一局';again.title='雙方確認後在同一房間開始新局';$('dockOpts').querySelector('[data-act="setup"]').textContent='離開房間';}
+    } else if (OL.inGame&&session.last?.undo?.pending) {
+      const u=session.last.undo.pending,mine=u.byActor===session.last.actor;
+      dock.classList.remove('wait');dock.dataset.mode='bar';document.body.dataset.dock='bar';$('manualBtn').hidden=true;
+      $('dockQ').textContent=mine?'已申請撤回上一個操作，等待對手同意；雙方操作暫停，2 分鐘未回覆自動取消。':`${oppName} 申請撤回上一個操作（第 ${u.target.rally} 球）；同意後返回該次選擇，2 分鐘未回覆自動取消。`;
+      $('dockOpts').innerHTML=mine?'<button class="opt" data-undo-cancel>取消申請</button>':'<button class="opt primary" data-undo-reply="yes">同意撤回</button><button class="opt" data-undo-reply="no">拒絕</button>';
+      for(const b of $('dockOpts').querySelectorAll('[data-undo-reply]'))b.onclick=olRun(()=>session.respondUndo(b.dataset.undoReply==='yes'));
+      const cancel=$('dockOpts').querySelector('[data-undo-cancel]');if(cancel)cancel.onclick=olRun(()=>session.cancelUndo());
     } else if (pending) {
       dock.classList.remove('wait');$('dockQ').textContent=flashMsg||pending.req.context.reason||'';renderNativeChoice(pending.req,savedSelection);
       $('dockOpts').querySelector('.hc-content').scrollTop=savedScrollTop;
@@ -1452,7 +1481,7 @@ body.playing .dock[data-mode="court"] [data-kind="parameter"] .hc-go{display:non
       $('dockQ').innerHTML = game.waitingFor?.kind==='discard'?`<span class="dots">等待${game.waitingFor.actor===0?'你':esc(oppName)}棄掉 ${game.waitingFor.count} 張手牌</span>`:`<span class="dots">${esc(oppName)} 行動中</span>`;
       $('dockOpts').innerHTML = '';
     }
-    $('dockSummary').textContent = game.winner ? $('dockQ').textContent : pending ? courtRequest(pending.req)==='parameter'?'直接點選下方要調整的數值':BreakChoiceUI.requestPrompt(pending.req) : `${oppName} 行動中`;
+    $('dockSummary').textContent = OL.inGame&&session.last?.undo?.pending?'悔棋申請 · 需雙方同意':game.winner ? $('dockQ').textContent : pending ? courtRequest(pending.req)==='parameter'?'直接點選下方要調整的數值':BreakChoiceUI.requestPrompt(pending.req) : `${oppName} 行動中`;
     updateUndoButton();
     renderCourtParam();
     olControls();
@@ -1502,8 +1531,8 @@ body.playing .dock[data-mode="court"] [data-kind="parameter"] .hc-go{display:non
       }else{handTap=tapKey;if(pending)onHandPick(c,i);}
       return;
     }
-    if (b.dataset.pile) { const p = game.players[+b.dataset.p]; return pileSheet(`${p.idx === 0 ? '你的' : esc(oppName) + ' 的'}${b.dataset.pile === 'ev' ? ' Event 區' : '棄牌區'}（最新的在前）`, (b.dataset.pile === 'ev' ? p.ev : p.drop).slice().reverse()); }
-    if (b.dataset.zone) { const p = game.players[+b.dataset.p], s = p.area[b.dataset.zone]; if (!s.length) return; return pileSheet(`${p.idx === 0 ? '你的' : esc(oppName) + ' 的'}${E.AREA_ZH[b.dataset.zone]}區（第 1 張是角色，後面是 Guts，越後面越早放；付 Guts 時從最下面開始付）`, s.slice().reverse()); }
+    if (b.dataset.pile) { const p = game.players[+b.dataset.p]; return pileSheet(`${p.idx === 0 ? '你的' : esc(oppName) + ' 的'}${b.dataset.pile === 'ev' ? ' Event 區' : '棄牌區'}`, (b.dataset.pile === 'ev' ? p.ev : p.drop).slice()); }
+    if (b.dataset.zone) { const p = game.players[+b.dataset.p], s = p.area[b.dataset.zone]; if (!s.length) return; return pileSheet(`${p.idx === 0 ? '你的' : esc(oppName) + ' 的'}${E.AREA_ZH[b.dataset.zone]}區（最新角色在前；可依放置先後排序）`, s.slice()); }
     if (b.dataset.card) cardSheet(b.dataset.card);
   }, true);
 
@@ -1525,7 +1554,7 @@ body.playing .dock[data-mode="court"] [data-kind="parameter"] .hc-go{display:non
     }
     e.preventDefault();
     drag.el.style.transform = `translate(${e.clientX - drag.w / 2}px, ${e.clientY - drag.h * 0.8}px) rotate(-4deg)`;
-    const t = document.elementFromPoint(e.clientX, e.clientY), z = t && t.closest('#meSide [data-drop]');
+    const t=document.elementFromPoint(e.clientX,e.clientY),court=$('meSide').querySelector('.court2').getBoundingClientRect(),want=targetOf(pending?.req,drag.c),inside=e.clientX>=court.left-24&&e.clientX<=court.right+24&&e.clientY>=court.top-24&&e.clientY<=court.bottom+24,z=inside&&want?document.querySelector('#meSide [data-drop="'+want+'"]'):t?.closest('#meSide [data-drop]');
     if (drag.over && drag.over !== z) drag.over.classList.remove('over');
     drag.over = z; if (z) z.classList.add('over');
   }, { passive: false });
@@ -1590,8 +1619,11 @@ body.playing .dock[data-mode="court"] [data-kind="parameter"] .hc-go{display:non
 
   function backToSetup() { courtParamOpen=null;courtNextTarget=null;$('courtParamPicker').hidden=true;presentation.reset();priorStatuses=null;statusToastUntil=0;$('hintToast').hidden=true;clearTimeout(hintToastTimer);persistSolo(false);nativeWidget?.destroy();nativeWidget=null;session?.stop(); session = null; game = null; pending = null; turnNotice = null; renderTransition(); $('game').hidden = true; $('dock').hidden = true; $('tbtns').hidden = true; $('setup').hidden = false; $('modebar').hidden = false; document.body.classList.remove('playing'); delete document.body.dataset.dock; }
 
-  function publicLogText(e) {
+  function publicLogText(e){const phase={setup:'調度',draw:'抽牌',receive:'接球',toss:'舉球',attack:'攻擊',serve:'發球',block:'攔網',end:'回合結束',loss_set:'失分',interval:'下一球準備'}[e.phase]||e.phase||'';const at=e.turn!=null?`【${e.rally?'第'+e.rally+'球・':''}回合${e.turn}・${phase}】`:'';return at+publicLogBody(e);}
+  function publicLogBody(e) {
     const who=e.player===0?'你':oppName;
+    if(e.type==='card_move'){const name=nm(e.cardNo.replace(/^HV-?/,'')),zone=E.AREA_ZH[e.from]||e.from;if(e.to==='drop')return `${who}${e.guts?'拔除':'棄掉'} ${name}${e.guts?'（'+zone+'區 Guts）':''}${e.payment?'，支付費用':''}`;return `${who}將 ${name} 放到${E.AREA_ZH[e.to]||{event:'Event區'}[e.to]||e.to}`;}
+    if(e.type==='rally_notice')return `${who}${e.notice==='loss'?'本球失分：'+e.reason:e.notice==='serve'?'發球'+(e.offense!=null?'，進攻值 '+e.offense:''):'的回合開始'}`;
     if(e.type==='skill_resolved'){const params={receive:'接球',toss:'舉球',attack:'攻擊',serve:'發球',block:'攔網'},parts=[...(e.draws||[]).map(d=>(d.player===e.player?'':d.player===0?'你':oppName)+'抽 '+d.count+' 張'),...(e.numeric||[]).map(n=>(params[n.parameter]||'數值')+(n.operation==='set'?'設為 '+n.value:(n.value>=0?' +':' ')+n.value))];return `${who}・${nm(e.cardNo.replace(/^HV-?/,''))} 技能已結算${parts.length?'：'+parts.join('、'):''}`;}
     if(e.type==='surrender')return `${who}投降，${e.player===0?oppName:'你'}獲勝`;
     if(e.type==='draw')return `${who}抽${e.count}張`;
@@ -1657,7 +1689,7 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
         const same=pending&&view.request?.requestId===pending.req.requestId&&view.request?.epoch===pending.req.epoch;game=board;if(!same)pending=null;turnNotice=null;
         art.preload(view.players.flatMap(p=>[...(Array.isArray(p.hand)?p.hand:[]),...p.court,...p.event,...p.drop]).map(c=>c.cardNo)).catch(()=>{});
         skillResults=view.publicLog.filter(e=>e.type==='skill_resolved'&&e.turn===view.turn.id).slice(-2);const checkpoint=persistSolo(true);
-        logBuf=view.publicLog.map(e=>[publicLogText(e), '']);captureMatchRecord(view,checkpoint);render();presentation.observe(view);noticeStatuses(board,view);
+        logBuf=view.publicLog.map(e=>[publicLogText(e), '']);captureMatchRecord(view,checkpoint);render();if(OL.inGame&&session.last?.undo?.pending){presentation.reset();$('hintToast').hidden=true;clearTimeout(hintToastTimer);}presentation.observe(view);noticeStatuses(board,view);
       },
       onRequest(req) {presentation.request(req);pending={req};if(req.kind==='parameter')courtParamOpen=null;courtNextTarget=null;setDockCollapsed(false);render();soloSelection=null;if(!courtUndoing&&courtRequest(req)==='target'&&req.input.min===1&&req.input.max===1&&req.options.length===1){queueMicrotask(()=>{if(pending?.req.requestId===req.requestId&&pending.req.epoch===req.epoch)nativeAnswer([req.options[0].value]);});}},
       onNotice(board,data,resolve) {if(hintMode()!=='normal'&&['serve','turn'].includes(data.type)){briefNotice(data);queueMicrotask(resolve);return;}turnNotice={data,resolve,game:board};render();},
@@ -1670,12 +1702,13 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
     if(drag?.el)drag.el.remove();if(drag?.over)drag.over.classList.remove('over');drag=null;suppressClick=false;document.body.classList.remove('dragging');
     $('setup').hidden = true; $('modebar').hidden = true; $('game').hidden = false; $('tbtns').hidden = false; document.body.classList.add('playing'); syncViewport();
     if(!navigator.connection?.saveData){const codes=OL.inGame?Object.keys(DECKS[$('myDeck').value]?.cards||{}):session.options.decks.flat();art.preload(codes).catch(()=>{});}
+    $('game').querySelector('.game').append($('dock'));
     session.start();if(OL.inGame)olConnectionChanged();
   }
   /* ---------- 多人連線（Claude 2026-10-25）：大廳在選牌頁，開打後沿用同一張正式牌桌 */
   const cleanName = n => String(n || '').replace(/[<>&"'`]/g, '').trim().slice(0, 20);
   function olToast(msg) { const box = $('runtimeStatus'); box.hidden = !msg; box.textContent = msg ? '⚠️ ' + msg : ''; }
-  function olFriendly(e) { const code = e?.code || ''; return ({ 'auth/popup-blocked': '登入視窗被瀏覽器擋下，請允許彈出視窗後再試。', 'auth/popup-closed-by-user': 'Google 登入已取消。', 'auth/unauthorized-domain': '這個網址尚未加入 Google 登入的授權網域。', 'auth/credential-already-in-use': '這個 Google 帳號已被使用，請先登出再用 Google 登入。', 'PERMISSION_DENIED': '權限已變更，請重新加入房間。' })[code] || e?.message || String(e); }
+  function olFriendly(e) { const code = e?.code || ''; return ({ 'auth/popup-blocked': '登入視窗被瀏覽器擋下，請允許彈出視窗後再試。', 'auth/popup-closed-by-user': 'Google 登入已取消。', 'auth/unauthorized-domain': '這個網址尚未加入 Google 登入的授權網域。', 'auth/credential-already-in-use': '這個 Google 帳號已被使用，請先登出再用 Google 登入。', 'PERMISSION_DENIED': '權限已變更，請重新加入房間。', 'UNDO_PENDING':'悔棋申請等待對方回覆，暫停出牌。', 'STALE_UNDO':'悔棋申請已結束，請以目前畫面為準。', 'INVALID_OR_STALE_COMMAND':'對局已更新，請依最新畫面重新操作。' })[code||e?.message] || e?.message || String(e); }
   const olRun = f => async () => { try { olToast(''); await f(); } catch (e) { olToast(olFriendly(e)); } };
   // Optional account and cloud backups share the multiplayer Firebase session.
   let accountUser=null,accountIdentity='',accountReady=false,accountLoadFailed=false,accountBusy=false,accountMessage='',cloudRows=[],cloudTarget='me';
@@ -1773,13 +1806,13 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
     if (waiting) { $('olWaitCode').textContent = OL.roomId; $('olWaitText').textContent = OL.meta.p1 === 'AI' ? '正在準備對局' : '等待朋友加入'; }
   }
   function olCanSend(v=session?.last){const c=OL.client,a=OL.authority;return !!(c?.online&&!c.pending&&OL.meta?.status==='running'&&a?.active&&a.lease.term===v?.term);}
-  function olControls(){if(!OL.inGame)return;const locked=!olCanSend();for(const b of document.querySelectorAll('#dockOpts .hc button,#rallyActions button,#courtParamPicker [data-court-param]')){if(locked){if(!b.hasAttribute('data-ol-disabled'))b.dataset.olDisabled=String(b.disabled);b.disabled=true;}else if(b.hasAttribute('data-ol-disabled')){b.disabled=b.dataset.olDisabled==='true';delete b.dataset.olDisabled;}}}
+  function olControls(){if(!OL.inGame)return;const locked=!olCanSend();for(const b of document.querySelectorAll('#dockOpts .hc button,#dockOpts [data-undo-reply],#dockOpts [data-undo-cancel],#rallyActions button,#courtParamPicker [data-court-param]')){if(locked){if(!b.hasAttribute('data-ol-disabled'))b.dataset.olDisabled=String(b.disabled);b.disabled=true;}else if(b.hasAttribute('data-ol-disabled')){b.disabled=b.dataset.olDisabled==='true';delete b.dataset.olDisabled;}}}
   function olConnectionChanged(){
     if(OL.inGame)$('tbtns').prepend($('olConnectionBar'));else if($('olConnectionBar').parentElement===$('tbtns'))$('runtimeStatus').before($('olConnectionBar'));
     $('olConnectionBar').hidden=!OL.roomId;const a=OL.authority,c=OL.client;
     $('olConnectionText').textContent=!c?.online?'連線中斷，恢復後同步對局':!a?.active?'房主離線，等待接手':a.mine?'房主：你':'房主在線';
     $('olTakeover').hidden=!OL.roomId||!c?.online||!a||a.mine||a.active;document.body.dataset.takeover=$('olTakeover').hidden?'0':'1';
-    if(OL.inGame){session?.setAvailable?.(olCanSend());olControls();}
+    if(OL.inGame){session?.setAvailable?.(olCanSend());olControls();updateUndoButton();}
   }
   $('olTakeover').onclick=olRun(()=>OL.client.takeover());
   function olLobby() {
