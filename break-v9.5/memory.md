@@ -1656,3 +1656,7 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 計畫：把選擇失分／失分確認與結束回合移到右側中線（對面SET與我方棄牌之間），沿用原選擇驗證、二次確認與多人送出；其餘選牌仍留操作列。三尺寸驗證位置、取消／Undo／過期按鈕及整局後部署。
 - 結果／測試：回合結束與失分操作集中中線右側、位於對面SET及我方棄牌之間，確認／取消原位，選牌仍在下方；通用選擇元件可指定外部操作容器，重繪／銷毀清理監聽與舊按鈕，多人送出／斷線鎖定同步。三尺寸位置／不重疊／取消／舊按鈕拒絕／Undo、18選擇形態、任意數值、9整局、mobile、雙人114步＋AI179步／重整／接手、build／fuzz3000／6×300通過；存檔測試改驗固定存檔警示，避免登入共用提示覆寫造成偶發失敗。541／358不變。
 - 部署：337c842已推送並發布Hosting；兩個Hosting網域之index／choice-ui皆HTTP200且SHA256一致。正式頁三尺寸中線右側位置、不重疊、取消／舊按鈕拒絕／結束回合／Undo通過，0頁面錯誤。https://haikyuu-playmat.web.app/break-v9.5/?v=337c842 。
+
+## 外部牌庫跨專案讀取確認
+- 計畫：比對外部牌庫公開Firebase設定、Firestore牌組格式與登入授權網域，先確認跨專案連線條件。
+- 結果：weilun2022/haikyuu-cards的js/firebase-config.js實際使用haikyuu-cards-cloud，Google登入後從users/{uid}/decks讀取deck並略過deleted文件；使用者貼的haikyuu-23e11是另一專案。公開Auth設定查詢成功，但兩者皆未授權haikyuu-playmat.web.app／haikyuu-playmat.firebaseapp.com；外部牌庫管理者須在haikyuu-cards-cloud新增這兩網域後，才能在正式對練台試登入讀取。未登入外部帳號、未讀取私人牌組、未修改外部規則；本輪無程式變更／無須部署，正式版仍337c842。
