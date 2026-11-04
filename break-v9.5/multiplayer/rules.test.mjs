@@ -33,7 +33,9 @@ try{
  await no(get(ref(guest,'publicDecks')));
  await no(get(query(ref(guest,'publicDecks'),orderByChild('createdAt'),limitToLast(31))));
  await no(set(ref(other,'publicDecks/pub_a/author'),'冒名'));
- await no(set(ref(google,'publicDecks/pub_a/author'),'改寫'));
+ await ok(set(ref(google,'publicDecks/pub_a'),{...publicDeck,name:'更新同一副牌組'}));
+ await no(set(ref(google,'publicDecks/pub_a'),{...publicDeck,owner:'other'}));
+ await no(set(ref(other,'publicDecks/pub_a'),{...publicDeck,owner:'other'}));
  await no(remove(ref(other,'publicDecks/pub_a')));
  await no(set(ref(google,'publicDecks/pub_bad'),{...publicDeck,cardCount:39}));
  await no(set(ref(google,'publicDecks/pub_bad'),{...publicDeck,eventCount:9}));

@@ -84,6 +84,8 @@ function describePayment(node){
 }
 const quantityActions={draw_count:['抽牌','不抽牌'],move_count:['移動／回收卡片','不移動卡片'],mill_count:['將牌庫頂的牌送到棄牌區','不送出牌庫的牌'],payment_count:['支付費用','不支付此項費用'],entry_count:['讓角色登場','不讓角色登場'],target_count:['選擇效果對象','不選擇對象']};
 function requestPrompt(request){
+ if(request.kind==='event'&&request.timing==='draw')return '抽牌階段：可發動技能，接著選接球角色';
+ if(request.kind==='event'&&request.timing==='receive')return '接球判定前：可發動技能';
  if(request.uiPresentation?.handDiscard)return '請棄掉 '+request.uiPresentation.count+' 張手牌';
  // Preserve card-specific instructions and ordering supplied by the core.
  if(request.prompt&&request.prompt!=='請選擇合法選項')return request.prompt;
@@ -148,7 +150,7 @@ function actionLabel(r,sel){
 function timingHint(request){
  const c=request.context||{};
  if(['receiver','setter','attacker','serve'].includes(request.kind)&&c.entrySkillIds?.length)return {label:'登場技能可觸發',active:true,candidates:true,ids:c.entrySkillIds};
- if(request.kind==='event'&&request.options.some(o=>o.card))return {label:'卡片／技能可使用',active:true,candidates:true};
+ if(request.kind==='event'&&request.options.some(o=>o.card))return {label:request.timing==='draw'?'抽牌階段技能可發動（接球前）':'卡片／技能可使用',active:true,candidates:true};
  if(request.kind==='activate_payment'&&request.options.some(o=>o.value===true))return c.ineffectiveReason?{label:'效果可能無效，請確認費用',active:false}:{label:'技能可發動',active:true};
  if(request.kind==='optional'&&request.options.some(o=>o.value===true))return {label:'可選效果',active:true};
  if(request.kind==='trigger_order')return {label:'觸發效果待結算',active:true,candidates:true};

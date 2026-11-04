@@ -255,7 +255,7 @@
         "createdAt"
       ],
       "$deck": {
-        ".write": "auth != null && auth.token.firebase.sign_in_provider == 'google.com' && ((!data.exists() && newData.child('owner').val() == auth.uid) || (data.child('owner').val() == auth.uid && !newData.exists()))",
+        ".write": "auth != null && auth.token.firebase.sign_in_provider == 'google.com' && ((!data.exists() && newData.child('owner').val() == auth.uid) || (data.child('owner').val() == auth.uid && (!newData.exists() || newData.child('owner').val() == auth.uid)))",
         ".validate": "newData.hasChildren(['version','owner','author','name','cardsJSON','cardCount','eventCount','createdAt'])",
         "version": {
           ".validate": "newData.val() == 1"
