@@ -78,8 +78,24 @@ export class FirebaseRooms{
    if(this.core.match._m.phase!=='finished'&&this.meta.status==='finished'){await this.D.set(this.ref('rooms/'+this.room+'/meta/status'),'running');await this._publishLobby();}
    const command=this.core.aiCommand();if(command){const cid='AI_'+this.core.config.id+'_'+this.lease.term+'_'+this.core.match.epoch+'_'+this.core.match._m.decisionIndex;const receipt=this.core.apply('AI',cid,command);await this._save(gen);if(!receipt.ok)throw Error('AI操作未完成：'+receipt.error);await new Promise(r=>setTimeout(r,150));continue;}
    if(this.core.match._m.phase==='finished'&&this.meta.status!=='finished'){await this.D.set(this.ref('rooms/'+this.room+'/meta/status'),'finished');await this._publishLobby();}
-   if(this.core.match._m.phase==='finished')await this._rematch(gen);if(this.core.undoPending)this.undoTimer=setTimeout(()=>this._schedule(),Math.max(1,this.core.undoPending.expiresAt-Date.now()));break;
+   if(this.core.match._m.phase==='finished'){await this._publishReplay(gen);await this._rematch(gen);}if(this.core.undoPending)this.undoTimer=setTimeout(()=>this._schedule(),Math.max(1,this.core.undoPending.expiresAt-Date.now()));break;
   }
+ }
+ _publishReplay(gen){if(this.archiveWork)return this.archiveWork;this.archiveWork=this._doPublishReplay(gen).finally(()=>{this.archiveWork=null;});return this.archiveWork;}
+ async _doPublishReplay(gen){
+  if(!this._current(gen)||this.core.config.publishVersion!==1||this.publishedReplay===this.core.config.archiveId)return;
+  const id=this.core.config.archiveId;
+  try{
+   const existing=await this.D.get(this.ref('publicReplays/'+id));let record;
+   if(existing.exists())record=BreakMatchPilot.Replay.parse(existing.val());
+   else{
+    await new Promise(r=>setTimeout(r,0));record=this.core.publicReplay();if(!this._current(gen))return;
+    await this.D.set(this.ref('archiveWriters/'+id),{uid:this.user.uid,room:this.room,matchId:this.core.config.id});
+    if(!this._current(gen))return;await this.D.set(this.ref('publicReplays/'+id),JSON.stringify(record));
+   }
+   const index=await this.D.get(this.ref('publicReplayIndex/'+id));if(!index.exists()&&this._current(gen))await this.D.set(this.ref('publicReplayIndex/'+id),{...BreakMatchPilot.Replay.summary(record),createdAt:this.D.serverTimestamp()});
+   this.archiveError=null;this.publishedReplay=id;this.cb.archive?.({id,ok:true});
+  }catch(e){this.archiveError=e.message;this.cb.archive?.({id,ok:false,message:'匿名回放尚未上傳：'+e.message});}
  }
  async _rematch(gen){
   const old=this.core,id=old.config.id,votes=this.meta.rematch||{};
@@ -104,8 +120,9 @@ export class FirebaseRooms{
   this.cb.sending?.(true);try{await this.D.set(this.ref('rooms/'+this.room+'/meta/rematch/'+this.user.uid),command.matchId);}finally{this.cb.sending?.(false);}
   return command.matchId;
  }
- async close(){const id=this.room;if(!this._current(this.active?.gen))throw Error('只有權威端可以關閉房間');await this.D.set(this.ref('rooms/'+this.room+'/meta/status'),'closed');await this.D.remove(this.ref('lobby/'+id));await this.leave();}
- async leave(){const id=this.room,conn=this.connection;this.generation++;this.core=null;this.active=null;this._stopAuthority();for(const stop of this.roomStops||[])stop();this.roomStops=[];this.room=null;this.meta=null;this.lease=null;this.pending=null;this.lastView=null;if(id&&conn&&this.user)await this.D.remove(this.ref('rooms/'+id+'/presence/'+this.user.uid+'/'+conn)).catch(()=>{});this.cb.room?.(null);}
+ async _flushReplay(){const gen=this.active?.gen;if(this._current(gen)&&this.core?.match._m.phase==='finished'&&this.meta?.status!=='closed'){if(this.meta.status!=='finished')await this.D.set(this.ref('rooms/'+this.room+'/meta/status'),'finished');await this._publishReplay(gen);}}
+ async close(){await this._flushReplay();const id=this.room;if(!this._current(this.active?.gen))throw Error('只有權威端可以關閉房間');await this.D.set(this.ref('rooms/'+this.room+'/meta/status'),'closed');await this.D.remove(this.ref('lobby/'+id));await this.leave();}
+ async leave(){await this._flushReplay();const id=this.room,conn=this.connection;this.generation++;this.core=null;this.active=null;this._stopAuthority();for(const stop of this.roomStops||[])stop();this.roomStops=[];this.room=null;this.meta=null;this.lease=null;this.pending=null;this.lastView=null;if(id&&conn&&this.user)await this.D.remove(this.ref('rooms/'+id+'/presence/'+this.user.uid+'/'+conn)).catch(()=>{});this.cb.room?.(null);}
  async logout(){await this.leave();if(this.user&&this.connection)await this.D.remove(this.ref('presence/'+this.user.uid+'/'+this.connection)).catch(()=>{});for(const stop of this.stops)stop();this.stops=[];this.online=false;this.user=null;}
  error(e){this.cb.error?.(e);}
 }

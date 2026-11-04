@@ -1,17 +1,19 @@
 /* Trusted browser authority. Never send this checkpoint to a non-authority seat. */
 'use strict';
 const {Match}=require('./match'),AI=require('../match-ai'),H=require('../host-choice');
+const Replay=require('./replay');
 const copy=x=>JSON.parse(JSON.stringify(x));
 class RoomAuthority{
  constructor({id,decks,players,seed=1,mode='strict',checkpoint,log={},interactiveDraws=false,openingCoin=false}){
   if(!Array.isArray(players)||players.length!==2||players[0]===players[1])throw Error('INVALID_PLAYERS');
   this.players=[...players];this.log=copy(log);this.undoPending=copy(checkpoint?.undoPending||null);
-  const c=checkpoint||{id,decks,seed,mode,...(openingCoin?{openingCoin:true}:{}),...(interactiveDraws?{interactiveDraws:true}:{})};
+  const c=checkpoint||{id,decks,seed,mode,publishVersion:1,archiveId:crypto.randomUUID().replaceAll('-',''),...(openingCoin?{openingCoin:true}:{}),...(interactiveDraws?{interactiveDraws:true}:{})};
   if(checkpoint&&(c.schema!==1||JSON.stringify(c.players)!==JSON.stringify(players)))throw Error('CHECKPOINT_PLAYERS_MISMATCH');
-  this.config={id:c.id,decks:copy(c.decks),seed:c.seed,mode:c.mode,...(c.openingCoin?{openingCoin:true}:{}),...(c.interactiveDraws?{interactiveDraws:true}:{})};
+  this.config={...(c.publishVersion===1?{publishVersion:1,archiveId:c.archiveId}:{}),id:c.id,decks:copy(c.decks),seed:c.seed,mode:c.mode,...(c.openingCoin?{openingCoin:true}:{}),...(c.interactiveDraws?{interactiveDraws:true}:{})};
   this.match=new Match({...this.config,wantsAck:[true,true]});
   if(checkpoint){this.match.epoch=c.epoch;this.match.restore(c.snapshot);}
  }
+ publicReplay(){return Replay.build(this.config,this.match,{id:this.config.archiveId});}
  expireUndo(now=Date.now()){if(this.undoPending&&this.undoPending.expiresAt<=now){this.undoPending=null;return true;}return false;}
  _undoIndex(actor){const h=this.match._m.history;for(let i=h.length-1;i>=0;i--)if(h[i].actor===actor)return i;return -1;}
  _replayUntil(index){

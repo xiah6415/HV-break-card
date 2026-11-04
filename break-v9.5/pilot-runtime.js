@@ -1575,17 +1575,19 @@ module.exports={TableSession,boardView};
 /* Trusted browser authority. Never send this checkpoint to a non-authority seat. */
 'use strict';
 const {Match}=require('./match'),AI=require('../match-ai'),H=require('../host-choice');
+const Replay=require('./replay');
 const copy=x=>JSON.parse(JSON.stringify(x));
 class RoomAuthority{
  constructor({id,decks,players,seed=1,mode='strict',checkpoint,log={},interactiveDraws=false,openingCoin=false}){
   if(!Array.isArray(players)||players.length!==2||players[0]===players[1])throw Error('INVALID_PLAYERS');
   this.players=[...players];this.log=copy(log);this.undoPending=copy(checkpoint?.undoPending||null);
-  const c=checkpoint||{id,decks,seed,mode,...(openingCoin?{openingCoin:true}:{}),...(interactiveDraws?{interactiveDraws:true}:{})};
+  const c=checkpoint||{id,decks,seed,mode,publishVersion:1,archiveId:crypto.randomUUID().replaceAll('-',''),...(openingCoin?{openingCoin:true}:{}),...(interactiveDraws?{interactiveDraws:true}:{})};
   if(checkpoint&&(c.schema!==1||JSON.stringify(c.players)!==JSON.stringify(players)))throw Error('CHECKPOINT_PLAYERS_MISMATCH');
-  this.config={id:c.id,decks:copy(c.decks),seed:c.seed,mode:c.mode,...(c.openingCoin?{openingCoin:true}:{}),...(c.interactiveDraws?{interactiveDraws:true}:{})};
+  this.config={...(c.publishVersion===1?{publishVersion:1,archiveId:c.archiveId}:{}),id:c.id,decks:copy(c.decks),seed:c.seed,mode:c.mode,...(c.openingCoin?{openingCoin:true}:{}),...(c.interactiveDraws?{interactiveDraws:true}:{})};
   this.match=new Match({...this.config,wantsAck:[true,true]});
   if(checkpoint){this.match.epoch=c.epoch;this.match.restore(c.snapshot);}
  }
+ publicReplay(){return Replay.build(this.config,this.match,{id:this.config.archiveId});}
  expireUndo(now=Date.now()){if(this.undoPending&&this.undoPending.expiresAt<=now){this.undoPending=null;return true;}return false;}
  _undoIndex(actor){const h=this.match._m.history;for(let i=h.length-1;i>=0;i--)if(h[i].actor===actor)return i;return -1;}
  _replayUntil(index){
@@ -1719,6 +1721,42 @@ class OnlineSession{
  }
 }
 module.exports={OnlineSession,rotateView};
+
+},
+"rules/replay.js":function(require,module,exports){
+/* Anonymous, versioned data replay. Playback applies presentation patches and does
+   not depend on the current rules engine. Never contains a room/account/name. */
+'use strict';
+const {Match}=require('./match'),H=require('../host-choice'),CL=require('../card-library');
+const copy=x=>JSON.parse(JSON.stringify(x)),MAX=750000;
+const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+const pick=(o,keys)=>Object.fromEntries(keys.filter(k=>o[k]!==undefined).map(k=>[k,copy(o[k])]));
+function picture(m){const a=m.view(0),b=m.view(1);return {rally:a.match.rally,turn:a.turn.id,phase:a.turn.phase,flow:a.match.phase,actor:a.turn.player,server:a.match.server,winner:a.match.winner,ball:a.ball?pick(a.ball,['kind','offense','owner']):null,players:[a.players[0],b.players[1]].map(p=>({hand:p.hand.map(c=>c.id),deck:p.deck.count,sets:p.sets.count,court:p.court.map(c=>({...pick(c,['id','cardNo','name','role','parameters']),guts:c.guts.map(g=>g.id)})),event:p.event.map(c=>c.id),drop:p.drop.map(c=>c.id)}))};}
+function cleanLog(e){return pick(e,['type','turn','phase','rally','player','cardNo','from','to','guts','payment','reason','count','notice','offense','draws','numeric','visibility','cards','destination','result','matched','available','declined','purpose','action']);}
+function patch(previous,next){const out={};for(const k of Object.keys(next))if(k!=='players'&&!same(previous?.[k],next[k]))out[k]=copy(next[k]);const players={};for(let p=0;p<2;p++){const d={};for(const k of Object.keys(next.players[p]))if(!same(previous?.players?.[p]?.[k],next.players[p][k]))d[k]=copy(next.players[p][k]);if(Object.keys(d).length)players[p]=d;}if(Object.keys(players).length)out.players=players;return out;}
+function apply(previous,delta){const next=copy(previous||{players:[{},{}]});for(const [k,v]of Object.entries(delta)){if(k==='players'){for(const [p,d]of Object.entries(v))Object.assign(next.players[+p],copy(d));}else next[k]=copy(v);}return next;}
+function build(config,match,{id=crypto.randomUUID().replaceAll('-',''),createdAt=Date.now()}={}){
+ if(match._m.phase!=='finished')throw Error('REPLAY_NOT_FINISHED');
+ const options={seed:config.seed>>>0,decks:copy(config.decks),mode:config.mode||'strict',wantsAck:copy(match._m.wantsAck),interactiveDraws:!!config.interactiveDraws,openingCoin:!!config.openingCoin},m=new Match({id:'anonymous-replay',...options});
+ const cards=Object.fromEntries(Object.values(m.snapshot().cards).map(c=>[c.id,c.cardNo]));const frames=[{step:0,patch:patch(null,picture(m)),logs:[]}],commands=[];let previous=picture(m),logAt=0;
+ for(const e of match._m.history){const r=m.request(0)||m.request(1),command={actor:e.actor,kind:e.kind,value:copy(e.value)};if(e.kind==='surrender')m.command({kind:'surrender',actor:e.actor,matchId:m._m.id,epoch:m.epoch});else{if(!r||r.actor!==e.actor)throw Error('REPLAY_DIVERGED');if(e.kind==='loss'||e.kind==='manual')m.command({kind:e.kind,actor:r.actor,matchId:r.matchId,requestId:r.requestId,epoch:r.epoch,...(e.kind==='manual'?{action:copy(e.value)}:{})});else{if(r.kind!==e.kind)throw Error('REPLAY_DIVERGED');m.command({kind:'answer',answer:H.makeAnswer(r,e.value)});}}commands.push(command);const next=picture(m),logs=m._kernel.state.publicLog.slice(logAt).map(cleanLog);logAt=m._kernel.state.publicLog.length;frames.push({step:commands.length,patch:patch(previous,next),logs});previous=next;}
+ if(!same(picture(match),previous)||!same(match.snapshot().rng,m.snapshot().rng))throw Error('REPLAY_RESULT_MISMATCH');
+ const record={format:'break.public-replay',version:1,id,createdAt,rules:match._m.rulesVersion,options,cards,commands,frames,result:{winner:match._m.winner,rallies:match._m.rally,reason:match._m.endReason||'sets'}};validate(record);return record;
+}
+function validate(r){
+ if(!r||r.format!=='break.public-replay'||r.version!==1||!/^[a-f0-9]{32}$/.test(r.id)||!Number.isFinite(r.createdAt)||!Array.isArray(r.frames)||r.frames.length<2||r.frames.length>6000||r.commands?.length!==r.frames.length-1||!Array.isArray(r.options?.decks)||r.options.decks.length!==2||r.options.decks.some(d=>d.length!==40)||![0,1].includes(r.result?.winner))throw Error('無效的回放資料');
+ const allowed=new Set(['format','version','id','createdAt','rules','options','cards','commands','frames','result']);if(Object.keys(r).some(k=>!allowed.has(k))||JSON.stringify(r).length>MAX)throw Error('回放資料過大或含未支援欄位');
+ for(let i=0;i<r.frames.length;i++){const f=r.frames[i];if(f.step!==i||!f.patch||!Array.isArray(f.logs))throw Error('無效的回放步驟');for(const [k,v]of Object.entries(f.patch)){if(k==='players'){for(const [p,d]of Object.entries(v)){if(!['0','1'].includes(p)||Object.keys(d).some(k=>!['hand','deck','sets','court','event','drop'].includes(k)))throw Error('無效玩家資料');}}else if(!['rally','turn','phase','flow','actor','server','winner','ball'].includes(k))throw Error('無效牌桌資料');}}
+ if(!r.cards||Object.keys(r.cards).length!==80||Object.entries(r.cards).some(([id,no])=>!/^c[0-9]+$/.test(id)||!CL.card(no))||r.options.decks.some(d=>d.some(no=>!CL.card(no)))||!Number.isSafeInteger(r.options.seed)||r.options.seed<0||r.options.seed>4294967295||!['strict','numeric'].includes(r.options.mode)||Object.keys(r.options).some(k=>!['seed','decks','mode','wantsAck','interactiveDraws','openingCoin'].includes(k)))throw Error('無效牌組資料');
+ const known=id=>typeof id==='string'&&Object.hasOwn(r.cards,id),ids=a=>Array.isArray(a)&&a.length<=40&&a.every(known);let state=null;
+ for(const f of r.frames){state=apply(state,f.patch);if(![null,0,1].includes(state.winner)||!Number.isSafeInteger(state.rally)||state.rally<0)throw Error('無效對局資料');const seen=new Set();for(const p of state.players){if(!ids(p.hand)||!ids(p.event)||!ids(p.drop)||!Number.isSafeInteger(p.deck)||p.deck<0||!Number.isSafeInteger(p.sets)||p.sets<0||!Array.isArray(p.court)||p.court.length>7)throw Error('無效區域資料');const face=[...p.hand,...p.event,...p.drop];for(const c of p.court){if(!known(c.id)||!ids(c.guts)||!['serve','receive','toss','attack','center_blocker','side_blocker'].includes(c.role)||!c.parameters||Object.values(c.parameters).some(v=>v!=='dash'&&!Number.isFinite(v)))throw Error('無效場上卡片');face.push(c.id,...c.guts);}if(face.length+p.deck+p.sets!==40)throw Error('卡片總數不一致');for(const id of face){if(seen.has(id))throw Error('卡片重複');seen.add(id);}}}
+ if(state.winner!==r.result.winner||state.rally!==r.result.rallies||state.flow!=='finished')throw Error('回放結果不一致');
+ const raw=JSON.stringify(r);if(/"(?:__proto__|constructor|prototype|uid|email|room|matchId|requestId|snapshot|checkpoint|names|deckNames)"\s*:/.test(raw))throw Error('回放含不允許的欄位');return r;
+}
+function parse(text){if(text.length>MAX)throw Error('回放檔案過大');return validate(JSON.parse(text));}
+function at(record,index){validate(record);if(!Number.isInteger(index)||index<0||index>=record.frames.length)throw Error('無效回放位置');let state=null;const logs=[];for(let i=0;i<=index;i++){state=apply(state,record.frames[i].patch);logs.push(...record.frames[i].logs);}return {state,logs,command:record.commands[index-1]||null};}
+function summary(r){return {version:1,createdAt:r.createdAt,rallies:r.result.rallies,winner:r.result.winner,steps:r.commands.length,mode:r.options.mode,bytes:new TextEncoder().encode(JSON.stringify(r)).length};}
+module.exports={build,parse,validate,at,summary,MAX};
 
 },
 "host-choice.js":function(require,module,exports){
@@ -2184,4 +2222,4 @@ module.exports={"schemaVersion":2,"authority":{"version":2,"cards":{"P01-001":{"
 ;
 }},cache={};
 function load(id){if(cache[id])return cache[id].exports;if(!modules[id])throw Error('Unknown pilot module '+id);const m=cache[id]={exports:{}};modules[id](name=>{const a=id.split('/');a.pop();for(const x of name.split('/')){if(x==='.')continue;if(x==='..')a.pop();else a.push(x);}let key=a.join('/');if(!/\.(js|json)$/.test(key))key+='.js';return load(key);},m,m.exports);return m.exports;}
-root.BreakCardLibrary=load('card-library.js');root.BREAK_LIBRARY=root.BreakCardLibrary.data;root.BreakMatchPilot={...load('rules/match.js'),...load('rules/local-session.js'),...load('rules/table-session.js'),...load('rules/room-authority.js'),...load('rules/online-session.js')};})(globalThis);
+root.BreakCardLibrary=load('card-library.js');root.BREAK_LIBRARY=root.BreakCardLibrary.data;root.BreakMatchPilot={...load('rules/match.js'),...load('rules/local-session.js'),...load('rules/table-session.js'),...load('rules/room-authority.js'),...load('rules/online-session.js'),Replay:load('rules/replay.js')};})(globalThis);

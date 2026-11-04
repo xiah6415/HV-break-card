@@ -32,7 +32,8 @@
       "break-v9.5/engine.js",
       "break-v9.5/qa-play.js",
       "ref_index.html",
-      "ref_cards_data.js"
+      "ref_cards_data.js",
+      "break-v9.5/tools/**"
     ],
     "headers": [
       {

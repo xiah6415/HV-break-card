@@ -768,6 +768,7 @@ body.playing .dock:not([data-mode="modal"]) .in{max-height:22vh}
  #rallyActions button{width:106px;font-size:14px}
 }
 
+.replay-controls{display:flex;flex-wrap:wrap;gap:6px}.replay-controls select{width:auto;min-width:80px}.replay-side{border:1px solid var(--line);padding:8px;border-radius:12px;margin:8px 0}.replay-side h4{margin:2px 0 8px}.replay-court{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.replay-area{min-width:0;border:1px solid var(--line);border-radius:8px;padding:4px;display:grid;justify-items:center}.replay-area>b,.replay-area>small{font-size:11px;overflow-wrap:anywhere}.replay-hand{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}.replay-card{width:70px;max-width:100%;padding:2px;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:7px}.replay-card img{width:100%;height:auto}.replay-card small{display:block;font-size:10px}.replay-card-detail{position:fixed;inset:5vh 8vw;background:var(--card);overflow:auto;z-index:400;border:2px solid var(--line);padding:12px;border-radius:12px}.replay-card-detail img{display:block;max-width:100%;max-height:60vh;margin:auto}#replayImport{max-width:180px}#replayPlayer [data-r-range]{width:100%}
 </style>
 <script>
 /* 外觀：bk_theme = light（預設）｜dark｜auto（跟隨系統）；在繪製前套用避免閃爍 */
@@ -805,7 +806,7 @@ body.playing .dock:not([data-mode="modal"]) .in{max-height:22vh}
   <div id="olConnectionBar" class="ol-row" hidden><span id="olConnectionText" role="status"></span><button class="chip" id="olTakeover" type="button" hidden>接手房主</button></div>
   <div id="runtimeStatus" role="status" style="margin:10px 0;padding:10px 12px;background:#45251b;color:#fff;border-radius:8px;font-size:13px">⚠️ 尚未啟動 JavaScript。如果此提示一直顯示，代表目前的檔案預覽器不執行遊戲程式。請下載 HTML 後以瀏覽器開啟，或透過 HTTPS 網站遊玩。</div>
   <div class="modebar" role="tablist" aria-label="對戰方式" id="modebar"><button type="button" role="tab" id="modeSolo" aria-selected="true">單人對練</button><button type="button" role="tab" id="modeOnline" aria-selected="false">多人連線</button></div>
-  <div class="account-panel" id="accountPanel"><div class="account-person"><span id="accountAvatar" class="player-avatar" aria-label="個人頭像">🏐</span><div><strong id="accountTitle">訪客模式</strong><p id="accountStatus" role="status">不需登入即可遊玩・牌組與草稿保存在此裝置</p></div></div><div class="opts"><button class="chip" id="accountGoogle" type="button" disabled>Google 登入</button><button class="chip" id="editProfile" type="button" hidden>編輯個人資料</button><button class="chip" id="openRecords" type="button">對局紀錄</button><button class="chip" id="openPublic" type="button">瀏覽公開牌組</button><button class="chip" id="openCloud" type="button" disabled>雲端牌組</button><button class="chip" id="accountLogout" type="button" hidden>登出</button></div></div>
+  <div class="account-panel" id="accountPanel"><div class="account-person"><span id="accountAvatar" class="player-avatar" aria-label="個人頭像">🏐</span><div><strong id="accountTitle">訪客模式</strong><p id="accountStatus" role="status">不需登入即可遊玩・牌組與草稿保存在此裝置</p></div></div><div class="opts"><button class="chip" id="accountGoogle" type="button" disabled>Google 登入</button><button class="chip" id="editProfile" type="button" hidden>編輯個人資料</button><button class="chip" id="openRecords" type="button">對局紀錄</button><button class="chip" id="openReplays" type="button">匿名對局回放</button><button class="chip" id="openPublic" type="button">瀏覽公開牌組</button><button class="chip" id="openCloud" type="button" disabled>雲端牌組</button><button class="chip" id="accountLogout" type="button" hidden>登出</button></div></div>
   <section id="setup" class="setup">
     <div class="panel solo-only" id="soloResume" hidden><h2>上次的對局</h2><p class="sub" id="soloSaveText"></p><div class="opts"><button class="btn" id="resumeSolo" type="button">繼續對局</button><button class="chip" id="clearSolo" type="button">清除對局存檔</button></div></div>
     <div class="panel" id="deckPanel">
@@ -841,7 +842,7 @@ body.playing .dock:not([data-mode="modal"]) .in{max-height:22vh}
         <button class="btn outline wide" type="button" id="olGoogle" disabled>用 Google 登入</button>
         <p class="ol-hint">免註冊身份只存在這個瀏覽器；想換裝置接續請用 Google。多人對戰使用嚴格模式。</p>
       </div>
-      <div id="olLobby" class="ol-list" hidden>
+      <div id="olLobby" class="ol-list" hidden><p class="sub">資料回放：完賽後，雙方完整牌組與出牌操作會匿名公開供研究，不含暱稱、帳號及房號。</p>
         <div class="ol-me"><span class="ol-dot" id="olDot"></span><b id="olWho"></b><span class="ol-sp"></span><button class="chip" type="button" id="olLink" hidden>連結 Google</button><button class="chip" type="button" id="olLogout">登出</button></div>
         <label class="field" for="olOpp">對手<select id="olOpp"><option value="human">邀請朋友</option><option value="AI">策略 AI</option></select></label>
         <button class="btn wide" type="button" id="olCreate" disabled>建立房間</button>
@@ -2475,17 +2476,19 @@ module.exports={TableSession,boardView};
 /* Trusted browser authority. Never send this checkpoint to a non-authority seat. */
 'use strict';
 const {Match}=require('./match'),AI=require('../match-ai'),H=require('../host-choice');
+const Replay=require('./replay');
 const copy=x=>JSON.parse(JSON.stringify(x));
 class RoomAuthority{
  constructor({id,decks,players,seed=1,mode='strict',checkpoint,log={},interactiveDraws=false,openingCoin=false}){
   if(!Array.isArray(players)||players.length!==2||players[0]===players[1])throw Error('INVALID_PLAYERS');
   this.players=[...players];this.log=copy(log);this.undoPending=copy(checkpoint?.undoPending||null);
-  const c=checkpoint||{id,decks,seed,mode,...(openingCoin?{openingCoin:true}:{}),...(interactiveDraws?{interactiveDraws:true}:{})};
+  const c=checkpoint||{id,decks,seed,mode,publishVersion:1,archiveId:crypto.randomUUID().replaceAll('-',''),...(openingCoin?{openingCoin:true}:{}),...(interactiveDraws?{interactiveDraws:true}:{})};
   if(checkpoint&&(c.schema!==1||JSON.stringify(c.players)!==JSON.stringify(players)))throw Error('CHECKPOINT_PLAYERS_MISMATCH');
-  this.config={id:c.id,decks:copy(c.decks),seed:c.seed,mode:c.mode,...(c.openingCoin?{openingCoin:true}:{}),...(c.interactiveDraws?{interactiveDraws:true}:{})};
+  this.config={...(c.publishVersion===1?{publishVersion:1,archiveId:c.archiveId}:{}),id:c.id,decks:copy(c.decks),seed:c.seed,mode:c.mode,...(c.openingCoin?{openingCoin:true}:{}),...(c.interactiveDraws?{interactiveDraws:true}:{})};
   this.match=new Match({...this.config,wantsAck:[true,true]});
   if(checkpoint){this.match.epoch=c.epoch;this.match.restore(c.snapshot);}
  }
+ publicReplay(){return Replay.build(this.config,this.match,{id:this.config.archiveId});}
  expireUndo(now=Date.now()){if(this.undoPending&&this.undoPending.expiresAt<=now){this.undoPending=null;return true;}return false;}
  _undoIndex(actor){const h=this.match._m.history;for(let i=h.length-1;i>=0;i--)if(h[i].actor===actor)return i;return -1;}
  _replayUntil(index){
@@ -2619,6 +2622,42 @@ class OnlineSession{
  }
 }
 module.exports={OnlineSession,rotateView};
+
+},
+"rules/replay.js":function(require,module,exports){
+/* Anonymous, versioned data replay. Playback applies presentation patches and does
+   not depend on the current rules engine. Never contains a room/account/name. */
+'use strict';
+const {Match}=require('./match'),H=require('../host-choice'),CL=require('../card-library');
+const copy=x=>JSON.parse(JSON.stringify(x)),MAX=750000;
+const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+const pick=(o,keys)=>Object.fromEntries(keys.filter(k=>o[k]!==undefined).map(k=>[k,copy(o[k])]));
+function picture(m){const a=m.view(0),b=m.view(1);return {rally:a.match.rally,turn:a.turn.id,phase:a.turn.phase,flow:a.match.phase,actor:a.turn.player,server:a.match.server,winner:a.match.winner,ball:a.ball?pick(a.ball,['kind','offense','owner']):null,players:[a.players[0],b.players[1]].map(p=>({hand:p.hand.map(c=>c.id),deck:p.deck.count,sets:p.sets.count,court:p.court.map(c=>({...pick(c,['id','cardNo','name','role','parameters']),guts:c.guts.map(g=>g.id)})),event:p.event.map(c=>c.id),drop:p.drop.map(c=>c.id)}))};}
+function cleanLog(e){return pick(e,['type','turn','phase','rally','player','cardNo','from','to','guts','payment','reason','count','notice','offense','draws','numeric','visibility','cards','destination','result','matched','available','declined','purpose','action']);}
+function patch(previous,next){const out={};for(const k of Object.keys(next))if(k!=='players'&&!same(previous?.[k],next[k]))out[k]=copy(next[k]);const players={};for(let p=0;p<2;p++){const d={};for(const k of Object.keys(next.players[p]))if(!same(previous?.players?.[p]?.[k],next.players[p][k]))d[k]=copy(next.players[p][k]);if(Object.keys(d).length)players[p]=d;}if(Object.keys(players).length)out.players=players;return out;}
+function apply(previous,delta){const next=copy(previous||{players:[{},{}]});for(const [k,v]of Object.entries(delta)){if(k==='players'){for(const [p,d]of Object.entries(v))Object.assign(next.players[+p],copy(d));}else next[k]=copy(v);}return next;}
+function build(config,match,{id=crypto.randomUUID().replaceAll('-',''),createdAt=Date.now()}={}){
+ if(match._m.phase!=='finished')throw Error('REPLAY_NOT_FINISHED');
+ const options={seed:config.seed>>>0,decks:copy(config.decks),mode:config.mode||'strict',wantsAck:copy(match._m.wantsAck),interactiveDraws:!!config.interactiveDraws,openingCoin:!!config.openingCoin},m=new Match({id:'anonymous-replay',...options});
+ const cards=Object.fromEntries(Object.values(m.snapshot().cards).map(c=>[c.id,c.cardNo]));const frames=[{step:0,patch:patch(null,picture(m)),logs:[]}],commands=[];let previous=picture(m),logAt=0;
+ for(const e of match._m.history){const r=m.request(0)||m.request(1),command={actor:e.actor,kind:e.kind,value:copy(e.value)};if(e.kind==='surrender')m.command({kind:'surrender',actor:e.actor,matchId:m._m.id,epoch:m.epoch});else{if(!r||r.actor!==e.actor)throw Error('REPLAY_DIVERGED');if(e.kind==='loss'||e.kind==='manual')m.command({kind:e.kind,actor:r.actor,matchId:r.matchId,requestId:r.requestId,epoch:r.epoch,...(e.kind==='manual'?{action:copy(e.value)}:{})});else{if(r.kind!==e.kind)throw Error('REPLAY_DIVERGED');m.command({kind:'answer',answer:H.makeAnswer(r,e.value)});}}commands.push(command);const next=picture(m),logs=m._kernel.state.publicLog.slice(logAt).map(cleanLog);logAt=m._kernel.state.publicLog.length;frames.push({step:commands.length,patch:patch(previous,next),logs});previous=next;}
+ if(!same(picture(match),previous)||!same(match.snapshot().rng,m.snapshot().rng))throw Error('REPLAY_RESULT_MISMATCH');
+ const record={format:'break.public-replay',version:1,id,createdAt,rules:match._m.rulesVersion,options,cards,commands,frames,result:{winner:match._m.winner,rallies:match._m.rally,reason:match._m.endReason||'sets'}};validate(record);return record;
+}
+function validate(r){
+ if(!r||r.format!=='break.public-replay'||r.version!==1||!/^[a-f0-9]{32}$/.test(r.id)||!Number.isFinite(r.createdAt)||!Array.isArray(r.frames)||r.frames.length<2||r.frames.length>6000||r.commands?.length!==r.frames.length-1||!Array.isArray(r.options?.decks)||r.options.decks.length!==2||r.options.decks.some(d=>d.length!==40)||![0,1].includes(r.result?.winner))throw Error('無效的回放資料');
+ const allowed=new Set(['format','version','id','createdAt','rules','options','cards','commands','frames','result']);if(Object.keys(r).some(k=>!allowed.has(k))||JSON.stringify(r).length>MAX)throw Error('回放資料過大或含未支援欄位');
+ for(let i=0;i<r.frames.length;i++){const f=r.frames[i];if(f.step!==i||!f.patch||!Array.isArray(f.logs))throw Error('無效的回放步驟');for(const [k,v]of Object.entries(f.patch)){if(k==='players'){for(const [p,d]of Object.entries(v)){if(!['0','1'].includes(p)||Object.keys(d).some(k=>!['hand','deck','sets','court','event','drop'].includes(k)))throw Error('無效玩家資料');}}else if(!['rally','turn','phase','flow','actor','server','winner','ball'].includes(k))throw Error('無效牌桌資料');}}
+ if(!r.cards||Object.keys(r.cards).length!==80||Object.entries(r.cards).some(([id,no])=>!/^c[0-9]+$/.test(id)||!CL.card(no))||r.options.decks.some(d=>d.some(no=>!CL.card(no)))||!Number.isSafeInteger(r.options.seed)||r.options.seed<0||r.options.seed>4294967295||!['strict','numeric'].includes(r.options.mode)||Object.keys(r.options).some(k=>!['seed','decks','mode','wantsAck','interactiveDraws','openingCoin'].includes(k)))throw Error('無效牌組資料');
+ const known=id=>typeof id==='string'&&Object.hasOwn(r.cards,id),ids=a=>Array.isArray(a)&&a.length<=40&&a.every(known);let state=null;
+ for(const f of r.frames){state=apply(state,f.patch);if(![null,0,1].includes(state.winner)||!Number.isSafeInteger(state.rally)||state.rally<0)throw Error('無效對局資料');const seen=new Set();for(const p of state.players){if(!ids(p.hand)||!ids(p.event)||!ids(p.drop)||!Number.isSafeInteger(p.deck)||p.deck<0||!Number.isSafeInteger(p.sets)||p.sets<0||!Array.isArray(p.court)||p.court.length>7)throw Error('無效區域資料');const face=[...p.hand,...p.event,...p.drop];for(const c of p.court){if(!known(c.id)||!ids(c.guts)||!['serve','receive','toss','attack','center_blocker','side_blocker'].includes(c.role)||!c.parameters||Object.values(c.parameters).some(v=>v!=='dash'&&!Number.isFinite(v)))throw Error('無效場上卡片');face.push(c.id,...c.guts);}if(face.length+p.deck+p.sets!==40)throw Error('卡片總數不一致');for(const id of face){if(seen.has(id))throw Error('卡片重複');seen.add(id);}}}
+ if(state.winner!==r.result.winner||state.rally!==r.result.rallies||state.flow!=='finished')throw Error('回放結果不一致');
+ const raw=JSON.stringify(r);if(/"(?:__proto__|constructor|prototype|uid|email|room|matchId|requestId|snapshot|checkpoint|names|deckNames)"\s*:/.test(raw))throw Error('回放含不允許的欄位');return r;
+}
+function parse(text){if(text.length>MAX)throw Error('回放檔案過大');return validate(JSON.parse(text));}
+function at(record,index){validate(record);if(!Number.isInteger(index)||index<0||index>=record.frames.length)throw Error('無效回放位置');let state=null;const logs=[];for(let i=0;i<=index;i++){state=apply(state,record.frames[i].patch);logs.push(...record.frames[i].logs);}return {state,logs,command:record.commands[index-1]||null};}
+function summary(r){return {version:1,createdAt:r.createdAt,rallies:r.result.rallies,winner:r.result.winner,steps:r.commands.length,mode:r.options.mode,bytes:new TextEncoder().encode(JSON.stringify(r)).length};}
+module.exports={build,parse,validate,at,summary,MAX};
 
 },
 "host-choice.js":function(require,module,exports){
@@ -3084,7 +3123,7 @@ module.exports={"schemaVersion":2,"authority":{"version":2,"cards":{"P01-001":{"
 ;
 }},cache={};
 function load(id){if(cache[id])return cache[id].exports;if(!modules[id])throw Error('Unknown pilot module '+id);const m=cache[id]={exports:{}};modules[id](name=>{const a=id.split('/');a.pop();for(const x of name.split('/')){if(x==='.')continue;if(x==='..')a.pop();else a.push(x);}let key=a.join('/');if(!/\.(js|json)$/.test(key))key+='.js';return load(key);},m,m.exports);return m.exports;}
-root.BreakCardLibrary=load('card-library.js');root.BREAK_LIBRARY=root.BreakCardLibrary.data;root.BreakMatchPilot={...load('rules/match.js'),...load('rules/local-session.js'),...load('rules/table-session.js'),...load('rules/room-authority.js'),...load('rules/online-session.js')};})(globalThis);
+root.BreakCardLibrary=load('card-library.js');root.BREAK_LIBRARY=root.BreakCardLibrary.data;root.BreakMatchPilot={...load('rules/match.js'),...load('rules/local-session.js'),...load('rules/table-session.js'),...load('rules/room-authority.js'),...load('rules/online-session.js'),Replay:load('rules/replay.js')};})(globalThis);
 
 /* BREAK 通用玩家選擇（C）：依 rules/HOST-CONTRACT.md（break.host.v1）驗證回答、管理選取狀態、產生 AI 基礎合法決策。
    純函式、不碰 DOM、不改規則狀態；UI（choice-ui.js）與 AI 共用同一套驗證。Claude 2026-10-21。 */
@@ -3633,6 +3672,21 @@ function create({thumb={},full={},ImageClass=root.Image,concurrency=3,timeout=12
 }
 if(typeof module!=='undefined'&&module.exports)module.exports={create};else root.BreakCardAssets={create};
 })(typeof globalThis!=='undefined'?globalThis:this);
+
+/* Read-only player for compact presentation patches, including old rule versions. */
+(function(root){'use strict';
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function render(el,record,{api,img,name,logText}){api.validate(record);let step=0,timer=null,alive=true;const action={coinGuess:'猜硬幣',firstService:'選先發／先接',roll:'開始調度',mulligan:'調度手牌',ack:'抽牌',drawConfirm:'確認抽牌',drawResult:'查看抽牌',receiver:'接球出牌',setter:'舉球出牌',attacker:'攻擊出牌',serve:'發球出牌',block:'攔網出牌',event:'事件／技能',activate_payment:'選擇技能費用',payment_cards:'支付費用',guts:'支付Guts',target:'選擇對象',parameter:'選擇數值',turnEnd:'結束回合',loss:'選擇失分',lossConfirm:'確認失分',surrender:'投降',manual:'手動調整'},phase={draw:'抽牌',receive:'接球',toss:'舉球',attack:'攻擊',serve:'發球',block:'攔網',end:'回合結束'},role={receive:'接球',toss:'舉球',attack:'攻擊',serve:'發球',center_blocker:'中攔',side_blocker:'側攔'};
+ el.innerHTML='<div class="replay-controls"><button class="chip" data-r-prev>上一步</button><button class="chip" data-r-play>播放</button><button class="chip" data-r-next>下一步</button><select data-r-speed aria-label="播放速度"><option value="1500">慢速</option><option value="800" selected>正常</option><option value="250">快速</option></select><select data-r-perspective aria-label="回放視角"><option value="0">A 視角</option><option value="1">B 視角</option><option value="both">雙方明牌</option></select></div><input data-r-range type="range" min="0" max="'+(record.frames.length-1)+'" value="0" aria-label="回放進度"><p data-r-position role="status"></p><div data-r-board></div><div class="log" data-r-logs style="max-height:25vh"></div>';
+ const $=s=>el.querySelector(s),card=id=>{const no=record.cards[id];return '<button type="button" class="replay-card" data-r-card="'+esc(no)+'">'+img(no.replace(/^HV-?/,''))+'<small>'+esc(name(no))+'</small></button>';};
+ function stop(){clearTimeout(timer);timer=null;$('[data-r-play]').textContent='播放';}
+ function show(){if(!alive)return;const {state:s,logs,command}=api.at(record,step),view=$('[data-r-perspective]').value;$('[data-r-range]').value=step;$('[data-r-position]').textContent=`第 ${s.rally} 球 · 回合 ${s.turn} · ${phase[s.phase]||s.phase} · ${step}/${record.commands.length} 步`+(s.ball?' · 來球 '+(phase[s.ball.kind]||s.ball.kind)+' '+s.ball.offense:'')+(s.winner!=null?' · '+(s.winner?'B':'A')+' 獲勝':'')+(command?' · '+(command.actor?'B':'A')+'：'+(action[command.kind]||'選擇'):'');$('[data-r-prev]').disabled=step===0;$('[data-r-next]').disabled=step===record.frames.length-1;
+ $('[data-r-board]').innerHTML=s.players.map((p,i)=>'<section class="replay-side"><h4>'+('AB'[i])+(s.server===i?' · 本球發球':'')+' · 手牌 '+p.hand.length+' · 牌庫 '+p.deck+' · SET '+p.sets+'</h4><div class="replay-court">'+p.court.map(c=>'<div class="replay-area"><b>'+esc(role[c.role]||c.role)+' · G'+c.guts.length+'</b>'+card(c.id)+'<small>'+esc(Object.entries(c.parameters).map(([k,v])=>(phase[k]||role[k]||k)+':'+v).join(' '))+'</small></div>').join('')+'</div><div class="replay-hand">'+(view==='both'||view===String(i)?p.hand.map(card).join(''):'手牌隱藏（可切換視角）')+'</div><details><summary>Event '+p.event.length+'／棄牌 '+p.drop.length+'</summary><div class="replay-hand">'+p.event.map(card).join('')+p.drop.map(card).join('')+'</div></details></section>').join('');$('[data-r-logs]').innerHTML=logs.slice(-100).map(e=>'<div>'+esc(logText(e))+'</div>').join('');$('[data-r-logs]').scrollTop=999999;
+ }
+ function tick(){if(!alive)return;if(step>=record.frames.length-1)return stop();step++;show();timer=setTimeout(tick,+$('[data-r-speed]').value);}
+ $('[data-r-play]').onclick=()=>{if(timer)return stop();if(step===record.frames.length-1)step=0;$('[data-r-play]').textContent='暫停';timer=setTimeout(tick,+$('[data-r-speed]').value);};$('[data-r-prev]').onclick=()=>{stop();step=Math.max(0,step-1);show();};$('[data-r-next]').onclick=()=>{stop();step=Math.min(record.frames.length-1,step+1);show();};$('[data-r-range]').oninput=e=>{stop();step=+e.target.value;show();};$('[data-r-perspective]').onchange=show;
+ el.onclick=e=>{const b=e.target.closest('[data-r-card]');if(b)root.dispatchEvent(new CustomEvent('break-replay-card',{detail:b.dataset.rCard}));};show();return {destroy(){alive=false;clearTimeout(timer);el.onclick=null;}};
+}root.BreakReplayUI={render};})(globalThis);
 
 </script>
 <script>
@@ -4541,11 +4595,30 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
   }
   function showMatchRecord(id){
     const r=matchRecords.rows.find(r=>r.id===id);if(!r)return openMatchRecords();
-    openSheet(`<h3>對局紀錄</h3><p>${esc(r.names.join(' vs '))} · ${r.status==='finished'?(r.result==='win'?'勝利':'落敗'):'未完成'} · 第${r.rally}球</p><p class="sub">${esc(r.deckNames.join(' vs '))}</p><p class="sub">${r.replay?'已保存種子、雙方牌組與操作順序，供後續相同核心版本重演；匯出包含完整牌組與隱藏牌資訊，請於對局結束後分享。':'多人僅保存你可見的文字與結果；不含對手隱藏手牌、牌庫順序或權威端快照。中途加入者只記錄收到的內容。'}</p><p id="recordDetailMessage" role="status"></p><div class="opts"><button class="chip" id="recordExport">匯出紀錄</button><button class="chip" id="recordDelete">刪除</button><button class="chip" id="recordBack">回清單</button></div><div class="log" style="max-height:50vh">${r.logs.map(s=>`<div>${esc(s)}</div>`).join('')||'<p>尚無文字紀錄</p>'}</div>`);
+    openSheet(`<h3>對局紀錄</h3><p>${esc(r.names.join(' vs '))} · ${r.status==='finished'?(r.result==='win'?'勝利':'落敗'):'未完成'} · 第${r.rally}球</p><p class="sub">${esc(r.deckNames.join(' vs '))}</p><p class="sub">${r.replay?'已保存種子、雙方牌組與操作順序，供後續相同核心版本重演；匯出包含完整牌組與隱藏牌資訊，請於對局結束後分享。':'多人僅保存你可見的文字與結果；不含對手隱藏手牌、牌庫順序或權威端快照。中途加入者只記錄收到的內容。'}</p><p id="recordDetailMessage" role="status"></p><div class="opts"><button class="chip" id="recordExport">匯出紀錄</button>${r.replay&&r.status==='finished'?'<button class="chip" id="recordPlay">資料回放</button>':''}<button class="chip" id="recordDelete">刪除</button><button class="chip" id="recordBack">回清單</button></div><div class="log" style="max-height:50vh">${r.logs.map(s=>`<div>${esc(s)}</div>`).join('')||'<p>尚無文字紀錄</p>'}</div>`);
+    if($('recordPlay'))$('recordPlay').onclick=()=>{try{const s=BreakMatchPilot.TableSession.fromCheckpoint(r.replay.checkpoint);showReplay(BreakMatchPilot.Replay.build(s.options,s.match));}catch(e){$('recordDetailMessage').textContent='此紀錄無法在目前核心重建；原始資料仍保留。'+e.message;}};
     $('recordBack').onclick=openMatchRecords;$('recordExport').onclick=()=>{try{downloadRecord('break-'+r.kind+'-'+r.startedAt+'.json',matchRecords.export(id));}catch{$('recordDetailMessage').textContent='無法下載紀錄，請檢查瀏覽器下載權限。';}};
     $('recordDelete').onclick=()=>{openSheet('<h3>刪除此場紀錄？</h3><p>刪除歷史紀錄不會影響目前牌桌或續玩存檔。</p><button class="opt danger" id="recordDeleteYes">確認刪除</button><button class="opt" id="recordDeleteNo">保留</button>');$('recordDeleteNo').onclick=()=>showMatchRecord(id);$('recordDeleteYes').onclick=()=>{try{matchRecords.remove(id);openMatchRecords();}catch(e){$('recordDeleteYes').textContent=e.message;}};};
   }
   $('openRecords').onclick=openMatchRecords;
+  let replayPlayer=null;
+  function replayLog(e){const who=e.player===0?'A':'B',no=e.cardNo,name=no?nm(no.replace(/^HV-?/,''))+'（'+no.replace(/^HV-?/,'')+'）':'';const at=`第${e.rally||0}球／回合${e.turn||0}／${({setup:'調度',draw:'抽牌',receive:'接球',toss:'舉球',attack:'攻擊',serve:'發球',block:'攔網',end:'回合結束',loss_set:'失分',interval:'下一球準備'})[e.phase]||e.phase||''} `;if(e.type==='card_move')return at+who+(e.to==='drop'?(e.guts?'拔除 Guts ':'棄掉 '):'放置 ')+name+' '+(e.from||'')+' → '+e.to+(e.payment?'（費用）':'');if(e.type==='skill_resolved')return at+who+' 發動 '+name+'：'+(e.numeric||[]).map(n=>n.parameter+' '+(n.value>=0?'+':'')+n.value).join('、');if(e.type==='rally_notice')return at+who+(e.notice==='loss'?' 本球失分 '+e.reason:e.notice==='serve'?' 發球':' 回合開始');if(e.type==='draw')return at+who+' 抽 '+e.count+' 張';if(e.type==='surrender')return at+who+' 投降';return at+who+' '+(name||e.type);}
+  function showReplay(record){
+    BreakMatchPilot.Replay.validate(record);openSheet('<h3>匿名資料回放</h3><p class="sub">完賽後公開完整牌組；A／B為座位，無玩家身分。這是資料重現，不是錄影。</p><div class="opts"><button class="chip" id="replayExport">下載回放資料</button><button class="chip" id="replayDecks">雙方牌組</button></div><div id="replayPlayer"></div>',()=>{replayPlayer?.destroy();replayPlayer=null;});
+    replayPlayer=BreakReplayUI.render($('replayPlayer'),record,{api:BreakMatchPilot.Replay,img:c=>img(c),name:no=>nm(no.replace(/^HV-?/,'')),logText:replayLog});
+    $('replayExport').onclick=()=>downloadRecord('break-replay-'+record.id+'.json',JSON.stringify(record));
+    $('replayDecks').onclick=()=>{const rows=record.options.decks.map((d,i)=>{const counts={};for(const c of d)counts[c]=(counts[c]||0)+1;return '<h4>'+('AB'[i])+' · 40張</h4><div class="replay-hand">'+Object.entries(counts).map(([c,n])=>'<div class="replay-card">'+img(c.replace(/^HV-?/,''))+'<small>'+esc(nm(c.replace(/^HV-?/,'')))+' ×'+n+'</small></div>').join('')+'</div>';}).join('');openSheet('<h3>回放牌組</h3>'+rows+'<button class="chip" id="replayReturn">返回回放</button>');$('replayReturn').onclick=()=>showReplay(record);};
+  }
+  window.addEventListener('break-replay-card',e=>{const no=e.detail;if(!no||!CL.card(no))return;const box=$('replayPlayer');if(box){const detail=document.createElement('div');detail.className='replay-card-detail';detail.innerHTML='<button class="chip" type="button">關閉卡片資訊</button>'+img(no.replace(/^HV-?/,''),true)+'<p>'+esc(DEF[no.replace(/^HV-?/,'')]?.[10]||'')+'</p>';box.append(detail);detail.querySelector('button').onclick=()=>detail.remove();}});
+  async function openPublicReplays(){
+    openSheet('<h3>匿名對局回放</h3><p class="sub">只在完賽後公開。清單每次最多20場，點選才下載完整資料。</p><p id="replayMessage">載入中…</p><div class="opts"><label class="chip">匯入回放檔<input id="replayImport" type="file" accept=".json,application/json"></label><button class="chip" id="replayBatch">下載本頁資料集</button></div><div id="replayList"></div>');
+    $('replayImport').onchange=async e=>{try{const f=e.target.files[0];if(!f)return;if(f.size>20000000)throw Error('檔案過大');const text=await f.text(),data=JSON.parse(text);if(data.format==='break.replay-dataset'){if(data.version!==1||!Array.isArray(data.records)||!data.records.length||data.records.length>20)throw Error('無效資料集');for(const r of data.records)BreakMatchPilot.Replay.validate(r);openSheet('<h3>回放資料集</h3>'+data.records.map((r,i)=>'<button class="opt" data-dataset-replay="'+i+'">第'+(i+1)+'場 · '+r.result.rallies+'球 · '+r.commands.length+'步</button>').join(''));for(const b of $('sheetBox').querySelectorAll('[data-dataset-replay]'))b.onclick=()=>showReplay(data.records[+b.dataset.datasetReplay]);}else showReplay(BreakMatchPilot.Replay.parse(text));}catch(err){if($('replayMessage'))$('replayMessage').textContent=err.message;}};
+    let rows=[];const fetchRecord=async id=>{const c=OL.client,s=await c.D.get(c.ref('publicReplays/'+id));if(!s.exists())throw Error('找不到回放');return BreakMatchPilot.Replay.parse(s.val());};
+    $('replayBatch').disabled=true;
+    try{await olLoad();const c=OL.client,q=c.D.query(c.ref('publicReplayIndex'),c.D.orderByChild('createdAt'),c.D.limitToLast(20)),snap=await c.D.get(q);if(!$('replayList'))return;rows=Object.entries(snap.val()||{}).sort((a,b)=>b[1].createdAt-a[1].createdAt);$('replayMessage').textContent=rows.length?'最近 '+rows.length+' 場；資料來自受信任房主，不是官方裁判認證。':'還沒有已公開的回放，新版多人對局完賽後會自動收錄。';$('replayList').innerHTML=rows.map(([id,r])=>'<article class="cloud-row"><div><strong>A vs B · '+(r.winner?'B':'A')+' 勝利</strong><small>'+esc(new Date(r.createdAt).toLocaleDateString('zh-TW'))+' · '+r.rallies+'球 · '+r.steps+'步 · '+(r.bytes/1024).toFixed(1)+' KB</small></div><button class="chip" data-public-replay="'+esc(id)+'">回放</button></article>').join('');for(const b of $('replayList').querySelectorAll('[data-public-replay]'))b.onclick=async()=>{b.disabled=true;try{showReplay(await fetchRecord(b.dataset.publicReplay));}catch(e){if($('replayMessage'))$('replayMessage').textContent=e.message;b.disabled=false;}};$('replayBatch').disabled=!rows.length;$('replayBatch').onclick=async()=>{const button=$('replayBatch');button.disabled=true;try{const records=[];for(const [id]of rows)records.push(await fetchRecord(id));downloadRecord('break-replays-'+new Date().toISOString().slice(0,10)+'.json',JSON.stringify({format:'break.replay-dataset',version:1,records}));}catch(e){if($('replayMessage'))$('replayMessage').textContent=e.message;}finally{button.disabled=false;}};
+    }catch(e){if($('replayMessage'))$('replayMessage').textContent='公開清單暫時無法讀取；仍可匯入回放檔。'+e.message;}
+  }
+  $('openReplays').onclick=openPublicReplays;
   function showLog() { openSheet(`<h3>對局紀錄</h3><div class="log" style="max-height:60vh">${logBuf.map(([s, c]) => `<div class="${c || ''}">${esc(s)}</div>`).join('')}</div>`); const l = $('sheetBox').querySelector('.log'); l.scrollTop = l.scrollHeight; }
   $('logBtn').onclick = showLog;
   function openGameMenu(){
@@ -4795,6 +4868,7 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
       OL.public=new publicModule.PublicDecks(services);
       OL.cloud=new cloudModule.DeckCloud(services,{list:rows=>{cloudRows=rows;accountRender();},error:e=>{accountMessage='雲端牌組讀取失敗：'+olFriendly(e);accountRender();}});
       const c = OL.client = new mod.FirebaseRooms(services, {
+        archive:info=>{archiveMessage=info.ok?'此場匿名資料回放已公開':'回放上傳失敗，本機文字紀錄仍保留。'+info.message;},
         error: e => olToast(olFriendly(e)),
         connection: () => {olView();syncSharing();syncProfileName().catch(e=>{accountMessage=olFriendly(e);accountRender();});},
         lobby: v => { OL.rooms = v || {}; olLobby(); },

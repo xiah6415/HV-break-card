@@ -305,6 +305,67 @@
           ".validate": false
         }
       }
+    },
+    "archiveWriters": {
+      "$id": {
+        ".read": false,
+        ".write": "auth != null && $id.matches(/^[a-f0-9]{32}$/) && newData.child('uid').val() == auth.uid && (!data.exists() || (newData.child('room').val() == data.child('room').val() && newData.child('matchId').val() == data.child('matchId').val())) && auth.uid == root.child('rooms').child(newData.child('room').val()).child('authority/uid').val() && root.child('rooms').child(newData.child('room').val()).child('meta/status').val() == 'finished' && newData.child('matchId').val() == root.child('rooms').child(newData.child('room').val()).child('bundle/matchId').val()",
+        ".validate": "newData.hasChildren(['uid','room','matchId'])",
+        "uid": {
+          ".validate": "newData.isString()"
+        },
+        "room": {
+          ".validate": "newData.isString()"
+        },
+        "matchId": {
+          ".validate": "newData.isString()"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+    "publicReplays": {
+      "$id": {
+        ".read": true,
+        ".write": "!data.exists() && auth != null && auth.uid == root.child('archiveWriters').child($id).child('uid').val() && auth.uid == root.child('rooms').child(root.child('archiveWriters').child($id).child('room').val()).child('authority/uid').val() && root.child('rooms').child(root.child('archiveWriters').child($id).child('room').val()).child('meta/status').val() == 'finished' && root.child('archiveWriters').child($id).child('matchId').val() == root.child('rooms').child(root.child('archiveWriters').child($id).child('room').val()).child('bundle/matchId').val()",
+        ".validate": "$id.matches(/^[a-f0-9]{32}$/) && newData.isString() && newData.val().length > 100 && newData.val().length <= 750000 && !newData.val().contains('\"uid\"') && !newData.val().contains('\"room\"') && !newData.val().contains('\"email\"') && !newData.val().contains('\"snapshot\"')"
+      }
+    },
+    "publicReplayIndex": {
+      ".read": "query.orderByChild == 'createdAt' && query.limitToLast != null && query.limitToLast <= 20",
+      ".indexOn": [
+        "createdAt"
+      ],
+      "$id": {
+        ".read": true,
+        ".write": "!data.exists() && root.child('publicReplays').child($id).exists() && auth != null && auth.uid == root.child('archiveWriters').child($id).child('uid').val() && auth.uid == root.child('rooms').child(root.child('archiveWriters').child($id).child('room').val()).child('authority/uid').val() && root.child('rooms').child(root.child('archiveWriters').child($id).child('room').val()).child('meta/status').val() == 'finished' && root.child('archiveWriters').child($id).child('matchId').val() == root.child('rooms').child(root.child('archiveWriters').child($id).child('room').val()).child('bundle/matchId').val()",
+        ".validate": "newData.hasChildren(['version','createdAt','rallies','winner','steps','mode','bytes'])",
+        "version": {
+          ".validate": "newData.val() == 1"
+        },
+        "createdAt": {
+          ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() <= now"
+        },
+        "rallies": {
+          ".validate": "newData.isNumber() && newData.val() >= 0"
+        },
+        "winner": {
+          ".validate": "newData.val() == 0 || newData.val() == 1"
+        },
+        "steps": {
+          ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() < 6000"
+        },
+        "mode": {
+          ".validate": "newData.val() == 'strict' || newData.val() == 'numeric'"
+        },
+        "bytes": {
+          ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() <= 3000000"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
     }
   }
 }
