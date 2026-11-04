@@ -696,6 +696,9 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
 .fx-coin-caption{white-space:nowrap;background:#102d32ed;color:white;padding:8px 16px;border-radius:99px;animation:fx-caption 1.2s both}
 @keyframes fx-coin-spin{from{transform:translateY(-90px) rotateY(-1440deg) rotateZ(-20deg)}to{transform:translateY(0) rotateY(var(--coin-end)) rotateZ(0)}}
 @keyframes fx-caption{0%,75%{opacity:0}100%{opacity:1}}
+.fx-notice{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:max-content;max-width:90vw;padding:12px 20px;border-radius:14px;background:#102d32ee;color:#fff;font-size:15px;font-weight:700;line-height:1.6;text-align:center;overflow-wrap:anywhere;box-shadow:0 5px 20px #0003}
+.fx-opponent-draw{top:28%;font-size:14px;padding:9px 16px}
+.fx-negative{background:#7c2927f2;border:1px solid #ffbb9e}
 #hintToast{position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:145;pointer-events:none;background:#102d32ee;color:#fff;padding:9px 18px;border-radius:99px;max-width:92vw;font-size:14px;text-align:center}
 body[data-hints="simple"] .hc-timing,body[data-hints="off"] .hc-timing{display:none}
 body[data-hints="off"] .skill-ready .ci,body[data-hints="off"] .slot.skill-ready,body[data-hints="off"] .hc-ready,body[data-hints="off"] .hc-ready img{outline:none;box-shadow:none;animation:none}
@@ -888,7 +891,7 @@ body.playing .dock[data-mode="court"] [data-kind="parameter"] .hc-go{display:non
   let hintToastTimer=null,statusToastUntil=0;
   function hintMode(){return $('hintMode').value;}
   function hintSettings(){return '<h3>效果提示</h3><div class="theme-seg" role="group" aria-label="效果提示">'+[['off','關閉提示'],['simple','簡易提示'],['normal','正常提示']].map(([v,t])=>`<button type="button" data-hint-set="${v}" aria-pressed="${hintMode()===v}">${t}</button>`).join('')+'</div><p class="sub">簡易提示以可用技能亮框為主；必要選擇、抽牌結果與 Loss 仍需確認。</p>';}
-  function applyHints(v,initial=false){if(!['off','simple','normal'].includes(v))v='simple';$('hintMode').value=v;document.body.dataset.hints=v;store.set('bk_hint_mode',v);document.querySelectorAll('[data-hint-set]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.hintSet===v)));if(v==='off'){$('hintToast').hidden=true;clearTimeout(hintToastTimer);}if(!initial&&turnNotice&&['turn','serve'].includes(turnNotice.data.type)&&v!=='normal'){const n=turnNotice;turnNotice=null;renderTransition();n.resolve();}}
+  function applyHints(v,initial=false){if(!['off','simple','normal'].includes(v))v='simple';$('hintMode').value=v;document.body.dataset.hints=v;store.set('bk_hint_mode',v);document.querySelectorAll('[data-hint-set]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.hintSet===v)));if(v==='off'){document.querySelectorAll('.fx-negative').forEach(n=>n.remove());$('hintToast').hidden=true;clearTimeout(hintToastTimer);}if(!initial&&turnNotice&&['turn','serve'].includes(turnNotice.data.type)&&v!=='normal'){const n=turnNotice;turnNotice=null;renderTransition();n.resolve();}}
   $('hintMode').onchange=()=>applyHints($('hintMode').value);
   document.addEventListener('click',e=>{const b=e.target.closest('[data-hint-set]');if(b)applyHints(b.dataset.hintSet);});
   applyHints(store.get('bk_hint_mode')||'simple',true);
@@ -1562,10 +1565,11 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
   $('clearSolo').onclick=()=>{try{localStorage.removeItem(SOLO_SAVE_KEY);soloRecord=null;soloReadError=false;soloSaveToken='';soloPanel();$('runtimeStatus').hidden=true;}catch(e){$('soloSaveText').textContent='目前無法清除存檔，請檢查瀏覽器儲存設定。';}};
   function setLogoSub(t) { const small = document.querySelector('.logo small'); if (small) small.textContent = t; }
   let priorStatuses=null;
-  function noticeStatuses(board,view){const now=new Set((board.statuses||[]).filter(s=>s.active).map(s=>s.id));
+  function noticeStatuses(board,view){const statuses=board.statuses||[],ids=new Set(statuses.map(s=>s.id)),activeIds=new Set(statuses.filter(s=>s.active).map(s=>s.id));
     if(priorStatuses&&priorStatuses.id===view.match.id&&view.match.decisionIndex>=priorStatuses.at&&hintMode()!=='off'){
-      const added=(board.statuses||[]).filter(s=>s.active&&!priorStatuses.ids.has(s.id));if(added.length){statusToastUntil=Date.now()+2200;clearTimeout(hintToastTimer);$('hintToast').textContent=added.map(s=>(s.player===0?'你':oppName)+'：'+s.label+(hintMode()==='normal'&&s.source?'（'+s.source.name+'）':'')).join('；');$('hintToast').hidden=false;hintToastTimer=setTimeout(()=>$('hintToast').hidden=true,2200);}
-    }priorStatuses={id:view.match.id,at:view.match.decisionIndex,ids:now};
+      const added=statuses.filter(s=>!priorStatuses.ids.has(s.id)||s.active&&!priorStatuses.activeIds.has(s.id));
+      if(added.length){statusToastUntil=Date.now()+2200;clearTimeout(hintToastTimer);$('hintToast').hidden=true;presentation.negative(added.map(s=>({id:s.id,text:(s.player===0?'你':oppName)+'：'+s.label+(s.scheduled?'（下回合生效）':'（生效中）')+(hintMode()==='normal'&&s.source?' · '+s.source.name:'')})));}
+    }priorStatuses={id:view.match.id,at:view.match.decisionIndex,ids,activeIds};
   }
   function tableCallbacks() {
     return {

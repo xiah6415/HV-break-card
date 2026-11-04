@@ -5,4 +5,4 @@ const a=view('m',[],[{id:'a',cardNo:'HV-D01-001'}]),b=view('m',[{type:'draw',pla
 assert.deepEqual(drawChanges(a,b),[{player:0,count:1,cards:[{id:'b',cardNo:'HV-D01-002'}]},{player:1,count:2,cards:[]}]);
 assert.deepEqual(drawChanges(null,b),[]);assert.deepEqual(drawChanges(b,b),[]);assert.deepEqual(drawChanges(b,a),[]);assert.deepEqual(drawChanges(a,{...b,match:{id:'new'}}),[]);
 assert.deepEqual(drawChanges(a,{...b,publicLog:[{type:'deck_selected',player:0,count:1}]}),[]);
-console.log('presentation draw detection: actual draw, own cards, opponent backs, no re-render/restore/retrieve false animation passed');
+console.log('presentation draw detection: actual draw, own cards, opponent count only, no re-render/restore/retrieve false animation passed');
