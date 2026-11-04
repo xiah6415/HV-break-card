@@ -227,13 +227,14 @@ function render(rootEl, request, opts = {}) {
       ${timing?`<div class="hc-timing${timing.active?' ready':''}" role="status">✦ ${esc(timing.label)}</div>`:''}${ctx()}${body()}${chips()}
       <div class="hc-err" role="alert">${esc(sel.error || '')}</div></div>
       <div class="hc-bar">${lossArm?'':`<button type="button" class="hc-go" data-hc-act="go" ${ok ? '' : 'disabled'}>${esc(opts.goLabel || actionLabel(request,sel))}</button>`}${!lossArm && (t === 'cards' || t === 'block') && sel.picked.length ? '<button type="button" class="hc-quiet" data-hc-act="clear">清除</button>' : ''}${loss}</div></div>`;
+    if(opts.actionsRoot){const a=opts.actionsRoot;a.replaceChildren();for(const b of rootEl.querySelectorAll('[data-hc-act]'))if(['loss','lossyes','lossno'].includes(b.dataset.hcAct)||(['turnEnd','lossConfirm'].includes(request.kind)&&b.dataset.hcAct==='go'))a.append(b);a.hidden=!a.childElementCount;}
     rootEl.querySelector('.hc-content').scrollTop=scrollTop;
     if(effectOpen&&rootEl.querySelector('.hc-effect-text'))rootEl.querySelector('.hc-effect-text').open=true;
   }
   function choose(value) { if (done) return; sel = H.toggle(request, sel, value); draw(); opts.onSelection && opts.onSelection(sel); }
   function onClick(e) {
     if (done) return;
-    const b = e.target.closest('button'); if (!b || !rootEl.contains(b)) return;
+    const b = e.target.closest('button'); if (!b || !(rootEl.contains(b)||opts.actionsRoot?.contains(b))) return;
     const d = b.dataset;
     if (d.hcInfo) { const o=request.options.find(o=>o.id===d.hcInfo); if(o?.card)opts.onCard?.(o.card);return; }
     if (d.hcSrc) { opts.onCard && opts.onCard(request.source); return; }
@@ -253,8 +254,9 @@ function render(rootEl, request, opts = {}) {
     }
   }
   rootEl.addEventListener('click', onClick);
+  opts.actionsRoot?.addEventListener('click',onClick);
   draw();
-  return { destroy() { rootEl.removeEventListener('click', onClick); rootEl.innerHTML = ''; }, select: choose, get selection() { return sel; }, get timing() { return timing; } };
+  return { destroy() { rootEl.removeEventListener('click', onClick);if(opts.actionsRoot){opts.actionsRoot.removeEventListener('click',onClick);opts.actionsRoot.replaceChildren();opts.actionsRoot.hidden=true;} rootEl.innerHTML = ''; }, select: choose, get selection() { return sel; }, get timing() { return timing; } };
 }
 const api = { render, CSS, describePayment, requestDetail, requestPrompt, optionLabel, timingHint, stepLabel, actionLabel };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.BreakChoiceUI = api;

@@ -477,6 +477,20 @@ body.playing .ball .v { font-size: 26px; }
 body.playing .rally-status { position: relative; max-width: 52%; padding: 3px 8px; border-width: 1.5px; box-shadow: none; }
 body.playing .rally-status strong { font-size: 11px; }
 body.playing .rally-status span { font-size: 10px; }
+/* 本球操作固定在中線右側，獨立於選牌面板。 */
+body.playing .net-zone:has(#rallyActions:not([hidden])){justify-content:flex-start;padding-right:90px;min-height:72px}
+body.playing .net-zone:has(#rallyActions:not([hidden])) .rally-status{flex:1;min-width:0;max-width:none}
+body.playing .net-zone:has(#rallyActions:not([hidden])) .net{flex:0 0 auto}
+body.playing .net-zone:has(#rallyActions:not([hidden])) .ball{padding:3px 6px;gap:3px;font-size:10px}
+body.playing .net-zone:has(#rallyActions:not([hidden])) .ball .v{font-size:20px}
+#rallyActions{position:absolute;right:2px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:4px;width:84px;z-index:5}
+#rallyActions[hidden]{display:none}
+#rallyActions button{order:0!important;margin:0!important;width:100%;min-height:32px;padding:5px 3px;border-radius:10px;font:inherit;font-size:12px;font-weight:700;line-height:1.2;cursor:pointer;box-shadow:0 1px 5px #0002}
+#rallyActions .hc-go{background:var(--court);color:#fff;border:1px solid var(--court)}
+#rallyActions .hc-loss{background:var(--surface);color:var(--bad);border:1px solid var(--bad)}
+#rallyActions .hc-quiet{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+#rallyActions button[disabled]{opacity:.4;cursor:default}
+@media(min-width:900px){body.playing .net-zone:has(#rallyActions:not([hidden])){padding-right:114px}#rallyActions{width:106px}#rallyActions button{font-size:14px}}
 /* 扇形手牌 */
 .hand-zone { position: relative; min-height: 0; z-index: 4; }
 body:not(.playing) .hand-zone { display: none; }
@@ -843,7 +857,7 @@ body.playing .dock[data-mode="court"] [data-kind="parameter"] .hc-go{display:non
     <div class="lay">
       <div class="game">
         <div class="side opp" id="oppSide"></div>
-        <div class="net-zone"><div class="rally-status" id="rallyStatus" role="status"></div><div class="net" id="net"></div></div>
+        <div class="net-zone"><div class="rally-status" id="rallyStatus" role="status"></div><div class="net" id="net"></div><div id="rallyActions" aria-label="本球操作" hidden></div></div>
         <div class="side me" id="meSide"></div>
         <div class="hand-zone" id="handZone"></div>
         <div class="spacer"></div>
@@ -3443,13 +3457,14 @@ function render(rootEl, request, opts = {}) {
       ${timing?`<div class="hc-timing${timing.active?' ready':''}" role="status">✦ ${esc(timing.label)}</div>`:''}${ctx()}${body()}${chips()}
       <div class="hc-err" role="alert">${esc(sel.error || '')}</div></div>
       <div class="hc-bar">${lossArm?'':`<button type="button" class="hc-go" data-hc-act="go" ${ok ? '' : 'disabled'}>${esc(opts.goLabel || actionLabel(request,sel))}</button>`}${!lossArm && (t === 'cards' || t === 'block') && sel.picked.length ? '<button type="button" class="hc-quiet" data-hc-act="clear">清除</button>' : ''}${loss}</div></div>`;
+    if(opts.actionsRoot){const a=opts.actionsRoot;a.replaceChildren();for(const b of rootEl.querySelectorAll('[data-hc-act]'))if(['loss','lossyes','lossno'].includes(b.dataset.hcAct)||(['turnEnd','lossConfirm'].includes(request.kind)&&b.dataset.hcAct==='go'))a.append(b);a.hidden=!a.childElementCount;}
     rootEl.querySelector('.hc-content').scrollTop=scrollTop;
     if(effectOpen&&rootEl.querySelector('.hc-effect-text'))rootEl.querySelector('.hc-effect-text').open=true;
   }
   function choose(value) { if (done) return; sel = H.toggle(request, sel, value); draw(); opts.onSelection && opts.onSelection(sel); }
   function onClick(e) {
     if (done) return;
-    const b = e.target.closest('button'); if (!b || !rootEl.contains(b)) return;
+    const b = e.target.closest('button'); if (!b || !(rootEl.contains(b)||opts.actionsRoot?.contains(b))) return;
     const d = b.dataset;
     if (d.hcInfo) { const o=request.options.find(o=>o.id===d.hcInfo); if(o?.card)opts.onCard?.(o.card);return; }
     if (d.hcSrc) { opts.onCard && opts.onCard(request.source); return; }
@@ -3469,8 +3484,9 @@ function render(rootEl, request, opts = {}) {
     }
   }
   rootEl.addEventListener('click', onClick);
+  opts.actionsRoot?.addEventListener('click',onClick);
   draw();
-  return { destroy() { rootEl.removeEventListener('click', onClick); rootEl.innerHTML = ''; }, select: choose, get selection() { return sel; }, get timing() { return timing; } };
+  return { destroy() { rootEl.removeEventListener('click', onClick);if(opts.actionsRoot){opts.actionsRoot.removeEventListener('click',onClick);opts.actionsRoot.replaceChildren();opts.actionsRoot.hidden=true;} rootEl.innerHTML = ''; }, select: choose, get selection() { return sel; }, get timing() { return timing; } };
 }
 const api = { render, CSS, describePayment, requestDetail, requestPrompt, optionLabel, timingHint, stepLabel, actionLabel };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.BreakChoiceUI = api;
@@ -3985,13 +4001,12 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
   function renderNativeChoice(r, selection = null) {
     const labels={ack:'抽 1 張',turnEnd:'結束回合',lossConfirm:'確認失分',roll:'開始調度',reveal:'翻開牌庫頂',mulligan:'保留／重抽選取的牌'};
     nativeWidgetKey=r.requestId+':'+r.epoch;
-    nativeWidget=BreakChoiceUI.render($('dockOpts'),r,{goLabel:labels[r.kind],selection,
+    nativeWidget=BreakChoiceUI.render($('dockOpts'),r,{goLabel:labels[r.kind],selection,actionsRoot:$('rallyActions'),
       sourceInfo:ref=>{const c=CL.card(ref.cardNo);return {name:ref.name||c?.name||ref.cardNo,skill:c?(DEF[c.code]?.[10]||c.skill):''};},
       previewBlockSkills:a=>session.match.previewBlockSkills(a),
       imgSrc:no=>IMG[no.replace(/^HV-?/,'')]||'',onCard:c=>cardSheet(c.cardNo.replace(/^HV-?/,'')),
       onAnswer:a=>nativeCommand({kind:'answer',answer:a}),onLoss:()=>nativeAnswer({__loss:true}),onSelection:s=>{syncNativeHand(s);olControls();if(courtRequest(r)==='parameter'&&s.value!==undefined){const value=s.value;queueMicrotask(()=>{if(pending?.req.requestId===r.requestId&&pending.req.epoch===r.epoch)nativeAnswer(value);});}}
     });
-    if(labels[r.kind])$('dockOpts').querySelector('[data-hc-act="go"]').textContent=labels[r.kind];
     if(['ack','drawConfirm'].includes(r.kind))$('dockOpts').querySelector('[data-hc-act="go"]').classList.add('draw-action');
     syncNativeHand(nativeWidget.selection);
   }
@@ -4584,7 +4599,7 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
     if (waiting) { $('olWaitCode').textContent = OL.roomId; $('olWaitText').textContent = OL.meta.p1 === 'AI' ? '正在準備對局' : '等待朋友加入'; }
   }
   function olCanSend(v=session?.last){const c=OL.client,a=OL.authority;return !!(c?.online&&!c.pending&&OL.meta?.status==='running'&&a?.active&&a.lease.term===v?.term);}
-  function olControls(){if(!OL.inGame)return;const locked=!olCanSend();for(const b of document.querySelectorAll('#dockOpts .hc button,#courtParamPicker [data-court-param]')){if(locked){if(!b.hasAttribute('data-ol-disabled'))b.dataset.olDisabled=String(b.disabled);b.disabled=true;}else if(b.hasAttribute('data-ol-disabled')){b.disabled=b.dataset.olDisabled==='true';delete b.dataset.olDisabled;}}}
+  function olControls(){if(!OL.inGame)return;const locked=!olCanSend();for(const b of document.querySelectorAll('#dockOpts .hc button,#rallyActions button,#courtParamPicker [data-court-param]')){if(locked){if(!b.hasAttribute('data-ol-disabled'))b.dataset.olDisabled=String(b.disabled);b.disabled=true;}else if(b.hasAttribute('data-ol-disabled')){b.disabled=b.dataset.olDisabled==='true';delete b.dataset.olDisabled;}}}
   function olConnectionChanged(){
     if(OL.inGame)$('tbtns').prepend($('olConnectionBar'));else if($('olConnectionBar').parentElement===$('tbtns'))$('runtimeStatus').before($('olConnectionBar'));
     $('olConnectionBar').hidden=!OL.roomId;const a=OL.authority,c=OL.client;
