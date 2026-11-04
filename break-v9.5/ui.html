@@ -907,10 +907,11 @@ body.playing .dock[data-mode="court"] [data-kind="parameter"] .hc-go{display:non
   try { const saved = store.get('bk_custom_ai_deck'); if (saved) { DECKS.custom_ai = DT.parseDeck(saved, DEF, {mode:'numeric'}); AI_DECKS.push('custom_ai'); } } catch (e) { console.warn('AI 自訂牌組載入失敗：' + e.message); }
   const STAT = [['srv', '發'], ['blk', '攔'], ['rcv', '接'], ['tos', '舉'], ['atk', '攻']];
   // 牌桌每次重繪都會重建圖片，延遲載入會造成閃白；只在大量卡片的列表（未進入對局時）用 lazy
-  const cardImage = c => `<img class="ci" src="${IMG[c] || ''}" alt="${esc(CL.card(c)?.name || c)}" ${document.body.classList.contains('playing') ? 'loading="eager" decoding="sync"' : 'loading="lazy"'} draggable="false">`;
+  const art=BreakCardAssets.create({full:IMG,thumb:window.CARD_THUMB||IMG});
+  const cardImage = (c, detail=false, lazy=false) => `<img class="ci" src="${art.url(c,detail)}" alt="${esc(CL.card(c)?.name || c)}" loading="${!lazy&&(detail||document.body.classList.contains('playing'))?'eager':'lazy'}" decoding="async" draggable="false">`;
   const esc = s => String(s).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
 
-  const img = c => !CL.card(c)?.playable ? `<span class="card-visual">${cardImage(c)}<span class="skill-pending">技能未自動化</span></span>` : cardImage(c);
+  const img = (c,detail=false,lazy=false) => !CL.card(c)?.playable ? `<span class="card-visual">${cardImage(c,detail,lazy)}<span class="skill-pending">技能未自動化</span></span>` : cardImage(c,detail,lazy);
 
   const presentation=BreakPresentation.create({root:$('tableEffects'),img,deckRect:p=>document.querySelector((p===0?'#meSide':'#oppSide')+' .rcol .pile2:not([data-pile])')?.getBoundingClientRect()||document.querySelector((p===0?'#meSide':'#oppSide')+' .pile2')?.getBoundingClientRect()});
   let hintToastTimer=null,statusToastUntil=0;
@@ -932,7 +933,7 @@ body.playing .dock[data-mode="court"] [data-kind="parameter"] .hc-go{display:non
   let deckConnectionReady=false,sharing=null;
   function renderSharing(){if(!sharing)return;const id=$('myDeck').value;$('deckPublic').disabled=!MY_DECKS.includes(id);try{$('deckPublic').checked=!!sharing.row(id).public;$('deckVisibilityStatus').textContent=id?(sharing.error?'本機牌組已保留；公開同步失敗：'+sharing.error:sharing.status(id)):'新建／匯入牌組預設公開，可改私人；登入後才會上傳。';$('shareRetry').hidden=!sharing.error;}catch(e){$('deckVisibilityStatus').textContent=e.message;}}
   function deckButtons(){const valid=MY_DECKS.includes($('myDeck').value)&&usableDeck($('myDeck').value);$('startBtn').disabled=!valid;$('olCreate').disabled=$('olJoin').disabled=!valid||!deckConnectionReady;for(const id of ['editMyDeck','renameDeck','deleteDeck','exportDeck'])$(id).disabled=!MY_DECKS.includes($('myDeck').value);$('deckHint').textContent=personal.error?'牌組讀取失敗：'+personal.error:valid?'已選擇 '+DECKS[$('myDeck').value].name+'・40 張':MY_DECKS.length?'請選擇可用牌組，或先組牌／匯入。':menuCloudRows.length?'請從選單選擇雲端牌組，即可載入對戰。':'尚無牌組，請先組牌或匯入牌組。';renderSharing();}
-  function strip(key) { return Object.entries(DECKS[key]?.cards||{}).sort((a, b) => (isC(a[0]) === isC(b[0]) ? 0 : isC(a[0]) ? -1 : 1)).map(([c, n]) => `<figure><button class="cbtn" type="button" data-card="${c}">${img(c)}</button><span>×${n}</span></figure>`).join(''); }
+  function strip(key) { return Object.entries(DECKS[key]?.cards||{}).sort((a, b) => (isC(a[0]) === isC(b[0]) ? 0 : isC(a[0]) ? -1 : 1)).map(([c, n]) => `<figure><button class="cbtn" type="button" data-card="${c}">${img(c,false,true)}</button><span>×${n}</span></figure>`).join(''); }
   fill($('myDeck'), MY_DECKS, store.get('bk_my')); fill($('aiDeck'), AI_DECKS, store.get('bk_ai') || 'seijoh');
   if (store.get('bk_speed')) $('speed').value = store.get('bk_speed');
   if (store.get('bk_turn_prompt') === 'manual') $('turnPromptStyle').value = 'manual';
@@ -1055,7 +1056,7 @@ body.playing .dock[data-mode="court"] [data-kind="parameter"] .hc-go{display:non
     const stats = meta.kind === 'C' ? `<div class="statrow">${STAT.map(([, z], i) => `<span><b>${meta.stats[i] == null ? '－' : meta.stats[i]}</b>${z}</span>`).join('')}</div>` : '';
     const text = esc((meta.skill || DEF[c]?.[10] || '沒有技能（白板）。').replace(/\[=([^\]]+)\]/g,'【$1】')).replace(/\n/g, '<br>');
     const variants = meta.versions.length > 1 ? `<p class="sub">此卡有 ${meta.versions.length} 組卡文資料，尚待確認版本。</p>${meta.versions.map((v, i) => `<details><summary>卡文版本 ${i + 1}</summary><p>${esc(v.skill).replace(/\n/g, '<br>')}</p></details>`).join('')}` : '';
-    openSheet(`${fromHand ? '<p class="sub" id="handCardInfoHint">第二次點擊查看資訊，不會改變原選取。關閉後可繼續選牌或按確認。</p>' : ''}${fromLibrary ? '<button class="chip" type="button" id="backLibrary">返回卡庫</button>' : ''}<div class="detail"><div>${img(c)}</div><div style="display:grid;gap:8px;min-width:0;overflow-wrap:anywhere"><h3>${esc(meta.name)}</h3><div class="sub">${esc(meta.number)}・${esc(meta.affiliation)}${meta.kind === 'C' ? '' : '・EVENT'}</div>${stats}<div>${text}</div>${variants}<div class="sub"><b>${supportLabel(support)}</b>${!meta.playable ? `<p>技能未自動化。${modeOptions().mode==='numeric'?'可按印刷數值組牌，效果請手動處理。':'嚴格模式尚未開放此卡。'}</p>` : ''}${support.gaps.map(x => `<p>${esc(x)}</p>`).join('')}<p><a href="${esc(meta.source)}" target="_blank" rel="noopener noreferrer">查看官方卡片</a></p></div></div></div>`);
+    openSheet(`${fromHand ? '<p class="sub" id="handCardInfoHint">第二次點擊查看資訊，不會改變原選取。關閉後可繼續選牌或按確認。</p>' : ''}${fromLibrary ? '<button class="chip" type="button" id="backLibrary">返回卡庫</button>' : ''}<div class="detail"><div>${img(c,true)}</div><div style="display:grid;gap:8px;min-width:0;overflow-wrap:anywhere"><h3>${esc(meta.name)}</h3><div class="sub">${esc(meta.number)}・${esc(meta.affiliation)}${meta.kind === 'C' ? '' : '・EVENT'}</div>${stats}<div>${text}</div>${variants}<div class="sub"><b>${supportLabel(support)}</b>${!meta.playable ? `<p>技能未自動化。${modeOptions().mode==='numeric'?'可按印刷數值組牌，效果請手動處理。':'嚴格模式尚未開放此卡。'}</p>` : ''}${support.gaps.map(x => `<p>${esc(x)}</p>`).join('')}<p><a href="${esc(meta.source)}" target="_blank" rel="noopener noreferrer">查看官方卡片</a></p></div></div></div>`);
     if (fromLibrary) $('backLibrary').onclick = openLibrary;
   }
   function supportLabel(card) { return { basic: '無技能卡：數值已核對', 'scenario-tested': '主要技能情境已測試', partial: '部分技能待補', locked: '技能未自動化' }[card.status]; }
@@ -1155,7 +1156,7 @@ body.playing .dock[data-mode="court"] [data-kind="parameter"] .hc-go{display:non
     nativeWidget=BreakChoiceUI.render($('dockOpts'),r,{goLabel:labels[r.kind],selection,actionsRoot:$('rallyActions'),
       sourceInfo:ref=>{const c=CL.card(ref.cardNo);return {name:ref.name||c?.name||ref.cardNo,skill:c?(DEF[c.code]?.[10]||c.skill):''};},
       previewBlockSkills:a=>session.match.previewBlockSkills(a),
-      imgSrc:no=>IMG[no.replace(/^HV-?/,'')]||'',onCard:c=>cardSheet(c.cardNo.replace(/^HV-?/,'')),
+      imgSrc:no=>art.url(no),onCard:c=>cardSheet(c.cardNo.replace(/^HV-?/,'')),
       onAnswer:a=>nativeCommand({kind:'answer',answer:a}),onLoss:()=>nativeAnswer({__loss:true}),onSelection:s=>{syncNativeHand(s);olControls();if(courtRequest(r)==='parameter'&&s.value!==undefined){const value=s.value;queueMicrotask(()=>{if(pending?.req.requestId===r.requestId&&pending.req.epoch===r.epoch)nativeAnswer(value);});}}
     });
     if(['ack','drawConfirm'].includes(r.kind))$('dockOpts').querySelector('[data-hc-act="go"]').classList.add('draw-action');
@@ -1654,6 +1655,7 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
     return {
       onBoard(board,view) {
         const same=pending&&view.request?.requestId===pending.req.requestId&&view.request?.epoch===pending.req.epoch;game=board;if(!same)pending=null;turnNotice=null;
+        art.preload(view.players.flatMap(p=>[...(Array.isArray(p.hand)?p.hand:[]),...p.court,...p.event,...p.drop]).map(c=>c.cardNo)).catch(()=>{});
         skillResults=view.publicLog.filter(e=>e.type==='skill_resolved'&&e.turn===view.turn.id).slice(-2);const checkpoint=persistSolo(true);
         logBuf=view.publicLog.map(e=>[publicLogText(e), '']);captureMatchRecord(view,checkpoint);render();presentation.observe(view);noticeStatuses(board,view);
       },
@@ -1667,6 +1669,7 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
     prevTop={};prevVal={};prevBall=null;skillResults=[];flashMsg='';clearTimeout(flashT);
     if(drag?.el)drag.el.remove();if(drag?.over)drag.over.classList.remove('over');drag=null;suppressClick=false;document.body.classList.remove('dragging');
     $('setup').hidden = true; $('modebar').hidden = true; $('game').hidden = false; $('tbtns').hidden = false; document.body.classList.add('playing'); syncViewport();
+    if(!navigator.connection?.saveData){const codes=OL.inGame?Object.keys(DECKS[$('myDeck').value]?.cards||{}):session.options.decks.flat();art.preload(codes).catch(()=>{});}
     session.start();if(OL.inGame)olConnectionChanged();
   }
   /* ---------- 多人連線（Claude 2026-10-25）：大廳在選牌頁，開打後沿用同一張正式牌桌 */
@@ -1739,7 +1742,7 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
   }
   function publicDetail(id,target='me'){
     const d=publicRows.find(x=>x.id===id);if(!d)return;
-    publicSheet(`<h3>${esc(d.name)}</h3><p class="sub"><span id="publicDetailAuthor" data-owner="${esc(d.owner)}" data-fallback="${esc(d.author)}">${avatarMarkup(d.owner)} ${esc(profileOf(d.owner)?.name||d.author)}</span> · ${esc(deckSchools(d).join('／'))} · 40 張</p><div class="opts"><button class="chip" id="publicCopy" type="button">存到我的牌組</button><button class="${target==='ai'?'opt primary':'chip'}" id="publicAI" type="button">設為 AI 牌組</button>${accountUser?.uid===d.owner?'<button class="chip" id="publicRemove" type="button">取消公開</button>':''}<button class="chip" id="publicBack" type="button">回公開列表</button></div><p id="publicDetailMessage" role="status"></p><div class="public-cards">${Object.entries(d.cards).map(([c,n])=>`<figure><img loading="lazy" src="${esc(CARD_IMG[c]||'')}" alt="${esc(CL.card(c)?.name||c)}"><figcaption>${esc(CL.card(c)?.name||c)}<br>${esc(c)} · ×${n}</figcaption></figure>`).join('')}</div>`);
+    publicSheet(`<h3>${esc(d.name)}</h3><p class="sub"><span id="publicDetailAuthor" data-owner="${esc(d.owner)}" data-fallback="${esc(d.author)}">${avatarMarkup(d.owner)} ${esc(profileOf(d.owner)?.name||d.author)}</span> · ${esc(deckSchools(d).join('／'))} · 40 張</p><div class="opts"><button class="chip" id="publicCopy" type="button">存到我的牌組</button><button class="${target==='ai'?'opt primary':'chip'}" id="publicAI" type="button">設為 AI 牌組</button>${accountUser?.uid===d.owner?'<button class="chip" id="publicRemove" type="button">取消公開</button>':''}<button class="chip" id="publicBack" type="button">回公開列表</button></div><p id="publicDetailMessage" role="status"></p><div class="public-cards">${Object.entries(d.cards).map(([c,n])=>`<figure><img loading="lazy" src="${esc(art.url(c))}" alt="${esc(CL.card(c)?.name||c)}"><figcaption>${esc(CL.card(c)?.name||c)}<br>${esc(c)} · ×${n}</figcaption></figure>`).join('')}</div>`);
     profileWatches();$('publicBack').onclick=()=>openPublic(target);
     $('publicCopy').onclick=()=>{try{const id=personal.add(d);sharing.set(id,true);selectPersonal(id);$('publicDetailMessage').textContent='已存成新的本機牌組，原牌組保留。';}catch(e){$('publicDetailMessage').textContent=e.message;}};
     $('publicAI').onclick=()=>{try{saveDeck('ai',DT.parseDeck(d,DEF,modeOptions()));$('publicDetailMessage').textContent='已設為 AI 自訂牌組。';}catch(e){$('publicDetailMessage').textContent=e.message;}};
