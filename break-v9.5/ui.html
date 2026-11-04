@@ -782,6 +782,39 @@ body.playing .net-zone:has(#rallyActions:not([hidden])) .rally-status{flex:0 1 a
  body.playing .net-zone .ball .v{font-size:20px;flex:none}
  body.playing .net-zone .net{max-width:100%}
 }
+/* 浮動選擇窗：只顯示必要操作，展開／收合均不佔牌桌排版。 */
+body.playing #game .game{grid-template-areas:"ob" "oc" "net" "mc" "." "mb" "hand";grid-template-rows:auto auto auto auto minmax(0,1fr) auto var(--handh)}
+body.playing .game::after{display:none!important}
+body.playing .dock,body.playing .dock:not([data-mode="modal"]),body.playing .dock[data-mode="modal"],body.playing .dock.peek-court{
+ --ink:#ecf9ff;--muted:#b5cbd5;--teal:#71d7e6;--ev:#ffe188;--bad:#ffb3aa;--sunk:#1b3545;--surface:#172f3d;--line:#456678;--court:#197c9d;
+ position:fixed;grid-area:auto;top:auto;left:50%;right:auto;bottom:calc(var(--handh) + 46px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);align-self:auto;
+ width:min(520px,calc(100vw - 24px));max-width:520px;max-height:min(50vh,calc(var(--viewh,100vh) - var(--handh) - 64px));margin:0;
+ color:var(--ink);background:linear-gradient(145deg,#173a4bf7,#0b1c2bf7)!important;border:1px solid #75d8f0a6;border-top:3px solid #47c5e3;border-radius:8px;box-shadow:0 8px 28px #00111b77;z-index:35;backdrop-filter:blur(6px)
+}
+body.playing .dock .in,body.playing .dock:not([data-mode="modal"]) .in{padding:8px 10px;max-height:inherit;display:flex;flex-direction:column;gap:7px;overflow:hidden}
+body.playing .dock .dock-head,body.playing .dock:not([data-mode="modal"]) .dock-head{position:static;min-height:26px;flex-shrink:0;display:flex;justify-content:space-between;gap:8px;padding:0}
+body.playing .dock .dock-summary{display:block;color:#d5f7ff;font-size:12px;min-width:0;flex:1}
+body.playing .dock .dock-head .chip{background:#193c50;color:#c6f3ff;border:1px solid #57bad5;box-shadow:none;min-height:28px}
+body.playing .dock .q{max-height:4em;font-size:12px;flex-shrink:0;color:#c4d9e4}
+body.playing .dock .opts{min-height:0;overflow:auto;max-height:none}
+body.playing .dock .native-choice>.hc{display:grid!important;min-height:0;gap:8px}
+body.playing .dock .hc-content,body.playing .dock[data-mode="modal"] .hc-content,body.playing .dock:not([data-mode="modal"]) .hc-content{max-height:29vh;min-height:0;overflow:auto;flex:auto}
+body.playing .dock .hc-q{font-size:13px;line-height:1.4;color:#f0fbff}
+body.playing .dock .hc-bar{flex-shrink:0;position:static;background:none;border:0;padding:0;gap:6px;display:flex}
+body.playing .dock .hc-opt,body.playing .dock .hc-nocard .hc-card{background:#143448;color:#e7f7ff;border-color:#557f94}
+body.playing .dock .hc-opt.on,body.playing .dock .hc-nocard .hc-card.on{background:#1a7192;border-color:#7ae2ff}
+body.playing .dock .hc-go{background:#167fa0;color:white;border-radius:6px;min-height:38px}
+body.playing .dock .hc-quiet,body.playing .dock .opt,body.playing .dock .chip{color:#e1f6ff;border-color:#578097}
+body.playing .dock .hc-timing{color:#ffe188}
+body.playing .dock .hc-effect-text,body.playing .dock .hc-zone,body.playing .dock .hc-ctx{color:#b5cbd5}
+body.playing .dock.peek-court{width:min(330px,calc(100vw - 24px));border-radius:8px;max-height:none}
+body.playing .dock.peek-court .in{padding:5px 8px}
+body.playing .dock.peek-court .opts,body.playing .dock.peek-court .q{display:none!important}
+body.playing .hand.fan .hc.dim .ci{filter:brightness(.88) saturate(.9);opacity:1}
+body.playing .hand.fan .hc.sel .ci{box-shadow:0 0 0 2px #76e0ff,0 0 12px #35bbdc99}
+#tableTools{position:fixed;right:max(10px,env(safe-area-inset-right,0px));bottom:calc(var(--handh) + 7px + env(safe-area-inset-bottom,0px));z-index:36;display:flex;gap:6px}
+#tableTools .chip{min-height:30px;padding:4px 10px;font-size:12px;box-shadow:0 2px 7px #0002}
+@media(max-height:499px){body.playing .dock,body.playing .dock[data-mode="modal"],body.playing .dock:not([data-mode="modal"]){max-height:58vh;bottom:calc(var(--handh) + 40px)}body.playing .dock .hc-content,body.playing .dock[data-mode="modal"] .hc-content,body.playing .dock:not([data-mode="modal"]) .hc-content{max-height:26vh}}
 </style>
 <script>
 /* 外觀：bk_theme = light（預設）｜dark｜auto（跟隨系統）；在繪製前套用避免閃爍 */
@@ -902,6 +935,7 @@ body.playing .net-zone:has(#rallyActions:not([hidden])) .rally-status{flex:0 1 a
 </div>
 
 <div class="dock" id="dock" hidden><div class="in"><div class="dock-head"><div class="dock-summary" id="dockSummary">目前操作</div><button class="chip" id="choicePeek" type="button" aria-expanded="true" aria-controls="dockOpts" hidden>查看球場</button><button class="chip" id="manualBtn" type="button" hidden>手動</button><button class="chip undo-button" id="undoBtn" type="button" disabled>Undo</button></div><div class="q" id="dockQ"></div><div class="opts" id="dockOpts"></div></div></div>
+<div id="tableTools" aria-label="牌桌工具" hidden></div>
 <div id="courtParamPicker" role="group" aria-label="選擇此卡的調整數值" hidden></div>
 <div id="tableEffects" aria-live="polite"></div><div id="hintToast" role="status" hidden></div>
 <div class="sheet" id="sheet" hidden><div class="box" id="sheetBox"></div></div>
@@ -1181,7 +1215,7 @@ body.playing .net-zone:has(#rallyActions:not([hidden])) .rally-status{flex:0 1 a
   function onCourtPick(button){
     const r=pending?.req,kind=courtRequest(r),ref=button.dataset.courtId,card=game.players.flatMap(p=>p.court).find(c=>c.id===ref);
     if(!kind||!courtEligible(card)||String(card.incarnation)!==button.dataset.courtIncarnation)return false;
-    if(kind==='target'){if(r.input.min===1&&r.input.max===1){courtNextTarget={id:ref,matchId:r.matchId};nativeAnswer([ref]);}else nativeWidget.select(ref);}
+    if(kind==='target'){if(r.input.min===1&&r.input.max===1){courtNextTarget={id:ref,matchId:r.matchId};nativeAnswer([ref]);}else{nativeWidget.select(ref);if(BreakHostChoice.canSubmit(r,nativeWidget.selection))peekChoice(false);}}
     else{courtParamOpen=r.requestId+':'+r.epoch;renderCourtParam();}
     return true;
   }
@@ -1339,8 +1373,9 @@ body.playing .net-zone:has(#rallyActions:not([hidden])) .rally-status{flex:0 1 a
     const hint = req && !req.multi && legal.size ? '<span class="newnote">亮框的牌可以點或拖到發光的區域</span>' : '';
     return `<div class="handhead"><span>手牌 ${p.hand.length} 張</span>${hint}</div><div class="hand" style="--hn:${p.hand.length <= 6 ? p.hand.length : Math.ceil(p.hand.length / 2)}">${p.hand.map((c, i) => {
       const ref=p.handRefs?.[i], selection=nativeSelection?.picked||[nativeSelection?.value];
+      const eligible=!!req&&req.input.max!==0&&req.options.some(o=>o.value===ref?.id);
       const nativeClass=req ? selection.includes(ref?.id)?(req.kind==='mulligan'?'picked':'staged'):req.options.some(o=>o.value===ref?.id)?'sel':legal.size?'dim':'' : '';
-      return `<div class="hc ${nativeClass}${req&&(req.kind==='event'&&req.options.some(o=>o.value===ref?.id)||req.context.entrySkillIds?.includes(ref?.id)||req.kind==='block'&&nativeWidget?.timing?.ids?.includes(ref?.id))?' skill-ready':''}">${nativeSelection?.center===ref?.id?'<span class="newb ctr">中攔</span>':''}<button class="cbtn" type="button" data-hand="${i}" data-card="${c}" title="點一下選取，再點查看資訊">${img(c)}</button></div>`;
+      return `<div class="hc ${nativeClass}${req&&(req.kind==='event'&&req.options.some(o=>o.value===ref?.id)||req.context.entrySkillIds?.includes(ref?.id)||req.kind==='block'&&nativeWidget?.timing?.ids?.includes(ref?.id))?' skill-ready':''}">${nativeSelection?.center===ref?.id?'<span class="newb ctr">中攔</span>':''}<button class="cbtn" type="button" data-hand="${i}" data-card="${c}" title="${eligible?'點一下選取，再點查看資訊':'查看卡片資訊（目前不可使用）'}" aria-label="${esc(nm(c))}・${eligible?'目前可選擇':'目前不可使用，點選查看資訊'}">${img(c)}</button></div>`;
     }).join('')}</div>`;
   }
   function netHTML() {
@@ -1413,22 +1448,25 @@ body.playing .net-zone:has(#rallyActions:not([hidden])) .rally-status{flex:0 1 a
     if (!p.hand.length) return '<div class="hand fan empty-hand"><span class="empty">手牌空了</span></div>';
     return `<div class="hand fan" style="--hn:${p.hand.length}">${p.hand.map((c, i) => {
       const ref = p.handRefs?.[i], selection = req?.input.type==='single' ? [nativeSelection?.value] : nativeSelection?.picked || [];
-      const cls = req ? selection.includes(ref?.id) ? (req.kind === 'mulligan' ? 'picked' : 'staged') : req.options.some(o => o.value === ref?.id) ? 'sel' : legal.size ? 'dim' : '' : '';
+      const eligible=!!req&&req.input.max!==0&&req.options.some(o=>o.value===ref?.id);
+      const cls=selection.includes(ref?.id)&&eligible?(req.kind==='mulligan'?'picked':'staged'):eligible?'sel':'dim';
       const ready = req && (req.kind === 'event' && req.options.some(o => o.value === ref?.id) || req.context.entrySkillIds?.includes(ref?.id) || req.kind === 'block' && nativeWidget?.timing?.ids?.includes(ref?.id)) ? ' skill-ready' : '';
       const mid = (p.hand.length - 1) / 2, rot = (i - mid) * Math.min(4, 24 / p.hand.length), drop = Math.abs(i - mid) * Math.min(4, 20 / p.hand.length);
-      return `<div class="hc ${cls}${ready}" style="--r:${rot.toFixed(1)}deg;--d:${drop.toFixed(1)}px">${nativeSelection?.center === ref?.id ? '<span class="newb ctr">中攔</span>' : ''}<button class="cbtn" type="button" data-hand="${i}" data-card="${c}" title="點一下選取，再點查看資訊">${img(c)}</button></div>`;
+      return `<div class="hc ${cls}${ready}" style="--r:${rot.toFixed(1)}deg;--d:${drop.toFixed(1)}px">${nativeSelection?.center === ref?.id ? '<span class="newb ctr">中攔</span>' : ''}<button class="cbtn" type="button" data-hand="${i}" data-card="${c}" title="${eligible?'點一下選取，再點查看資訊':'查看卡片資訊（目前不可使用）'}" aria-label="${esc(nm(c))}・${eligible?'目前可選擇':'目前不可使用，點選查看資訊'}">${img(c)}</button></div>`;
     }).join('')}</div>`;
   }
   function measureDock() {
     const dock = $('dock'); if (!dock) return;
-    document.documentElement.style.setProperty('--dockh', (dock.hidden ? 0 : dock.offsetHeight + 16) + 'px');
+    document.documentElement.style.setProperty('--dockh','0px');
   }
   function syncViewport() {
     document.documentElement.style.setProperty('--viewh', (window.visualViewport?.height || window.innerHeight) + 'px');
     requestAnimationFrame(measureDock);
   }
-  function setDockCollapsed() { $('dock').classList.remove('collapsed'); requestAnimationFrame(measureDock); }
-  function peekChoice(value) { $('dock').classList.toggle('peek-court',value);document.body.dataset.peek=value?'1':'0';$('choicePeek').textContent=value?'繼續選擇':'查看球場';$('choicePeek').setAttribute('aria-expanded',String(!value));requestAnimationFrame(measureDock); }
+  let dockRequestKey=null;
+  const compactChoice=r=>!!r&&(['receiver','setter','attacker','serve'].includes(r.kind)||courtRequest(r)==='target'||courtRequest(r)==='parameter'&&!(courtNextTarget?.id===r.context.target?.id&&courtNextTarget?.matchId===r.matchId));
+  function setDockCollapsed() {requestAnimationFrame(measureDock);}
+  function peekChoice(value) { $('dock').classList.toggle('peek-court',value);document.body.dataset.peek=value?'1':'0';$('choicePeek').textContent=value?'展開操作 ▴':'收合 ▾';$('choicePeek').setAttribute('aria-expanded',String(!value));requestAnimationFrame(measureDock); }
   $('choicePeek').onclick=()=>peekChoice(!$('dock').classList.contains('peek-court'));
   window.addEventListener('resize', syncViewport);window.addEventListener('resize',()=>{if(courtParamOpen)renderCourtParam();});
   window.visualViewport?.addEventListener('resize', syncViewport);
@@ -1471,7 +1509,7 @@ body.playing .net-zone:has(#rallyActions:not([hidden])) .rally-status{flex:0 1 a
     // 面板模式：hand＝只留提示列，直接點手牌／場地；modal＝置中卡片框（手牌以外的卡、調度、攔網組合）；bar＝精簡按鈕列
     { const r = pending?.req, cardOpts = r ? r.options.filter(o => o.card) : [], handIds = new Set(me.handRefs.map(c => c.id));
       const mode = !r || game.winner ? 'bar' : courtRequest(r) ? 'court' : !cardOpts.length ? 'bar' : (cardOpts.every(o => handIds.has(o.value)) && !['mulligan','drawResult'].includes(r.kind) && r.input.type !== 'block' && !(r.input.type === 'cards' && r.input.max > 1)) ? 'hand' : 'modal';
-      dock.dataset.mode = mode; document.body.dataset.dock = mode;dock.dataset.effect=r?.source?'1':'0';$('choicePeek').hidden=mode!=='modal';if(!sameRequest||mode!=='modal')peekChoice(false); }
+      dock.dataset.mode = mode; document.body.dataset.dock = mode;dock.dataset.effect=r?.source?'1':'0';const key=r?r.requestId+':'+r.epoch:OL.inGame&&session.last?.undo?.pending?'undo:'+session.last.undo.pending.id:game.winner?'finished':null;$('choicePeek').hidden=false;if(key!==dockRequestKey){dockRequestKey=key;peekChoice(compactChoice(r)&&!BreakHostChoice.canSubmit(r,savedSelection||BreakHostChoice.createSelection(r)));} }
     $('dockOpts').classList.toggle('native-choice',!!pending&&!game.winner);
     $('manualBtn').hidden = !(game.mode==='numeric' && pending?.req.canManual);
     if (game.winner) {
@@ -1494,7 +1532,8 @@ body.playing .net-zone:has(#rallyActions:not([hidden])) .rally-status{flex:0 1 a
       $('dockQ').innerHTML = game.waitingFor?.kind==='discard'?`<span class="dots">等待${game.waitingFor.actor===0?'你':esc(oppName)}棄掉 ${game.waitingFor.count} 張手牌</span>`:`<span class="dots">${esc(oppName)} 行動中</span>`;
       $('dockOpts').innerHTML = '';
     }
-    $('dockSummary').textContent = OL.inGame&&session.last?.undo?.pending?'悔棋申請 · 需雙方同意':game.winner ? $('dockQ').textContent : pending ? courtRequest(pending.req)==='parameter'?'直接點選下方要調整的數值':BreakChoiceUI.requestPrompt(pending.req) : `${oppName} 行動中`;
+    $('dockSummary').textContent = OL.inGame&&session.last?.undo?.pending?'悔棋申請 · 需雙方同意':game.winner ? $('dockQ').textContent : pending ? courtRequest(pending.req)==='parameter'?$('dock').classList.contains('peek-court')?'點擊亮框角色，選擇數值':'直接點選下方要調整的數值':BreakChoiceUI.requestPrompt(pending.req) : `${oppName} 行動中`;
+    dock.hidden=!(game.winner||OL.inGame&&session.last?.undo?.pending||pending&&!['ack','turnEnd'].includes(pending.req.kind));
     updateUndoButton();
     renderCourtParam();
     olControls();
@@ -1517,7 +1556,7 @@ body.playing .net-zone:has(#rallyActions:not([hidden])) .rally-status{flex:0 1 a
     if(pending?.req.input.type==='cards'&&pending.req.input.max===0)return false;
     const ref=game.players[0].handRefs[handIndex];
     if(!pending?.req.options.some(o=>o.value===ref?.id))return false;
-    nativeWidget.select(ref.id);return true;
+    nativeWidget.select(ref.id);if(compactChoice(pending.req)&&BreakHostChoice.canSubmit(pending.req,nativeWidget.selection))peekChoice(false);return true;
   }
   function onZonePick(z) {
     if (!pending) return false;
@@ -1538,7 +1577,8 @@ body.playing .net-zone:has(#rallyActions:not([hidden])) .rally-status{flex:0 1 a
       const ref=game.players[0].handRefs[i]?.id, tapKey=JSON.stringify([ref,pending?.req.requestId,pending?.req.epoch]);
       const value=pending&&nativeWidget?BreakHostChoice.selectionValue(pending.req,nativeWidget.selection):null;
       const selected=Array.isArray(value)?value.includes(ref):value?.cards?value.cards.includes(ref):value===ref;
-      if(handTap===tapKey||selected){
+      const selectable=pending&&pending.req.input.max!==0&&pending.req.options.some(o=>o.value===ref);
+      if(!selectable||handTap===tapKey||selected){
         handTap=null;cardSheet(c,false,true);
         if(selected){const btn=document.createElement('button');btn.type='button';btn.className='chip';btn.id='handDeselect';btn.textContent='取消選取這張牌';$('handCardInfoHint').append(document.createElement('br'),btn);btn.onclick=()=>{if(['single','number'].includes(pending.req.input.type)){nativeWidget.destroy();renderNativeChoice(pending.req,BreakHostChoice.createSelection(pending.req));}else onHandPick(c,i);closeSheet();};}
       }else{handTap=tapKey;if(pending)onHandPick(c,i);}
@@ -1649,7 +1689,7 @@ body.playing .net-zone:has(#rallyActions:not([hidden])) .rally-status{flex:0 1 a
   $('menuBtn').onclick=openGameMenu;
   $('sheet').addEventListener('click',e=>{if(e.target.id==='mRecords')openMatchRecords();if(e.target.id==='mRestart'){closeSheet();restartSolo();}if(e.target.id==='mSurrender')confirmGameAction('surrender');if(e.target.id==='mHome'||e.target.id==='mSetup'||e.target.id==='mLeave')confirmGameAction('home');});
 
-  function backToSetup() { courtParamOpen=null;courtNextTarget=null;$('courtParamPicker').hidden=true;presentation.reset();priorStatuses=null;statusToastUntil=0;$('hintToast').hidden=true;clearTimeout(hintToastTimer);persistSolo(false);nativeWidget?.destroy();nativeWidget=null;session?.stop(); session = null; game = null; pending = null; turnNotice = null; renderTransition(); $('game').hidden = true; $('dock').hidden = true; $('tbtns').hidden = true; $('setup').hidden = false; $('modebar').hidden = false; document.body.classList.remove('playing'); delete document.body.dataset.dock; }
+  function backToSetup() { courtParamOpen=null;courtNextTarget=null;$('courtParamPicker').hidden=true;presentation.reset();priorStatuses=null;statusToastUntil=0;$('hintToast').hidden=true;clearTimeout(hintToastTimer);persistSolo(false);nativeWidget?.destroy();nativeWidget=null;session?.stop(); session = null; game = null; pending = null; turnNotice = null; renderTransition(); $('game').hidden = true; $('dock').hidden = true;$('tableTools').hidden=true; $('tbtns').hidden = true; $('setup').hidden = false; $('modebar').hidden = false; document.body.classList.remove('playing'); delete document.body.dataset.dock; }
 
   function publicLogText(e){const phase={setup:'調度',draw:'抽牌',receive:'接球',toss:'舉球',attack:'攻擊',serve:'發球',block:'攔網',end:'回合結束',loss_set:'失分',interval:'下一球準備'}[e.phase]||e.phase||'';const at=e.turn!=null?`【${e.rally?'第'+e.rally+'球・':''}回合${e.turn}・${phase}】`:'';return at+publicLogBody(e);}
   function publicLogBody(e) {
@@ -1723,7 +1763,7 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
         skillResults=view.publicLog.filter(e=>e.type==='skill_resolved'&&e.turn===view.turn.id).slice(-2);const checkpoint=persistSolo(true);
         logBuf=view.publicLog.map(e=>[publicLogText(e), '']);captureMatchRecord(view,checkpoint);render();if(OL.inGame&&session.last?.undo?.pending){presentation.reset();$('hintToast').hidden=true;clearTimeout(hintToastTimer);}presentation.observe(view);noticeStatuses(board,view);
       },
-      onRequest(req) {presentation.request(req);pending={req};if(req.kind==='parameter')courtParamOpen=null;courtNextTarget=null;setDockCollapsed(false);render();soloSelection=null;if(!courtUndoing&&courtRequest(req)==='target'&&req.input.min===1&&req.input.max===1&&req.options.length===1){queueMicrotask(()=>{if(pending?.req.requestId===req.requestId&&pending.req.epoch===req.epoch)nativeAnswer([req.options[0].value]);});}},
+      onRequest(req) {presentation.request(req);pending={req};if(req.kind==='parameter')courtParamOpen=null;else courtNextTarget=null;setDockCollapsed(false);render();soloSelection=null;if(!courtUndoing&&courtRequest(req)==='target'&&req.input.min===1&&req.input.max===1&&req.options.length===1){queueMicrotask(()=>{if(pending?.req.requestId===req.requestId&&pending.req.epoch===req.epoch)nativeAnswer([req.options[0].value]);});}},
       onNotice(board,data,resolve) {if(hintMode()!=='normal'&&['serve','turn'].includes(data.type)){briefNotice(data);queueMicrotask(resolve);return;}turnNotice={data,resolve,game:board};render();},
       onError(err) {pending=null;turnNotice=null;logBuf.push(['發生錯誤：'+err.message,'lost']);render();$('runtimeStatus').hidden=false;$('runtimeStatus').textContent='❌ '+err.message;console.error(err);}
     };
@@ -1734,7 +1774,7 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
     if(drag?.el)drag.el.remove();if(drag?.over)drag.over.classList.remove('over');drag=null;suppressClick=false;document.body.classList.remove('dragging');
     $('setup').hidden = true; $('modebar').hidden = true; $('game').hidden = false; $('tbtns').hidden = false; document.body.classList.add('playing'); syncViewport();
     if(!navigator.connection?.saveData){const codes=OL.inGame?Object.keys(DECKS[$('myDeck').value]?.cards||{}):session.options.decks.flat();art.preload(codes).catch(()=>{});}
-    $('game').querySelector('.game').append($('dock'));
+    $('tableTools').append($('manualBtn'),$('undoBtn'));$('tableTools').hidden=false;$('game').querySelector('.game').append($('dock'),$('tableTools'));
     session.start();if(OL.inGame)olConnectionChanged();
   }
   /* ---------- 多人連線（Claude 2026-10-25）：大廳在選牌頁，開打後沿用同一張正式牌桌 */
