@@ -928,17 +928,27 @@ class Kernel {
     this._admit(p);
     this.state.queue.push({id:this.id('q'),controller:this.card(id).owner,source:clone(event.character),event,program:p.program,profileId:p.profile_id,generated:false,window:event.window});
   }
+  _triggerAvailable(job) {
+    // Generated watchers and printed coverage skills have their own Guts permission.
+    if(job.generated||job.covered)return true;
+    const c=this.state.cards[job.source?.id];if(!c)return false;
+    const zone=c.zone.split('.')[1];
+    // An intrinsic skill awaiting activation cannot be used from underneath a
+    // later entrant. Already established effects still resolve after source exit.
+    return !['hand','deck','sets'].includes(zone)&&(!COURT.includes(zone)||this.current(job.source));
+  }
   _drain() {
     if(this.depth || this.draining)return;
     this.draining=true;
     try {
       let count=0;
       while(this.state.queue.length){need(++count<500,'Trigger loop limit reached');
+        this.state.queue=this.state.queue.filter(job=>this._triggerAvailable(job));if(!this.state.queue.length)break;
         const player=this.state.queue.some(q=>q.controller===this.state.turn.player)?this.state.turn.player:1-this.state.turn.player;
         const own=this.state.queue.filter(q=>q.controller===player);
         const id=own.length===1?own[0].id:this._decide('trigger_order',{controller:player,source:null},own.map(q=>q.id));
         legal(own.some(q=>q.id===id),'Invalid trigger order');const index=this.state.queue.findIndex(q=>q.id===id),job=this.state.queue.splice(index,1)[0];
-        if(!job.generated && !job.covered && (!this.state.cards[job.source.id] || ['hand','deck','sets'].includes(this.card(job.source.id).zone.split('.')[1])))continue;
+        if(!this._triggerAvailable(job))continue;
         const ctx=this._context(job.source?.id,job.controller,job.event);ctx.source=job.source;
         if(!job.generated && !this._skillAllowed(ctx,this.profiles[job.profileId]))continue;
         this.state.events.push({type:'resolve_trigger',id:job.id,controller:job.controller,generated:job.generated});

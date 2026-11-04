@@ -4,7 +4,7 @@ const defs=I.scope(catalog).filter(c=>I.entryKey(c)==='passive:character_entry')
 let checks=0;
 for(const card of shapes.values()){
  const t=card.profiles[0].activation.trigger;
- for(const mode of ['match',...((t.filters.role==='block'||t.filters.role_any?.includes('block'))?['match_side']:[]),...(t.source_role==='block'?['source_side']:[]),'opponent','source_guts',...(t.source_role?['source_wrong_role']:[]),...Object.keys(t.filters).map(f=>'filter:'+f),'pending_drop','pending_hand']){
+ for(const mode of ['match',...((t.filters.role==='block'||t.filters.role_any?.includes('block'))?['match_side']:[]),...(t.source_role==='block'?['source_side']:[]),'opponent','source_guts',...(t.source_role?['source_wrong_role']:[]),...Object.keys(t.filters).map(f=>'filter:'+f),'pending_drop','pending_hand','pending_guts']){
   const k=F.game(catalog),sourceArea=mode==='source_side'?'side:0':mode==='source_wrong_role'?(t.source_role==='serve'?'toss':'serve'):t.source_role||'receive',source=k.addCard(card.card_no,0,sourceArea),player=mode==='opponent'?1:0;
   if(mode==='source_guts')k.addCard('HV-D01-009',0,sourceArea);
   let role=mode==='match_side'?'side:0':t.filters.role_any?.[0]||t.filters.role||'attack';const target=k.addCard('HV-D01-001',player,'hand'),p=k.card(target).printed;
@@ -13,9 +13,9 @@ for(const card of shapes.values()){
   if(filter==='names')p.name='Wrong name';if(filter==='tags')p.affiliation_tags=[];if(filter==='printed_attack')p.parameters.attack++;if(filter==='position_has_any_other_than')p.position_tags=[...t.filters.position_has_any_other_than];if(filter==='entry_origins')origin='drop';if(filter==='role'||filter==='role_any')role='serve';
   const dest=role==='block'?'block':role;if(sourceArea.startsWith('side:')||dest.startsWith('side:'))k.addCard('HV-D01-009',player,'block');k._atomic(()=>k._move(target,player,dest,k._context(target,player)));let resolved=0;
   // Isolate trigger admission from child effect nodes, which have their own modules.
-  k._admit=()=>{};k._resolveSkill=()=>{resolved++;return false;};
+  k._admit=()=>{};k._resolveSkill=()=>{resolved++;return false;};const cover=mode==='pending_guts'?k.addCard('HV-D01-009',0,'hand'):null;
   k._atomic(()=>{k._emit({type:'character_entry',player,card:target,character:k.reference(target),role:k.role(target),origin});
-   if(mode.startsWith('pending_'))k._move(source,0,mode==='pending_drop'?'drop':'hand',k._context(source,0));k._drain();});
+   if(mode==='pending_guts')k._move(cover,0,sourceArea,k._context(cover,0));else if(mode.startsWith('pending_'))k._move(source,0,mode==='pending_drop'?'drop':'hand',k._context(source,0));k._drain();});
   assert.equal(resolved,['match','match_side','source_side','pending_drop'].includes(mode)?1:0,card.card_no+' '+mode);checks++;
  }
 }
