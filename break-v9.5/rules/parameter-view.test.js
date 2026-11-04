@@ -1,0 +1,11 @@
+'use strict';
+const assert=require('node:assert/strict'),{Match}=require('./match'),{parameterDetails,formatParameter}=require('./parameter-view'),{rotateView}=require('./online-session');
+const deck=['P02-016',...Array(39).fill('D01-009')],m=new Match({id:'parameter-detail',seed:7,decks:[deck,deck]}),k=m._kernel,id=Object.values(k.state.cards).find(c=>c.owner===1&&c.cardNo==='HV-P02-016').id;
+k._atomic(()=>k._move(id,1,'toss',k._context(id,1)));const ctx=k._context(id,1),base=k.snapshot();
+const add=(op,value)=>k.effect('numeric',{target:k.reference(id),parameter:'toss',operation:op,value},ctx);
+const check=text=>{const detail=parameterDetails(k,id).toss;assert.equal(detail.total,k.parameter(id,'toss'));assert.equal(formatParameter(detail,detail.total).text,text);const copy=m.snapshot();m.view(0);assert.deepEqual(m.snapshot(),copy,'summary never mutates state');return detail;};
+check('1');add('add',2);check('1＋2＝3');add('add',-1);check('1＋2−1＝2');add('set',6);check('1→6');add('add',2);check('1→6＋2＝8');
+const view=m.view(0),c=view.players[1].court[0];assert.equal(c.parameterDetails.toss.total,8);assert(!JSON.stringify(c.parameterDetails).includes('source'));assert(!JSON.stringify(c.parameterDetails).includes('target'));assert.equal(rotateView(view,1).players[0].court[0].parameterDetails.toss.total,8);assert(!Array.isArray(view.players[1].hand));
+k.restore(base);add('add',2);k.state.turn.id++;check('1');k.restore(base);add('add',2);k.card(id).incarnation++;check('1');
+assert.equal(formatParameter(undefined,3).text,'3','older authority views retain total');assert.equal(formatParameter({base:'dash',total:'dash',steps:[]},'dash').text,'—');
+console.log('parameter breakdown: printed/add/subtract/set/order/expiry/re-entry, pure views, safe arithmetic only, seat rotation and old-view fallback passed');

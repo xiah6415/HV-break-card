@@ -41,10 +41,11 @@ const CSS = `
 .hc-opt.on{background:var(--court,#d96a1f);border-color:var(--court,#d96a1f);color:#fff;font-weight:700}
 .hc-opt.num{min-width:52px;text-align:center;font-size:17px;font-weight:700}
 .hc-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.hc-go{border:0;border-radius:999px;padding:11px 20px;min-height:44px;background:var(--court,#d96a1f);color:#fff;font:inherit;font-weight:700;cursor:pointer}
+.hc-go{order:3;margin-left:auto;border:0;border-radius:999px;padding:11px 20px;min-height:44px;background:var(--court,#d96a1f);color:#fff;font:inherit;font-weight:700;cursor:pointer}
 .hc-go[disabled]{opacity:.4;cursor:not-allowed}
-.hc-quiet{border:1px solid var(--line,#c3d3d2);background:transparent;border-radius:999px;padding:9px 14px;min-height:42px;font:inherit;color:inherit;cursor:pointer}
-.hc-loss{margin-left:auto;border:1px solid var(--bad,#b83229);color:var(--bad,#b83229);background:transparent;border-radius:999px;padding:9px 14px;min-height:42px;font:inherit;cursor:pointer}
+.hc-quiet{order:2;border:1px solid var(--line,#c3d3d2);background:transparent;border-radius:999px;padding:9px 14px;min-height:42px;font:inherit;color:inherit;cursor:pointer}
+.hc-loss-confirm{order:3!important;margin-left:auto!important}
+.hc-loss{order:1;margin-left:0;border:1px solid var(--bad,#b83229);color:var(--bad,#b83229);background:transparent;border-radius:999px;padding:9px 14px;min-height:42px;font:inherit;cursor:pointer}
 .hc-prog{font-size:12.5px;color:var(--muted,#566b6e)}
 .hc-err{font-size:12.5px;color:var(--bad,#b83229);min-height:1em}
 .hc-chips{display:flex;flex-wrap:wrap;gap:6px}
@@ -84,6 +85,8 @@ function describePayment(node){
 }
 const quantityActions={draw_count:['抽牌','不抽牌'],move_count:['移動／回收卡片','不移動卡片'],mill_count:['將牌庫頂的牌送到棄牌區','不送出牌庫的牌'],payment_count:['支付費用','不支付此項費用'],entry_count:['讓角色登場','不讓角色登場'],target_count:['選擇效果對象','不選擇對象']};
 function requestPrompt(request){
+ if(request.kind==='turnEnd')return '確認結束回合；交棒前仍可選擇失分';
+ if(request.kind==='lossConfirm')return '本球無法繼續，請確認失分';
  if(request.kind==='event'&&request.timing==='draw')return '抽牌階段：可發動技能，接著選接球角色';
  if(request.kind==='event'&&request.timing==='receive')return '接球判定前：可發動技能';
  if(request.uiPresentation?.handDiscard)return '請棄掉 '+request.uiPresentation.count+' 張手牌';
@@ -216,14 +219,14 @@ function render(rootEl, request, opts = {}) {
     const step=stepLabel(request),sourceName=sourceInfo?.name||request.source?.cardNo;
     const src = request.source ? `<button type="button" class="hc-card hc-src${timing?.active?' hc-ready':''}" data-hc-src="1" aria-label="查看 ${esc(request.source.name || request.source.cardNo)}">${cardImg(request.source)}</button>` : '';
     const loss = request.canLoss && opts.onLoss ? (lossArm
-      ? `<button type="button" class="hc-loss" data-hc-act="lossyes">確定 Loss</button><button type="button" class="hc-quiet" data-hc-act="lossno">不要</button>`
-      : `<button type="button" class="hc-loss" data-hc-act="loss">喊 Loss</button>`) : '';
+      ? `<button type="button" class="hc-loss hc-loss-confirm" data-hc-act="lossyes">確認本球失分</button><button type="button" class="hc-quiet" data-hc-act="lossno">繼續本球</button>`
+      : `<button type="button" class="hc-loss" data-hc-act="loss">選擇失分</button>`) : '';
     rootEl.innerHTML = `<div class="hc" data-kind="${esc(request.kind)}" data-input="${t}">
       <div class="hc-content"><div class="hc-head">${src}<div class="hc-heading">${sourceName?`<strong class="hc-source-name">${esc(sourceName)} <small>${esc(request.source.cardNo)}</small></strong>`:''}${step?`<span class="hc-step">${esc(step)}</span>`:''}<div class="hc-q"><mark class="hc-current">${esc(requestPrompt(request))}</mark>${prog ? `<small class="hc-prog">${esc(prog)}</small>` : ''}</div></div></div>
       ${sourceInfo?.skill?`<details class="hc-effect-text"><summary>查看卡片效果全文</summary><p>${esc(sourceInfo.skill)}</p></details>`:''}
       ${timing?`<div class="hc-timing${timing.active?' ready':''}" role="status">✦ ${esc(timing.label)}</div>`:''}${ctx()}${body()}${chips()}
       <div class="hc-err" role="alert">${esc(sel.error || '')}</div></div>
-      <div class="hc-bar"><button type="button" class="hc-go" data-hc-act="go" ${ok ? '' : 'disabled'}>${esc(opts.goLabel || actionLabel(request,sel))}</button>${(t === 'cards' || t === 'block') && sel.picked.length ? '<button type="button" class="hc-quiet" data-hc-act="clear">清除</button>' : ''}${loss}</div></div>`;
+      <div class="hc-bar">${lossArm?'':`<button type="button" class="hc-go" data-hc-act="go" ${ok ? '' : 'disabled'}>${esc(opts.goLabel || actionLabel(request,sel))}</button>`}${!lossArm && (t === 'cards' || t === 'block') && sel.picked.length ? '<button type="button" class="hc-quiet" data-hc-act="clear">清除</button>' : ''}${loss}</div></div>`;
     rootEl.querySelector('.hc-content').scrollTop=scrollTop;
     if(effectOpen&&rootEl.querySelector('.hc-effect-text'))rootEl.querySelector('.hc-effect-text').open=true;
   }

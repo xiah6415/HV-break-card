@@ -436,6 +436,7 @@ body.playing .side { padding: 0; border-radius: 0; background: none; }
 .area .nm { position: absolute; right: 5px; top: 3px; font-size: 9.5px; letter-spacing: .08em; color: #6f8a87; font-weight: 700; pointer-events: none; }
 .opp .area .nm { top: auto; bottom: 3px; }
 .area .v { position: absolute; right: 4px; bottom: 4px; min-width: 22px; height: 22px; padding: 0 4px; border-radius: 7px; color: #fff; font-weight: 800; font-size: 13px; display: grid; place-items: center; box-shadow: 0 1px 3px #0003; font-variant-numeric: tabular-nums; }
+.area .v.modified {display:block;font-size:clamp(10px,1.1vw,12px);line-height:1.3;height:auto;min-height:22px;max-width:calc(100% - 8px);text-align:center;overflow-wrap:anywhere}
 .opp .area .v { bottom: auto; top: 4px; }
 .area .v.pop { animation: vpop .5s ease-out; }
 @keyframes vpop { 0% { transform: scale(1.6); } 100% { transform: scale(1); } }
@@ -698,7 +699,7 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
 @keyframes fx-caption{0%,75%{opacity:0}100%{opacity:1}}
 .fx-notice{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:max-content;max-width:90vw;padding:12px 20px;border-radius:14px;background:#102d32ee;color:#fff;font-size:15px;font-weight:700;line-height:1.6;text-align:center;overflow-wrap:anywhere;box-shadow:0 5px 20px #0003}
 .fx-opponent-draw{top:28%;font-size:14px;padding:9px 16px}
-.fx-negative{background:#7c2927f2;border:1px solid #ffbb9e}
+.fx-negative{top:30%;background:#7c2927f2;border:1px solid #ffbb9e}
 #hintToast{position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:145;pointer-events:none;background:#102d32ee;color:#fff;padding:9px 18px;border-radius:99px;max-width:92vw;font-size:14px;text-align:center}
 body[data-hints="simple"] .hc-timing,body[data-hints="off"] .hc-timing{display:none}
 body[data-hints="off"] .skill-ready .ci,body[data-hints="off"] .slot.skill-ready,body[data-hints="off"] .hc-ready,body[data-hints="off"] .hc-ready img{outline:none;box-shadow:none;animation:none}
@@ -708,6 +709,7 @@ body[data-hints="simple"] .hc-step,body[data-hints="simple"] .hc-prog,body[data-
 
 
 .pbar:has(.status-strip){flex-wrap:wrap}.pbar:has(.status-strip) .dk{flex:1 1 0}.pbar .status-strip{flex:0 0 100%}
+.court2 > .status-strip{grid-column:1 / -1}
 .status-strip{display:flex;gap:5px;overflow-x:auto;max-width:100%;min-width:0;padding:3px 1px;scrollbar-width:thin}
 .status-chip{flex:0 0 auto;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border:1px solid #c23f34;border-radius:99px;background:#ffebe7;color:#8c2219;font:inherit;font-size:11px;font-weight:700;min-height:26px;padding:3px 9px;cursor:pointer}
 .status-chip.scheduled{border-style:dashed;background:var(--surface,#fff);color:var(--ink,#233)}
@@ -716,7 +718,12 @@ body[data-hints="simple"] .hc-step,body[data-hints="simple"] .hc-prog,body[data-
 .status-detail{display:grid;gap:10px}.status-detail p{margin:0;overflow-wrap:anywhere}
 
 
-body.playing .dock[data-mode="court"] .hc-grid,body.playing .dock[data-mode="court"] [data-kind="parameter"] .hc-opts{display:none}
+body.playing .dock[data-mode="court"] .hc-grid{display:none}
+body.playing .dock[data-mode="court"] .hc-source-name,body.playing .dock[data-mode="court"] .hc-ctx,body.playing .dock[data-mode="court"] .hc-timing{display:none}
+body.playing .dock[data-mode="court"] .hc-q{font-size:12px}
+body.playing .dock[data-mode="court"] .hc-content{max-height:none}
+body.playing .dock[data-mode="court"] [data-kind="parameter"] .hc-opts{display:flex;margin-top:6px;gap:6px}
+body.playing .dock[data-mode="court"] [data-kind="parameter"] .hc-opt{min-height:40px;padding:6px 12px}
 body.playing .dock[data-mode="court"] .hc-src,body.playing .dock[data-mode="court"] .hc-step,body.playing .dock[data-mode="court"] .hc-effect-text{display:none}
 body.playing .dock[data-mode="court"] [data-kind="parameter"] .hc-go{display:none}
 .area.court-target{outline:3px solid #d79213;outline-offset:1px;box-shadow:0 0 12px #e9ad2780}
@@ -773,7 +780,7 @@ body.playing .dock[data-mode="court"] [data-kind="parameter"] .hc-go{display:non
       <label class="field" for="myDeck">牌組<select id="myDeck"><option value="">尚無牌組</option></select></label>
       <p class="sub" id="deckHint" role="status">尚無牌組，請先組牌或匯入牌組。</p>
       <div class="opts"><label class="chip"><input type="checkbox" id="deckPublic"> 公開這副牌組</label><button class="chip" type="button" id="shareRetry" hidden>重試公開同步</button></div><p class="sub" id="deckVisibilityStatus" role="status"></p>
-      <section id="myCloudSection" hidden><h3>我的雲端牌組</h3><p class="sub" id="myCloudMessage" role="status"></p><div id="myCloudRows" style="max-height:240px;overflow:auto"></div></section>
+
       <div class="deckstrip" id="myStrip"></div>
       <div class="opts"><button class="chip" type="button" id="newDeck">＋內建組牌器</button><button class="chip" type="button" id="editMyDeck">編輯</button><button class="chip" type="button" id="renameDeck">改名</button><button class="chip" type="button" id="deleteDeck">刪除</button><button class="chip" type="button" id="exportDeck">匯出分享碼</button></div>
       <a class="chip" id="buildDeck" href="https://weilun2022.github.io/haikyuu-cards/" target="_blank" rel="noopener noreferrer">🃏 到卡牌資料庫組牌</a>
@@ -872,6 +879,7 @@ body.playing .dock[data-mode="court"] [data-kind="parameter"] .hc-go{display:non
   const { DEF, DECKS, nm, isC, st } = E;
   const $ = id => document.getElementById(id);
   const MY_DECKS = [];
+  let menuCloudRows=[],cloudMenuStamp='';const cloudSelections=new Map();
   const AI_DECKS = ['seijoh'];
   const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
   if (store.get('bk_game_mode') === 'strict') $('gameMode').value = 'strict';
@@ -893,7 +901,7 @@ body.playing .dock[data-mode="court"] [data-kind="parameter"] .hc-go{display:non
   const presentation=BreakPresentation.create({root:$('tableEffects'),img,deckRect:p=>document.querySelector((p===0?'#meSide':'#oppSide')+' .rcol .pile2:not([data-pile])')?.getBoundingClientRect()||document.querySelector((p===0?'#meSide':'#oppSide')+' .pile2')?.getBoundingClientRect()});
   let hintToastTimer=null,statusToastUntil=0;
   function hintMode(){return $('hintMode').value;}
-  function hintSettings(){return '<h3>效果提示</h3><div class="theme-seg" role="group" aria-label="效果提示">'+[['off','關閉提示'],['simple','簡易提示'],['normal','正常提示']].map(([v,t])=>`<button type="button" data-hint-set="${v}" aria-pressed="${hintMode()===v}">${t}</button>`).join('')+'</div><p class="sub">簡易提示以可用技能亮框為主；必要選擇、抽牌結果與 Loss 仍需確認。</p>';}
+  function hintSettings(){return '<h3>效果提示</h3><div class="theme-seg" role="group" aria-label="效果提示">'+[['off','關閉提示'],['simple','簡易提示'],['normal','正常提示']].map(([v,t])=>`<button type="button" data-hint-set="${v}" aria-pressed="${hintMode()===v}">${t}</button>`).join('')+'</div><p class="sub">簡易提示以可用技能亮框為主；必要選擇、抽牌結果與失分 仍需確認。</p>';}
   function applyHints(v,initial=false){if(!['off','simple','normal'].includes(v))v='simple';$('hintMode').value=v;document.body.dataset.hints=v;store.set('bk_hint_mode',v);document.querySelectorAll('[data-hint-set]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.hintSet===v)));if(v==='off'){document.querySelectorAll('.fx-negative').forEach(n=>n.remove());$('hintToast').hidden=true;clearTimeout(hintToastTimer);}if(!initial&&turnNotice&&['turn','serve'].includes(turnNotice.data.type)&&v!=='normal'){const n=turnNotice;turnNotice=null;renderTransition();n.resolve();}}
   $('hintMode').onchange=()=>applyHints($('hintMode').value);
   document.addEventListener('click',e=>{const b=e.target.closest('[data-hint-set]');if(b)applyHints(b.dataset.hintSet);});
@@ -901,17 +909,29 @@ body.playing .dock[data-mode="court"] [data-kind="parameter"] .hc-go{display:non
   function briefNotice(n){if(hintMode()!=='simple'||Date.now()<statusToastUntil)return;clearTimeout(hintToastTimer);const who=n.player===0?'你':oppName;$('hintToast').textContent=n.type==='serve'?`${who}發球 · 第 ${n.rally} 球`:`${who}的回合${n.ball?' · 來球 '+n.ball.off:''}`;$('hintToast').hidden=false;hintToastTimer=setTimeout(()=>$('hintToast').hidden=true,1300);}
   // ---------- setup
   function usableDeck(k) { try { E.validateDeck(DECKS[k].cards, modeOptions().mode); return true; } catch(e) { return false; } }
-  function fill(sel, keys, saved) { const usable=keys.filter(usableDeck);sel.innerHTML=(sel.id==='myDeck'?'<option value="">'+(keys.length?'請選擇牌組':'尚無牌組')+'</option>':'')+keys.map(k => `<option value="${esc(k)}" ${usableDeck(k)?'':'disabled'}>${esc(DECKS[k].name)}${usableDeck(k)?'':'（此模式不可用）'}</option>`).join('');sel.value=saved&&usable.includes(saved)?saved:usable[0]||''; }
+  function fill(sel, keys, saved) {
+    const usable=keys.filter(usableDeck),local=keys.map(k=>`<option value="${esc(k)}" ${usableDeck(k)?'':'disabled'}>${esc(DECKS[k].name)}${usableDeck(k)?'':'（此模式不可用）'}</option>`).join('');
+    const cloud=sel.id==='myDeck'?menuCloudRows.map(d=>{let ok=true;try{E.validateDeck(d.cards,modeOptions().mode);}catch{ok=false;}return `<option value="cloud:${esc(d.id)}" ${ok?'':'disabled'}>${esc(d.name)}${ok?'':'（此模式不可用）'}</option>`;}).join(''):'';
+    sel.innerHTML=sel.id==='myDeck'?'<option value="">'+(keys.length||cloud?'請選擇牌組':'尚無牌組')+'</option>'+(local?'<optgroup label="本機牌組">'+local+'</optgroup>':'')+(cloud?'<optgroup label="雲端牌組">'+cloud+'</optgroup>':''):local;
+    sel.value=saved&&usable.includes(saved)?saved:usable[0]||'';
+  }
   let deckConnectionReady=false,sharing=null;
   function renderSharing(){if(!sharing)return;const id=$('myDeck').value;$('deckPublic').disabled=!MY_DECKS.includes(id);try{$('deckPublic').checked=!!sharing.row(id).public;$('deckVisibilityStatus').textContent=id?(sharing.error?'本機牌組已保留；公開同步失敗：'+sharing.error:sharing.status(id)):'新建／匯入牌組預設公開，可改私人；登入後才會上傳。';$('shareRetry').hidden=!sharing.error;}catch(e){$('deckVisibilityStatus').textContent=e.message;}}
-  function deckButtons(){const valid=MY_DECKS.includes($('myDeck').value)&&usableDeck($('myDeck').value);$('startBtn').disabled=!valid;$('olCreate').disabled=$('olJoin').disabled=!valid||!deckConnectionReady;for(const id of ['editMyDeck','renameDeck','deleteDeck','exportDeck'])$(id).disabled=!MY_DECKS.includes($('myDeck').value);$('deckHint').textContent=personal.error?'牌組讀取失敗：'+personal.error:valid?'已選擇 '+DECKS[$('myDeck').value].name+'・40 張':MY_DECKS.length?'請選擇可用牌組，或先組牌／匯入。':'尚無牌組，請先組牌或匯入牌組。';renderSharing();}
+  function deckButtons(){const valid=MY_DECKS.includes($('myDeck').value)&&usableDeck($('myDeck').value);$('startBtn').disabled=!valid;$('olCreate').disabled=$('olJoin').disabled=!valid||!deckConnectionReady;for(const id of ['editMyDeck','renameDeck','deleteDeck','exportDeck'])$(id).disabled=!MY_DECKS.includes($('myDeck').value);$('deckHint').textContent=personal.error?'牌組讀取失敗：'+personal.error:valid?'已選擇 '+DECKS[$('myDeck').value].name+'・40 張':MY_DECKS.length?'請選擇可用牌組，或先組牌／匯入。':menuCloudRows.length?'請從選單選擇雲端牌組，即可載入對戰。':'尚無牌組，請先組牌或匯入牌組。';renderSharing();}
   function strip(key) { return Object.entries(DECKS[key]?.cards||{}).sort((a, b) => (isC(a[0]) === isC(b[0]) ? 0 : isC(a[0]) ? -1 : 1)).map(([c, n]) => `<figure><button class="cbtn" type="button" data-card="${c}">${img(c)}</button><span>×${n}</span></figure>`).join(''); }
   fill($('myDeck'), MY_DECKS, store.get('bk_my')); fill($('aiDeck'), AI_DECKS, store.get('bk_ai') || 'seijoh');
   if (store.get('bk_speed')) $('speed').value = store.get('bk_speed');
   if (store.get('bk_turn_prompt') === 'manual') $('turnPromptStyle').value = 'manual';
   $('turnPromptStyle').onchange = () => { store.set('bk_turn_prompt', $('turnPromptStyle').value); scheduleTransition(turnNotice); };
   const refresh = () => { $('myStrip').innerHTML = strip($('myDeck').value); $('aiStrip').innerHTML = strip($('aiDeck').value);deckButtons(); };
-  $('myDeck').onchange = () => {store.set('bk_my',$('myDeck').value);refresh();};$('aiDeck').onchange=()=>{store.set('bk_ai',$('aiDeck').value);refresh();};refresh();
+  $('myDeck').onchange=()=>{
+    const value=$('myDeck').value;
+    if(value.startsWith('cloud:')){try{
+      const d=menuCloudRows.find(d=>'cloud:'+d.id===value);if(!d)throw Error('雲端牌組已變更，請重新選擇');const deck=DT.parseDeck(d,DEF,modeOptions()),key=accountUser.uid+':'+d.id,old=cloudSelections.get(key),local=personal.decks.find(d=>d.id===old);
+      const id=local&&DT.exportDeck(local)===DT.exportDeck(deck)?old:personal.add(deck);cloudSelections.set(key,id);selectPersonal(id);
+    }catch(e){fill($('myDeck'),MY_DECKS,store.get('bk_my'));refresh();$('deckHint').textContent='雲端牌組載入失敗：'+e.message;}return;}
+    store.set('bk_my',value);refresh();
+  };$('aiDeck').onchange=()=>{store.set('bk_ai',$('aiDeck').value);refresh();};refresh();
   $('gameMode').onchange = () => { store.set('bk_game_mode', $('gameMode').value); const me=$('myDeck').value, ai=$('aiDeck').value; fill($('myDeck'),MY_DECKS,me);fill($('aiDeck'),AI_DECKS,ai);refresh(); };
 
   sharing=new BreakDeckSharing(localStorage,{deck:id=>personal.decks.find(d=>d.id===id),changed:renderSharing});
@@ -1115,13 +1135,13 @@ body.playing .dock[data-mode="court"] [data-kind="parameter"] .hc-go{display:non
     return true;
   }
   function renderNativeChoice(r, selection = null) {
-    const labels={ack:'抽 1 張',turnEnd:'結束回合',lossConfirm:'喊 Loss',roll:'開始調度',reveal:'翻開牌庫頂',mulligan:'保留／重抽選取的牌'};
+    const labels={ack:'抽 1 張',turnEnd:'結束回合',lossConfirm:'確認失分',roll:'開始調度',reveal:'翻開牌庫頂',mulligan:'保留／重抽選取的牌'};
     nativeWidgetKey=r.requestId+':'+r.epoch;
     nativeWidget=BreakChoiceUI.render($('dockOpts'),r,{goLabel:labels[r.kind],selection,
       sourceInfo:ref=>{const c=CL.card(ref.cardNo);return {name:ref.name||c?.name||ref.cardNo,skill:c?(DEF[c.code]?.[10]||c.skill):''};},
       previewBlockSkills:a=>session.match.previewBlockSkills(a),
       imgSrc:no=>IMG[no.replace(/^HV-?/,'')]||'',onCard:c=>cardSheet(c.cardNo.replace(/^HV-?/,'')),
-      onAnswer:a=>nativeCommand({kind:'answer',answer:a}),onLoss:()=>nativeAnswer({__loss:true}),onSelection:s=>{syncNativeHand(s);olControls();}
+      onAnswer:a=>nativeCommand({kind:'answer',answer:a}),onLoss:()=>nativeAnswer({__loss:true}),onSelection:s=>{syncNativeHand(s);olControls();if(courtRequest(r)==='parameter'&&s.value!==undefined){const value=s.value;queueMicrotask(()=>{if(pending?.req.requestId===r.requestId&&pending.req.epoch===r.epoch)nativeAnswer(value);});}}
     });
     if(labels[r.kind])$('dockOpts').querySelector('[data-hc-act="go"]').textContent=labels[r.kind];
     if(['ack','drawConfirm'].includes(r.kind))$('dockOpts').querySelector('[data-hc-act="go"]').classList.add('draw-action');
@@ -1170,10 +1190,10 @@ body.playing .dock[data-mode="court"] [data-kind="parameter"] .hc-go{display:non
     } else if (n.type === 'reveal') {
       title = `${who}的翻牌結果`; phase = `${n.source}技能 · ${n.result}`;
       middle = n.card ? `<div class="reveal-public">${img(n.card)}<b>${esc(nm(n.card))}</b><span>${esc(n.card)}</span></div>` : '';
-      detail = n.reason; action = '看完了，繼續';
+      detail = String(n.reason||'').replace(/Loss|LOSS/g,'失分'); action = '看完了，繼續';
     } else {
-      title = mine ? '你 LOSS' : `${oppName} LOSS`; phase = mine ? `${oppName} 得分` : '你得分';
-      detail = n.reason;
+      title = mine ? '你本球失分' : `${oppName} 本球失分`; phase = mine ? `${oppName} 得分` : '你得分';
+      detail = String(n.reason||'').replace(/Loss|LOSS/g,'失分');
       middle = `<div class="turn-ball"><span>${n.final ? (n.winner === 0 ? '你贏了這場對戰' : `${oppName} 贏了這場對戰`) : `下一球：${n.winner === 0 ? '你' : oppName}發球`}</span></div>`;
       action = n.final ? '查看對戰結果' : '確認結果，進入下一球';
     }
@@ -1298,6 +1318,7 @@ body.playing .dock[data-mode="court"] [data-kind="parameter"] .hc-go{display:non
   function areaHTML(p, key) {
     const mine = p.idx === 0, stack = areaStack(p, key), top = key === 'ev' ? null : stack.at(-1) || null, card = key === 'ev' ? null : p.court.find(c => c.key === key);
     const param = AREA_PARAM[key], raw = top && param ? p.parameter(key, param) : null, val = raw == null ? null : raw;
+    const arithmetic=BreakMatchPilot.formatParameter(card?.parameterDetails?.[({srv:'serve',blk:'block',rcv:'receive',tos:'toss',atk:'attack'})[param]],val);
     const k = p.idx + key, enter = top && prevTop[k] !== top, pop = val != null && prevVal[k] !== String(val);
     nextTop[k] = top; nextVal[k] = val == null ? '' : String(val);
     let tgt = '';
@@ -1318,7 +1339,7 @@ body.playing .dock[data-mode="court"] [data-kind="parameter"] .hc-go{display:non
       + `<span class="nm">${AREA_LABEL[key]}${more > 0 ? ` +${more}` : ''}</span>`
       + (key !== 'ev' && stack.length > 1 ? `<span class="gcount">G${stack.length - 1}</span>` : '')
       + (renamed ? `<span class="rn">${esc(name)}</span>` : '')
-      + (val != null ? `<span class="v${pop ? ' pop' : ''}">${val}</span>` : '')
+      + (val != null ? `<span class="v${pop ? ' pop' : ''}${arithmetic.changed?' modified':''}" title="${esc(arithmetic.title)}" aria-label="${AREA_LABEL[key]}：${esc(arithmetic.title)}">${esc(arithmetic.text).replace('＝','<wbr>＝')}</span>` : '')
       + `</div>`;
   }
   function courtHTML(p) {
@@ -1330,13 +1351,13 @@ body.playing .dock[data-mode="court"] [data-kind="parameter"] .hc-go{display:non
     const lastDrop = p.drop.at(-1);
     const deck = ack ? `<button class="pile2 tgt" type="button" data-act="ack"><b>${p.deck.length}</b>抽牌</button>` : `<div class="pile2"><b>${p.deck.length}</b>牌庫</div>`;
     const drop = `<button class="pile2" type="button" data-pile="drop" data-p="${p.idx}" ${mine ? 'data-drop="drop"' : ''}>${lastDrop ? `<span class="pthumb">${img(lastDrop)}</span>` : ''}<b>${p.drop.length}</b>棄牌</button>`;
-    const set=`<div class="lcol"><div class="setbox">SET<b>${p.sets.length}</b>${sets(p)}</div></div>`,field=`<div class="field">${rows.map(([k,h])=>`<div class="row row-${k}">${h}</div>`).join('')}</div>`,piles=`<div class="rcol">${mine?drop+deck:deck+drop}</div>`;return `<div class="court2 ${mine?'me':'opp'}">${mine?set+field+piles:piles+field+set}</div>`;
+    const set=`<div class="lcol"><div class="setbox">SET<b>${p.sets.length}</b>${sets(p)}</div></div>`,field=`<div class="field">${rows.map(([k,h])=>`<div class="row row-${k}">${h}</div>`).join('')}</div>`,piles=`<div class="rcol">${mine?drop+deck:deck+drop}</div>`;return `<div class="court2 ${mine?'me':'opp'}">${mine?statusStrip(p.idx)+set+field+piles:piles+field+set}</div>`;
   }
   function statusStrip(player){const items=(game.statuses||[]).filter(s=>s.player===player);return items.length?`<div class="status-strip" aria-label="${player===0?'你':'對手'}的持續狀態">${items.map(s=>`<button type="button" class="status-chip${s.scheduled?' scheduled':''}" data-status="${esc(s.id)}" aria-label="${esc(s.label)}，${s.scheduled?'尚未生效':'生效中'}，查看詳情">${s.scheduled?'下回合 · ':''}${esc(s.label)}</button>`).join('')}</div>`:'';}
   document.addEventListener('click',e=>{const b=e.target.closest('[data-status]');if(!b)return;const s=game?.statuses?.find(s=>s.id===b.dataset.status);if(!s)return;openSheet(`<div class="status-detail"><h3>${esc(s.label)}</h3><p><b>${s.player===0?'你':esc(oppName)}</b> · ${s.scheduled?'尚未生效':'生效中'}</p><p>${esc(s.detail)}</p><p><b>解除時機：</b>${esc(s.expires)}</p><p><b>來源：</b>${s.source?esc(s.source.name)+'（'+esc(s.source.cardNo)+'）':'來源卡尚未公開'}</p>${s.source?'<button type="button" class="chip" id="statusSource">查看來源卡完整效果</button>':''}</div>`);if(s.source)$('statusSource').onclick=()=>cardSheet(s.source.cardNo.replace(/^HV-?/,''));});
   function barHTML(p, mine) {
     const backs = mine ? '' : `<span class="backs">${'<i></i>'.repeat(Math.min(p.hand.length, 8))}</span>`;
-    return `<div class="pbar ${mine ? 'me' : 'opp'}"><span class="av">${esc((mine ? '你' : oppName).slice(0, 1))}</span><span class="who">${mine ? '你' : esc(oppName)}</span><span class="hn" aria-label="${mine ? '你的' : '對手'}手牌 ${p.hand.length} 張">手牌 <b>${p.hand.length}</b> 張</span><span class="dk">${esc(OL.inGame&&mine?(!OL.client?.online?'已離線':!OL.authority?.active?'房主離線':OL.client.pending?'同步中':'已連線'):DECKS[p.deckKey]?.name || '')}</span><span class="sp"></span>${backs}${statusStrip(p.idx)}</div>`;
+    return `<div class="pbar ${mine ? 'me' : 'opp'}"><span class="av">${esc((mine ? '你' : oppName).slice(0, 1))}</span><span class="who">${mine ? '你' : esc(oppName)}</span><span class="hn" aria-label="${mine ? '你的' : '對手'}手牌 ${p.hand.length} 張">手牌 <b>${p.hand.length}</b> 張</span><span class="dk">${esc(OL.inGame&&mine?(!OL.client?.online?'已離線':!OL.authority?.active?'房主離線':OL.client.pending?'同步中':'已連線'):DECKS[p.deckKey]?.name || '')}</span><span class="sp"></span>${backs}${mine?'':statusStrip(p.idx)}</div>`;
   }
   function markDiscardHand(){$('handZone').querySelector('.hand')?.classList.toggle('discard-required',!!pending?.req.uiPresentation?.handDiscard);}
   function fanHTML(p) {
@@ -1392,7 +1413,7 @@ body.playing .dock[data-mode="court"] [data-kind="parameter"] .hc-go{display:non
     const server = game.server ?? game.firstServer;
     const owner = game.turnP?.idx;
     const who = owner === 0 ? '你' : oppName;
-    const state = !game.rallyNo && server != null ? '調度中 · 確認手牌後開始對局' : game.winner ? '對局結束' : pending?.req.kind === 'lossConfirm' ? '你的回合 · 等待你喊 Loss' : pending?.req.kind === 'turnEnd' ? '你的回合 · 等待結束或 Loss' : owner == null ? '準備／交接中' : !game.ball ? `${who}正在發球` : `${who}的回合`;
+    const state = !game.rallyNo && server != null ? '調度中 · 確認手牌後開始對局' : game.winner ? '對局結束' : pending?.req.kind === 'lossConfirm' ? '你的回合 · 等待你確認失分' : pending?.req.kind === 'turnEnd' ? '你的回合 · 等待結束或選擇失分' : owner == null ? '準備／交接中' : !game.ball ? `${who}正在發球` : `${who}的回合`;
     $('rallyStatus').innerHTML = `<strong>${game.rallyNo ? `第 ${game.rallyNo} 球 · 本球發球：${server === 0 ? '你' : esc(oppName)}` : server != null ? `首球發球：${server === 0 ? '你' : esc(oppName)}` : '準備對局'}</strong><span>${state}</span>`;
     const logHTML = logBuf.slice(-200).map(([s, c]) => `<div class="${c || ''}">${esc(s)}</div>`).join('');
     $('logSide').innerHTML = logHTML; $('logSide').scrollTop = $('logSide').scrollHeight;
@@ -1416,7 +1437,7 @@ body.playing .dock[data-mode="court"] [data-kind="parameter"] .hc-go{display:non
       $('dockQ').innerHTML = game.waitingFor?.kind==='discard'?`<span class="dots">等待${game.waitingFor.actor===0?'你':esc(oppName)}棄掉 ${game.waitingFor.count} 張手牌</span>`:`<span class="dots">${esc(oppName)} 行動中</span>`;
       $('dockOpts').innerHTML = '';
     }
-    $('dockSummary').textContent = game.winner ? $('dockQ').textContent : pending ? courtRequest(pending.req)==='parameter'?'點場上亮框卡，選擇要調整的數值':BreakChoiceUI.requestPrompt(pending.req) : `${oppName} 行動中`;
+    $('dockSummary').textContent = game.winner ? $('dockQ').textContent : pending ? courtRequest(pending.req)==='parameter'?'直接點選下方要調整的數值':BreakChoiceUI.requestPrompt(pending.req) : `${oppName} 行動中`;
     updateUndoButton();
     renderCourtParam();
     olControls();
@@ -1602,7 +1623,7 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
         skillResults=view.publicLog.filter(e=>e.type==='skill_resolved'&&e.turn===view.turn.id).slice(-2);persistSolo(true);
         logBuf=view.publicLog.map(e=>[publicLogText(e), '']);render();presentation.observe(view);noticeStatuses(board,view);
       },
-      onRequest(req) {presentation.request(req);pending={req};if(req.kind==='parameter'&&courtNextTarget?.id===req.context.target?.id&&courtNextTarget.matchId===req.matchId)courtParamOpen=req.requestId+':'+req.epoch;courtNextTarget=null;setDockCollapsed(false);render();soloSelection=null;if(!courtUndoing&&courtRequest(req)==='target'&&req.input.min===1&&req.input.max===1&&req.options.length===1){queueMicrotask(()=>{if(pending?.req.requestId===req.requestId&&pending.req.epoch===req.epoch)nativeAnswer([req.options[0].value]);});}},
+      onRequest(req) {presentation.request(req);pending={req};if(req.kind==='parameter')courtParamOpen=null;courtNextTarget=null;setDockCollapsed(false);render();soloSelection=null;if(!courtUndoing&&courtRequest(req)==='target'&&req.input.min===1&&req.input.max===1&&req.options.length===1){queueMicrotask(()=>{if(pending?.req.requestId===req.requestId&&pending.req.epoch===req.epoch)nativeAnswer([req.options[0].value]);});}},
       onNotice(board,data,resolve) {if(hintMode()!=='normal'&&['serve','turn'].includes(data.type)){briefNotice(data);queueMicrotask(resolve);return;}turnNotice={data,resolve,game:board};render();},
       onError(err) {pending=null;turnNotice=null;logBuf.push(['發生錯誤：'+err.message,'lost']);render();$('runtimeStatus').hidden=false;$('runtimeStatus').textContent='❌ '+err.message;console.error(err);}
     };
@@ -1621,15 +1642,14 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
   const olRun = f => async () => { try { olToast(''); await f(); } catch (e) { olToast(olFriendly(e)); } };
   // Optional account and cloud backups share the multiplayer Firebase session.
   let accountUser=null,accountIdentity='',accountReady=false,accountLoadFailed=false,accountBusy=false,accountMessage='',cloudRows=[],cloudTarget='me';
-  function accountRender(){const member=!!accountUser&&!accountUser.isAnonymous&&accountUser.providerData.some(p=>p.providerId==='google.com');$('accountTitle').textContent=member?(profileOf(accountUser.uid)?.name||accountUser.displayName||'Google 帳號'):'訪客模式';$('accountAvatar').innerHTML=avatarMarkup(member?accountUser.uid:null);$('editProfile').hidden=!member;$('editProfile').disabled=accountBusy;$('accountStatus').textContent=accountMessage||(member?'本機牌組保留於此裝置；可另存雲端備份':'不需登入即可遊玩・牌組與草稿保存在此裝置');$('accountGoogle').hidden=member;$('accountLogout').hidden=!member;$('openCloud').disabled=!member||accountBusy;$('aiCloud').disabled=!member||accountBusy;$('aiCloudHint').textContent=member?'可將雲端備份或公開牌組設為 AI 對手，選取結果保存在此裝置。':'Google 登入後可選自己的雲端備份；公開牌組不需登入。';$('accountGoogle').disabled=accountBusy||(!accountReady&&!accountLoadFailed);$('accountGoogle').textContent=accountLoadFailed&&!accountReady?'重試登入連線':'Google 登入';$('accountLogout').disabled=accountBusy||!!OL.roomId;renderInlineCloud();if($('cloudRows'))renderCloud();if($('publicPublish'))$('publicPublish').disabled=!member||!usableDeck($('myDeck').value)||!OL.client?.online;}
+  function accountRender(){const member=!!accountUser&&!accountUser.isAnonymous&&accountUser.providerData.some(p=>p.providerId==='google.com');$('accountTitle').textContent=member?(profileOf(accountUser.uid)?.name||accountUser.displayName||'Google 帳號'):'訪客模式';$('accountAvatar').innerHTML=avatarMarkup(member?accountUser.uid:null);$('editProfile').hidden=!member;$('editProfile').disabled=accountBusy;$('accountStatus').textContent=accountMessage||(member?'本機牌組保留於此裝置；可另存雲端備份':'不需登入即可遊玩・牌組與草稿保存在此裝置');$('accountGoogle').hidden=member;$('accountLogout').hidden=!member;$('openCloud').disabled=!member||accountBusy;$('aiCloud').disabled=!member||accountBusy;$('aiCloudHint').textContent=member?'可將雲端備份或公開牌組設為 AI 對手，選取結果保存在此裝置。':'Google 登入後可選自己的雲端備份；公開牌組不需登入。';$('accountGoogle').disabled=accountBusy||(!accountReady&&!accountLoadFailed);$('accountGoogle').textContent=accountLoadFailed&&!accountReady?'重試登入連線':'Google 登入';$('accountLogout').disabled=accountBusy||!!OL.roomId;renderCloudOptions();if($('cloudRows'))renderCloud();if($('publicPublish'))$('publicPublish').disabled=!member||!usableDeck($('myDeck').value)||!OL.client?.online;}
   function syncSharing(){sharing?.bind(accountUser,OL.public,!!OL.client?.online,profileOf(accountUser?.uid)?.name||cleanName(accountUser?.displayName)||'玩家');renderSharing();}
   function accountChanged(user){const identity=user?[user.uid,user.isAnonymous,user.providerData.some(p=>p.providerId==='google.com')].join(':'):'guest';if(accountIdentity===identity){accountUser=user;accountRender();return;}accountIdentity=identity;const wasOpen=!!$('cloudRows');accountUser=user;accountMessage='';if(wasOpen)closeSheet();OL.cloud?.bind(user);syncSharing();profileWatches();accountRender();}
-  function renderInlineCloud(){
-    const member=!!accountUser&&!accountUser.isAnonymous&&accountUser.providerData.some(p=>p.providerId==='google.com');$('myCloudSection').hidden=!member;
-    $('myCloudMessage').textContent=member?(accountMessage|| (OL.cloud?.loading?'讀取雲端牌組…':cloudRows.length?`${cloudRows.length} 副私人備份・載入後即可選用`:'尚無雲端備份，可在「雲端牌組」另存目前牌組。')):'';
-    $('myCloudRows').innerHTML=member?cloudRows.map(d=>`<article class="cloud-row"><div><strong>${esc(d.name)}</strong><small>40 張・私人備份</small></div><button class="chip" type="button" data-cloud-pick="${esc(d.id)}" ${accountBusy?'disabled':''}>載入選用</button></article>`).join(''):'';
+  function renderCloudOptions(){
+    menuCloudRows=accountUser&&!accountUser.isAnonymous&&accountUser.providerData.some(p=>p.providerId==='google.com')?cloudRows:[];
+    const stamp=JSON.stringify([modeOptions().mode,menuCloudRows]);if(stamp===cloudMenuStamp)return;cloudMenuStamp=stamp;
+    fill($('myDeck'),MY_DECKS,$('myDeck').value);refresh();
   }
-  $('myCloudRows').onclick=e=>{const b=e.target.closest('[data-cloud-pick]');if(!b||b.disabled)return;try{const d=cloudRows.find(d=>d.id===b.dataset.cloudPick);if(!d)throw Error('牌組已變更，請重新選擇');selectPersonal(personal.add(d));accountMessage='已載入為新的本機牌組，可開始對局。';accountRender();}catch(e){accountMessage=e.message;accountRender();}};
   function renderCloud(){if(!$('cloudRows'))return;$('cloudUpload').disabled=accountBusy||!OL.client?.online||!usableDeck($('myDeck').value);$('cloudSummary').textContent=`${cloudRows.length} 副雲端備份`;$('cloudMessage').textContent=accountMessage;$('cloudRows').innerHTML=cloudRows.map(d=>`<article class="cloud-row"><div><strong>${esc(d.name)}</strong><small>40 張 · Event ${Object.entries(d.cards).reduce((n,[c,k])=>n+(isC(c)?0:k),0)}</small></div><div class="opts"><button class="chip" type="button" data-cloud-get="${esc(d.id)}" ${accountBusy?'disabled':''}>${cloudTarget==='ai'?'設為 AI 牌組':'下載副本'}</button>${cloudTarget==='ai'?'':`<button class="chip" type="button" data-cloud-remove="${esc(d.id)}" ${accountBusy?'disabled':''}>刪除</button>`}</div></article>`).join('')||'<p class="sub">還沒有雲端備份。選擇一副本機牌組後，可另存到此帳號。</p>';}
   async function accountRun(fn){if(accountBusy)return;accountBusy=true;accountRender();try{await fn();}catch(e){accountMessage=olFriendly(e);}finally{accountBusy=false;accountRender();}}
   $('accountGoogle').onclick=()=>accountRun(async()=>{if(OL.roomId)throw Error('請先離開房間再切換帳號');if(!accountReady){await olLoad();accountMessage='登入已就緒，請再次點 Google 登入';return;}await OL.services.A.signInWithPopup(OL.services.auth,new OL.services.A.GoogleAuthProvider());});

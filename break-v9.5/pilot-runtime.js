@@ -1174,6 +1174,7 @@ if(typeof module!=='undefined')module.exports=api;else root.BreakRulesCore=api;
 /* Single-state match core. No legacy Game/import/projection dependency. */
 'use strict';
 const StatusView=require('./status-view');
+const ParameterView=require('./parameter-view');
 const {Kernel,distinctNameOptions}=require('./core');
 const runtime=require('./runtime-data.json');
 const library=require('../card-library');
@@ -1410,9 +1411,9 @@ class Match {
   if(!m.rng||!snapshot.rng||['algorithm','word','calls'].some(key=>m.rng[key]!==snapshot.rng[key])||m.rng.algorithm!=='mulberry32-v1'||!Number.isSafeInteger(m.rng.calls)||m.rng.calls<0||m.rng.word!==((m.seed>>>0)+Math.imul(m.rng.calls,0x6D2B79F5)>>>0)||m.decisionIndex!==m.history?.length||!['setup','rally','loss','interval','finished'].includes(m.phase)||m.pending&&!host.validateRequest(m.pending))throw Error('Invalid match checkpoint');
   const state=copy(snapshot);delete state.match.rng;this._kernel.restore(state);this.epoch++;if(this._m.pending){this._m.pending.epoch=this.epoch;this._m.pending.requestId=this._m.id+':'+this.epoch+':'+this._m.decisionIndex;}return this;
  }
- view(actor){if(![0,1].includes(actor))throw Error('Unknown viewer');const view=this._kernel.view(actor);for(const p of view.players)for(const c of [...(Array.isArray(p.hand)?p.hand:[]),...p.court])c.incarnation=this._kernel.card(c.id).incarnation;const pending=this._m.pending,waitingFor=pending?.uiPresentation?.handDiscard?{actor:pending.actor,kind:'discard',count:pending.input.min}:null;return {...view,statuses:StatusView.statuses(this._kernel,actor),waitingFor,match:{id:this._m.id,mode:this._m.mode,phase:this._m.phase,rally:this._m.rally,server:this._m.server,winner:this._m.winner,...(this._m.endReason?{endReason:this._m.endReason,surrendered:this._m.surrendered}:{}),dice:copy(this._m.dice),decisionIndex:this._m.decisionIndex,notices:copy(this._m.notices)},request:this.request(actor)};}
+ view(actor){if(![0,1].includes(actor))throw Error('Unknown viewer');const view=this._kernel.view(actor);for(const p of view.players)for(const c of [...(Array.isArray(p.hand)?p.hand:[]),...p.court])c.incarnation=this._kernel.card(c.id).incarnation;for(const p of view.players)for(const c of p.court)c.parameterDetails=ParameterView.parameterDetails(this._kernel,c.id);const pending=this._m.pending,waitingFor=pending?.uiPresentation?.handDiscard?{actor:pending.actor,kind:'discard',count:pending.input.min}:null;return {...view,statuses:StatusView.statuses(this._kernel,actor),waitingFor,match:{id:this._m.id,mode:this._m.mode,phase:this._m.phase,rally:this._m.rally,server:this._m.server,winner:this._m.winner,...(this._m.endReason?{endReason:this._m.endReason,surrendered:this._m.surrendered}:{}),dice:copy(this._m.dice),decisionIndex:this._m.decisionIndex,notices:copy(this._m.notices)},request:this.request(actor)};}
 }
-module.exports={Match,signature};
+module.exports={Match,signature,formatParameter:ParameterView.formatParameter};
 
 },
 "rules/status-view.js":function(require,module,exports){
@@ -1449,6 +1450,29 @@ function statuses(k,viewer){return k.state.effects.flatMap(e=>{
  return [{id:e.id,player,active,scheduled:waiting,...text,detail:text.detail||'依來源卡指定範圍適用',expires,source}];
  });}
 module.exports={statuses,description,scopeText};
+
+},
+"rules/parameter-view.js":function(require,module,exports){
+/* Public arithmetic only: never include source cards, hidden zones, or effect IDs. */
+'use strict';
+const fields=['serve','block','receive','toss','attack'];
+function parameterDetails(k,id){
+ const card=k.card(id),ref=k.reference(id);return Object.fromEntries(fields.map(param=>{
+  const base=card.printed.parameters[param],total=k.parameter(id,param);
+  const steps=total==='dash'?[]:k.state.effects.filter(e=>e.kind==='numeric'&&k.active(e)&&k.current(ref)&&e.target?.id===ref.id&&e.target.incarnation===ref.incarnation&&e.parameter===param).map(e=>({operation:e.operation,value:e.value}));
+  return [param,{base,total,steps}];
+ }));
+}
+function formatParameter(detail,total){
+ const plain={text:total==null||total==='dash'?'—':String(total),title:'目前數值 '+(total??'—'),changed:false};
+ if(!detail||!Number.isInteger(total))return plain;
+ const steps=detail.steps.filter(s=>s.operation==='set'||s.value!==0);if(!steps.length)return plain;
+ let base=detail.base,fixed=false,plus=0,minus=0;
+ for(const s of steps)if(s.operation==='set'){base=s.value;fixed=true;plus=minus=0;}else if(s.value>0)plus+=s.value;else minus-=s.value;
+ const start=fixed?detail.base+'→'+base:String(base),add=(plus?'＋'+plus:'')+(minus?'−'+minus:'');
+ return {text:start+add+(add?'＝'+total:''),title:'原始 '+detail.base+'；'+steps.map(s=>s.operation==='set'?'設為 '+s.value:s.value>=0?'＋'+s.value:'−'+Math.abs(s.value)).join('；')+'；目前 '+total,changed:true};
+}
+module.exports={parameterDetails,formatParameter};
 
 },
 "rules/local-session.js":function(require,module,exports){
