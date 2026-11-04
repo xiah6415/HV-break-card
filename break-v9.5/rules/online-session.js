@@ -12,7 +12,7 @@ function rotateView(view,actor){
  for(const s of v.statuses||[])s.player=flip(s.player,actor);if(v.waitingFor)v.waitingFor.actor=flip(v.waitingFor.actor,actor);
  if(v.turn&&'player' in v.turn)v.turn.player=flip(v.turn.player,actor);
  if(v.ball&&'owner' in v.ball)v.ball.owner=flip(v.ball.owner,actor);
- for(const k of ['server','winner','firstServer','loser','diceWinner'])if(v.match&&k in v.match)v.match[k]=flip(v.match[k],actor);
+ for(const k of ['server','winner','firstServer','loser','diceWinner','surrendered'])if(v.match&&k in v.match)v.match[k]=flip(v.match[k],actor);
  if(Array.isArray(v.match?.dice))v.match.dice=[v.match.dice[1],v.match.dice[0]];
  for(const n of v.match?.notices||[]){for(const k of ['player','winner','server','loser'])if(k in n)n[k]=flip(n[k],actor);if(n.ball&&'owner' in n.ball)n.ball.owner=flip(n.ball.owner,actor);}
  for(const e of v.publicLog||[]){if('player' in e)e.player=flip(e.player,actor);for(const d of e.draws||[])if('player' in d)d.player=flip(d.player,actor);}
@@ -44,6 +44,7 @@ class OnlineSession{
   if(newMatch){this.noticeIndex=this.last?0:Math.max(0,(v.view.match.notices?.length||0)-1);this.resume=null;this.previewCache.clear();this.previewFlight=null;}
   if(this.last?.view.request?.requestId!==v.view.request?.requestId){this.previewCache.clear();this.previewFlight=null;}
   if(v.receipt?.preview){const p=v.receipt.preview;this.previewCache.set(previewKey(p.requestId,p.value),p.ids);this.previewFlight=null;}else if(v.receipt?.ok===false&&this.previewFlight){this.previewCache.set(this.previewFlight,[]);this.previewFlight=null;}
+  if(v.view.match.phase==='finished'){this.resume=null;this.noticeIndex=v.view.match.notices?.length||0;}
   this.term=v.term;this.last=v;if(!this.stopped&&!this.resume)this._drive();
  }
  _drive(){
@@ -62,6 +63,7 @@ class OnlineSession{
    if(r&&r.actor===v.actor&&this.available&&!this.client.pending){this.waiting=r;this.callbacks.onRequest?.(r);}
   }catch(e){this.callbacks.onError?.(e);}
  }
+ surrender(){if(this.stopped||!this.last||!this.available||this.client.pending||this.last.view.match.phase==='finished')throw Error('請等待連線恢復後投降');if(!Number.isInteger(this.last.epoch))throw Error('請房主更新頁面後再試投降');return this.client.send({kind:'surrender',actor:this.last.actor,matchId:this.last.view.match.id,epoch:this.last.epoch});}
  submit(command){
   if(this.stopped||!this.waiting||!this.available||this.client.pending)throw Error('NO_LOCAL_DECISION');
   this.waiting=null;

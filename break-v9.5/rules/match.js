@@ -198,6 +198,11 @@ class Match {
  request(actor){if(!this._m.pending||this._m.pending.actor!==actor)return null;return copy(this._m.pending);}
  command(command){
   if(command?.kind==='answer')return this.dispatch(command.answer);
+  if(command?.kind==='surrender'){
+   const actor=command.actor;if(![0,1].includes(actor)||command.matchId!==this._m.id||command.epoch!==this.epoch||this._m.phase==='finished')throw Error('INVALID_OR_STALE_COMMAND');
+   this._m.history.push({kind:'surrender',actor,origin:'game',signature:'surrender',value:true});this._m.decisionIndex++;
+   this._m.loser=actor;this._m.winner=1-actor;this._m.endReason='surrender';this._m.surrendered=actor;this._m.phase='finished';this._m.pc='done';this._m.pending=null;this._m.continuation=null;delete this._m.manualAction;delete this._m.manualReturnPc;this._kernel.state.queue=[];this._kernel.state.publicLog.push({type:'surrender',player:actor});this._kernel.state.revision++;return this.view(actor);
+  }
   if(command?.kind==='manual'){if(this._m.mode!=='numeric')throw Error('UNSUPPORTED_COMMAND');return this._manual(command);}
   if(command?.kind!=='loss')throw Error('UNSUPPORTED_COMMAND');
   const r=this._m.pending;
@@ -232,6 +237,6 @@ class Match {
   if(!m.rng||!snapshot.rng||['algorithm','word','calls'].some(key=>m.rng[key]!==snapshot.rng[key])||m.rng.algorithm!=='mulberry32-v1'||!Number.isSafeInteger(m.rng.calls)||m.rng.calls<0||m.rng.word!==((m.seed>>>0)+Math.imul(m.rng.calls,0x6D2B79F5)>>>0)||m.decisionIndex!==m.history?.length||!['setup','rally','loss','interval','finished'].includes(m.phase)||m.pending&&!host.validateRequest(m.pending))throw Error('Invalid match checkpoint');
   const state=copy(snapshot);delete state.match.rng;this._kernel.restore(state);this.epoch++;if(this._m.pending){this._m.pending.epoch=this.epoch;this._m.pending.requestId=this._m.id+':'+this.epoch+':'+this._m.decisionIndex;}return this;
  }
- view(actor){if(![0,1].includes(actor))throw Error('Unknown viewer');const view=this._kernel.view(actor);for(const p of view.players)for(const c of [...(Array.isArray(p.hand)?p.hand:[]),...p.court])c.incarnation=this._kernel.card(c.id).incarnation;const pending=this._m.pending,waitingFor=pending?.uiPresentation?.handDiscard?{actor:pending.actor,kind:'discard',count:pending.input.min}:null;return {...view,statuses:StatusView.statuses(this._kernel,actor),waitingFor,match:{id:this._m.id,mode:this._m.mode,phase:this._m.phase,rally:this._m.rally,server:this._m.server,winner:this._m.winner,dice:copy(this._m.dice),decisionIndex:this._m.decisionIndex,notices:copy(this._m.notices)},request:this.request(actor)};}
+ view(actor){if(![0,1].includes(actor))throw Error('Unknown viewer');const view=this._kernel.view(actor);for(const p of view.players)for(const c of [...(Array.isArray(p.hand)?p.hand:[]),...p.court])c.incarnation=this._kernel.card(c.id).incarnation;const pending=this._m.pending,waitingFor=pending?.uiPresentation?.handDiscard?{actor:pending.actor,kind:'discard',count:pending.input.min}:null;return {...view,statuses:StatusView.statuses(this._kernel,actor),waitingFor,match:{id:this._m.id,mode:this._m.mode,phase:this._m.phase,rally:this._m.rally,server:this._m.server,winner:this._m.winner,...(this._m.endReason?{endReason:this._m.endReason,surrendered:this._m.surrendered}:{}),dice:copy(this._m.dice),decisionIndex:this._m.decisionIndex,notices:copy(this._m.notices)},request:this.request(actor)};}
 }
 module.exports={Match,signature};

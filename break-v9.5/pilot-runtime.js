@@ -1371,6 +1371,11 @@ class Match {
  request(actor){if(!this._m.pending||this._m.pending.actor!==actor)return null;return copy(this._m.pending);}
  command(command){
   if(command?.kind==='answer')return this.dispatch(command.answer);
+  if(command?.kind==='surrender'){
+   const actor=command.actor;if(![0,1].includes(actor)||command.matchId!==this._m.id||command.epoch!==this.epoch||this._m.phase==='finished')throw Error('INVALID_OR_STALE_COMMAND');
+   this._m.history.push({kind:'surrender',actor,origin:'game',signature:'surrender',value:true});this._m.decisionIndex++;
+   this._m.loser=actor;this._m.winner=1-actor;this._m.endReason='surrender';this._m.surrendered=actor;this._m.phase='finished';this._m.pc='done';this._m.pending=null;this._m.continuation=null;delete this._m.manualAction;delete this._m.manualReturnPc;this._kernel.state.queue=[];this._kernel.state.publicLog.push({type:'surrender',player:actor});this._kernel.state.revision++;return this.view(actor);
+  }
   if(command?.kind==='manual'){if(this._m.mode!=='numeric')throw Error('UNSUPPORTED_COMMAND');return this._manual(command);}
   if(command?.kind!=='loss')throw Error('UNSUPPORTED_COMMAND');
   const r=this._m.pending;
@@ -1405,7 +1410,7 @@ class Match {
   if(!m.rng||!snapshot.rng||['algorithm','word','calls'].some(key=>m.rng[key]!==snapshot.rng[key])||m.rng.algorithm!=='mulberry32-v1'||!Number.isSafeInteger(m.rng.calls)||m.rng.calls<0||m.rng.word!==((m.seed>>>0)+Math.imul(m.rng.calls,0x6D2B79F5)>>>0)||m.decisionIndex!==m.history?.length||!['setup','rally','loss','interval','finished'].includes(m.phase)||m.pending&&!host.validateRequest(m.pending))throw Error('Invalid match checkpoint');
   const state=copy(snapshot);delete state.match.rng;this._kernel.restore(state);this.epoch++;if(this._m.pending){this._m.pending.epoch=this.epoch;this._m.pending.requestId=this._m.id+':'+this.epoch+':'+this._m.decisionIndex;}return this;
  }
- view(actor){if(![0,1].includes(actor))throw Error('Unknown viewer');const view=this._kernel.view(actor);for(const p of view.players)for(const c of [...(Array.isArray(p.hand)?p.hand:[]),...p.court])c.incarnation=this._kernel.card(c.id).incarnation;const pending=this._m.pending,waitingFor=pending?.uiPresentation?.handDiscard?{actor:pending.actor,kind:'discard',count:pending.input.min}:null;return {...view,statuses:StatusView.statuses(this._kernel,actor),waitingFor,match:{id:this._m.id,mode:this._m.mode,phase:this._m.phase,rally:this._m.rally,server:this._m.server,winner:this._m.winner,dice:copy(this._m.dice),decisionIndex:this._m.decisionIndex,notices:copy(this._m.notices)},request:this.request(actor)};}
+ view(actor){if(![0,1].includes(actor))throw Error('Unknown viewer');const view=this._kernel.view(actor);for(const p of view.players)for(const c of [...(Array.isArray(p.hand)?p.hand:[]),...p.court])c.incarnation=this._kernel.card(c.id).incarnation;const pending=this._m.pending,waitingFor=pending?.uiPresentation?.handDiscard?{actor:pending.actor,kind:'discard',count:pending.input.min}:null;return {...view,statuses:StatusView.statuses(this._kernel,actor),waitingFor,match:{id:this._m.id,mode:this._m.mode,phase:this._m.phase,rally:this._m.rally,server:this._m.server,winner:this._m.winner,...(this._m.endReason?{endReason:this._m.endReason,surrendered:this._m.surrendered}:{}),dice:copy(this._m.dice),decisionIndex:this._m.decisionIndex,notices:copy(this._m.notices)},request:this.request(actor)};}
 }
 module.exports={Match,signature};
 
@@ -1484,7 +1489,7 @@ function boardView(view,deckKeys){
    court,handRefs:Array.isArray(p.hand)?p.hand:[],top:key=>area[key]?.at(-1)||null,guts:key=>Math.max(0,(area[key]?.length||0)-1),
    ts:{finished:view.match.phase!=='rally',receiver:area.receive.at(-1),setter:area.toss.at(-1),attacker:area.attack.at(-1),rcv:parameter('receive','rcv'),toss:parameter('toss','tos'),atk:parameter('attack','atk'),sides:court.filter(c=>c.role==='side_blocker').map(c=>short(c.cardNo))},parameter};
  });
- return {native:true,statuses:view.statuses||[],waitingFor:view.waitingFor||null,mode:view.match.mode,players,rallyNo:view.match.rally,server:view.match.server,firstServer:view.match.server,target:view.ball?1-view.ball.owner:null,turnP:view.match.phase==='rally'?players[view.turn.player]:null,winner:view.match.winner==null?null:players[view.match.winner],ball:view.ball?{type:view.ball.kind,off:view.ball.offense}:null,
+ return {native:true,endReason:view.match.endReason,surrendered:view.match.surrendered,statuses:view.statuses||[],waitingFor:view.waitingFor||null,mode:view.match.mode,players,rallyNo:view.match.rally,server:view.match.server,firstServer:view.match.server,target:view.ball?1-view.ball.owner:null,turnP:view.match.phase==='rally'?players[view.turn.player]:null,winner:view.match.winner==null?null:players[view.match.winner],ball:view.ball?{type:view.ball.kind,off:view.ball.offense}:null,
   cardName:(p,key)=>p.court.find(c=>c.key===key)?.name||'',parameter:(p,key,param)=>p.parameter(key,param),
   courtTargets:p=>p.court.map(c=>({key:c.key,card:short(c.cardNo)})),roleReference:(p,key)=>{const c=p.court.find(c=>c.key===key);return c?{id:c.id,incarnation:c.incarnation}:null;},cardReference:(p,zone,index)=>zone==='hand'&&p.handRefs[index]?{id:p.handRefs[index].id,incarnation:p.handRefs[index].incarnation}:null};
 }
@@ -1498,7 +1503,7 @@ class TableSession {
  static fromCheckpoint(record,callbacks={}){
   if(record?.version!==1||!Array.isArray(record.journal)||record.journal.length>50000||!Number.isInteger(record.noticeIndex))throw Error('INVALID_SOLO_SAVE');
   const s=new this(record.options,callbacks);s.match.restore(record.base);s.saveBase=copy(record.base);
-  for(const e of record.journal){const r=s.match.request(0)||s.match.request(1);if(!r||r.actor!==e.actor)throw Error('SOLO_REPLAY_DIVERGED');
+  for(const e of record.journal){if(e.kind==='surrender'){s.local.command({kind:'surrender',actor:e.actor,matchId:s.match._m.id,epoch:s.match.epoch});continue;}const r=s.match.request(0)||s.match.request(1);if(!r||r.actor!==e.actor)throw Error('SOLO_REPLAY_DIVERGED');
    if(e.kind==='manual'||e.kind==='loss')s.local.command({kind:e.kind,matchId:r.matchId,requestId:r.requestId,epoch:r.epoch,actor:r.actor,...(e.kind==='manual'?{action:copy(e.value)}:{})});
    else{if(r.kind!==e.kind)throw Error('SOLO_REPLAY_DIVERGED');s.local.command({kind:'answer',answer:H.makeAnswer(r,e.value)});}
   }
@@ -1524,6 +1529,7 @@ class TableSession {
  }
  _error(e){this.stop();this.callbacks.onError?.(e);}
  submit(command){if(this.stopped||!this.waiting)throw Error('NO_LOCAL_DECISION');this.local.command(command);this._drive();}
+ surrender(){if(this.stopped)throw Error('SESSION_STOPPED');clearTimeout(this.timer);this.token++;this.local.command({kind:'surrender',actor:0,matchId:this.match._m.id,epoch:this.match.epoch});this.noticeIndex=this.match._m.notices.length;this._drive();}
  undo(){if(this.stopped||!this.local.undo())return false;this.noticeIndex=Math.min(this.noticeIndex,this.match.view(0).match.notices.length);this._drive();return true;}
 }
 module.exports={TableSession,boardView};
@@ -1548,10 +1554,11 @@ class RoomAuthority{
   if(this.log[cmdId])return copy(this.log[cmdId]);
   const r=this.match.request(0)||this.match.request(1);let ok=false,error=null,preview=null;
   try{
+   if(command?.kind==='surrender'){const actor=this.players.indexOf(uid);if(actor<0||command.actor!==actor)throw Error('WRONG_SEAT');this.match.command(command);ok=true;}else{
    if(!r||this.players[r.actor]!==uid)throw Error('NOT_YOUR_DECISION');
    if(!['answer','loss','previewBlock'].includes(command?.kind))throw Error('UNSUPPORTED_REMOTE_COMMAND');
    if((['answer','previewBlock'].includes(command.kind)?command.answer?.actor:command.actor)!==r.actor)throw Error('WRONG_SEAT');
-   if(command.kind==='previewBlock'){if(r.kind!=='block'||!H.validate(r,command.answer).ok)throw Error('INVALID_PREVIEW');const a=command.answer;if(a.matchId!==r.matchId||a.requestId!==r.requestId||a.epoch!==r.epoch)throw Error('STALE_PREVIEW');preview={requestId:r.requestId,value:copy(a.value),ids:this.match.previewBlockSkills(a.value)};}else this.match.command(command);ok=true;
+   if(command.kind==='previewBlock'){if(r.kind!=='block'||!H.validate(r,command.answer).ok)throw Error('INVALID_PREVIEW');const a=command.answer;if(a.matchId!==r.matchId||a.requestId!==r.requestId||a.epoch!==r.epoch)throw Error('STALE_PREVIEW');preview={requestId:r.requestId,value:copy(a.value),ids:this.match.previewBlockSkills(a.value)};}else this.match.command(command);ok=true;}
   }catch(e){error=String(e.message).slice(0,180);}
   const receipt={cmdId,uid,ok,error,...(preview?{preview}:{}),command:copy(command||null),decisionIndex:this.match._m.decisionIndex};this.log[cmdId]=receipt;return copy(receipt);
  }
@@ -1559,7 +1566,7 @@ class RoomAuthority{
  checkpoint(){return {schema:1,...copy(this.config),players:[...this.players],epoch:this.match.epoch,snapshot:this.match.snapshot()};}
  views(term,revision){const out={},r=this.match.request(0)||this.match.request(1);for(let actor=0;actor<2;actor++)if(this.players[actor]!=='AI'){
   const uid=this.players[actor],last=Object.values(this.log).filter(x=>x.uid===uid).at(-1);
-  out[uid]=JSON.stringify({term,revision,actor,pendingActor:r?.actor??null,view:this.match.view(actor),receipt:last?{cmdId:last.cmdId,ok:last.ok,error:last.error,...(last.preview?{preview:last.preview}:{})}:null});
+  out[uid]=JSON.stringify({term,revision,actor,epoch:this.match.epoch,pendingActor:r?.actor??null,view:this.match.view(actor),receipt:last?{cmdId:last.cmdId,ok:last.ok,error:last.error,...(last.preview?{preview:last.preview}:{})}:null});
  }return out;}
  bundle(term,revision,writer){return {term,revision,writer,matchId:this.config.id,checkpointJSON:JSON.stringify(this.checkpoint()),logJSON:JSON.stringify(this.log),views:this.views(term,revision),updatedAt:Date.now()};}
 }
@@ -1581,7 +1588,7 @@ function rotateView(view,actor){
  for(const s of v.statuses||[])s.player=flip(s.player,actor);if(v.waitingFor)v.waitingFor.actor=flip(v.waitingFor.actor,actor);
  if(v.turn&&'player' in v.turn)v.turn.player=flip(v.turn.player,actor);
  if(v.ball&&'owner' in v.ball)v.ball.owner=flip(v.ball.owner,actor);
- for(const k of ['server','winner','firstServer','loser','diceWinner'])if(v.match&&k in v.match)v.match[k]=flip(v.match[k],actor);
+ for(const k of ['server','winner','firstServer','loser','diceWinner','surrendered'])if(v.match&&k in v.match)v.match[k]=flip(v.match[k],actor);
  if(Array.isArray(v.match?.dice))v.match.dice=[v.match.dice[1],v.match.dice[0]];
  for(const n of v.match?.notices||[]){for(const k of ['player','winner','server','loser'])if(k in n)n[k]=flip(n[k],actor);if(n.ball&&'owner' in n.ball)n.ball.owner=flip(n.ball.owner,actor);}
  for(const e of v.publicLog||[]){if('player' in e)e.player=flip(e.player,actor);for(const d of e.draws||[])if('player' in d)d.player=flip(d.player,actor);}
@@ -1613,6 +1620,7 @@ class OnlineSession{
   if(newMatch){this.noticeIndex=this.last?0:Math.max(0,(v.view.match.notices?.length||0)-1);this.resume=null;this.previewCache.clear();this.previewFlight=null;}
   if(this.last?.view.request?.requestId!==v.view.request?.requestId){this.previewCache.clear();this.previewFlight=null;}
   if(v.receipt?.preview){const p=v.receipt.preview;this.previewCache.set(previewKey(p.requestId,p.value),p.ids);this.previewFlight=null;}else if(v.receipt?.ok===false&&this.previewFlight){this.previewCache.set(this.previewFlight,[]);this.previewFlight=null;}
+  if(v.view.match.phase==='finished'){this.resume=null;this.noticeIndex=v.view.match.notices?.length||0;}
   this.term=v.term;this.last=v;if(!this.stopped&&!this.resume)this._drive();
  }
  _drive(){
@@ -1631,6 +1639,7 @@ class OnlineSession{
    if(r&&r.actor===v.actor&&this.available&&!this.client.pending){this.waiting=r;this.callbacks.onRequest?.(r);}
   }catch(e){this.callbacks.onError?.(e);}
  }
+ surrender(){if(this.stopped||!this.last||!this.available||this.client.pending||this.last.view.match.phase==='finished')throw Error('請等待連線恢復後投降');if(!Number.isInteger(this.last.epoch))throw Error('請房主更新頁面後再試投降');return this.client.send({kind:'surrender',actor:this.last.actor,matchId:this.last.view.match.id,epoch:this.last.epoch});}
  submit(command){
   if(this.stopped||!this.waiting||!this.available||this.client.pending)throw Error('NO_LOCAL_DECISION');
   this.waiting=null;

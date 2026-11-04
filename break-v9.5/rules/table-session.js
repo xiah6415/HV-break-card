@@ -15,7 +15,7 @@ function boardView(view,deckKeys){
    court,handRefs:Array.isArray(p.hand)?p.hand:[],top:key=>area[key]?.at(-1)||null,guts:key=>Math.max(0,(area[key]?.length||0)-1),
    ts:{finished:view.match.phase!=='rally',receiver:area.receive.at(-1),setter:area.toss.at(-1),attacker:area.attack.at(-1),rcv:parameter('receive','rcv'),toss:parameter('toss','tos'),atk:parameter('attack','atk'),sides:court.filter(c=>c.role==='side_blocker').map(c=>short(c.cardNo))},parameter};
  });
- return {native:true,statuses:view.statuses||[],waitingFor:view.waitingFor||null,mode:view.match.mode,players,rallyNo:view.match.rally,server:view.match.server,firstServer:view.match.server,target:view.ball?1-view.ball.owner:null,turnP:view.match.phase==='rally'?players[view.turn.player]:null,winner:view.match.winner==null?null:players[view.match.winner],ball:view.ball?{type:view.ball.kind,off:view.ball.offense}:null,
+ return {native:true,endReason:view.match.endReason,surrendered:view.match.surrendered,statuses:view.statuses||[],waitingFor:view.waitingFor||null,mode:view.match.mode,players,rallyNo:view.match.rally,server:view.match.server,firstServer:view.match.server,target:view.ball?1-view.ball.owner:null,turnP:view.match.phase==='rally'?players[view.turn.player]:null,winner:view.match.winner==null?null:players[view.match.winner],ball:view.ball?{type:view.ball.kind,off:view.ball.offense}:null,
   cardName:(p,key)=>p.court.find(c=>c.key===key)?.name||'',parameter:(p,key,param)=>p.parameter(key,param),
   courtTargets:p=>p.court.map(c=>({key:c.key,card:short(c.cardNo)})),roleReference:(p,key)=>{const c=p.court.find(c=>c.key===key);return c?{id:c.id,incarnation:c.incarnation}:null;},cardReference:(p,zone,index)=>zone==='hand'&&p.handRefs[index]?{id:p.handRefs[index].id,incarnation:p.handRefs[index].incarnation}:null};
 }
@@ -29,7 +29,7 @@ class TableSession {
  static fromCheckpoint(record,callbacks={}){
   if(record?.version!==1||!Array.isArray(record.journal)||record.journal.length>50000||!Number.isInteger(record.noticeIndex))throw Error('INVALID_SOLO_SAVE');
   const s=new this(record.options,callbacks);s.match.restore(record.base);s.saveBase=copy(record.base);
-  for(const e of record.journal){const r=s.match.request(0)||s.match.request(1);if(!r||r.actor!==e.actor)throw Error('SOLO_REPLAY_DIVERGED');
+  for(const e of record.journal){if(e.kind==='surrender'){s.local.command({kind:'surrender',actor:e.actor,matchId:s.match._m.id,epoch:s.match.epoch});continue;}const r=s.match.request(0)||s.match.request(1);if(!r||r.actor!==e.actor)throw Error('SOLO_REPLAY_DIVERGED');
    if(e.kind==='manual'||e.kind==='loss')s.local.command({kind:e.kind,matchId:r.matchId,requestId:r.requestId,epoch:r.epoch,actor:r.actor,...(e.kind==='manual'?{action:copy(e.value)}:{})});
    else{if(r.kind!==e.kind)throw Error('SOLO_REPLAY_DIVERGED');s.local.command({kind:'answer',answer:H.makeAnswer(r,e.value)});}
   }
@@ -55,6 +55,7 @@ class TableSession {
  }
  _error(e){this.stop();this.callbacks.onError?.(e);}
  submit(command){if(this.stopped||!this.waiting)throw Error('NO_LOCAL_DECISION');this.local.command(command);this._drive();}
+ surrender(){if(this.stopped)throw Error('SESSION_STOPPED');clearTimeout(this.timer);this.token++;this.local.command({kind:'surrender',actor:0,matchId:this.match._m.id,epoch:this.match.epoch});this.noticeIndex=this.match._m.notices.length;this._drive();}
  undo(){if(this.stopped||!this.local.undo())return false;this.noticeIndex=Math.min(this.noticeIndex,this.match.view(0).match.notices.length);this._drive();return true;}
 }
 module.exports={TableSession,boardView};

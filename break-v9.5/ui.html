@@ -773,6 +773,7 @@ body.playing .dock[data-mode="court"] [data-kind="parameter"] .hc-go{display:non
       <label class="field" for="myDeck">牌組<select id="myDeck"><option value="">尚無牌組</option></select></label>
       <p class="sub" id="deckHint" role="status">尚無牌組，請先組牌或匯入牌組。</p>
       <div class="opts"><label class="chip"><input type="checkbox" id="deckPublic"> 公開這副牌組</label><button class="chip" type="button" id="shareRetry" hidden>重試公開同步</button></div><p class="sub" id="deckVisibilityStatus" role="status"></p>
+      <section id="myCloudSection" hidden><h3>我的雲端牌組</h3><p class="sub" id="myCloudMessage" role="status"></p><div id="myCloudRows" style="max-height:240px;overflow:auto"></div></section>
       <div class="deckstrip" id="myStrip"></div>
       <div class="opts"><button class="chip" type="button" id="newDeck">＋內建組牌器</button><button class="chip" type="button" id="editMyDeck">編輯</button><button class="chip" type="button" id="renameDeck">改名</button><button class="chip" type="button" id="deleteDeck">刪除</button><button class="chip" type="button" id="exportDeck">匯出分享碼</button></div>
       <a class="chip" id="buildDeck" href="https://weilun2022.github.io/haikyuu-cards/" target="_blank" rel="noopener noreferrer">🃏 到卡牌資料庫組牌</a>
@@ -1404,7 +1405,7 @@ body.playing .dock[data-mode="court"] [data-kind="parameter"] .hc-go{display:non
     $('manualBtn').hidden = !(game.mode==='numeric' && pending?.req.canManual);
     if (game.winner) {
       dock.classList.remove('wait');
-      $('dockQ').textContent = game.winner.idx === 0 ? '你贏了！' : `${oppName} 贏了`;
+      $('dockQ').textContent = game.endReason==='surrender'?(game.surrendered===0?`你已投降・${oppName} 獲勝`:`${oppName} 已投降・你獲勝！`):game.winner.idx === 0 ? '你贏了！' : `${oppName} 贏了`;
       $('dockOpts').innerHTML = '<button class="opt primary" type="button" data-act="again">再打一場</button><button class="opt" type="button" data-act="setup">換牌組</button><button class="opt" type="button" data-act="log">看紀錄</button>';
       if(OL.inGame){const again=$('dockOpts').querySelector('[data-act="again"]'),voted=OL.meta?.rematch?.[OL.client.user.uid]===session?.last?.view.match.id;again.disabled=voted||!OL.client.online||OL.meta?.status!=='finished';again.textContent=voted?'已確認，等待對手':'再來一局';again.title='雙方確認後在同一房間開始新局';$('dockOpts').querySelector('[data-act="setup"]').textContent='離開房間';}
     } else if (pending) {
@@ -1514,13 +1515,29 @@ body.playing .dock[data-mode="court"] [data-kind="parameter"] .hc-go{display:non
   document.addEventListener('pointerup', endDrag); document.addEventListener('pointercancel', endDrag);
   function showLog() { openSheet(`<h3>對局紀錄</h3><div class="log" style="max-height:60vh">${logBuf.map(([s, c]) => `<div class="${c || ''}">${esc(s)}</div>`).join('')}</div>`); const l = $('sheetBox').querySelector('.log'); l.scrollTop = l.scrollHeight; }
   $('logBtn').onclick = showLog;
-  $('menuBtn').onclick = () => openSheet(OL.inGame ? '<h3>選單</h3><div class="opts"><button class="opt" type="button" id="mLeave">離開房間（回到大廳）</button></div><p class="sub">離開後可從大廳「回到房間」接續；房主離開時對手可接手。</p>'+'<h3>外觀</h3>'+bkThemeSeg()+hintSettings() : '<h3>選單</h3><div class="opts"><button class="opt primary" type="button" id="mRestart">重新開始這場</button><button class="opt" type="button" id="mSetup">回到選牌組</button></div>'+'<h3>外觀</h3>'+bkThemeSeg()+hintSettings());
-  $('sheet').addEventListener('click', e => { if (e.target.id === 'mRestart') { closeSheet(); restartSolo(); } if (e.target.id === 'mSetup') { closeSheet(); backToSetup(); } if (e.target.id === 'mLeave') { closeSheet(); olRun(async () => { await OL.client.leave(); olLeaveGame(); })(); } });
+  function openGameMenu(){
+    openSheet('<h3>對局選單</h3><div class="opts"><button class="opt danger" type="button" id="mSurrender" '+(game?.winner?'disabled':'')+'>投降</button><button class="opt" type="button" id="mHome">回到主頁</button>'+(OL.inGame?'':'<button class="opt" type="button" id="mRestart">重新開始這場</button>')+'</div><h3>外觀</h3>'+bkThemeSeg()+hintSettings());
+  }
+  function confirmGameAction(kind){
+    const surrender=kind==='surrender',current=session,id=OL.inGame?session?.last?.view.match.id:session?.match?._m.id;
+    openSheet(`<h3>${surrender?'確定投降？':'回到主頁？'}</h3><p>${surrender?'投降會結束整場對局，對手獲勝；無法 Undo。':OL.inGame?'將離開房間並回到主頁。房間保留，對手可接手；這不會判定投降。':'目前對局會保存在此裝置，可從主頁繼續。'}</p><p id="exitMessage" role="alert"></p><div class="opts"><button class="opt ${surrender?'danger':'primary'}" id="confirmGameAction" type="button">${surrender?'確認投降':'確認回到主頁'}</button><button class="opt" id="cancelGameAction" type="button">繼續對局</button></div>`);
+    $('cancelGameAction').onclick=closeSheet;
+    $('confirmGameAction').onclick=async()=>{const button=$('confirmGameAction');button.disabled=true;try{
+      const now=OL.inGame?session?.last?.view.match.id:session?.match?._m.id;
+      if(session!==current||now!==id)throw Error('對局已更新，請重新選擇');
+      if(surrender){if(OL.inGame&&!olCanSend(session.last))throw Error('請等待連線恢復後投降');await session.surrender();closeSheet();}
+      else{if(OL.inGame)await OL.client.leave();closeSheet();backToSetup();setMode('solo');const u=new URL(location.href);u.searchParams.delete('online');u.searchParams.delete('room');history.replaceState(null,'',u);}
+    }catch(e){if($('exitMessage'))$('exitMessage').textContent=e.message;button.disabled=false;}};
+  }
+  $('menuBtn').onclick=openGameMenu;
+  $('sheet').addEventListener('click',e=>{if(e.target.id==='mRestart'){closeSheet();restartSolo();}if(e.target.id==='mSurrender')confirmGameAction('surrender');if(e.target.id==='mHome'||e.target.id==='mSetup'||e.target.id==='mLeave')confirmGameAction('home');});
+
   function backToSetup() { courtParamOpen=null;courtNextTarget=null;$('courtParamPicker').hidden=true;presentation.reset();priorStatuses=null;statusToastUntil=0;$('hintToast').hidden=true;clearTimeout(hintToastTimer);persistSolo(false);nativeWidget?.destroy();nativeWidget=null;session?.stop(); session = null; game = null; pending = null; turnNotice = null; renderTransition(); $('game').hidden = true; $('dock').hidden = true; $('tbtns').hidden = true; $('setup').hidden = false; $('modebar').hidden = false; document.body.classList.remove('playing'); delete document.body.dataset.dock; }
 
   function publicLogText(e) {
     const who=e.player===0?'你':oppName;
     if(e.type==='skill_resolved'){const params={receive:'接球',toss:'舉球',attack:'攻擊',serve:'發球',block:'攔網'},parts=[...(e.draws||[]).map(d=>(d.player===e.player?'':d.player===0?'你':oppName)+'抽 '+d.count+' 張'),...(e.numeric||[]).map(n=>(params[n.parameter]||'數值')+(n.operation==='set'?'設為 '+n.value:(n.value>=0?' +':' ')+n.value))];return `${who}・${nm(e.cardNo.replace(/^HV-?/,''))} 技能已結算${parts.length?'：'+parts.join('、'):''}`;}
+    if(e.type==='surrender')return `${who}投降，${e.player===0?oppName:'你'}獲勝`;
     if(e.type==='draw')return `${who}抽${e.count}張`;
     if(e.type==='deck_view'&&e.visibility==='look')return `${who}查看牌庫頂 ${e.count} 張`;
     if(e.type==='deck_view')return `${who}公開：${(e.cards||[]).map(c=>nm(c.cardNo.replace(/^HV-?/,''))).join('、')||'牌庫為空'}`;
@@ -1604,9 +1621,15 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
   const olRun = f => async () => { try { olToast(''); await f(); } catch (e) { olToast(olFriendly(e)); } };
   // Optional account and cloud backups share the multiplayer Firebase session.
   let accountUser=null,accountIdentity='',accountReady=false,accountLoadFailed=false,accountBusy=false,accountMessage='',cloudRows=[],cloudTarget='me';
-  function accountRender(){const member=!!accountUser&&!accountUser.isAnonymous&&accountUser.providerData.some(p=>p.providerId==='google.com');$('accountTitle').textContent=member?(profileOf(accountUser.uid)?.name||accountUser.displayName||'Google 帳號'):'訪客模式';$('accountAvatar').innerHTML=avatarMarkup(member?accountUser.uid:null);$('editProfile').hidden=!member;$('editProfile').disabled=accountBusy;$('accountStatus').textContent=accountMessage||(member?'本機牌組保留於此裝置；可另存雲端備份':'不需登入即可遊玩・牌組與草稿保存在此裝置');$('accountGoogle').hidden=member;$('accountLogout').hidden=!member;$('openCloud').disabled=!member||accountBusy;$('aiCloud').disabled=!member||accountBusy;$('aiCloudHint').textContent=member?'可將雲端備份或公開牌組設為 AI 對手，選取結果保存在此裝置。':'Google 登入後可選自己的雲端備份；公開牌組不需登入。';$('accountGoogle').disabled=accountBusy||(!accountReady&&!accountLoadFailed);$('accountGoogle').textContent=accountLoadFailed&&!accountReady?'重試登入連線':'Google 登入';$('accountLogout').disabled=accountBusy||!!OL.roomId;if($('cloudRows'))renderCloud();if($('publicPublish'))$('publicPublish').disabled=!member||!usableDeck($('myDeck').value)||!OL.client?.online;}
+  function accountRender(){const member=!!accountUser&&!accountUser.isAnonymous&&accountUser.providerData.some(p=>p.providerId==='google.com');$('accountTitle').textContent=member?(profileOf(accountUser.uid)?.name||accountUser.displayName||'Google 帳號'):'訪客模式';$('accountAvatar').innerHTML=avatarMarkup(member?accountUser.uid:null);$('editProfile').hidden=!member;$('editProfile').disabled=accountBusy;$('accountStatus').textContent=accountMessage||(member?'本機牌組保留於此裝置；可另存雲端備份':'不需登入即可遊玩・牌組與草稿保存在此裝置');$('accountGoogle').hidden=member;$('accountLogout').hidden=!member;$('openCloud').disabled=!member||accountBusy;$('aiCloud').disabled=!member||accountBusy;$('aiCloudHint').textContent=member?'可將雲端備份或公開牌組設為 AI 對手，選取結果保存在此裝置。':'Google 登入後可選自己的雲端備份；公開牌組不需登入。';$('accountGoogle').disabled=accountBusy||(!accountReady&&!accountLoadFailed);$('accountGoogle').textContent=accountLoadFailed&&!accountReady?'重試登入連線':'Google 登入';$('accountLogout').disabled=accountBusy||!!OL.roomId;renderInlineCloud();if($('cloudRows'))renderCloud();if($('publicPublish'))$('publicPublish').disabled=!member||!usableDeck($('myDeck').value)||!OL.client?.online;}
   function syncSharing(){sharing?.bind(accountUser,OL.public,!!OL.client?.online,profileOf(accountUser?.uid)?.name||cleanName(accountUser?.displayName)||'玩家');renderSharing();}
   function accountChanged(user){const identity=user?[user.uid,user.isAnonymous,user.providerData.some(p=>p.providerId==='google.com')].join(':'):'guest';if(accountIdentity===identity){accountUser=user;accountRender();return;}accountIdentity=identity;const wasOpen=!!$('cloudRows');accountUser=user;accountMessage='';if(wasOpen)closeSheet();OL.cloud?.bind(user);syncSharing();profileWatches();accountRender();}
+  function renderInlineCloud(){
+    const member=!!accountUser&&!accountUser.isAnonymous&&accountUser.providerData.some(p=>p.providerId==='google.com');$('myCloudSection').hidden=!member;
+    $('myCloudMessage').textContent=member?(accountMessage|| (OL.cloud?.loading?'讀取雲端牌組…':cloudRows.length?`${cloudRows.length} 副私人備份・載入後即可選用`:'尚無雲端備份，可在「雲端牌組」另存目前牌組。')):'';
+    $('myCloudRows').innerHTML=member?cloudRows.map(d=>`<article class="cloud-row"><div><strong>${esc(d.name)}</strong><small>40 張・私人備份</small></div><button class="chip" type="button" data-cloud-pick="${esc(d.id)}" ${accountBusy?'disabled':''}>載入選用</button></article>`).join(''):'';
+  }
+  $('myCloudRows').onclick=e=>{const b=e.target.closest('[data-cloud-pick]');if(!b||b.disabled)return;try{const d=cloudRows.find(d=>d.id===b.dataset.cloudPick);if(!d)throw Error('牌組已變更，請重新選擇');selectPersonal(personal.add(d));accountMessage='已載入為新的本機牌組，可開始對局。';accountRender();}catch(e){accountMessage=e.message;accountRender();}};
   function renderCloud(){if(!$('cloudRows'))return;$('cloudUpload').disabled=accountBusy||!OL.client?.online||!usableDeck($('myDeck').value);$('cloudSummary').textContent=`${cloudRows.length} 副雲端備份`;$('cloudMessage').textContent=accountMessage;$('cloudRows').innerHTML=cloudRows.map(d=>`<article class="cloud-row"><div><strong>${esc(d.name)}</strong><small>40 張 · Event ${Object.entries(d.cards).reduce((n,[c,k])=>n+(isC(c)?0:k),0)}</small></div><div class="opts"><button class="chip" type="button" data-cloud-get="${esc(d.id)}" ${accountBusy?'disabled':''}>${cloudTarget==='ai'?'設為 AI 牌組':'下載副本'}</button>${cloudTarget==='ai'?'':`<button class="chip" type="button" data-cloud-remove="${esc(d.id)}" ${accountBusy?'disabled':''}>刪除</button>`}</div></article>`).join('')||'<p class="sub">還沒有雲端備份。選擇一副本機牌組後，可另存到此帳號。</p>';}
   async function accountRun(fn){if(accountBusy)return;accountBusy=true;accountRender();try{await fn();}catch(e){accountMessage=olFriendly(e);}finally{accountBusy=false;accountRender();}}
   $('accountGoogle').onclick=()=>accountRun(async()=>{if(OL.roomId)throw Error('請先離開房間再切換帳號');if(!accountReady){await olLoad();accountMessage='登入已就緒，請再次點 Google 登入';return;}await OL.services.A.signInWithPopup(OL.services.auth,new OL.services.A.GoogleAuthProvider());});
