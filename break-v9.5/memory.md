@@ -1738,3 +1738,4 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 ## 回合動態可見性修正
 - 計畫：修正回合動畫被效果提示off連帶停用、以及簡易模式同位置飄字遮住的問題；回合中線動畫獨立於技能提示開關，自己回合不再重複排入回合飄字，播放期間暫停其他通知倒數／顯示而不遺失。必要modal關閉後才啟播；補真正onNotice→onRequest流程的normal／simple／off三尺寸測試，不只人工餵board，完整回歸部署。
 - 結果／測試：舊版真實defendStart→turn通知→request在off設定的新增測試先失敗，修正後normal／simple／off×1280／390／320九組皆確認動畫實際running；自己回合不再另排fx-turn，中線播放2秒內其他通知暫隱並保留倒數、其後恢復；維持原曲線與減少動態，modal之後才啟播。build、fuzz3000、6×300、三尺寸9整局、原動畫／抽牌提示／UI檢查及多人Undo／重連／接手／隱私回放全通過，541／358不變。
+- 部署：a69cf82已推送並發布Hosting，web.app／firebaseapp.com主要檔案HTTP200／SHA256一致；公開頁三尺寸×三提示設定九組真實交棒流程皆確認動畫播放、無重複回合飄字、通知延後恢復通過，未建立正式房間或寫入玩家資料。https://haikyuu-playmat.web.app/break-v9.5/?v=a69cf82 。
