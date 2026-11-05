@@ -663,6 +663,7 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
 .builder-empty {display:grid;justify-items:center;text-align:center;padding:42px 12px;color:var(--muted);gap:8px;}
 .builder-empty>span {display:grid;place-items:center;width:48px;height:58px;border:1.5px dashed var(--line);border-radius:9px;font-size:24px;color:var(--teal);transform:rotate(-7deg);margin-bottom:8px;}
 .builder-empty strong {color:var(--ink);font-size:13px;}.builder-empty p {font-size:11px;line-height:1.7;margin:0;max-width:190px;}
+.card-data-credit{line-height:1.7;overflow-wrap:anywhere}.card-data-credit a{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
 .builder-footer {border-top:1px solid var(--line);padding:14px 22px;display:flex;align-items:center;gap:20px;background:var(--surface);}
 .builder-draft-status {display:block;margin-top:3px;color:var(--teal);font-size:10px;}
 .builder-totals {flex:1;min-width:0;}.builder-totals b {font-size:14px;font-variant-numeric:tabular-nums;}.builder-totals p {font-size:11px;color:var(--muted);margin:5px 0 0;}
@@ -906,6 +907,7 @@ body.playing .dock:has([data-kind="drawConfirm"]){width:min(360px,calc(100vw - 1
       <a class="chip" id="buildDeck" href="https://weilun2022.github.io/haikyuu-cards/" target="_blank" rel="noopener noreferrer">🃏 到卡牌資料庫組牌</a>
       <button class="chip" type="button" id="editDeck">匯入／編輯自訂牌組</button>
       <button class="chip" type="button" id="supportBtn">卡庫／支援狀態</button>
+      <p class="sub card-data-credit" id="cardDataCredit">卡片資料與中文翻譯來自 <a href="https://weilun2022.github.io/haikyuu-cards/" target="_blank" rel="noopener noreferrer">排球少年卡牌資料庫</a>。</p>
     </div>
     <div class="panel solo-only">
       <h2>AI 對手</h2>
@@ -4178,6 +4180,7 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
   function closeSheet() {delete $('sheet').dataset.kind; $('sheetBox').onclick=null;$('sheet').hidden = true; $('turnScreen').inert = false; const callback = sheetOnClose; sheetOnClose = null; callback?.();if(OL?.profiles)profileWatches();scheduleTransition(turnNotice); requestAnimationFrame(syncMidlineMotion); }
   $('sheet').addEventListener('click', e => { if (e.target.id === 'sheet' || e.target.dataset.close) closeSheet(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+  const cardDataCredit = '<p class="sub card-data-credit">'+$('cardDataCredit').innerHTML+'</p>';
   const libraryView = {query: '', status: 'all', limit: 60};
   function cardSheet(c, fromLibrary = false, fromHand = false) {
     const meta = CL.card(c); if (!meta) return;
@@ -4185,7 +4188,7 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
     const stats = meta.kind === 'C' ? `<div class="statrow">${STAT.map(([, z], i) => `<span><b>${meta.stats[i] == null ? '－' : meta.stats[i]}</b>${z}</span>`).join('')}</div>` : '';
     const text = esc((meta.skill || DEF[c]?.[10] || '沒有技能（白板）。').replace(/\[=([^\]]+)\]/g,'【$1】')).replace(/\n/g, '<br>');
     const variants = meta.versions.length > 1 ? `<p class="sub">此卡有 ${meta.versions.length} 組卡文資料，尚待確認版本。</p>${meta.versions.map((v, i) => `<details><summary>卡文版本 ${i + 1}</summary><p>${esc(v.skill).replace(/\n/g, '<br>')}</p></details>`).join('')}` : '';
-    openSheet(`${fromHand ? '<p class="sub" id="handCardInfoHint">長按或點資訊按鈕查看卡片，不會改變原選取。關閉後可繼續選牌或按確認。</p>' : ''}${fromLibrary ? '<button class="chip" type="button" id="backLibrary">返回卡庫</button>' : ''}<div class="detail"><div>${img(c,true)}</div><div style="display:grid;gap:8px;min-width:0;overflow-wrap:anywhere"><h3>${esc(meta.name)}</h3><div class="sub">${esc(meta.number)}・${esc(meta.affiliation)}${meta.kind === 'C' ? '' : '・EVENT'}</div>${stats}<div>${text}</div>${variants}<div class="sub"><b>${supportLabel(support)}</b>${!meta.playable ? `<p>技能未自動化。${modeOptions().mode==='numeric'?'可按印刷數值組牌，效果請手動處理。':'嚴格模式尚未開放此卡。'}</p>` : ''}${support.gaps.map(x => `<p>${esc(x)}</p>`).join('')}<p><a href="${esc(meta.source)}" target="_blank" rel="noopener noreferrer">查看官方卡片</a></p></div></div></div>`);
+    openSheet(`${fromHand ? '<p class="sub" id="handCardInfoHint">長按或點資訊按鈕查看卡片，不會改變原選取。關閉後可繼續選牌或按確認。</p>' : ''}${fromLibrary ? '<button class="chip" type="button" id="backLibrary">返回卡庫</button>' : ''}<div class="detail"><div>${img(c,true)}</div><div style="display:grid;gap:8px;min-width:0;overflow-wrap:anywhere"><h3>${esc(meta.name)}</h3><div class="sub">${esc(meta.number)}・${esc(meta.affiliation)}${meta.kind === 'C' ? '' : '・EVENT'}</div>${stats}<div>${text}</div>${variants}<div class="sub"><b>${supportLabel(support)}</b>${!meta.playable ? `<p>技能未自動化。${modeOptions().mode==='numeric'?'可按印刷數值組牌，效果請手動處理。':'嚴格模式尚未開放此卡。'}</p>` : ''}${support.gaps.map(x => `<p>${esc(x)}</p>`).join('')}<p><a href="${esc(meta.source)}" target="_blank" rel="noopener noreferrer">查看官方卡片</a></p></div>${cardDataCredit}</div></div>`);
     if (fromLibrary) $('backLibrary').onclick = openLibrary;
   }
   function supportLabel(card) { return { basic: '無技能卡：數值已核對', 'scenario-tested': '主要技能情境已測試', partial: '部分技能待補', locked: '技能未自動化' }[card.status]; }
@@ -4197,7 +4200,7 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
   }
   function openLibrary() {
     const n = CL.data.counts;
-    openSheet(`<h3>全卡庫與支援狀態</h3><p>${n.cards} 張卡片可查閱，${modeOptions().mode==='numeric'?n.cards:n.playable} 張可對戰（${modeOptions().mode==='numeric'?'數值':'嚴格'}模式，含 ${n.basic} 張無技能卡）；${n.locked} 張技能卡尚未自動化。</p><p class="sub">點卡片查看卡圖、數值與效果。主要情境通過仍不等於所有技能組合皆已驗證。</p><label>搜尋卡號、名稱或所屬<input id="libraryQuery" type="search" placeholder="例如：P03-004、日向、稲荷崎" style="width:100%;min-width:0;box-sizing:border-box"></label><label>顯示範圍<select id="libraryStatus" style="width:100%"><option value="all">全部卡片</option><option value="playable">可對戰</option><option value="locked">技能未自動化</option></select></label><p class="sub" id="libraryCount" aria-live="polite"></p><div id="libraryList" style="display:grid;gap:8px"></div><button class="chip" type="button" id="libraryMore">顯示更多</button>`);
+    openSheet(`<h3>全卡庫與支援狀態</h3>${cardDataCredit}<p>${n.cards} 張卡片可查閱，${modeOptions().mode==='numeric'?n.cards:n.playable} 張可對戰（${modeOptions().mode==='numeric'?'數值':'嚴格'}模式，含 ${n.basic} 張無技能卡）；${n.locked} 張技能卡尚未自動化。</p><p class="sub">點卡片查看卡圖、數值與效果。主要情境通過仍不等於所有技能組合皆已驗證。</p><label>搜尋卡號、名稱或所屬<input id="libraryQuery" type="search" placeholder="例如：P03-004、日向、稲荷崎" style="width:100%;min-width:0;box-sizing:border-box"></label><label>顯示範圍<select id="libraryStatus" style="width:100%"><option value="all">全部卡片</option><option value="playable">可對戰</option><option value="locked">技能未自動化</option></select></label><p class="sub" id="libraryCount" aria-live="polite"></p><div id="libraryList" style="display:grid;gap:8px"></div><button class="chip" type="button" id="libraryMore">顯示更多</button>`);
     $('libraryQuery').value = libraryView.query; $('libraryStatus').value = libraryView.status;
     $('libraryQuery').oninput = () => { libraryView.query = $('libraryQuery').value; libraryView.limit = 60; renderLibrary(); };
     $('libraryStatus').onchange = () => { libraryView.status = $('libraryStatus').value; libraryView.limit = 60; renderLibrary(); };
