@@ -1,0 +1,26 @@
+'use strict';
+const A=require('node:assert/strict'),{Match}=require('./match'),{TableSession,boardView}=require('./table-session'),{rotateView}=require('./online-session'),H=require('../host-choice');
+const deck=['P02-016','D01-001',...Array(38).fill('D01-009')],options={id:'turn-parameter-history',seed:7,decks:[deck,deck],mode:'numeric',wantsAck:[true,true]};
+const m=new Match(options),k=m._kernel;
+Object.assign(m._m,{pending:null,continuation:null,phase:'rally',rally:1,actor:0,turnNo:1,pc:'turnEnd',outgoingType:'attack',roleTotals:[{},{}]});k.state.stage='rally';k.state.turn={id:1,player:0,phase:'attack',step:'free'};k.state.ball={kind:'attack',offense:1,owner:1};
+const put=(no,z)=>{const id=Object.values(k.state.cards).find(c=>c.owner===0&&c.cardNo==='HV-'+no).id;k._atomic(()=>k._move(id,0,z,k._context(id,0)));return id;};
+const toss=put('P02-016','toss'),attack=put('D01-001','attack'),attackBase=k.card(attack).printed.parameters.attack;
+const add=(id,param,value,duration='this_turn')=>k.effect('numeric',{target:k.reference(id),parameter:param,operation:'add',value},k._context(id,0),duration);
+add(toss,'toss',2);add(attack,'attack',1);add(attack,'attack',2,'next_opponent_turn');m._pump();A.equal(m.request(0).kind,'turnEnd');
+const before=m.snapshot(),answer=()=>m.command({kind:'answer',answer:H.makeAnswer(m.request(0),true)});answer();
+A.equal(k.state.turn.player,1);A.equal(k.parameter(toss,'toss'),1,'this-turn bonus actually expires');A.equal(k.parameter(attack,'attack'),attackBase+2,'next-opponent-turn bonus becomes effective independently');
+const state=m.snapshot(),view=m.view(0),c=view.players[0].court.find(c=>c.id===toss),d=view.players[0].court.find(c=>c.id===attack);
+A.equal(c.parameters.toss,1);A.equal(c.previousTurnParameters.details.toss.total,3);A.equal(c.previousTurnParameters.turn,1);A.equal(d.previousTurnParameters.details.attack.total,attackBase+1);A.deepEqual(Object.keys(c.previousTurnParameters.details),['toss'],'only modified public parameters are stored');
+A.equal(boardView(view,['a','b']).players[0].court.find(x=>x.id===toss).previousTurnParameters.details.toss.total,3);
+A.equal(rotateView(m.view(1),1).players[1].court.find(x=>x.id===toss).previousTurnParameters.details.toss.total,3,'second seat sees same public recap');A(!Array.isArray(m.view(1).players[0].hand));A(!/"(?:source|target|effectId)"/.test(JSON.stringify(c.previousTurnParameters)));A.deepEqual(m.snapshot(),state,'views do not mutate state or RNG');
+const restored=new Match(options);restored.restore(state);A.equal(restored.view(1).players[0].court.find(x=>x.id===toss).previousTurnParameters.details.toss.total,3,'reconnect restores recap');
+m.restore(before);A.equal(m.view(0).players[0].court.find(x=>x.id===toss).previousTurnParameters,undefined,'Undo returns to live own-turn values');answer();A.deepEqual(m.snapshot().match.lastTurnParameters,state.match.lastTurnParameters,'replay reconstructs same recap');
+m._begin(0,'draw');A.equal(m.view(0).players[0].court.find(x=>x.id===toss).previousTurnParameters,undefined,'own new turn clears recap');
+m.restore(state);k._atomic(()=>{k._move(toss,0,'hand',k._context(toss,0));k._move(toss,0,'toss',k._context(toss,0));});A.equal(m.view(0).players[0].court.find(x=>x.id===toss).previousTurnParameters,undefined,'re-entry never reuses old arithmetic');
+m.restore(state);m._m.rally++;A.equal(m.view(0).players[0].court.find(x=>x.id===toss).previousTurnParameters,undefined,'new rally never shows stale recap');
+m.restore(state);m._m.phase='loss';A.equal(m.view(0).players[0].court.find(x=>x.id===toss).previousTurnParameters,undefined,'loss/interval clears presentation');
+// The pre-update checksum included no recap field. Saved journals must still load.
+const s=new TableSession(options);s.match.restore(before);s.checkpoint();s.local.command({kind:'answer',answer:H.makeAnswer(s.match.request(0),true)});const record=s.checkpoint(),legacyState=JSON.parse(JSON.stringify(s.match.snapshot(),(key,v)=>key==='lastTurnParameters'?undefined:v));
+let hash=2166136261;const legacyJSON=JSON.stringify(legacyState,(key,v)=>['epoch','requestId','uiPresentation'].includes(key)?undefined:v);for(let i=0;i<legacyJSON.length;i++){hash^=legacyJSON.charCodeAt(i);hash=Math.imul(hash,16777619);}record.stamp=(hash>>>0).toString(16);
+const loaded=TableSession.fromCheckpoint(record);A.equal(loaded.checkpoint().stamp,record.stamp);A.equal(loaded.match._kernel.parameter(toss,'toss'),1);
+console.log('turn arithmetic recap: correct expiry/active totals, public-only details, both seats, Undo/replay, reconnect, re-entry/new turn/rally, legacy saved checksum passed');

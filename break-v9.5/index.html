@@ -848,6 +848,9 @@ body.playing .dock[data-mode="hand"]:has([data-kind="event"] .hc-go:disabled) .h
 body.playing .dock .hc-err:empty{display:none}
 /* 抽牌確認保留兩側牌庫可點區域。 */
 body.playing .dock:has([data-kind="drawConfirm"]){width:min(360px,calc(100vw - 112px))}
+
+.hand.fan [data-hand]{-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
+.area .v.historical::after{content:'上回合結算';display:block;font-size:9px;font-weight:500;line-height:1.2}
 </style>
 <script>
 /* 外觀：bk_theme = light（預設）｜dark｜auto（跟隨系統）；在繪製前套用避免閃爍 */
@@ -944,7 +947,7 @@ body.playing .dock:has([data-kind="drawConfirm"]){width:min(360px,calc(100vw - 1
         <li>接球回合：抽 1 → 接球 → 舉球 → 攻擊；舉球不能和接球同名，攻擊不能和舉球同名。</li>
         <li>對手攻擊過來可以改攔網（不抽牌）；發球和攔網回球只能接。</li>
         <li>沒有セットカード時再失分就輸。</li>
-        <li>亮橘框的手牌可以直接點來出牌；手牌選取後再點可看完整效果。</li>
+        <li>亮橘框的手牌可以直接點來出牌；手牌長按或點資訊按鈕可看完整效果。</li>
       </ul>
       <label class="field" for="turnPromptStyle">正常提示的回合／發球過場
         <select id="turnPromptStyle"><option value="auto" selected>顯示 1 秒後繼續</option><option value="manual">點擊後繼續</option></select>
@@ -2288,7 +2291,7 @@ class Match {
   delete this._m.outgoingResolution;
   if(!this._m.turnNo){this._kernel.state.turn={id:1,player:p,phase,step:'free'};}
   else {this._kernel.state.stage='rally';this._kernel.state.turn.step='cleaned';this._kernel.beginTurn(p,phase);}
-  this._m.turnNo=this._kernel.state.turn.id;this._m.actor=p;this._m.roleTotals[p]={};
+  this._m.turnNo=this._kernel.state.turn.id;this._m.actor=p;this._m.roleTotals[p]={};if(this._m.lastTurnParameters)this._m.lastTurnParameters[p]=null;
  }
  _lose(reason){this._m.loser=this._m.actor;this._m.lossReason=reason;this._next(this._m.wantsAck[this._m.actor]?'lossConfirm':'lossResolve');}
  _param(p,area){const id=this._kernel.top(p,area);return id?this._kernel.parameter(id,area):0;}
@@ -2355,7 +2358,7 @@ class Match {
    case 'attack': this._setPhase('attack');this._pick('attack','attacker','attackEvent');break;
    case 'attackEvent': this._event('attackDone');break;
    case 'attackDone': this._m.roleTotals[p].toss=this._param(p,'toss');this._m.roleTotals[p].attack=this._param(p,'attack');this._m.outgoingType='attack';this._next('turnEnd');break;
-   case 'turnEnd': {const out=this._resolvedOutgoing();if(this._m.wantsAck[p])this._ask('turnEnd',p,{type:'ack'},[true],{outgoing:copy(out)});this._m.outgoing=copy(out);const parts={toss:this._param(p,'toss'),attack:this._param(p,'attack')};this._m.outgoingDetails=out.kind==='attack'&&Number.isInteger(parts.toss)&&Number.isInteger(parts.attack)&&parts.toss+parts.attack===out.offense?parts:null;k.endTurn();k.state.ball=out;this._next('defendStart');break;}
+   case 'turnEnd': {const out=this._resolvedOutgoing();if(this._m.wantsAck[p])this._ask('turnEnd',p,{type:'ack'},[true],{outgoing:copy(out)});this._m.outgoing=copy(out);const parts={toss:this._param(p,'toss'),attack:this._param(p,'attack')};this._m.outgoingDetails=out.kind==='attack'&&Number.isInteger(parts.toss)&&Number.isInteger(parts.attack)&&parts.toss+parts.attack===out.offense?parts:null;this._m.lastTurnParameters||=[null,null];this._m.lastTurnParameters[p]={turn:k.state.turn.id,rally:this._m.rally,cards:k.view(p).players[p].court.map(c=>({id:c.id,incarnation:k.card(c.id).incarnation,details:Object.fromEntries(Object.entries(ParameterView.parameterDetails(k,c.id)).filter(([,d])=>ParameterView.formatParameter(d,d.total).changed))})).filter(c=>Object.keys(c.details).length)};k.endTurn();k.state.ball=out;this._next('defendStart');break;}
    case 'lossConfirm': this._ask('lossConfirm',p,{type:'ack'},[true],{reason:this._m.lossReason});this._next('lossResolve');break;
    case 'lossResolve': {this._cleanupSides(p);k.loss(p,{voluntary:false});k.finishLoss();this._m.phase='loss';this._notice('loss',{player:p,reason:this._m.lossReason,winner:1-p,final:!this._zone(p,'sets').length});if(!this._zone(p,'sets').length){this._m.winner=1-p;this._m.phase='finished';this._next('done');}else this._next('interval');break;}
    case 'interval': {this._m.phase='interval';for(let q=0;q<2;q++)k.drawRule(q,Math.max(0,6-this._zone(q,'hand').length));this._move(k.top(p,'sets'),p,'hand');this._m.server=1-p;this._next('rallyStart');break;}
@@ -2404,7 +2407,7 @@ class Match {
   if(!m.rng||!snapshot.rng||['algorithm','word','calls'].some(key=>m.rng[key]!==snapshot.rng[key])||m.rng.algorithm!=='mulberry32-v1'||!Number.isSafeInteger(m.rng.calls)||m.rng.calls<0||m.rng.word!==((m.seed>>>0)+Math.imul(m.rng.calls,0x6D2B79F5)>>>0)||m.decisionIndex!==m.history?.length||!['setup','rally','loss','interval','finished'].includes(m.phase)||m.pending&&!host.validateRequest(m.pending))throw Error('Invalid match checkpoint');
   const state=copy(snapshot);delete state.match.rng;this._kernel.restore(state);this.epoch++;if(this._m.pending){this._m.pending.epoch=this.epoch;this._m.pending.requestId=this._m.id+':'+this.epoch+':'+this._m.decisionIndex;}return this;
  }
- view(actor){if(![0,1].includes(actor))throw Error('Unknown viewer');const view=this._kernel.view(actor);for(const p of view.players)for(const c of [...(Array.isArray(p.hand)?p.hand:[]),...p.court])c.incarnation=this._kernel.card(c.id).incarnation;for(const p of view.players)for(const c of p.court)c.parameterDetails=ParameterView.parameterDetails(this._kernel,c.id);const pending=this._m.pending,waitingFor=pending?.uiPresentation?.handDiscard?{actor:pending.actor,kind:'discard',count:pending.input.min}:null;return {...view,statuses:StatusView.statuses(this._kernel,actor),waitingFor,match:{id:this._m.id,mode:this._m.mode,phase:this._m.phase,rally:this._m.rally,server:this._m.server,winner:this._m.winner,...(this._m.endReason?{endReason:this._m.endReason,surrendered:this._m.surrendered}:{}),dice:copy(this._m.dice),decisionIndex:this._m.decisionIndex,notices:copy(this._m.notices)},request:this.request(actor)};}
+ view(actor){if(![0,1].includes(actor))throw Error('Unknown viewer');const view=this._kernel.view(actor);for(const p of view.players)for(const c of [...(Array.isArray(p.hand)?p.hand:[]),...p.court])c.incarnation=this._kernel.card(c.id).incarnation;for(const [player,p] of view.players.entries())for(const c of p.court){c.parameterDetails=ParameterView.parameterDetails(this._kernel,c.id);const last=this._m.lastTurnParameters?.[player],saved=this._m.phase==='rally'&&last?.rally===this._m.rally&&player!==view.turn.player?last.cards.find(x=>x.id===c.id&&x.incarnation===c.incarnation):null;if(saved)c.previousTurnParameters={turn:last.turn,details:copy(saved.details)};}const pending=this._m.pending,waitingFor=pending?.uiPresentation?.handDiscard?{actor:pending.actor,kind:'discard',count:pending.input.min}:null;return {...view,statuses:StatusView.statuses(this._kernel,actor),waitingFor,match:{id:this._m.id,mode:this._m.mode,phase:this._m.phase,rally:this._m.rally,server:this._m.server,winner:this._m.winner,...(this._m.endReason?{endReason:this._m.endReason,surrendered:this._m.surrendered}:{}),dice:copy(this._m.dice),decisionIndex:this._m.decisionIndex,notices:copy(this._m.notices)},request:this.request(actor)};}
 }
 module.exports={Match,signature,formatParameter:ParameterView.formatParameter};
 
@@ -2495,7 +2498,7 @@ const {LocalSession}=require('./local-session');
 const H=require('../host-choice'),AI=require('../match-ai');
 const short=c=>c.replace(/^HV-?/,'');
 const copy=x=>JSON.parse(JSON.stringify(x));
-function checkpointStamp(state){let n=2166136261;const json=JSON.stringify(state,(key,value)=>['epoch','requestId','uiPresentation'].includes(key)?undefined:value);for(let i=0;i<json.length;i++){n^=json.charCodeAt(i);n=Math.imul(n,16777619);}return (n>>>0).toString(16);}
+function checkpointStamp(state){let n=2166136261;const json=JSON.stringify(state,(key,value)=>['epoch','requestId','uiPresentation','lastTurnParameters'].includes(key)?undefined:value);for(let i=0;i<json.length;i++){n^=json.charCodeAt(i);n=Math.imul(n,16777619);}return (n>>>0).toString(16);}
 const fields={srv:'serve',blk:'block',rcv:'receive',tos:'toss',atk:'attack'};
 function boardView(view,deckKeys){
  const players=view.players.map((p,idx)=>{
@@ -4179,7 +4182,7 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
     const stats = meta.kind === 'C' ? `<div class="statrow">${STAT.map(([, z], i) => `<span><b>${meta.stats[i] == null ? '－' : meta.stats[i]}</b>${z}</span>`).join('')}</div>` : '';
     const text = esc((meta.skill || DEF[c]?.[10] || '沒有技能（白板）。').replace(/\[=([^\]]+)\]/g,'【$1】')).replace(/\n/g, '<br>');
     const variants = meta.versions.length > 1 ? `<p class="sub">此卡有 ${meta.versions.length} 組卡文資料，尚待確認版本。</p>${meta.versions.map((v, i) => `<details><summary>卡文版本 ${i + 1}</summary><p>${esc(v.skill).replace(/\n/g, '<br>')}</p></details>`).join('')}` : '';
-    openSheet(`${fromHand ? '<p class="sub" id="handCardInfoHint">第二次點擊查看資訊，不會改變原選取。關閉後可繼續選牌或按確認。</p>' : ''}${fromLibrary ? '<button class="chip" type="button" id="backLibrary">返回卡庫</button>' : ''}<div class="detail"><div>${img(c,true)}</div><div style="display:grid;gap:8px;min-width:0;overflow-wrap:anywhere"><h3>${esc(meta.name)}</h3><div class="sub">${esc(meta.number)}・${esc(meta.affiliation)}${meta.kind === 'C' ? '' : '・EVENT'}</div>${stats}<div>${text}</div>${variants}<div class="sub"><b>${supportLabel(support)}</b>${!meta.playable ? `<p>技能未自動化。${modeOptions().mode==='numeric'?'可按印刷數值組牌，效果請手動處理。':'嚴格模式尚未開放此卡。'}</p>` : ''}${support.gaps.map(x => `<p>${esc(x)}</p>`).join('')}<p><a href="${esc(meta.source)}" target="_blank" rel="noopener noreferrer">查看官方卡片</a></p></div></div></div>`);
+    openSheet(`${fromHand ? '<p class="sub" id="handCardInfoHint">長按或點資訊按鈕查看卡片，不會改變原選取。關閉後可繼續選牌或按確認。</p>' : ''}${fromLibrary ? '<button class="chip" type="button" id="backLibrary">返回卡庫</button>' : ''}<div class="detail"><div>${img(c,true)}</div><div style="display:grid;gap:8px;min-width:0;overflow-wrap:anywhere"><h3>${esc(meta.name)}</h3><div class="sub">${esc(meta.number)}・${esc(meta.affiliation)}${meta.kind === 'C' ? '' : '・EVENT'}</div>${stats}<div>${text}</div>${variants}<div class="sub"><b>${supportLabel(support)}</b>${!meta.playable ? `<p>技能未自動化。${modeOptions().mode==='numeric'?'可按印刷數值組牌，效果請手動處理。':'嚴格模式尚未開放此卡。'}</p>` : ''}${support.gaps.map(x => `<p>${esc(x)}</p>`).join('')}<p><a href="${esc(meta.source)}" target="_blank" rel="noopener noreferrer">查看官方卡片</a></p></div></div></div>`);
     if (fromLibrary) $('backLibrary').onclick = openLibrary;
   }
   function supportLabel(card) { return { basic: '無技能卡：數值已核對', 'scenario-tested': '主要技能情境已測試', partial: '部分技能待補', locked: '技能未自動化' }[card.status]; }
@@ -4246,7 +4249,7 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
     nativeSelection=selection;
     nextTop={};nextVal={};
     const me=game.players[0];if(courtRequest(pending?.req)==='target')$('oppSide').innerHTML=barHTML(game.players[1],false)+courtHTML(game.players[1]);$('meSide').innerHTML=courtHTML(me)+barHTML(me,true);$('handZone').innerHTML=fanHTML(me);markDiscardHand();
-    persistSolo(true);requestAnimationFrame(()=>{measureDock();presentation.sync();});
+    updateHandInfoButton();persistSolo(true);requestAnimationFrame(()=>{measureDock();presentation.sync();});
   }
   let courtParamOpen=null,courtNextTarget=null,courtUndoing=false;
   function courtRequest(r){
@@ -4284,7 +4287,7 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
       onAnswer:a=>nativeCommand({kind:'answer',answer:a}),onLoss:()=>nativeAnswer({__loss:true}),onSelection:s=>{syncNativeHand(s);olControls();if(courtRequest(r)==='parameter'&&s.value!==undefined){const value=s.value;queueMicrotask(()=>{if(pending?.req.requestId===r.requestId&&pending.req.epoch===r.epoch)nativeAnswer(value);});}}
     });
     if(['ack','drawConfirm'].includes(r.kind))$('dockOpts').querySelector('[data-hc-act="go"]').classList.add('draw-action');
-    syncNativeHand(nativeWidget.selection);
+    syncNativeHand(nativeWidget.selection);updateHandInfoButton();
   }
 
   function finishTransition(source) {
@@ -4430,7 +4433,7 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
       const ref=p.handRefs?.[i], selection=nativeSelection?.picked||[nativeSelection?.value];
       const eligible=!!req&&req.input.max!==0&&req.options.some(o=>o.value===ref?.id);
       const nativeClass=req ? selection.includes(ref?.id)?(req.kind==='mulligan'?'picked':'staged'):req.options.some(o=>o.value===ref?.id)?'sel':legal.size?'dim':'' : '';
-      return `<div class="hc ${nativeClass}${req&&(req.kind==='event'&&req.options.some(o=>o.value===ref?.id)||req.context.entrySkillIds?.includes(ref?.id)||req.kind==='block'&&nativeWidget?.timing?.ids?.includes(ref?.id))?' skill-ready':''}">${nativeSelection?.center===ref?.id?'<span class="newb ctr">中攔</span>':''}<button class="cbtn" type="button" data-hand="${i}" data-card="${c}" title="${eligible?'點一下選取，再點查看資訊':'查看卡片資訊（目前不可使用）'}" aria-label="${esc(nm(c))}・${eligible?'目前可選擇':'目前不可使用，點選查看資訊'}">${img(c)}</button></div>`;
+      return `<div class="hc ${nativeClass}${req&&(req.kind==='event'&&req.options.some(o=>o.value===ref?.id)||req.context.entrySkillIds?.includes(ref?.id)||req.kind==='block'&&nativeWidget?.timing?.ids?.includes(ref?.id))?' skill-ready':''}">${nativeSelection?.center===ref?.id?'<span class="newb ctr">中攔</span>':''}<button class="cbtn" type="button" data-hand="${i}" data-card="${c}" title="${eligible?'點選選牌，長按查看資訊':'查看卡片資訊（目前不可使用）'}" aria-label="${esc(nm(c))}・${eligible?'目前可選擇':'目前不可使用，點選查看資訊'}">${img(c)}</button></div>`;
     }).join('')}</div>`;
   }
   function netHTML() {
@@ -4456,7 +4459,9 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
   function areaHTML(p, key) {
     const mine = p.idx === 0, stack = areaStack(p, key), top = key === 'ev' ? null : stack.at(-1) || null, card = key === 'ev' ? null : p.court.find(c => c.key === key);
     const param = AREA_PARAM[key], raw = top && param ? p.parameter(key, param) : null, val = raw == null ? null : raw;
-    const arithmetic=BreakMatchPilot.formatParameter(card?.parameterDetails?.[({srv:'serve',blk:'block',rcv:'receive',tos:'toss',atk:'attack'})[param]],val);
+    const parameterKey=({srv:'serve',blk:'block',rcv:'receive',tos:'toss',atk:'attack'})[param],currentDetail=card?.parameterDetails?.[parameterKey],previousDetail=card?.previousTurnParameters?.details?.[parameterKey];
+    const currentArithmetic=BreakMatchPilot.formatParameter(currentDetail,val),previousArithmetic=BreakMatchPilot.formatParameter(previousDetail,previousDetail?.total),historical=!!previousArithmetic.changed&&previousArithmetic.text!==currentArithmetic.text;
+    const arithmetic=historical?{...previousArithmetic,title:`第 ${card.previousTurnParameters.turn} 回合結算：${previousArithmetic.title.replace('目前 ','結算值 ')}；目前有效數值 ${val??'—'}`} :currentArithmetic;
     const k = p.idx + key, enter = top && prevTop[k] !== top, pop = val != null && prevVal[k] !== String(val);
     nextTop[k] = top; nextVal[k] = val == null ? '' : String(val);
     let tgt = '';
@@ -4477,7 +4482,7 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
       + `<span class="nm">${AREA_LABEL[key]}${more > 0 ? ` +${more}` : ''}</span>`
       + (key !== 'ev' && stack.length > 1 ? `<span class="gcount">G${stack.length - 1}</span>` : '')
       + (renamed ? `<span class="rn">${esc(name)}</span>` : '')
-      + (val != null ? `<span class="v${pop ? ' pop' : ''}${arithmetic.changed?' modified':''}" title="${esc(arithmetic.title)}" aria-label="${AREA_LABEL[key]}：${esc(arithmetic.title)}">${esc(arithmetic.text).replace('＝','<wbr>＝')}</span>` : '')
+      + (val != null ? `<span class="v${pop ? ' pop' : ''}${arithmetic.changed?' modified':''}${historical?' historical':''}" title="${esc(arithmetic.title)}" aria-label="${AREA_LABEL[key]}：${esc(arithmetic.title)}">${esc(arithmetic.text).replace('＝','<wbr>＝')}</span>` : '')
       + `</div>`;
   }
   function courtHTML(p) {
@@ -4507,7 +4512,7 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
       const cls=selection.includes(ref?.id)&&eligible?(req.kind==='mulligan'?'picked':'staged'):eligible?'sel':'dim';
       const ready = req && (req.kind === 'event' && req.options.some(o => o.value === ref?.id) || req.context.entrySkillIds?.includes(ref?.id) || req.kind === 'block' && nativeWidget?.timing?.ids?.includes(ref?.id)) ? ' skill-ready' : '';
       const mid = (p.hand.length - 1) / 2, rot = (i - mid) * Math.min(4, 24 / p.hand.length), drop = Math.abs(i - mid) * Math.min(4, 20 / p.hand.length);
-      return `<div class="hc ${cls}${ready}" style="--r:${rot.toFixed(1)}deg;--d:${drop.toFixed(1)}px">${nativeSelection?.center === ref?.id ? '<span class="newb ctr">中攔</span>' : ''}<button class="cbtn" type="button" data-hand="${i}" data-card="${c}" title="${eligible?'點一下選取，再點查看資訊':'查看卡片資訊（目前不可使用）'}" aria-label="${esc(nm(c))}・${eligible?'目前可選擇':'目前不可使用，點選查看資訊'}">${img(c)}</button></div>`;
+      return `<div class="hc ${cls}${ready}" style="--r:${rot.toFixed(1)}deg;--d:${drop.toFixed(1)}px">${nativeSelection?.center === ref?.id ? '<span class="newb ctr">中攔</span>' : ''}<button class="cbtn" type="button" data-hand="${i}" data-card="${c}" title="${eligible?'點選選牌，長按查看資訊':'查看卡片資訊（目前不可使用）'}" aria-label="${esc(nm(c))}・${eligible?'目前可選擇':'目前不可使用，點選查看資訊'}">${img(c)}</button></div>`;
     }).join('')}</div>`;
   }
   function measureDock() {
@@ -4607,12 +4612,22 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
   $('dockOpts').addEventListener('click', e => {
     const b = e.target.closest('[data-act]'); if (b && !b.disabled) act(b.dataset.act);
   });
-  let handTap = null;
-  function onHandPick(c, handIndex) {
+    function onHandPick(c, handIndex) {
     if(pending?.req.input.type==='cards'&&pending.req.input.max===0)return false;
     const ref=game.players[0].handRefs[handIndex];
     if(!pending?.req.options.some(o=>o.value===ref?.id))return false;
     nativeWidget.select(ref.id);if(compactChoice(pending.req)&&BreakHostChoice.canSubmit(pending.req,nativeWidget.selection))peekChoice(false);return true;
+  }
+  function updateHandInfoButton(){
+    $('selectedHandInfo')?.remove();if(!pending||!nativeWidget||$('dock').dataset.mode!=='hand')return;
+    const value=BreakHostChoice.selectionValue(pending.req,nativeWidget.selection),ids=Array.isArray(value)?value:value?.cards||[value],index=game.players[0].handRefs.findIndex(c=>c.id===ids.at(-1));if(index<0)return;
+    const bar=$('dockOpts').querySelector('.hc-bar');if(!bar)return;const b=document.createElement('button');b.type='button';b.className='hc-quiet';b.id='selectedHandInfo';b.dataset.handInfo=index;b.textContent='卡片資訊';b.setAttribute('aria-label','查看 '+nm(game.players[0].hand[index])+' 的卡片資訊');bar.append(b);
+  }
+  function showHandInfo(index){
+    const ref=game?.players[0].handRefs[index];if(!ref)return;const key=pending?.req.requestId+':'+pending?.req.epoch,value=pending&&nativeWidget?BreakHostChoice.selectionValue(pending.req,nativeWidget.selection):null;
+    const selected=Array.isArray(value)?value.includes(ref.id):value?.cards?value.cards.includes(ref.id):value===ref.id;
+    cardSheet(game.players[0].hand[index],false,true);
+    if(selected){const btn=document.createElement('button');btn.type='button';btn.className='chip';btn.id='handDeselect';btn.textContent='取消選取這張牌';$('handCardInfoHint').append(document.createElement('br'),btn);btn.onclick=()=>{if(key!==pending?.req.requestId+':'+pending?.req.epoch){closeSheet();return;}if(['single','number'].includes(pending.req.input.type)){nativeWidget.destroy();renderNativeChoice(pending.req,BreakHostChoice.createSelection(pending.req));}else onHandPick(game.players[0].hand[index],index);closeSheet();};}
   }
   function onZonePick(z) {
     if (!pending) return false;
@@ -4622,22 +4637,17 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
     return false;
   }
   document.addEventListener('click', e => {
-    if(!e.target.closest('[data-hand]'))handTap=null;
     if (suppressClick) { suppressClick = false; e.preventDefault(); e.stopPropagation(); return; }
+    const info=e.target.closest('[data-hand-info]');if(info){showHandInfo(+info.dataset.handInfo);return;}
+    if(heldHand&&Date.now()<heldHand.until){heldHand=null;e.preventDefault();e.stopImmediatePropagation();return;}
     const court=e.target.closest('[data-court-id]');if(court&&onCourtPick(court))return;
     const da = e.target.closest('[data-act]'); if (da && !da.closest('#dock')) return act(da.dataset.act, da);
     const dz = e.target.closest('#meSide [data-drop]'); if (dz && onZonePick(dz.dataset.drop)) return;
     const b = e.target.closest('.cbtn, .pile, .pile2[data-pile], .pilebox, .aux, .glist[data-zone]'); if (!b || b.closest('#dock')) return;
     if (b.dataset.hand != null) {
-      const i = +b.dataset.hand, c = b.dataset.card;
-      const ref=game.players[0].handRefs[i]?.id, tapKey=JSON.stringify([ref,pending?.req.requestId,pending?.req.epoch]);
-      const value=pending&&nativeWidget?BreakHostChoice.selectionValue(pending.req,nativeWidget.selection):null;
-      const selected=Array.isArray(value)?value.includes(ref):value?.cards?value.cards.includes(ref):value===ref;
+      const i=+b.dataset.hand,ref=game.players[0].handRefs[i]?.id;
       const selectable=pending&&pending.req.input.max!==0&&pending.req.options.some(o=>o.value===ref);
-      if(!selectable||handTap===tapKey||selected){
-        handTap=null;cardSheet(c,false,true);
-        if(selected){const btn=document.createElement('button');btn.type='button';btn.className='chip';btn.id='handDeselect';btn.textContent='取消選取這張牌';$('handCardInfoHint').append(document.createElement('br'),btn);btn.onclick=()=>{if(['single','number'].includes(pending.req.input.type)){nativeWidget.destroy();renderNativeChoice(pending.req,BreakHostChoice.createSelection(pending.req));}else onHandPick(c,i);closeSheet();};}
-      }else{handTap=tapKey;if(pending)onHandPick(c,i);}
+      if(selectable)onHandPick(b.dataset.card,i);else showHandInfo(i);
       return;
     }
     if (b.dataset.pile) { const p = game.players[+b.dataset.p]; return pileSheet(`${p.idx === 0 ? '你的' : esc(oppName) + ' 的'}${b.dataset.pile === 'ev' ? ' Event 區' : '棄牌區'}`, (b.dataset.pile === 'ev' ? p.ev : p.drop).slice()); }
@@ -4645,6 +4655,18 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
     if (b.dataset.card) cardSheet(b.dataset.card);
   }, true);
 
+  let handPress=null,heldHand=null;
+  function cancelHandPress(){if(handPress)clearTimeout(handPress.timer);handPress=null;}
+  document.addEventListener('pointerdown',e=>{
+    cancelHandPress();heldHand=null;const b=e.target.closest('.hand [data-hand]');if(!b||e.button>0)return;const ref=game?.players[0].handRefs[+b.dataset.hand];if(!ref)return;
+    const current=handPress={pointer:e.pointerId,x:e.clientX,y:e.clientY,ref:ref.id,incarnation:ref.incarnation,session};
+    current.timer=setTimeout(()=>{if(handPress!==current)return;if(session!==current.session){cancelHandPress();return;}const i=game.players[0].handRefs.findIndex(c=>c.id===current.ref&&c.incarnation===current.incarnation);cancelHandPress();if(i<0)return;if(drag?.id===current.pointer)drag=null;heldHand={pointer:current.pointer,until:Date.now()+1800};showHandInfo(i);},500);
+  });
+  document.addEventListener('pointermove',e=>{if(handPress&&e.pointerId===handPress.pointer&&Math.hypot(e.clientX-handPress.x,e.clientY-handPress.y)>=10)cancelHandPress();},{passive:true});
+  document.addEventListener('pointerup',e=>{cancelHandPress();if(heldHand?.pointer===e.pointerId)e.preventDefault();});
+  document.addEventListener('pointercancel',cancelHandPress);
+  document.addEventListener('contextmenu',e=>{if(e.target.closest('.hand [data-hand]'))e.preventDefault();});
+  window.addEventListener('blur',cancelHandPress);
   // ---------- 拖曳出牌
   let drag = null;
   document.addEventListener('pointerdown', e => {
@@ -4655,7 +4677,7 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
     if (!drag || e.pointerId !== drag.id) return;
     if (!drag.on) {
       if (Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 10) return;
-      handTap = null; drag.on = true; document.body.classList.add('dragging');
+      drag.on = true; document.body.classList.add('dragging');
       const r = drag.b.getBoundingClientRect();
       drag.el = document.createElement('div'); drag.el.className = 'dragcard'; drag.el.style.width = r.width + 'px'; drag.el.innerHTML = img(drag.c);
       document.body.appendChild(drag.el); drag.w = r.width; drag.h = r.height;
@@ -4745,7 +4767,7 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
   $('menuBtn').onclick=openGameMenu;
   $('sheet').addEventListener('click',e=>{if(e.target.id==='mRecords')openMatchRecords();if(e.target.id==='mRestart'){closeSheet();restartSolo();}if(e.target.id==='mSurrender')confirmGameAction('surrender');if(e.target.id==='mHome'||e.target.id==='mSetup'||e.target.id==='mLeave')confirmGameAction('home');});
 
-  function backToSetup() { courtParamOpen=null;courtNextTarget=null;$('courtParamPicker').hidden=true;presentation.reset();priorStatuses=null;statusToastUntil=0;$('hintToast').hidden=true;clearTimeout(hintToastTimer);persistSolo(false);nativeWidget?.destroy();nativeWidget=null;session?.stop(); session = null; game = null; pending = null; turnNotice = null; renderTransition(); $('game').hidden = true; $('dock').hidden = true;$('tableTools').hidden=true; $('tbtns').hidden = true; $('setup').hidden = false; $('modebar').hidden = false; document.body.classList.remove('playing'); delete document.body.dataset.dock; }
+  function backToSetup() { cancelHandPress();heldHand=null;courtParamOpen=null;courtNextTarget=null;$('courtParamPicker').hidden=true;presentation.reset();priorStatuses=null;statusToastUntil=0;$('hintToast').hidden=true;clearTimeout(hintToastTimer);persistSolo(false);nativeWidget?.destroy();nativeWidget=null;session?.stop(); session = null; game = null; pending = null; turnNotice = null; renderTransition(); $('game').hidden = true; $('dock').hidden = true;$('tableTools').hidden=true; $('tbtns').hidden = true; $('setup').hidden = false; $('modebar').hidden = false; document.body.classList.remove('playing'); delete document.body.dataset.dock; }
 
   function publicLogText(e){const phase={setup:'調度',draw:'抽牌',receive:'接球',toss:'舉球',attack:'攻擊',serve:'發球',block:'攔網',end:'回合結束',loss_set:'失分',interval:'下一球準備'}[e.phase]||e.phase||'';const at=e.turn!=null?`【${e.rally?'第'+e.rally+'球・':''}回合${e.turn}・${phase}】`:'';return at+publicLogBody(e);}
   function publicLogBody(e) {
