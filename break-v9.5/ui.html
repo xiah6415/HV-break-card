@@ -1030,7 +1030,7 @@ body.playing .dock:has([data-kind="drawConfirm"]){width:min(360px,calc(100vw - 1
   $('hintMode').onchange=()=>applyHints($('hintMode').value);
   document.addEventListener('click',e=>{const b=e.target.closest('[data-hint-set]');if(b)applyHints(b.dataset.hintSet);});
   applyHints(store.get('bk_hint_mode')||'simple',true);
-  function briefNotice(n){if(hintMode()!=='simple')return;const who=n.player===0?'你':oppName;presentation.notice(n.type==='serve'?`${who}發球 · 第 ${n.rally} 球`:`${who}的回合${n.ball?' · 來球 '+n.ball.off:''}`,'fx-turn',1300);}
+  function briefNotice(n){if(hintMode()!=='simple'||n.player===0)return;const who=n.player===0?'你':oppName;presentation.notice(n.type==='serve'?`${who}發球 · 第 ${n.rally} 球`:`${who}的回合${n.ball?' · 來球 '+n.ball.off:''}`,'fx-turn',1300);}
   // ---------- setup
   function usableDeck(k) { try { E.validateDeck(DECKS[k].cards, modeOptions().mode); return true; } catch(e) { return false; } }
   function fill(sel, keys, saved) {
@@ -1424,13 +1424,14 @@ body.playing .dock:has([data-kind="drawConfirm"]){width:min(360px,calc(100vw - 1
   function syncMidlineMotion() {
     if(midlineSession!==session){midlineAnimations.forEach(a=>a.cancel());midlineAnimations=[];midlineSeen.clear();midlineSession=session;}
     const own=game?.turnP?.idx===0&&game.rallyNo&&!game.winner&&game.matchPhase==='rally';
-    if(!own||hintMode()==='off'){midlineAnimations.forEach(a=>a.cancel());midlineAnimations=[];return;}
+    if(!own){midlineAnimations.forEach(a=>a.cancel());midlineAnimations=[];return;}
     // Full-screen transitions and card details finish before this non-blocking cue.
-    if(!$('turnScreen').hidden||!$('sheet').hidden)return;
+    if(!$('turnScreen').hidden||!$('sheet').hidden||!$('dock').hidden&&$('dock').dataset.mode==='modal')return;
     const key=(session?.last?.view.match.id||session?.match?._m.id||'')+':'+game.rallyNo+':'+game.turnNo;
     if(midlineSeen.has(key))return;
     midlineSeen.add(key);midlineAnimations.forEach(a=>a.cancel());
     const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+    presentation.clearNotices('fx-turn');presentation.holdNotices(reduced?240:2000);
     midlineAnimations=[$('rallyStatus').animate(reduced?[{opacity:0},{opacity:1}]:[
       {transform:'translateX(-650px)',opacity:0,offset:0,easing:'cubic-bezier(.55,.02,.18,1)'},
       {transform:'translateX(9px)',opacity:1,offset:.82,easing:'cubic-bezier(.25,.1,.25,1)'},
