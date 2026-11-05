@@ -23,6 +23,6 @@ for(const withTarget of [false,true]){
 for(const lower of [false,true]){
  const f=setup('P03-086',false,lower);answer(f,f.id);assert.equal(request(f).kind,'target');answer(f);assert.equal(request(f).kind,'activate_payment');assert.equal(request(f).options.some(o=>o.value===false),lower);
  const saved=f.m.snapshot();f.m.restore(saved);assert.throws(()=>f.m.restore({...saved,match:{...saved.match,coreVersion:'break.match.local.2'}}),/mismatch/);
- answer(f,lower?false:true);for(let i=0;request(f)?.origin==='kernel'&&i<20;i++)answer(f);assert.equal(request(f).kind,'event');assert.equal(f.k.parameter(f.k.top(0,'toss'),'toss'),2);f.k.assertState();
+ answer(f,lower?false:true);for(let i=0;request(f)?.origin==='kernel'&&i<20;i++)answer(f);assert.equal(request(f).kind,'lossConfirm','no remaining usable Event; the fixture has no legal attacker');assert.equal(f.k.parameter(f.k.top(0,'toss'),'toss'),2);f.k.assertState();
 }
 console.log('Native Event options: inert zero/decline pruned, effective zero/decline preserved, RNG/Undo/replay and old checkpoint rejection passed');

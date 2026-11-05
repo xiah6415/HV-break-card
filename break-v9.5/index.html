@@ -694,9 +694,8 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
 .account-person{display:flex;align-items:center;gap:12px}.player-avatar,.player-avatar-img,.player-avatar-fallback{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;flex-shrink:0;border-radius:50%;object-fit:cover;vertical-align:middle;background:var(--sunk)}.player-avatar>.player-avatar-img{width:36px;height:36px}.cloud-row .player-avatar-img,.cloud-row .player-avatar-fallback{width:24px;height:24px}.profile-preview{width:96px;height:96px;display:grid;place-items:center;border-radius:50%;overflow:hidden;background:var(--sunk);font-size:40px}.profile-preview img{width:96px;height:96px;object-fit:cover}#profileName{width:100%;min-width:0;padding:10px;background:var(--sunk);color:var(--ink);border:1px solid var(--line);border-radius:8px}#profileFile{width:100%;min-width:0}
 
 /* Non-blocking, local presentation: no commands are dispatched by these effects. */
-#tableEffects{position:fixed;inset:0;z-index:150;pointer-events:none;overflow:hidden}
+#tableEffects{position:fixed;inset:0;z-index:30;pointer-events:none;overflow:hidden}
 .fx-draw{position:absolute;top:62%;left:50%;display:flex;justify-content:center;gap:5px;transform:translate(-50%,-50%);max-width:94vw}
-.fx-draw>strong{position:absolute;bottom:calc(100% + 12px);left:50%;transform:translateX(-50%);white-space:nowrap;border-radius:99px;background:#102d32ed;color:white;padding:8px 16px;font-size:14px}
 .fx-card{flex:0 0 clamp(36px,calc((90vw - 25px)/var(--cards)),96px);width:clamp(36px,calc((90vw - 25px)/var(--cards)),96px);aspect-ratio:63/88;perspective:700px;animation:fx-draw-flight 1.15s calc(var(--i)*45ms) both}
 .fx-card-inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;animation:fx-draw-flip 1s calc(var(--i)*45ms) both}
 .fx-back,.fx-front{position:absolute;inset:0;border-radius:7px;backface-visibility:hidden;overflow:hidden;box-shadow:0 5px 18px #0006}
@@ -711,9 +710,9 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
 .fx-coin-caption{white-space:nowrap;background:#102d32ed;color:white;padding:8px 16px;border-radius:99px;animation:fx-caption 1.2s both}
 @keyframes fx-coin-spin{from{transform:translateY(-90px) rotateY(-1440deg) rotateZ(-20deg)}to{transform:translateY(0) rotateY(var(--coin-end)) rotateZ(0)}}
 @keyframes fx-caption{0%,75%{opacity:0}100%{opacity:1}}
-.fx-notice{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:max-content;max-width:90vw;padding:12px 20px;border-radius:14px;background:#102d32ee;color:#fff;font-size:15px;font-weight:700;line-height:1.6;text-align:center;overflow-wrap:anywhere;box-shadow:0 5px 20px #0003}
-.fx-opponent-draw{top:28%;font-size:14px;padding:9px 16px}
-.fx-negative{top:30%;background:#7c2927f2;border:1px solid #ffbb9e}
+.fx-notice{position:absolute;top:var(--notice-y,50%);left:50%;transform:translate(-50%,-50%);width:max-content;max-width:min(340px,88vw);padding:8px 14px;border-radius:14px;background:#102d32ee;color:#fff;font-size:15px;font-weight:700;line-height:1.6;text-align:center;overflow-wrap:anywhere;box-shadow:0 5px 20px #0003}
+.fx-opponent-draw{font-size:14px;padding:9px 16px}
+.fx-negative{background:#7c2927f2;border:1px solid #ffbb9e}
 #hintToast{position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:145;pointer-events:none;background:#102d32ee;color:#fff;padding:9px 18px;border-radius:99px;max-width:92vw;font-size:14px;text-align:center}
 body[data-hints="simple"] .hc-timing,body[data-hints="off"] .hc-timing{display:none}
 body[data-hints="off"] .skill-ready .ci,body[data-hints="off"] .slot.skill-ready,body[data-hints="off"] .hc-ready,body[data-hints="off"] .hc-ready img{outline:none;box-shadow:none;animation:none}
@@ -814,6 +813,41 @@ body.playing .hand.fan .hc.sel .ci{box-shadow:0 0 0 2px var(--teal),0 0 12px col
 #tableTools{position:fixed;right:max(10px,env(safe-area-inset-right,0px));bottom:calc(var(--handh) + 7px + env(safe-area-inset-bottom,0px));z-index:36;display:flex;gap:6px}
 #tableTools .chip{min-height:30px;padding:4px 10px;font-size:12px;box-shadow:0 2px 7px #0002}
 @media(max-height:499px){body.playing .dock,body.playing .dock[data-mode="modal"],body.playing .dock:not([data-mode="modal"]){max-height:58vh;bottom:calc(var(--handh) + 40px)}body.playing .dock .hc-content,body.playing .dock[data-mode="modal"] .hc-content,body.playing .dock:not([data-mode="modal"]) .hc-content{max-height:26vh}}
+
+/* 11/05：設定收納、低權重失分與依區域高度顯示卡片。 */
+.advanced-settings{display:block;align-self:start}.advanced-settings>summary{font-weight:700;cursor:pointer;font-size:15px}.advanced-content{display:grid;gap:12px;padding-top:14px}.advanced-content h3{margin:4px 0}
+.setup-actions{grid-column:1/-1;display:flex;align-items:center;justify-content:flex-end;gap:14px;padding:12px 0}.setup-actions .btn{min-width:180px}.setup-actions .sub{margin:0}
+#rallyActions [data-hc-act="loss"]{border-color:var(--line);color:var(--muted);background:transparent;box-shadow:none;font-weight:500}
+body.playing .dock .hc-heading:has(.hc-q:empty):not(:has(.hc-source-name,.hc-step)){display:none}
+@media(max-width:600px){
+ body:not(.playing)[data-mode="solo"] .wrap{padding-bottom:calc(90px + env(safe-area-inset-bottom,0px))}
+ body:not(.playing) .setup-actions{position:fixed;bottom:0;left:0;right:0;z-index:12;background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -3px 16px #0001;padding:8px 16px calc(8px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:minmax(0,1fr);justify-content:stretch;gap:4px}
+ .setup-actions .sub{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.setup-actions .btn{width:100%;min-height:44px}
+}
+@media(min-width:1000px) and (min-height:650px){
+ body.playing .area .stack .st{--sh:calc(var(--ah) - 4px)}
+ body.playing .court2.me .row-main .area{--ah:15.8vh}body.playing .court2.opp .row-main .area{--ah:14.2vh}
+ body.playing .court2.me .row-back .area{--ah:8.4vh}body.playing .court2.opp .row-back .area{--ah:6.4vh}
+ body.playing .dock,body.playing .dock:not([data-mode="modal"]),body.playing .dock[data-mode="modal"],body.playing .dock.peek-court{bottom:calc(var(--handh) + 34px)}
+}
+
+/* 沒有選牌時，Event時機只留一行標題、略過及收合。 */
+body.playing .dock[data-mode="hand"]:has([data-kind="event"] .hc-go:disabled) .in{display:flex;flex-direction:row;align-items:center;gap:8px}
+body.playing .dock[data-mode="hand"]:has([data-kind="event"] .hc-go:disabled) .dock-head{display:contents}
+body.playing .dock[data-mode="hand"]:has([data-kind="event"] .hc-go:disabled) #choicePeek{order:3;flex-shrink:0}
+body.playing .dock[data-mode="hand"]:has([data-kind="event"] .hc-go:disabled) .opts{flex-shrink:0}
+body.playing .dock[data-mode="hand"]:has([data-kind="event"] .hc-go:disabled) .native-choice>.hc,
+body.playing .dock[data-mode="hand"]:has([data-kind="event"] .hc-go:disabled) .hc-content,
+body.playing .dock[data-mode="hand"]:has([data-kind="event"] .hc-go:disabled) .hc-grid{display:contents!important}
+body.playing .dock[data-mode="hand"]:has([data-kind="event"] .hc-go:disabled) .hc-head,
+body.playing .dock[data-mode="hand"]:has([data-kind="event"] .hc-go:disabled) .hc-ctx,
+body.playing .dock[data-mode="hand"]:has([data-kind="event"] .hc-go:disabled) .hc-timing,
+body.playing .dock[data-mode="hand"]:has([data-kind="event"] .hc-go:disabled) .hc-err,
+body.playing .dock[data-mode="hand"]:has([data-kind="event"] .hc-go:disabled) .hc-bar{display:none!important}
+body.playing .dock[data-mode="hand"]:has([data-kind="event"] .hc-go:disabled) .hc-nocard .hc-card{min-height:32px;padding:4px 9px;font-size:12px}
+body.playing .dock .hc-err:empty{display:none}
+/* 抽牌確認保留兩側牌庫可點區域。 */
+body.playing .dock:has([data-kind="drawConfirm"]){width:min(360px,calc(100vw - 112px))}
 </style>
 <script>
 /* 外觀：bk_theme = light（預設）｜dark｜auto（跟隨系統）；在繪製前套用避免閃爍 */
@@ -873,10 +907,6 @@ body.playing .hand.fan .hc.sel .ci{box-shadow:0 0 0 2px var(--teal),0 0 12px col
       <label class="field" for="aiLevel">AI 難度<select id="aiLevel"><option value="easy">簡單（較常失誤、不攔網）</option><option value="normal" selected>普通</option><option value="hard">困難（思考較久）</option></select></label>
       <div class="opts"><button class="chip" type="button" id="aiCloud" disabled>我的雲端牌組</button><button class="chip" type="button" id="aiPublic">公開牌組</button><button class="chip" type="button" id="editAiDeck">匯入 AI 牌組</button></div>
       <p class="sub" id="aiCloudHint">Google 登入後可選自己的雲端備份；公開牌組不需登入。</p>
-      <label class="field" for="speed">AI 出牌速度
-        <select id="speed"><option value="200">快</option><option value="550" selected>正常</option><option value="1000">慢</option></select>
-      </label>
-      <div class="field">外觀<div id="themeSlot"></div></div><label class="field">效果提示<select id="hintMode"><option value="off">關閉提示</option><option value="simple" selected>簡易提示（亮框為主）</option><option value="normal">正常提示</option></select></label>
       <div class="deckstrip" id="aiStrip"></div>
     </div>
     <div class="panel online-only" id="olPanel">
@@ -903,8 +933,12 @@ body.playing .hand.fan .hc.sel .ci{box-shadow:0 0 0 2px var(--teal),0 0 12px col
         <button class="btn outline wide" type="button" id="olCancel">取消房間</button>
       </div>
     </div>
-    <div class="panel solo-only">
-      <h2>規則提醒</h2>
+    <details class="panel advanced-settings" id="advancedSettings"><summary>進階設定</summary><div class="advanced-content">
+      <label class="field" for="speed">AI 出牌速度
+        <select id="speed"><option value="200">快</option><option value="550" selected>正常</option><option value="1000">慢</option></select>
+      </label>
+      <div class="field">外觀<div id="themeSlot"></div></div><label class="field">效果提示<select id="hintMode"><option value="off">關閉提示</option><option value="simple" selected>簡易提示（亮框為主）</option><option value="normal">正常提示</option></select></label>
+      <h3>規則提醒</h3>
       <ul class="rules">
         <li>起手 6 張，可以挑任意張放回牌庫重抽（調度 1 次）。</li>
         <li>接球回合：抽 1 → 接球 → 舉球 → 攻擊；舉球不能和接球同名，攻擊不能和舉球同名。</li>
@@ -915,8 +949,8 @@ body.playing .hand.fan .hc.sel .ci{box-shadow:0 0 0 2px var(--teal),0 0 12px col
       <label class="field" for="turnPromptStyle">正常提示的回合／發球過場
         <select id="turnPromptStyle"><option value="auto" selected>顯示 1 秒後繼續</option><option value="manual">點擊後繼續</option></select>
       </label>
-      <button class="btn" id="startBtn" type="button" disabled>開始對戰</button>
-    </div>
+    </div></details>
+    <div class="setup-actions solo-only" id="setupActions"><span id="startHint" class="sub">請先選擇牌組</span><button class="btn" id="startBtn" type="button" disabled>開始對戰</button></div>
   </section>
 
   <section id="game" hidden>
@@ -3605,7 +3639,7 @@ function render(rootEl, request, opts = {}) {
       ? `<button type="button" class="hc-loss hc-loss-confirm" data-hc-act="lossyes">確認本球失分</button><button type="button" class="hc-quiet" data-hc-act="lossno">繼續本球</button>`
       : `<button type="button" class="hc-loss" data-hc-act="loss">選擇失分</button>`) : '';
     rootEl.innerHTML = `<div class="hc" data-kind="${esc(request.kind)}" data-input="${t}">
-      <div class="hc-content"><div class="hc-head">${src}<div class="hc-heading">${sourceName?`<strong class="hc-source-name">${esc(sourceName)} <small>${esc(request.source.cardNo)}</small></strong>`:''}${step?`<span class="hc-step">${esc(step)}</span>`:''}<div class="hc-q"><mark class="hc-current">${esc(requestPrompt(request))}</mark>${prog ? `<small class="hc-prog">${esc(prog)}</small>` : ''}</div></div></div>
+      <div class="hc-content"><div class="hc-head">${src}<div class="hc-heading">${sourceName?`<strong class="hc-source-name">${esc(sourceName)} <small>${esc(request.source.cardNo)}</small></strong>`:''}${step?`<span class="hc-step">${esc(step)}</span>`:''}<div class="hc-q">${opts.hidePrompt?'':`<mark class="hc-current">${esc(requestPrompt(request))}</mark>`}${prog ? `<small class="hc-prog">${esc(prog)}</small>` : ''}</div></div></div>
       ${sourceInfo?.skill?`<details class="hc-effect-text"><summary>查看卡片效果全文</summary><p>${esc(sourceInfo.skill)}</p></details>`:''}
       ${timing?`<div class="hc-timing${timing.active?' ready':''}" role="status">✦ ${esc(timing.label)}</div>`:''}${ctx()}${body()}${chips()}
       <div class="hc-err" role="alert">${esc(sel.error || '')}</div></div>
@@ -3623,7 +3657,11 @@ function render(rootEl, request, opts = {}) {
     if (d.hcSrc) { opts.onCard && opts.onCard(request.source); return; }
     if (d.hcRm) { sel = H.toggle(request, sel, JSON.parse(d.hcRm)); draw(); opts.onSelection && opts.onSelection(sel); return; }
     if (d.hcCtr) { sel = H.setCenter(request, sel, JSON.parse(d.hcCtr)); draw();opts.onSelection?.(sel);return; }
-    if (d.hcV !== undefined) return choose(JSON.parse(d.hcV));
+    if (d.hcV !== undefined) {
+      const value=JSON.parse(d.hcV),skip=request.kind==='event'&&value===null||['optional','activate_payment'].includes(request.kind)&&value===false;
+      if(skip){const answer=H.makeAnswer(request,value),check=H.validate(request,answer);if(!check.ok)return;done=true;opts.onAnswer?.(answer);return;}
+      return choose(value);
+    }
     switch (d.hcAct) {
       case 'clear': sel = H.createSelection(request); draw(); opts.onSelection && opts.onSelection(sel); return;
       case 'loss': lossArm = true; return draw();
@@ -3661,43 +3699,60 @@ if (typeof module !== 'undefined' && module.exports) module.exports = api; else 
   }return out;
  }
  function create({root:el,img,deckRect}){
-  let previous=null,coinKey=null,timers=[];
-  const later=(fn,ms)=>{const id=setTimeout(()=>{timers=timers.filter(t=>t!==id);fn();},ms);timers.push(id);};
+  let previous=null,coinKey=null,queue=[],active=null,tickTimer=null,timers=new Set();
+  const later=(fn,ms)=>{const id=setTimeout(()=>{timers.delete(id);fn();},ms);timers.add(id);return id;};
   const reduced=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
-  function reset(){for(const id of timers)clearTimeout(id);timers=[];el.replaceChildren();previous=null;coinKey=null;}
-  function notice(text,kind,duration=1600){
-   const box=document.createElement('div');box.className='fx-notice '+kind;box.setAttribute('role','status');box.textContent=text;el.append(box);later(()=>box.remove(),duration);return box;
+  const visible=e=>e&&!e.hidden&&e.getClientRects().length;
+  const intersects=(a,b)=>a.left<b.right&&a.right>b.left&&a.top<b.bottom&&a.bottom>b.top;
+  function sync(){
+   const net=document.querySelector('.net-zone'),r=net?.getBoundingClientRect();
+   el.style.setProperty('--notice-y',(r?r.top+r.height/2:innerHeight/2)+'px');
+   const box=active?.box;if(!box)return false;
+   const rect=box.getBoundingClientRect();
+   const blocked=['#dock','#sheet','#turnScreen','#courtParamPicker'].some(q=>{const other=document.querySelector(q);return visible(other)&&intersects(rect,other.getBoundingClientRect());});
+   box.style.visibility=blocked?'hidden':'visible';return blocked;
   }
-  function negative(items){
-   const old=el.querySelector('.fx-negative'),lines=new Map(old?old._items:[]);
-   for(const item of items)lines.set(item.id,item.text);old?.remove();const box=notice('負面效果 · '+[...lines.values()].join('；'),'fx-negative',2200);box._items=[...lines];
-  }
-  function showDraw(d){
-   if(d.player===1){el.querySelector('.fx-opponent-draw')?.remove();const box=notice('對手抽了 '+d.count+' 張牌','fx-opponent-draw');box.dataset.player='1';return;}
-   const box=document.createElement('div');box.className='fx-draw';box.dataset.player=d.player;box.style.setProperty('--cards',Math.min(d.count,6));box.setAttribute('role','status');
-   const text=document.createElement('strong');text.textContent=(d.player===0?'你':'對手')+'抽了 '+d.count+' 張牌';box.append(text);
-   const rect=deckRect(d.player),x=rect?rect.x+rect.width/2-innerWidth/2:0,y=rect?rect.y+rect.height/2-innerHeight*.62:0;
-   for(let i=0;i<Math.min(d.count,6);i++){const card=document.createElement('div');card.className='fx-card';card.style.setProperty('--i',i);card.style.setProperty('--from-x',x+'px');card.style.setProperty('--from-y',y+'px');
+  function reset(){for(const id of timers)clearTimeout(id);timers.clear();tickTimer=null;queue=[];active=null;el.replaceChildren();previous=null;coinKey=null;}
+  function animateDraw(d){
+   // The result panel already shows the drawn faces. Never leave a second card strip over it.
+   const dock=document.getElementById('dock');if(visible(dock)&&dock.dataset.mode==='modal')return;
+   const box=document.createElement('div');box.className='fx-draw';box.dataset.player='0';box.style.setProperty('--cards',Math.min(d.count,6));box.setAttribute('aria-hidden','true');
+   const rect=deckRect(0),x=rect?rect.x+rect.width/2-innerWidth/2:0,y=rect?rect.y+rect.height/2-innerHeight*.62:0;
+   const count=Math.min(d.count,6);
+   for(let i=0;i<count;i++){const card=document.createElement('div');card.className='fx-card';card.style.setProperty('--i',i);card.style.setProperty('--from-x',x+'px');card.style.setProperty('--from-y',y+'px');
     card.innerHTML='<div class="fx-card-inner"><div class="fx-back">BREAK</div><div class="fx-front"></div></div>';
-    // Faces come exclusively from cards already visible in the local player's hand.
-    if(d.player===0&&d.cards[i])card.querySelector('.fx-front').innerHTML=img(d.cards[i].cardNo.replace(/^HV-?/,''));
-    else card.classList.add('back-only');box.append(card);
+    if(d.cards[i])card.querySelector('.fx-front').innerHTML=img(d.cards[i].cardNo.replace(/^HV-?/,''));else card.classList.add('back-only');
+    if(i===count-1)card.addEventListener('animationend',e=>{if(e.target===card)box.remove();},{once:false});box.append(card);
    }
-   el.append(box);later(()=>box.remove(),reduced()?300:1500);
+   el.append(box);later(()=>box.remove(),reduced()?300:1450);
   }
+  function tick(){
+   tickTimer=null;
+   if(!active&&queue.length){const job=queue.shift(),box=document.createElement('div');box.className='fx-notice '+job.kind;box.setAttribute('role','status');box.textContent=job.text;el.append(box);active={...job,box,left:job.duration,last:Date.now(),started:false};}
+   if(active){const blocked=sync(),now=Date.now();if(!blocked){if(!active.started){active.started=true;active.start?.();}else active.left-=now-active.last;}active.last=now;if(active.left<=0){active.box.remove();active=null;}}
+   if(active||queue.length)tickTimer=later(tick,100);
+  }
+  function notice(text,kind='fx-info',duration=1600,start){queue.push({text,kind,duration,start});if(!tickTimer)tick();}
+  function clearNotices(kind){queue=queue.filter(j=>j.kind!==kind);if(active?.kind===kind){active.box.remove();active=null;}if((active||queue.length)&&!tickTimer)tick();}
+  function negative(items){
+   const job=active?.kind==='fx-negative'?active:queue.find(j=>j.kind==='fx-negative'),merged=new Map(job?.items||[]);for(const i of items)merged.set(i.id,i.text);
+   const text='負面效果 · '+[...merged.values()].join('；');if(job){job.items=[...merged];job.text=text;if(job.box){job.box.textContent=text;job.left=2200;sync();}}else{notice(text,'fx-negative',2200);const added=active?.kind==='fx-negative'?active:queue.findLast(j=>j.kind==='fx-negative');if(added)added.items=[...merged];}
+  }
+  function showDraw(d){notice((d.player===0?'你':'對手')+'抽了 '+d.count+' 張牌',d.player===0?'fx-own-draw':'fx-opponent-draw',1600,d.player===0?()=>animateDraw(d):null);}
   function observe(view){
    if(previous&&(previous.match.id!==view.match.id||view.publicLog.length<previous.publicLog.length||view.match.decisionIndex<previous.match.decisionIndex))reset();
-   const draws=drawChanges(previous,view);previous=view;for(const d of draws)showDraw(d);
+   const draws=drawChanges(previous,view);previous=view;for(const d of draws)showDraw(d);sync();
   }
   function request(req){
-   if(req.kind==='coinGuess'){coinKey=null;return;}
-   const c=req.context?.coin;if(!c)return;const key=req.matchId+':'+JSON.stringify(c);if(key===coinKey)return;coinKey=key;
+   if(req.kind==='mulligan'||req.kind==='coinGuess'){el.querySelectorAll('.fx-coin-wrap,.fx-draw').forEach(n=>n.remove());if(req.kind==='coinGuess')coinKey=null;sync();return;}
+   if(req.kind==='drawResult')el.querySelectorAll('.fx-draw').forEach(n=>n.remove());
+   const c=req.context?.coin;if(!c){sync();return;}const key=req.matchId+':'+JSON.stringify(c);if(key===coinKey)return;coinKey=key;
    el.querySelector('.fx-coin-wrap')?.remove();const box=document.createElement('div');box.className='fx-coin-wrap';box.setAttribute('role','status');box.dataset.result=c.result;
    box.style.setProperty('--coin-end',c.result==='tails'?'180deg':'0deg');
    box.innerHTML='<div class="fx-coin"><div class="fx-face">正</div><div class="fx-face fx-tail">反</div></div><strong class="fx-coin-caption"></strong>';
    box.querySelector('strong').textContent='硬幣結果：'+(c.result==='heads'?'正面':'反面');el.append(box);later(()=>box.remove(),reduced()?500:1800);
   }
-  return {observe,request,reset,negative};
+  return {observe,request,reset,negative,notice,clearNotices,sync};
  }
  const api={drawChanges,create};if(typeof module==='object'&&module.exports)module.exports=api;else root.BreakPresentation=api;
 })(typeof window==='object'?window:globalThis);
@@ -3985,11 +4040,11 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
   let hintToastTimer=null,statusToastUntil=0;
   function hintMode(){return $('hintMode').value;}
   function hintSettings(){return '<h3>效果提示</h3><div class="theme-seg" role="group" aria-label="效果提示">'+[['off','關閉提示'],['simple','簡易提示'],['normal','正常提示']].map(([v,t])=>`<button type="button" data-hint-set="${v}" aria-pressed="${hintMode()===v}">${t}</button>`).join('')+'</div><p class="sub">簡易提示以可用技能亮框為主；必要選擇、抽牌結果與失分 仍需確認。</p>';}
-  function applyHints(v,initial=false){if(!['off','simple','normal'].includes(v))v='simple';$('hintMode').value=v;document.body.dataset.hints=v;store.set('bk_hint_mode',v);document.querySelectorAll('[data-hint-set]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.hintSet===v)));if(v==='off'){document.querySelectorAll('.fx-negative').forEach(n=>n.remove());$('hintToast').hidden=true;clearTimeout(hintToastTimer);}if(!initial&&turnNotice&&['turn','serve'].includes(turnNotice.data.type)&&v!=='normal'){const n=turnNotice;turnNotice=null;renderTransition();n.resolve();}}
+  function applyHints(v,initial=false){if(!['off','simple','normal'].includes(v))v='simple';$('hintMode').value=v;document.body.dataset.hints=v;store.set('bk_hint_mode',v);document.querySelectorAll('[data-hint-set]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.hintSet===v)));if(v==='off'){presentation.clearNotices('fx-negative');presentation.clearNotices('fx-turn');$('hintToast').hidden=true;clearTimeout(hintToastTimer);}if(!initial&&turnNotice&&['turn','serve'].includes(turnNotice.data.type)&&v!=='normal'){const n=turnNotice;turnNotice=null;renderTransition();n.resolve();}}
   $('hintMode').onchange=()=>applyHints($('hintMode').value);
   document.addEventListener('click',e=>{const b=e.target.closest('[data-hint-set]');if(b)applyHints(b.dataset.hintSet);});
   applyHints(store.get('bk_hint_mode')||'simple',true);
-  function briefNotice(n){if(hintMode()!=='simple'||Date.now()<statusToastUntil)return;clearTimeout(hintToastTimer);const who=n.player===0?'你':oppName;$('hintToast').textContent=n.type==='serve'?`${who}發球 · 第 ${n.rally} 球`:`${who}的回合${n.ball?' · 來球 '+n.ball.off:''}`;$('hintToast').hidden=false;hintToastTimer=setTimeout(()=>$('hintToast').hidden=true,1300);}
+  function briefNotice(n){if(hintMode()!=='simple')return;const who=n.player===0?'你':oppName;presentation.notice(n.type==='serve'?`${who}發球 · 第 ${n.rally} 球`:`${who}的回合${n.ball?' · 來球 '+n.ball.off:''}`,'fx-turn',1300);}
   // ---------- setup
   function usableDeck(k) { try { E.validateDeck(DECKS[k].cards, modeOptions().mode); return true; } catch(e) { return false; } }
   function fill(sel, keys, saved) {
@@ -4000,7 +4055,7 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
   }
   let deckConnectionReady=false,sharing=null;
   function renderSharing(){if(!sharing)return;const id=$('myDeck').value;$('deckPublic').disabled=!MY_DECKS.includes(id);try{$('deckPublic').checked=!!sharing.row(id).public;$('deckVisibilityStatus').textContent=id?(sharing.error?'本機牌組已保留；公開同步失敗：'+sharing.error:sharing.status(id)):'新建／匯入牌組預設公開，可改私人；登入後才會上傳。';$('shareRetry').hidden=!sharing.error;}catch(e){$('deckVisibilityStatus').textContent=e.message;}}
-  function deckButtons(){const valid=MY_DECKS.includes($('myDeck').value)&&usableDeck($('myDeck').value);$('startBtn').disabled=!valid;$('olCreate').disabled=$('olJoin').disabled=!valid||!deckConnectionReady;for(const id of ['editMyDeck','renameDeck','deleteDeck','exportDeck'])$(id).disabled=!MY_DECKS.includes($('myDeck').value);$('deckHint').textContent=personal.error?'牌組讀取失敗：'+personal.error:valid?'已選擇 '+DECKS[$('myDeck').value].name+'・40 張':MY_DECKS.length?'請選擇可用牌組，或先組牌／匯入。':menuCloudRows.length?'請從選單選擇雲端牌組，即可載入對戰。':'尚無牌組，請先組牌或匯入牌組。';renderSharing();}
+  function deckButtons(){const valid=MY_DECKS.includes($('myDeck').value)&&usableDeck($('myDeck').value);$('startBtn').disabled=!valid;$('olCreate').disabled=$('olJoin').disabled=!valid||!deckConnectionReady;for(const id of ['editMyDeck','renameDeck','deleteDeck','exportDeck'])$(id).disabled=!MY_DECKS.includes($('myDeck').value);$('deckHint').textContent=personal.error?'牌組讀取失敗：'+personal.error:valid?'已選擇 '+DECKS[$('myDeck').value].name+'・40 張':MY_DECKS.length?'請選擇可用牌組，或先組牌／匯入。':menuCloudRows.length?'請從選單選擇雲端牌組，即可載入對戰。':'尚無牌組，請先組牌或匯入牌組。';$('startHint').textContent=valid?'準備好了，開始對戰':$('deckHint').textContent;renderSharing();}
   function strip(key) { return Object.entries(DECKS[key]?.cards||{}).sort((a, b) => (isC(a[0]) === isC(b[0]) ? 0 : isC(a[0]) ? -1 : 1)).map(([c, n]) => `<figure><button class="cbtn" type="button" data-card="${c}">${img(c,false,true)}</button><span>×${n}</span></figure>`).join(''); }
   fill($('myDeck'), MY_DECKS, store.get('bk_my')); fill($('aiDeck'), AI_DECKS, store.get('bk_ai') || 'seijoh');
   if (store.get('bk_speed')) $('speed').value = store.get('bk_speed');
@@ -4191,7 +4246,7 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
     nativeSelection=selection;
     nextTop={};nextVal={};
     const me=game.players[0];if(courtRequest(pending?.req)==='target')$('oppSide').innerHTML=barHTML(game.players[1],false)+courtHTML(game.players[1]);$('meSide').innerHTML=courtHTML(me)+barHTML(me,true);$('handZone').innerHTML=fanHTML(me);markDiscardHand();
-    persistSolo(true);requestAnimationFrame(measureDock);
+    persistSolo(true);requestAnimationFrame(()=>{measureDock();presentation.sync();});
   }
   let courtParamOpen=null,courtNextTarget=null,courtUndoing=false;
   function courtRequest(r){
@@ -4222,7 +4277,7 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
   function renderNativeChoice(r, selection = null) {
     const labels={ack:'抽 1 張',turnEnd:'結束回合',lossConfirm:'確認失分',roll:'開始調度',reveal:'翻開牌庫頂',mulligan:'保留／重抽選取的牌'};
     nativeWidgetKey=r.requestId+':'+r.epoch;
-    nativeWidget=BreakChoiceUI.render($('dockOpts'),r,{goLabel:labels[r.kind],selection,actionsRoot:$('rallyActions'),
+    nativeWidget=BreakChoiceUI.render($('dockOpts'),r,{goLabel:labels[r.kind],hidePrompt:true,selection,actionsRoot:$('rallyActions'),
       sourceInfo:ref=>{const c=CL.card(ref.cardNo);return {name:ref.name||c?.name||ref.cardNo,skill:c?(DEF[c.code]?.[10]||c.skill):''};},
       previewBlockSkills:a=>session.match.previewBlockSkills(a),
       imgSrc:no=>art.url(no),onCard:c=>cardSheet(c.cardNo.replace(/^HV-?/,'')),
@@ -4461,7 +4516,7 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
   }
   function syncViewport() {
     document.documentElement.style.setProperty('--viewh', (window.visualViewport?.height || window.innerHeight) + 'px');
-    requestAnimationFrame(measureDock);
+    requestAnimationFrame(()=>{measureDock();presentation.sync();});
   }
   let dockRequestKey=null;
   const compactChoice=r=>!!r&&(['receiver','setter','attacker','serve'].includes(r.kind)||courtRequest(r)==='target'||courtRequest(r)==='parameter'&&!(courtNextTarget?.id===r.context.target?.id&&courtNextTarget?.matchId===r.matchId));
@@ -4536,6 +4591,7 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
     dock.hidden=!(game.winner||OL.inGame&&session.last?.undo?.pending||pending&&!['ack','turnEnd'].includes(pending.req.kind));
     updateUndoButton();
     renderCourtParam();
+    presentation.sync();
     olControls();
     renderTransition();
     requestAnimationFrame(measureDock);
@@ -4774,7 +4830,7 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
     if(drag?.el)drag.el.remove();if(drag?.over)drag.over.classList.remove('over');drag=null;suppressClick=false;document.body.classList.remove('dragging');
     $('setup').hidden = true; $('modebar').hidden = true; $('game').hidden = false; $('tbtns').hidden = false; document.body.classList.add('playing'); syncViewport();
     if(!navigator.connection?.saveData){const codes=OL.inGame?Object.keys(DECKS[$('myDeck').value]?.cards||{}):session.options.decks.flat();art.preload(codes).catch(()=>{});}
-    $('tableTools').append($('manualBtn'),$('undoBtn'));$('tableTools').hidden=false;$('game').querySelector('.game').append($('dock'),$('tableTools'));
+    $('tableTools').append($('manualBtn'),$('undoBtn'));$('tableTools').hidden=false;$('game').querySelector('.game').append($('dock'),$('tableTools'),$('tableEffects'));
     session.start();if(OL.inGame)olConnectionChanged();
   }
   /* ---------- 多人連線（Claude 2026-10-25）：大廳在選牌頁，開打後沿用同一張正式牌桌 */

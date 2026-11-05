@@ -20,8 +20,7 @@ const out = process.env.E2E_OUTPUT_DIR || '.';
         if (r.input.type === 'cards') for (const x of v) await click(x);
         if (r.input.type === 'block') { for (const x of v.cards) await click(x); }
         const go = page.locator('#stage [data-hc-act="go"]');
-        assert.ok(await go.isEnabled(), r.kind + ' 確認鍵應可按');
-        await go.click();
+        if(!await page.textContent('#out')){assert.ok(await go.isEnabled(), r.kind + ' 確認鍵應可按');await go.click();}
         const txt = await page.textContent('#out');
         assert.match(txt, /驗證：通過/, `${width} ${r.kind}: ${txt}`);
         assert.deepEqual(JSON.parse(txt.split('\n')[0].replace('回答：', '')).value, v);

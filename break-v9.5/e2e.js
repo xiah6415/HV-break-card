@@ -7,7 +7,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=req
   await require('./test-decks.cjs').seed(page);await page.goto(require('node:url').pathToFileURL(path.resolve('index.html')).href,{waitUntil:'domcontentloaded'});
   // A production game must never create the retired mutable Game or bridge.
   await page.evaluate(()=>{BreakEngine.Game=class{constructor(){throw Error('OLD_GAME_USED');}};if(window.BreakRulesLegacy)throw Error('OLD_BRIDGE_BUNDLED');const T=BreakMatchPilot.TableSession;BreakMatchPilot.TableSession=class extends T{constructor(o,c){super({...o,seed:7},c);window.tableTest=this;}};});
-  await page.selectOption('#speed','200');await page.click('#startBtn');
+  await page.locator('#advancedSettings').evaluate(e=>e.open=true);await page.selectOption('#speed','200');await page.click('#startBtn');
   let games=0,steps=0,manual=false,undo=false,drag=false,mull=false,loss=false,draw=false;const kinds=new Set();
   const click=selector=>page.locator(selector).evaluate(e=>e.click());
   while(games<3&&steps++<1000){
@@ -41,6 +41,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=req
     }else if(await page.locator('#dock').getAttribute('data-mode')==='hand'&&r.options.some(o=>o.value===value&&o.card))await require('./browser-test-helpers.cjs').fan(page,value);else await select(value);
    }else if(r.input.type==='cards')for(const v of value)await select(v);
    else if(r.input.type==='block'){for(const v of value.cards)await select(v);}
+   if(await page.evaluate(id=>tableTest.waiting?.requestId!==id,r.requestId))continue;
    assert(await page.locator('[data-hc-act="go"]').isEnabled(),r.kind+' cannot submit');await click('[data-hc-act="go"]');
   }
   assert.equal(games,3);assert(manual&&undo&&mull&&loss&&draw);assert.deepEqual(errors,[]);assert(await page.isHidden('#runtimeStatus'));

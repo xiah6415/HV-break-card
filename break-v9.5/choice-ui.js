@@ -222,7 +222,7 @@ function render(rootEl, request, opts = {}) {
       ? `<button type="button" class="hc-loss hc-loss-confirm" data-hc-act="lossyes">確認本球失分</button><button type="button" class="hc-quiet" data-hc-act="lossno">繼續本球</button>`
       : `<button type="button" class="hc-loss" data-hc-act="loss">選擇失分</button>`) : '';
     rootEl.innerHTML = `<div class="hc" data-kind="${esc(request.kind)}" data-input="${t}">
-      <div class="hc-content"><div class="hc-head">${src}<div class="hc-heading">${sourceName?`<strong class="hc-source-name">${esc(sourceName)} <small>${esc(request.source.cardNo)}</small></strong>`:''}${step?`<span class="hc-step">${esc(step)}</span>`:''}<div class="hc-q"><mark class="hc-current">${esc(requestPrompt(request))}</mark>${prog ? `<small class="hc-prog">${esc(prog)}</small>` : ''}</div></div></div>
+      <div class="hc-content"><div class="hc-head">${src}<div class="hc-heading">${sourceName?`<strong class="hc-source-name">${esc(sourceName)} <small>${esc(request.source.cardNo)}</small></strong>`:''}${step?`<span class="hc-step">${esc(step)}</span>`:''}<div class="hc-q">${opts.hidePrompt?'':`<mark class="hc-current">${esc(requestPrompt(request))}</mark>`}${prog ? `<small class="hc-prog">${esc(prog)}</small>` : ''}</div></div></div>
       ${sourceInfo?.skill?`<details class="hc-effect-text"><summary>查看卡片效果全文</summary><p>${esc(sourceInfo.skill)}</p></details>`:''}
       ${timing?`<div class="hc-timing${timing.active?' ready':''}" role="status">✦ ${esc(timing.label)}</div>`:''}${ctx()}${body()}${chips()}
       <div class="hc-err" role="alert">${esc(sel.error || '')}</div></div>
@@ -240,7 +240,11 @@ function render(rootEl, request, opts = {}) {
     if (d.hcSrc) { opts.onCard && opts.onCard(request.source); return; }
     if (d.hcRm) { sel = H.toggle(request, sel, JSON.parse(d.hcRm)); draw(); opts.onSelection && opts.onSelection(sel); return; }
     if (d.hcCtr) { sel = H.setCenter(request, sel, JSON.parse(d.hcCtr)); draw();opts.onSelection?.(sel);return; }
-    if (d.hcV !== undefined) return choose(JSON.parse(d.hcV));
+    if (d.hcV !== undefined) {
+      const value=JSON.parse(d.hcV),skip=request.kind==='event'&&value===null||['optional','activate_payment'].includes(request.kind)&&value===false;
+      if(skip){const answer=H.makeAnswer(request,value),check=H.validate(request,answer);if(!check.ok)return;done=true;opts.onAnswer?.(answer);return;}
+      return choose(value);
+    }
     switch (d.hcAct) {
       case 'clear': sel = H.createSelection(request); draw(); opts.onSelection && opts.onSelection(sel); return;
       case 'loss': lossArm = true; return draw();

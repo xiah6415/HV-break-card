@@ -14,43 +14,60 @@
   }return out;
  }
  function create({root:el,img,deckRect}){
-  let previous=null,coinKey=null,timers=[];
-  const later=(fn,ms)=>{const id=setTimeout(()=>{timers=timers.filter(t=>t!==id);fn();},ms);timers.push(id);};
+  let previous=null,coinKey=null,queue=[],active=null,tickTimer=null,timers=new Set();
+  const later=(fn,ms)=>{const id=setTimeout(()=>{timers.delete(id);fn();},ms);timers.add(id);return id;};
   const reduced=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
-  function reset(){for(const id of timers)clearTimeout(id);timers=[];el.replaceChildren();previous=null;coinKey=null;}
-  function notice(text,kind,duration=1600){
-   const box=document.createElement('div');box.className='fx-notice '+kind;box.setAttribute('role','status');box.textContent=text;el.append(box);later(()=>box.remove(),duration);return box;
+  const visible=e=>e&&!e.hidden&&e.getClientRects().length;
+  const intersects=(a,b)=>a.left<b.right&&a.right>b.left&&a.top<b.bottom&&a.bottom>b.top;
+  function sync(){
+   const net=document.querySelector('.net-zone'),r=net?.getBoundingClientRect();
+   el.style.setProperty('--notice-y',(r?r.top+r.height/2:innerHeight/2)+'px');
+   const box=active?.box;if(!box)return false;
+   const rect=box.getBoundingClientRect();
+   const blocked=['#dock','#sheet','#turnScreen','#courtParamPicker'].some(q=>{const other=document.querySelector(q);return visible(other)&&intersects(rect,other.getBoundingClientRect());});
+   box.style.visibility=blocked?'hidden':'visible';return blocked;
   }
-  function negative(items){
-   const old=el.querySelector('.fx-negative'),lines=new Map(old?old._items:[]);
-   for(const item of items)lines.set(item.id,item.text);old?.remove();const box=notice('負面效果 · '+[...lines.values()].join('；'),'fx-negative',2200);box._items=[...lines];
-  }
-  function showDraw(d){
-   if(d.player===1){el.querySelector('.fx-opponent-draw')?.remove();const box=notice('對手抽了 '+d.count+' 張牌','fx-opponent-draw');box.dataset.player='1';return;}
-   const box=document.createElement('div');box.className='fx-draw';box.dataset.player=d.player;box.style.setProperty('--cards',Math.min(d.count,6));box.setAttribute('role','status');
-   const text=document.createElement('strong');text.textContent=(d.player===0?'你':'對手')+'抽了 '+d.count+' 張牌';box.append(text);
-   const rect=deckRect(d.player),x=rect?rect.x+rect.width/2-innerWidth/2:0,y=rect?rect.y+rect.height/2-innerHeight*.62:0;
-   for(let i=0;i<Math.min(d.count,6);i++){const card=document.createElement('div');card.className='fx-card';card.style.setProperty('--i',i);card.style.setProperty('--from-x',x+'px');card.style.setProperty('--from-y',y+'px');
+  function reset(){for(const id of timers)clearTimeout(id);timers.clear();tickTimer=null;queue=[];active=null;el.replaceChildren();previous=null;coinKey=null;}
+  function animateDraw(d){
+   // The result panel already shows the drawn faces. Never leave a second card strip over it.
+   const dock=document.getElementById('dock');if(visible(dock)&&dock.dataset.mode==='modal')return;
+   const box=document.createElement('div');box.className='fx-draw';box.dataset.player='0';box.style.setProperty('--cards',Math.min(d.count,6));box.setAttribute('aria-hidden','true');
+   const rect=deckRect(0),x=rect?rect.x+rect.width/2-innerWidth/2:0,y=rect?rect.y+rect.height/2-innerHeight*.62:0;
+   const count=Math.min(d.count,6);
+   for(let i=0;i<count;i++){const card=document.createElement('div');card.className='fx-card';card.style.setProperty('--i',i);card.style.setProperty('--from-x',x+'px');card.style.setProperty('--from-y',y+'px');
     card.innerHTML='<div class="fx-card-inner"><div class="fx-back">BREAK</div><div class="fx-front"></div></div>';
-    // Faces come exclusively from cards already visible in the local player's hand.
-    if(d.player===0&&d.cards[i])card.querySelector('.fx-front').innerHTML=img(d.cards[i].cardNo.replace(/^HV-?/,''));
-    else card.classList.add('back-only');box.append(card);
+    if(d.cards[i])card.querySelector('.fx-front').innerHTML=img(d.cards[i].cardNo.replace(/^HV-?/,''));else card.classList.add('back-only');
+    if(i===count-1)card.addEventListener('animationend',e=>{if(e.target===card)box.remove();},{once:false});box.append(card);
    }
-   el.append(box);later(()=>box.remove(),reduced()?300:1500);
+   el.append(box);later(()=>box.remove(),reduced()?300:1450);
   }
+  function tick(){
+   tickTimer=null;
+   if(!active&&queue.length){const job=queue.shift(),box=document.createElement('div');box.className='fx-notice '+job.kind;box.setAttribute('role','status');box.textContent=job.text;el.append(box);active={...job,box,left:job.duration,last:Date.now(),started:false};}
+   if(active){const blocked=sync(),now=Date.now();if(!blocked){if(!active.started){active.started=true;active.start?.();}else active.left-=now-active.last;}active.last=now;if(active.left<=0){active.box.remove();active=null;}}
+   if(active||queue.length)tickTimer=later(tick,100);
+  }
+  function notice(text,kind='fx-info',duration=1600,start){queue.push({text,kind,duration,start});if(!tickTimer)tick();}
+  function clearNotices(kind){queue=queue.filter(j=>j.kind!==kind);if(active?.kind===kind){active.box.remove();active=null;}if((active||queue.length)&&!tickTimer)tick();}
+  function negative(items){
+   const job=active?.kind==='fx-negative'?active:queue.find(j=>j.kind==='fx-negative'),merged=new Map(job?.items||[]);for(const i of items)merged.set(i.id,i.text);
+   const text='負面效果 · '+[...merged.values()].join('；');if(job){job.items=[...merged];job.text=text;if(job.box){job.box.textContent=text;job.left=2200;sync();}}else{notice(text,'fx-negative',2200);const added=active?.kind==='fx-negative'?active:queue.findLast(j=>j.kind==='fx-negative');if(added)added.items=[...merged];}
+  }
+  function showDraw(d){notice((d.player===0?'你':'對手')+'抽了 '+d.count+' 張牌',d.player===0?'fx-own-draw':'fx-opponent-draw',1600,d.player===0?()=>animateDraw(d):null);}
   function observe(view){
    if(previous&&(previous.match.id!==view.match.id||view.publicLog.length<previous.publicLog.length||view.match.decisionIndex<previous.match.decisionIndex))reset();
-   const draws=drawChanges(previous,view);previous=view;for(const d of draws)showDraw(d);
+   const draws=drawChanges(previous,view);previous=view;for(const d of draws)showDraw(d);sync();
   }
   function request(req){
-   if(req.kind==='coinGuess'){coinKey=null;return;}
-   const c=req.context?.coin;if(!c)return;const key=req.matchId+':'+JSON.stringify(c);if(key===coinKey)return;coinKey=key;
+   if(req.kind==='mulligan'||req.kind==='coinGuess'){el.querySelectorAll('.fx-coin-wrap,.fx-draw').forEach(n=>n.remove());if(req.kind==='coinGuess')coinKey=null;sync();return;}
+   if(req.kind==='drawResult')el.querySelectorAll('.fx-draw').forEach(n=>n.remove());
+   const c=req.context?.coin;if(!c){sync();return;}const key=req.matchId+':'+JSON.stringify(c);if(key===coinKey)return;coinKey=key;
    el.querySelector('.fx-coin-wrap')?.remove();const box=document.createElement('div');box.className='fx-coin-wrap';box.setAttribute('role','status');box.dataset.result=c.result;
    box.style.setProperty('--coin-end',c.result==='tails'?'180deg':'0deg');
    box.innerHTML='<div class="fx-coin"><div class="fx-face">正</div><div class="fx-face fx-tail">反</div></div><strong class="fx-coin-caption"></strong>';
    box.querySelector('strong').textContent='硬幣結果：'+(c.result==='heads'?'正面':'反面');el.append(box);later(()=>box.remove(),reduced()?500:1800);
   }
-  return {observe,request,reset,negative};
+  return {observe,request,reset,negative,notice,clearNotices,sync};
  }
  const api={drawChanges,create};if(typeof module==='object'&&module.exports)module.exports=api;else root.BreakPresentation=api;
 })(typeof window==='object'?window:globalThis);

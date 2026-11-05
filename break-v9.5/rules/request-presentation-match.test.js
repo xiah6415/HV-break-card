@@ -12,7 +12,7 @@ for(const oldFirst of [false,true]){
  assert(r.options.find(o=>o.card.id===covered).label.includes('被覆蓋'));assert(r.options.find(o=>o.card.id===entrant).label.includes('登場'));
  const before=m.snapshot(),old=H.makeAnswer(r,r.options[0].value);m.restore(before);assert.throws(()=>m.dispatch(old),/STALE/);r=m.request(0);s.command({kind:'answer',answer:H.makeAnswer(r,r.options.find(o=>o.card.id===(oldFirst?covered:entrant)).value)});
  for(let i=0;(m.request(0)||m.request(1))?.origin==='kernel'&&i<30;i++){r=m.request(0)||m.request(1);s.command({kind:'answer',answer:H.aiAnswer(r)});}
- assert.equal(m.request(0).kind,'event');k.assertState();assert(s.undo());assert(m.request(0));
+ assert.equal(m.request(0).kind,'turnEnd','empty attack Event window is skipped');k.assertState();assert(s.undo());assert(m.request(0));
 }
 console.log('Native trigger ordering: real covered/entry sources and labels, both orders, stale refusal and local Undo passed');
 // A real look/remainder Event exposes top/bottom and ordered placement using

@@ -34,7 +34,7 @@ const site='https://weilun2022.github.io/haikyu-cards/?deck=';
   assert.ok(!(await page.evaluate(()=>location.search)).includes('deck='));
   await page.click('[data-close]');
   // 用匯入的牌組實際開局
-  await page.selectOption('#speed','200').catch(()=>{});await page.click('#startBtn');
+  await page.locator('#advancedSettings').evaluate(e=>e.open=true);await page.selectOption('#speed','200').catch(()=>{});await page.click('#startBtn');
   await page.waitForFunction(()=>document.querySelector('#dockOpts [data-hc-act="go"]'));assert.equal(await page.evaluate(()=>!!window.BreakRulesLegacy),false);
   assert.deepEqual(errors,[]);
   console.log('share-e2e',width,'ok');await page.close();
