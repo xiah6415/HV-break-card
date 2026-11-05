@@ -26,7 +26,7 @@
         "createdAt"
       ],
       "$room": {
-        ".write": "auth != null && auth.uid == root.child('rooms').child($room).child('authority').child('uid').val() || (auth != null && auth.uid == root.child('rooms').child($room).child('meta').child('p0').val() && root.child('rooms').child($room).child('meta').child('status').val() == 'closed' && !newData.exists())",
+        ".write": "(auth != null && auth.uid == root.child('rooms').child($room).child('authority').child('uid').val() || (auth != null && auth.uid == root.child('rooms').child($room).child('meta').child('p0').val() && root.child('rooms').child($room).child('meta').child('status').val() == 'closed' && !newData.exists())) || (auth != null && (auth.uid == root.child('rooms').child($room).child('meta/p0').val() || auth.uid == root.child('rooms').child($room).child('authority/uid').val()) && root.child('rooms').child($room).child('meta/status').val() == 'finished' && !newData.exists())",
         ".validate": "newData.hasChildren(['room','title','owner','status','mode','createdAt'])",
         "room": {
           ".validate": "newData.val() == $room"
@@ -48,12 +48,15 @@
         },
         "$other": {
           ".validate": false
+        },
+        "p0": {
+          ".validate": "newData.val() == root.child('rooms').child($room).child('meta/p0').val()"
         }
       }
     },
     "rooms": {
       "$room": {
-        ".write": "auth != null && ((!data.exists() && newData.child('meta/p0').val() == auth.uid && newData.child('authority/uid').val() == auth.uid && $room.matches(/^[A-Z0-9]{8}$/)) || (!newData.exists() && data.child('meta/p0').val() == auth.uid && data.child('meta/status').val() == 'closed'))",
+        ".write": "(auth != null && ((!data.exists() && newData.child('meta/p0').val() == auth.uid && newData.child('authority/uid').val() == auth.uid && $room.matches(/^[A-Z0-9]{8}$/)) || (!newData.exists() && data.child('meta/p0').val() == auth.uid && data.child('meta/status').val() == 'closed'))) || (auth != null && (auth.uid == root.child('rooms').child($room).child('meta/p0').val() || auth.uid == root.child('rooms').child($room).child('authority/uid').val()) && root.child('rooms').child($room).child('meta/status').val() == 'finished' && !newData.exists())",
         ".validate": "newData.hasChildren(['meta','authority'])",
         "meta": {
           ".read": "auth != null",

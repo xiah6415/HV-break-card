@@ -85,5 +85,18 @@ try{
  await no(set(ref(a,'rooms/'+room+'/meta/rematch/host'),'next-game'));
  await ok(set(ref(b,'rooms/'+room+'/meta/status'),'closed'));await no(set(ref(b,'rooms/'+room+'/commands/guest/closed'),{...cmd,term:2}));await ok(remove(ref(a,'rooms/'+room)));
  await ok(set(ref(a,'rooms/ROOM0002'),{meta:{...meta,id:'ROOM0002',p1:'AI',names:{host:'Host',AI:'AI'}},authority:{uid:'host',connection:'c1',term:1},settings:{host:{deckJSON:'[]',ready:true},AI:{deckJSON:'[]',ready:true}}}));await ok(set(ref(a,'rooms/ROOM0002/meta/status'),'closed'));await ok(remove(ref(a,'rooms/ROOM0002')));
+ // Completed-room deletion is atomic and never opens ongoing rooms or other rooms.
+ const cleanup='ROOM0003', paths={['rooms/'+cleanup]:null,['lobby/'+cleanup]:null};
+ await ok(set(ref(a,'rooms/'+cleanup),{meta:{...meta,id:cleanup,status:'running'},authority:{uid:'host',connection:'c1',term:1}}));
+ await ok(set(ref(a,'lobby/'+cleanup),{room:cleanup,title:'cleanup',owner:'host',status:'running',mode:'strict',createdAt:at}));
+ await no(update(ref(a),paths));await ok(get(ref(a,'rooms/'+cleanup+'/meta')));
+ await ok(set(ref(a,'rooms/'+cleanup+'/meta/status'),'finished'));
+ await no(update(ref(x),paths));await no(update(ref(b),paths));
+ await ok(update(ref(a),paths));assert.equal((await get(ref(a,'rooms/'+cleanup+'/meta'))).exists(),false);assert.equal((await get(ref(a,'lobby/'+cleanup))).exists(),false);
+ // The current authority can clean up after takeover; original creator can too.
+ for(const [id,db] of [['ROOM0004',b],['ROOM0005',a]]){
+  await env.withSecurityRulesDisabled(async context=>{const admin=context.database();await set(ref(admin,'rooms/'+id),{meta:{...meta,id,status:'finished'},authority:{uid:'guest',connection:'c2',term:2}});await set(ref(admin,'lobby/'+id),{room:id,title:'takeover cleanup',owner:'guest',status:'finished',mode:'strict',createdAt:1});});
+  await ok(update(ref(db),{['rooms/'+id]:null,['lobby/'+id]:null}));
+ }
  console.log('Firebase rules: '+count+' authorization/privacy/immutability/takeover checks passed');
 }finally{await env.clearDatabase();await env.cleanup();}

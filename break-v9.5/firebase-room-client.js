@@ -110,7 +110,7 @@ export class FirebaseRooms{
   catch(e){if(this.active?.gen===gen){this.core=null;this.active=null;this.generation++;this._stopAuthority();this.recoveries=(this.recoveries||0)+1;if(this.online&&this.recoveries<=3)setTimeout(()=>this._inspectLease().catch(x=>this.error(x)),200);}throw e;}
 
  }
- async _publishLobby(){if(!this.meta||!this._current(this.active?.gen))return;await this.D.set(this.ref('lobby/'+this.room),{room:this.room,title:this.meta.title,owner:this.user.uid,status:this.meta.status,mode:this.meta.mode,createdAt:this.meta.createdAt});}
+ async _publishLobby(){if(!this.meta||!this._current(this.active?.gen))return;await this.D.set(this.ref('lobby/'+this.room),{room:this.room,title:this.meta.title,owner:this.user.uid,p0:this.meta.p0,status:this.meta.status,mode:this.meta.mode,createdAt:this.meta.createdAt});}
  async send(command){if(command?.kind==='rematch')return this._confirmRematch(command);if(!this.online||!this.room||!this.lastView||this.meta?.status!=='running')throw Error('請等待連線與對戰開始');if(!this.lease||this.lastView.term!==this.lease.term||!this.roomOnline[this.lease.uid]?.[this.lease.connection])throw Error('請等待房主接手與最新視圖');if(this.pending)throw Error('正在等待上一個操作確認');const r=this.ref('rooms/'+this.room+'/commands/'+this.user.uid),cid=this.D.push(r).key;this.pending=cid;this.cb.sending?.(true);
   try{await this.D.set(this.ref('rooms/'+this.room+'/commands/'+this.user.uid+'/'+cid),{body:JSON.stringify(command),term:this.lastView.term,createdAt:this.D.serverTimestamp()});}catch(e){this.pending=null;throw e;}finally{this.cb.sending?.(false);}return cid;
  }
@@ -120,7 +120,17 @@ export class FirebaseRooms{
   this.cb.sending?.(true);try{await this.D.set(this.ref('rooms/'+this.room+'/meta/rematch/'+this.user.uid),command.matchId);}finally{this.cb.sending?.(false);}
   return command.matchId;
  }
- async _flushReplay(){const gen=this.active?.gen;if(this._current(gen)&&this.core?.match._m.phase==='finished'&&this.meta?.status!=='closed'){if(this.meta.status!=='finished')await this.D.set(this.ref('rooms/'+this.room+'/meta/status'),'finished');await this._publishReplay(gen);}}
+ async _flushReplay(){const gen=this.active?.gen;if(this._current(gen)&&this.meta&&this.core?.match._m.phase==='finished'&&this.meta.status!=='closed'){if(this.meta.status!=='finished')await this.D.set(this.ref('rooms/'+this.room+'/meta/status'),'finished');await this._publishReplay(gen);}}
+ async deleteRoom(id){
+  id=String(id||'').toUpperCase();if(!/^[A-Z0-9]{8}$/.test(id)||!this.online||!this.user)throw Error('請先連線登入');
+  if(this.room===id){await this._flushReplay();if(this.archiveError)throw Error('回放尚未保存，請稍後重試刪除');}
+  const meta=(await this.D.get(this.ref('rooms/'+id+'/meta'))).val(),lease=(await this.D.get(this.ref('rooms/'+id+'/authority'))).val();
+  if(!meta)return;
+  if(meta.status!=='finished')throw Error('只能刪除已結束的房間');
+  if(meta.p0!==this.user.uid&&lease?.uid!==this.user.uid)throw Error('只有房主可以刪除房間');
+  await this.D.update(this.D.ref(this.db),{['rooms/'+id]:null,['lobby/'+id]:null});
+  if(this.room===id)await this.leave();
+ }
  async close(){await this._flushReplay();const id=this.room;if(!this._current(this.active?.gen))throw Error('只有權威端可以關閉房間');await this.D.set(this.ref('rooms/'+this.room+'/meta/status'),'closed');await this.D.remove(this.ref('lobby/'+id));await this.leave();}
  async leave(){await this._flushReplay();const id=this.room,conn=this.connection;this.generation++;this.core=null;this.active=null;this._stopAuthority();for(const stop of this.roomStops||[])stop();this.roomStops=[];this.room=null;this.meta=null;this.lease=null;this.pending=null;this.lastView=null;if(id&&conn&&this.user)await this.D.remove(this.ref('rooms/'+id+'/presence/'+this.user.uid+'/'+conn)).catch(()=>{});this.cb.room?.(null);}
  async logout(){await this.leave();if(this.user&&this.connection)await this.D.remove(this.ref('presence/'+this.user.uid+'/'+this.connection)).catch(()=>{});for(const stop of this.stops)stop();this.stops=[];this.online=false;this.user=null;}

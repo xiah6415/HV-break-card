@@ -46,6 +46,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=req
   }
   assert.equal(games,3);assert(manual&&undo&&mull&&loss&&draw);assert.deepEqual(errors,[]);assert(await page.isHidden('#runtimeStatus'));
   await page.screenshot({path:path.join(process.env.E2E_OUTPUT_DIR||'/tmp','native-table-'+width+'.png')});
+  const records=await page.evaluate(()=>JSON.parse(localStorage.getItem('bk_match_records')).rows.length);await page.locator('[data-act="home"]').click();assert(await page.isVisible('#setup'),'finished match returns home');assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('bk_match_records')).rows.length),records,'return home preserves records');
   console.log(JSON.stringify({width,games,steps,manual,undo,drag,mull,loss,draw,kinds:[...kinds],noOldGame:true,noErrors:true,noOverflow:true}));await page.close();
  }}finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});
