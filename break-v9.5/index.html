@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>BREAK 對練台</title>
+<link rel="preload" as="image" href="img/ui/coin-heads-7fa122568f33.png">
+<link rel="preload" as="image" href="img/ui/coin-tails-4006bad17af0.png">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -704,9 +706,10 @@ a.chip { text-decoration: none; display: inline-flex; align-items: center; color
 @keyframes fx-draw-flight{0%{transform:translate(var(--from-x),var(--from-y)) scale(.35);opacity:0}25%,70%{opacity:1}40%,75%{transform:translate(0,0) scale(1)}100%{transform:translateY(80px) scale(.7);opacity:0}}
 @keyframes fx-draw-flip{0%,35%{transform:rotateY(0)}65%,100%{transform:rotateY(180deg)}}
 .fx-coin-wrap{position:absolute;top:34%;left:50%;transform:translate(-50%,-50%);perspective:700px;display:grid;justify-items:center;gap:18px}
-.fx-coin{width:110px;height:110px;position:relative;transform-style:preserve-3d;transform:rotateY(var(--coin-end));animation:fx-coin-spin 1.2s cubic-bezier(.16,.7,.22,1) both}
-.fx-face{position:absolute;inset:0;border:7px double #fff3b4;border-radius:50%;background:linear-gradient(135deg,#ffdc66,#c18518);backface-visibility:hidden;display:grid;place-items:center;font-size:48px;font-weight:900;color:#613c08;box-shadow:0 8px 28px #0005}
-.fx-tail{transform:rotateY(180deg);background:linear-gradient(135deg,#ffeab0,#c89843)}
+.fx-coin{width:140px;height:140px;position:relative;transform-style:preserve-3d;transform:rotateY(var(--coin-end));animation:fx-coin-spin 1.2s cubic-bezier(.16,.7,.22,1) both}
+.fx-face{position:absolute;inset:0;backface-visibility:hidden;display:grid;place-items:center;filter:drop-shadow(0 8px 12px #0005)}
+.fx-face img{display:block;width:100%;height:100%;object-fit:contain}
+.fx-tail{transform:rotateY(180deg)}
 .fx-coin-caption{white-space:nowrap;background:#102d32ed;color:white;padding:8px 16px;border-radius:99px;animation:fx-caption 1.2s both}
 @keyframes fx-coin-spin{from{transform:translateY(-90px) rotateY(-1440deg) rotateZ(-20deg)}to{transform:translateY(0) rotateY(var(--coin-end)) rotateZ(0)}}
 @keyframes fx-caption{0%,75%{opacity:0}100%{opacity:1}}
@@ -3752,7 +3755,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = api; else 
    const c=req.context?.coin;if(!c){sync();return;}const key=req.matchId+':'+JSON.stringify(c);if(key===coinKey)return;coinKey=key;
    el.querySelector('.fx-coin-wrap')?.remove();const box=document.createElement('div');box.className='fx-coin-wrap';box.setAttribute('role','status');box.dataset.result=c.result;
    box.style.setProperty('--coin-end',c.result==='tails'?'180deg':'0deg');
-   box.innerHTML='<div class="fx-coin"><div class="fx-face">正</div><div class="fx-face fx-tail">反</div></div><strong class="fx-coin-caption"></strong>';
+   box.innerHTML='<div class="fx-coin"><div class="fx-face"><img src="img/ui/coin-heads-7fa122568f33.png" alt="正面：BREAK 標誌" width="140" height="140"></div><div class="fx-face fx-tail"><img src="img/ui/coin-tails-4006bad17af0.png" alt="反面：排球" width="140" height="140"></div></div><strong class="fx-coin-caption"></strong>';
    box.querySelector('strong').textContent='硬幣結果：'+(c.result==='heads'?'正面':'反面');el.append(box);later(()=>box.remove(),reduced()?500:1800);
   }
   return {observe,request,reset,negative,notice,clearNotices,sync};

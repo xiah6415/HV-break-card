@@ -64,7 +64,7 @@
    const c=req.context?.coin;if(!c){sync();return;}const key=req.matchId+':'+JSON.stringify(c);if(key===coinKey)return;coinKey=key;
    el.querySelector('.fx-coin-wrap')?.remove();const box=document.createElement('div');box.className='fx-coin-wrap';box.setAttribute('role','status');box.dataset.result=c.result;
    box.style.setProperty('--coin-end',c.result==='tails'?'180deg':'0deg');
-   box.innerHTML='<div class="fx-coin"><div class="fx-face">正</div><div class="fx-face fx-tail">反</div></div><strong class="fx-coin-caption"></strong>';
+   box.innerHTML='<div class="fx-coin"><div class="fx-face"><img src="img/ui/coin-heads-7fa122568f33.png" alt="正面：BREAK 標誌" width="140" height="140"></div><div class="fx-face fx-tail"><img src="img/ui/coin-tails-4006bad17af0.png" alt="反面：排球" width="140" height="140"></div></div><strong class="fx-coin-caption"></strong>';
    box.querySelector('strong').textContent='硬幣結果：'+(c.result==='heads'?'正面':'反面');el.append(box);later(()=>box.remove(),reduced()?500:1800);
   }
   return {observe,request,reset,negative,notice,clearNotices,sync};
