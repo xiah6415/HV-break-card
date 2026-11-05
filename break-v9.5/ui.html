@@ -290,6 +290,8 @@ body[data-mode="online"] .solo-only, body[data-mode="solo"] .online-only, body[d
 .ball.pop .v { animation-name: popb; } @keyframes popb { 0% { transform: scale(.4); } 60% { transform: scale(1.3); } }
 .dragcard { position: fixed; left: 0; top: 0; z-index: 60; pointer-events: none; filter: drop-shadow(0 10px 18px rgb(0 0 0 / .35)); }
 body.dragging { user-select: none; -webkit-user-select: none; }
+.hand.fan .hc.hand-insert-before{box-shadow:-4px 0 0 var(--court)}
+.hand.fan .hc.hand-insert-after{box-shadow:4px 0 0 var(--court)}
 body.dragging .dock { pointer-events: none; }
 body.dragging .dock[data-mode="modal"] { opacity: .2; }
 body.dragging .game::after { pointer-events: none; opacity: 0; }
@@ -808,7 +810,7 @@ body.playing .dock .hc-opt.on,body.playing .dock .hc-nocard .hc-card.on{backgrou
 body.playing .dock .hc-go{background:var(--court);color:#fff;border-radius:6px;min-height:38px}
 body.playing .dock .hc-quiet,body.playing .dock .opt,body.playing .dock .chip{color:var(--ink);border-color:var(--line)}
 body.playing .dock .hc-timing{color:var(--ev)}
-body.playing .dock .hc-effect-text,body.playing .dock .hc-zone,body.playing .dock .hc-ctx{color:var(--muted)}
+body.playing .dock .hc-effect-text,body.playing .dock .hc-ctx{color:var(--muted)}
 body.playing .dock.peek-court{width:min(330px,calc(100vw - 24px));border-radius:8px;max-height:none}
 body.playing .dock.peek-court .in{padding:5px 8px}
 body.playing .dock.peek-court .opts,body.playing .dock.peek-court .q{display:none!important}
@@ -853,7 +855,7 @@ body.playing .dock .hc-err:empty{display:none}
 /* 抽牌確認保留兩側牌庫可點區域。 */
 body.playing .dock:has([data-kind="drawConfirm"]){width:min(360px,calc(100vw - 112px))}
 
-.hand.fan [data-hand]{-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
+.hand.fan [data-hand]{touch-action:none;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
 .area .v.historical::after{content:'上回合結算';display:block;font-size:9px;font-weight:500;line-height:1.2}
 </style>
 <script>
@@ -1005,6 +1007,8 @@ body.playing .dock:has([data-kind="drawConfirm"]){width:min(360px,calc(100vw - 1
   let menuCloudRows=[],cloudMenuStamp='';const cloudSelections=new Map();
   const AI_DECKS = ['seijoh'];
   const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+  const handOrder = new BreakHandOrder(store);
+  const handOrderKey=()=>session?(OL.inGame?'online:'+OL.roomId+':'+session.last?.actor+':'+session.last?.view.match.id:'solo:'+session.match?._m.id):'';
   if (store.get('bk_game_mode') === 'strict') $('gameMode').value = 'strict';
   if (['easy','normal','hard'].includes(store.get('bk_ai_level'))) $('aiLevel').value = store.get('bk_ai_level');
   $('aiLevel').onchange = () => store.set('bk_ai_level', $('aiLevel').value);
@@ -1267,6 +1271,7 @@ body.playing .dock:has([data-kind="drawConfirm"]){width:min(360px,calc(100vw - 1
     nativeWidget=BreakChoiceUI.render($('dockOpts'),r,{goLabel:labels[r.kind],hidePrompt:true,selection,actionsRoot:$('rallyActions'),
       sourceInfo:ref=>{const c=CL.card(ref.cardNo);return {name:ref.name||c?.name||ref.cardNo,skill:c?(DEF[c.code]?.[10]||c.skill):''};},
       previewBlockSkills:a=>session.match.previewBlockSkills(a),
+      cardLocation:ref=>{const courts=game.players.flatMap(p=>p.court);return {guts:courts.some(c=>c.guts.some(g=>g.id===ref.id))};},
       imgSrc:no=>art.url(no),onCard:c=>cardSheet(c.cardNo.replace(/^HV-?/,'')),
       onAnswer:a=>nativeCommand({kind:'answer',answer:a}),onLoss:()=>nativeAnswer({__loss:true}),onSelection:s=>{syncNativeHand(s);olControls();if(courtRequest(r)==='parameter'&&s.value!==undefined){const value=s.value;queueMicrotask(()=>{if(pending?.req.requestId===r.requestId&&pending.req.epoch===r.epoch)nativeAnswer(value);});}}
     });
@@ -1511,12 +1516,13 @@ body.playing .dock:has([data-kind="drawConfirm"]){width:min(360px,calc(100vw - 1
   function fanHTML(p) {
     const req = pending && pending.req, legal = legalCards();
     if (!p.hand.length) return '<div class="hand fan empty-hand"><span class="empty">手牌空了</span></div>';
-    return `<div class="hand fan" style="--hn:${p.hand.length}">${p.hand.map((c, i) => {
+    return `<div class="hand fan" style="--hn:${p.hand.length}">${handOrder.indices(handOrderKey(),p.handRefs).map((i,position) => {
+      const c=p.hand[i];
       const ref = p.handRefs?.[i], selection = req?.input.type==='single' ? [nativeSelection?.value] : nativeSelection?.picked || [];
       const eligible=!!req&&req.input.max!==0&&req.options.some(o=>o.value===ref?.id);
       const cls=selection.includes(ref?.id)&&eligible?(req.kind==='mulligan'?'picked':'staged'):eligible?'sel':'dim';
       const ready = req && (req.kind === 'event' && req.options.some(o => o.value === ref?.id) || req.context.entrySkillIds?.includes(ref?.id) || req.kind === 'block' && nativeWidget?.timing?.ids?.includes(ref?.id)) ? ' skill-ready' : '';
-      const mid = (p.hand.length - 1) / 2, rot = (i - mid) * Math.min(4, 24 / p.hand.length), drop = Math.abs(i - mid) * Math.min(4, 20 / p.hand.length);
+      const mid = (p.hand.length - 1) / 2, rot = (position - mid) * Math.min(4, 24 / p.hand.length), drop = Math.abs(position - mid) * Math.min(4, 20 / p.hand.length);
       return `<div class="hc ${cls}${ready}" style="--r:${rot.toFixed(1)}deg;--d:${drop.toFixed(1)}px">${nativeSelection?.center === ref?.id ? '<span class="newb ctr">中攔</span>' : ''}<button class="cbtn" type="button" data-hand="${i}" data-card="${c}" title="${eligible?'點選選牌，長按查看資訊':'查看卡片資訊（目前不可使用）'}" aria-label="${esc(nm(c))}・${eligible?'目前可選擇':'目前不可使用，點選查看資訊'}">${img(c)}</button></div>`;
     }).join('')}</div>`;
   }
@@ -1676,8 +1682,8 @@ body.playing .dock:has([data-kind="drawConfirm"]){width:min(360px,calc(100vw - 1
   // ---------- 拖曳出牌
   let drag = null;
   document.addEventListener('pointerdown', e => {
-    const b = e.target.closest('.hand .hc.sel .cbtn, .hand .hc.staged .cbtn'); if (!b || !pending || !targetOf(pending.req,b.dataset.card) || (e.pointerType === 'mouse' && e.button !== 0)) return;
-    drag = { b, requestId:pending.req.requestId, epoch:pending.req.epoch, ref:game.players[0].handRefs[+b.dataset.hand]?.id, c: b.dataset.card, handIndex:+b.dataset.hand, x: e.clientX, y: e.clientY, on: false, el: null, over: null, id: e.pointerId };
+    const b = e.target.closest('.hand [data-hand]'); if (!b || !game || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    drag = { b, session, orderKey:handOrderKey(), requestId:pending?.req.requestId, epoch:pending?.req.epoch, ref:game.players[0].handRefs[+b.dataset.hand]?.id, c: b.dataset.card, handIndex:+b.dataset.hand, x: e.clientX, y: e.clientY, on: false, el: null, over: null, id: e.pointerId };
   });
   document.addEventListener('pointermove', e => {
     if (!drag || e.pointerId !== drag.id) return;
@@ -1691,16 +1697,24 @@ body.playing .dock:has([data-kind="drawConfirm"]){width:min(360px,calc(100vw - 1
     }
     e.preventDefault();
     drag.el.style.transform = `translate(${e.clientX - drag.w / 2}px, ${e.clientY - drag.h * 0.8}px) rotate(-4deg)`;
-    const t=document.elementFromPoint(e.clientX,e.clientY),court=$('meSide').querySelector('.court2').getBoundingClientRect(),want=targetOf(pending?.req,drag.c),inside=e.clientX>=court.left-24&&e.clientX<=court.right+24&&e.clientY>=court.top-24&&e.clientY<=court.bottom+24,z=inside&&want?document.querySelector('#meSide [data-drop="'+want+'"]'):t?.closest('#meSide [data-drop]');
+    const sort=handSortTarget(e.clientX,e.clientY,drag.ref);if(drag.sortEl)drag.sortEl.classList.remove('hand-insert-before','hand-insert-after');drag.sort=sort;drag.sortEl=sort?.el;if(sort)sort.el.classList.add(sort.before?'hand-insert-before':'hand-insert-after');
+    const t=document.elementFromPoint(e.clientX,e.clientY),court=$('meSide').querySelector('.court2').getBoundingClientRect(),want=targetOf(pending?.req,drag.c),inside=e.clientX>=court.left-24&&e.clientX<=court.right+24&&e.clientY>=court.top-24&&e.clientY<=court.bottom+24,z=sort?null:inside&&want?document.querySelector('#meSide [data-drop="'+want+'"]'):t?.closest('#meSide [data-drop]');
     if (drag.over && drag.over !== z) drag.over.classList.remove('over');
     drag.over = z; if (z) z.classList.add('over');
   }, { passive: false });
+  function handSortTarget(x,y,ref){
+    const hand=$('handZone').querySelector('.hand'),r=hand?.getBoundingClientRect();if(!r||x<r.left||x>r.right||y<r.top-12||y>r.bottom+12)return null;
+    const targets=[...hand.querySelectorAll('[data-hand]')].filter(b=>game.players[0].handRefs[+b.dataset.hand]?.id!==ref);if(!targets.length)return null;
+    const hit=document.elementFromPoint(x,y)?.closest('.hand [data-hand]'),b=targets.includes(hit)?hit:targets.reduce((a,b)=>Math.abs(a.getBoundingClientRect().left+a.getBoundingClientRect().width/2-x)<Math.abs(b.getBoundingClientRect().left+b.getBoundingClientRect().width/2-x)?a:b),rect=b.getBoundingClientRect();
+    return {el:b.closest('.hc'),target:game.players[0].handRefs[+b.dataset.hand]?.id,before:x<rect.left+rect.width/2};
+  }
   function endDrag(e) {
     if (!drag || (e && e.pointerId !== drag.id)) return;
     const d = drag; drag = null; document.body.classList.remove('dragging');
     if (!d.on) return;
     suppressClick = true; setTimeout(() => { suppressClick = false; }, 0);
-    if (d.el) d.el.remove(); if (d.over) d.over.classList.remove('over');
+    if (d.el) d.el.remove(); if (d.over) d.over.classList.remove('over');if(d.sortEl)d.sortEl.classList.remove('hand-insert-before','hand-insert-after');
+    if(e?.type!=='pointercancel'&&d.sort&&session===d.session&&handOrderKey()===d.orderKey){if(handOrder.move(d.orderKey,game.players[0].handRefs,d.ref,d.sort.target,d.sort.before)){$('handZone').innerHTML=fanHTML(game.players[0]);markDiscardHand();}return;}
     try { if(d.b.hasPointerCapture(d.id))d.b.releasePointerCapture(d.id); } catch (_) {}
     if (e?.type === 'pointercancel' || !d.over || !pending || pending.req.requestId!==d.requestId || pending.req.epoch!==d.epoch) return;
     const want = targetOf(pending.req, d.c);

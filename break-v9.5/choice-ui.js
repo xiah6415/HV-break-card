@@ -31,7 +31,7 @@ const CSS = `
 .hc-card span.hc-nm{font-size:11px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hc .hc-nm.renamed{white-space:normal;overflow:visible;overflow-wrap:anywhere}
 .hc[data-kind="trigger_order"] .hc-nm{white-space:normal;overflow:visible;overflow-wrap:anywhere}
-.hc-zone{font-size:10px;color:var(--muted,#566b6e)}
+.hc-zone{display:block;font-size:12px;font-weight:700;line-height:1.5;color:var(--ink,#122326);background:var(--sunk,#d9e4e3);padding:4px 5px;border-radius:5px;white-space:normal;overflow-wrap:anywhere}.hc-code{font-size:11px;color:var(--muted,#566b6e)}
 .hc-card.on img{box-shadow:0 0 0 3px var(--court,#d96a1f)}
 .hc-card[aria-pressed="false"] img{opacity:.92}
 .hc-card .hc-badge{position:absolute;top:-6px;right:-4px;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:var(--court,#d96a1f);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center}
@@ -109,6 +109,13 @@ function optionLabel(request,option){
  if(current&&printed&&normalize(current)!==normalize(printed))return current+'（'+option.label+'）';
  return option.label;
 }
+function locationLabel(request,option,location){
+ const parts=String(option.card?.zone||'').split('.'),zone=parts.at(-1);
+ if(!zoneNames[zone]&&!['side:0','side:1'].includes(zone))return '';
+ const owner=parts.length===2?(+parts[0]===request.actor?'我方':'對方'):'';
+ const guts=location?.guts??(['guts','entry'].includes(request.kind)&&['serve','block','receive','toss','attack','side:0','side:1'].includes(zone));
+ return owner+zoneText(zone)+(guts?'・Guts':'');
+}
 function requestDetail(request){
  if(request.kind==='activate_payment')return describePayment(request.context?.payment);
  if(quantityActions[request.kind]&&request.context?.selectionAction!=='exchange')return '請從目前提供的數量中選擇，再按確認；下一步依此數量結算。';
@@ -182,9 +189,8 @@ function render(rootEl, request, opts = {}) {
         else if (on && t === 'block') badge = `<span class="hc-badge${key(sel.center) === key(o.value) ? ' ctr' : ''}">${key(sel.center) === key(o.value) ? '中' : '側'}</span>`;
         else if (on) badge = '<span class="hc-badge">✓</span>';
         const c = o.card || { cardNo: '', name: o.label };
-        const parts=String(c.zone||'').split('.'),zone=parts.length===2?parts[1]:parts[0],labels={hand:'手牌',deck:'牌庫',drop:'棄牌',event:'Event',serve:'發球',block:'中攔',receive:'接球',toss:'舉球',attack:'攻擊','side:0':'側攔','side:1':'側攔'};
-        const location=labels[zone]?(parts.length===2?(+parts[0]===request.actor?'我方 ':'對方 '):'')+labels[zone]:'';
-        return `<div class="hc-item${o.card?'':' hc-nocard'}"><button type="button" class="hc-card${timing?.active&&timing.candidates&&o.card&&(!timing.ids||timing.ids.includes(o.value))?' hc-ready':''}${on ? ' on' : ''}" aria-pressed="${on}" ${readOnlyCards?'disabled':''} data-hc-v="${esc(key(o.value))}">${c.cardNo ? cardImg(c) : ''}<span class="hc-nm${o.card?.effectiveName&&optionLabel(request,o)!==o.label?' renamed':''}">${esc(optionLabel(request,o))}</span>${location?`<small class="hc-zone">${esc(location)}</small>`:''}${badge}</button>${o.card&&opts.onCard?`<button type="button" class="hc-info" data-hc-info="${esc(o.id)}" aria-label="查看 ${esc(optionLabel(request,o))} 卡片">查卡</button>`:''}</div>`;
+        const location=locationLabel(request,o,opts.cardLocation?.(c));
+        return `<div class="hc-item${o.card?'':' hc-nocard'}"><button type="button" class="hc-card${timing?.active&&timing.candidates&&o.card&&(!timing.ids||timing.ids.includes(o.value))?' hc-ready':''}${on ? ' on' : ''}" aria-pressed="${on}" ${readOnlyCards?'disabled':''} data-hc-v="${esc(key(o.value))}">${location?`<small class="hc-zone">${esc(location)}</small>`:''}${c.cardNo ? cardImg(c) : ''}<span class="hc-nm${o.card?.effectiveName&&optionLabel(request,o)!==o.label?' renamed':''}">${esc(optionLabel(request,o))}</span>${o.card?`<small class="hc-code">${esc(o.card.cardNo.replace(/^HV-?/,''))}</small>`:''}${badge}</button>${o.card&&opts.onCard?`<button type="button" class="hc-info" data-hc-info="${esc(o.id)}" aria-label="查看 ${esc(optionLabel(request,o))} 卡片">查卡</button>`:''}</div>`;
       }).join('')}</div>`;
     }
     return `<div class="hc-opts" role="group">${request.options.map(o => `<button type="button" class="hc-opt${t === 'number' ? ' num' : ''}${sel.value !== undefined && key(sel.value) === key(o.value) ? ' on' : ''}" aria-pressed="${sel.value !== undefined && key(sel.value) === key(o.value)}" data-hc-v="${esc(key(o.value))}">${esc(optionLabel(request,o))}</button>`).join('')}</div>`;
@@ -262,6 +268,6 @@ function render(rootEl, request, opts = {}) {
   draw();
   return { destroy() { rootEl.removeEventListener('click', onClick);if(opts.actionsRoot){opts.actionsRoot.removeEventListener('click',onClick);opts.actionsRoot.replaceChildren();opts.actionsRoot.hidden=true;} rootEl.innerHTML = ''; }, select: choose, get selection() { return sel; }, get timing() { return timing; } };
 }
-const api = { render, CSS, describePayment, requestDetail, requestPrompt, optionLabel, timingHint, stepLabel, actionLabel };
+const api = { render, CSS, describePayment, requestDetail, locationLabel, requestPrompt, optionLabel, timingHint, stepLabel, actionLabel };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.BreakChoiceUI = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

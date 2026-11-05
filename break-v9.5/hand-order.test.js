@@ -1,0 +1,10 @@
+'use strict';const assert=require('node:assert/strict'),HandOrder=require('./hand-order');
+let saved=null;const store={get:()=>saved,set:(key,value)=>{saved=value;}},order=new HandOrder(store),refs=['a','b','c'].map(id=>({id})),before=structuredClone(refs);
+assert(order.move('solo:m',refs,'a','c',false));assert.deepEqual(order.indices('solo:m',refs),[1,2,0]);assert.deepEqual(refs,before);
+assert.deepEqual(order.indices('solo:m',[refs[1],refs[2],{id:'d'}]),[0,1,2],'new card appends');
+assert.deepEqual(new HandOrder(store).indices('solo:m',refs),[1,2,0],'refresh and Undo restore positions');
+assert.deepEqual(order.indices('online:r:1:m',refs),[0,1,2],'other seat isolated');
+assert(!order.move('solo:m',refs,'missing','a',true));assert(!order.move('solo:m',refs,'a','a',true));
+for(let i=0;i<25;i++)order.move('match:'+i,refs,'a','b',false);assert.equal(order.rows.length,20);
+const blocked=new HandOrder({get:()=>'{invalid',set:()=>{throw Error('quota');}});assert(blocked.move('m',refs,'c','a',true));assert.deepEqual(blocked.indices('m',refs),[2,0,1]);
+console.log('Local hand ordering: physical IDs, unchanged input, draw, Undo, refresh, seat/match isolation, bounds and blocked storage passed');

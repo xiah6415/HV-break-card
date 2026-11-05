@@ -290,6 +290,8 @@ body[data-mode="online"] .solo-only, body[data-mode="solo"] .online-only, body[d
 .ball.pop .v { animation-name: popb; } @keyframes popb { 0% { transform: scale(.4); } 60% { transform: scale(1.3); } }
 .dragcard { position: fixed; left: 0; top: 0; z-index: 60; pointer-events: none; filter: drop-shadow(0 10px 18px rgb(0 0 0 / .35)); }
 body.dragging { user-select: none; -webkit-user-select: none; }
+.hand.fan .hc.hand-insert-before{box-shadow:-4px 0 0 var(--court)}
+.hand.fan .hc.hand-insert-after{box-shadow:4px 0 0 var(--court)}
 body.dragging .dock { pointer-events: none; }
 body.dragging .dock[data-mode="modal"] { opacity: .2; }
 body.dragging .game::after { pointer-events: none; opacity: 0; }
@@ -808,7 +810,7 @@ body.playing .dock .hc-opt.on,body.playing .dock .hc-nocard .hc-card.on{backgrou
 body.playing .dock .hc-go{background:var(--court);color:#fff;border-radius:6px;min-height:38px}
 body.playing .dock .hc-quiet,body.playing .dock .opt,body.playing .dock .chip{color:var(--ink);border-color:var(--line)}
 body.playing .dock .hc-timing{color:var(--ev)}
-body.playing .dock .hc-effect-text,body.playing .dock .hc-zone,body.playing .dock .hc-ctx{color:var(--muted)}
+body.playing .dock .hc-effect-text,body.playing .dock .hc-ctx{color:var(--muted)}
 body.playing .dock.peek-court{width:min(330px,calc(100vw - 24px));border-radius:8px;max-height:none}
 body.playing .dock.peek-court .in{padding:5px 8px}
 body.playing .dock.peek-court .opts,body.playing .dock.peek-court .q{display:none!important}
@@ -853,7 +855,7 @@ body.playing .dock .hc-err:empty{display:none}
 /* 抽牌確認保留兩側牌庫可點區域。 */
 body.playing .dock:has([data-kind="drawConfirm"]){width:min(360px,calc(100vw - 112px))}
 
-.hand.fan [data-hand]{-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
+.hand.fan [data-hand]{touch-action:none;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
 .area .v.historical::after{content:'上回合結算';display:block;font-size:9px;font-weight:500;line-height:1.2}
 </style>
 <script>
@@ -2301,7 +2303,7 @@ class Match {
  _lose(reason){this._m.loser=this._m.actor;this._m.lossReason=reason;this._next(this._m.wantsAck[this._m.actor]?'lossConfirm':'lossResolve');}
  _param(p,area){const id=this._kernel.top(p,area);return id?this._kernel.parameter(id,area):0;}
  _probe(fn){const saved=this._kernel.snapshot(),choose=this._kernel.choose;this._kernel.choose=r=>r.count!=null?r.options.slice(0,r.count):r.options.includes(true)?true:r.options.length&&r.options.every(Number.isInteger)?Math.max(...r.options):r.options[0];try{return fn();}catch(e){if(e.code==='ILLEGAL_ACTION'||e.code==='REQUIRES_REVIEW'&&e.message==='OPEN-EVENT-NO-CHANGE')return false;throw e;}finally{this._kernel.restore(saved);this._kernel.choose=choose;}}
- _playable(p){const k=this._kernel,phase=k.state.turn.phase;return [...this._zone(p,'hand')].filter(id=>{const pr=k.profile(id),a=pr.activation;if(!pr.runtime_approved||!['event','active'].includes(a?.skill_type))return false;if(a.skill_type==='active'&&pr.limit&&k.state.locks.some(l=>l.player===p&&l.turn===k.state.turn.id&&l.name===k.effectiveName(id)))return false;if(!a.activation_phases.includes(phase)&&!(phase==='receive'&&pr.practice_override?.extra_window==='before_receive_judgment'))return false;const result=this._probe(()=>k.card(id).printed.type==='event'?k.playEvent(id):k.useSkill(id));return !!result&&(result.performed||result.invalid&&k.card(id).printed.type==='event');});}
+ _playable(p){const k=this._kernel,phase=k.state.turn.phase;return [...this._zone(p,'hand')].filter(id=>{const pr=k.profile(id),a=pr.activation;if(!pr.runtime_approved||!['event','active'].includes(a?.skill_type))return false;if(a.skill_type==='active'&&pr.limit&&k.state.locks.some(l=>l.player===p&&l.turn===k.state.turn.id&&l.name===k.effectiveName(id)))return false;if(!a.activation_phases.includes(phase))return false;const result=this._probe(()=>k.card(id).printed.type==='event'?k.playEvent(id):k.useSkill(id));return !!result&&(result.performed||result.invalid&&k.card(id).printed.type==='event');});}
  _event(next){const p=this._m.actor,opts=this._playable(p);if(!opts.length){
   // Consume an already-recorded empty numeric window from a pre-update snapshot,
   // without creating that window for new play or replay.
@@ -3456,7 +3458,7 @@ const CSS = `
 .hc-card span.hc-nm{font-size:11px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hc .hc-nm.renamed{white-space:normal;overflow:visible;overflow-wrap:anywhere}
 .hc[data-kind="trigger_order"] .hc-nm{white-space:normal;overflow:visible;overflow-wrap:anywhere}
-.hc-zone{font-size:10px;color:var(--muted,#566b6e)}
+.hc-zone{display:block;font-size:12px;font-weight:700;line-height:1.5;color:var(--ink,#122326);background:var(--sunk,#d9e4e3);padding:4px 5px;border-radius:5px;white-space:normal;overflow-wrap:anywhere}.hc-code{font-size:11px;color:var(--muted,#566b6e)}
 .hc-card.on img{box-shadow:0 0 0 3px var(--court,#d96a1f)}
 .hc-card[aria-pressed="false"] img{opacity:.92}
 .hc-card .hc-badge{position:absolute;top:-6px;right:-4px;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:var(--court,#d96a1f);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center}
@@ -3534,6 +3536,13 @@ function optionLabel(request,option){
  if(current&&printed&&normalize(current)!==normalize(printed))return current+'（'+option.label+'）';
  return option.label;
 }
+function locationLabel(request,option,location){
+ const parts=String(option.card?.zone||'').split('.'),zone=parts.at(-1);
+ if(!zoneNames[zone]&&!['side:0','side:1'].includes(zone))return '';
+ const owner=parts.length===2?(+parts[0]===request.actor?'我方':'對方'):'';
+ const guts=location?.guts??(['guts','entry'].includes(request.kind)&&['serve','block','receive','toss','attack','side:0','side:1'].includes(zone));
+ return owner+zoneText(zone)+(guts?'・Guts':'');
+}
 function requestDetail(request){
  if(request.kind==='activate_payment')return describePayment(request.context?.payment);
  if(quantityActions[request.kind]&&request.context?.selectionAction!=='exchange')return '請從目前提供的數量中選擇，再按確認；下一步依此數量結算。';
@@ -3607,9 +3616,8 @@ function render(rootEl, request, opts = {}) {
         else if (on && t === 'block') badge = `<span class="hc-badge${key(sel.center) === key(o.value) ? ' ctr' : ''}">${key(sel.center) === key(o.value) ? '中' : '側'}</span>`;
         else if (on) badge = '<span class="hc-badge">✓</span>';
         const c = o.card || { cardNo: '', name: o.label };
-        const parts=String(c.zone||'').split('.'),zone=parts.length===2?parts[1]:parts[0],labels={hand:'手牌',deck:'牌庫',drop:'棄牌',event:'Event',serve:'發球',block:'中攔',receive:'接球',toss:'舉球',attack:'攻擊','side:0':'側攔','side:1':'側攔'};
-        const location=labels[zone]?(parts.length===2?(+parts[0]===request.actor?'我方 ':'對方 '):'')+labels[zone]:'';
-        return `<div class="hc-item${o.card?'':' hc-nocard'}"><button type="button" class="hc-card${timing?.active&&timing.candidates&&o.card&&(!timing.ids||timing.ids.includes(o.value))?' hc-ready':''}${on ? ' on' : ''}" aria-pressed="${on}" ${readOnlyCards?'disabled':''} data-hc-v="${esc(key(o.value))}">${c.cardNo ? cardImg(c) : ''}<span class="hc-nm${o.card?.effectiveName&&optionLabel(request,o)!==o.label?' renamed':''}">${esc(optionLabel(request,o))}</span>${location?`<small class="hc-zone">${esc(location)}</small>`:''}${badge}</button>${o.card&&opts.onCard?`<button type="button" class="hc-info" data-hc-info="${esc(o.id)}" aria-label="查看 ${esc(optionLabel(request,o))} 卡片">查卡</button>`:''}</div>`;
+        const location=locationLabel(request,o,opts.cardLocation?.(c));
+        return `<div class="hc-item${o.card?'':' hc-nocard'}"><button type="button" class="hc-card${timing?.active&&timing.candidates&&o.card&&(!timing.ids||timing.ids.includes(o.value))?' hc-ready':''}${on ? ' on' : ''}" aria-pressed="${on}" ${readOnlyCards?'disabled':''} data-hc-v="${esc(key(o.value))}">${location?`<small class="hc-zone">${esc(location)}</small>`:''}${c.cardNo ? cardImg(c) : ''}<span class="hc-nm${o.card?.effectiveName&&optionLabel(request,o)!==o.label?' renamed':''}">${esc(optionLabel(request,o))}</span>${o.card?`<small class="hc-code">${esc(o.card.cardNo.replace(/^HV-?/,''))}</small>`:''}${badge}</button>${o.card&&opts.onCard?`<button type="button" class="hc-info" data-hc-info="${esc(o.id)}" aria-label="查看 ${esc(optionLabel(request,o))} 卡片">查卡</button>`:''}</div>`;
       }).join('')}</div>`;
     }
     return `<div class="hc-opts" role="group">${request.options.map(o => `<button type="button" class="hc-opt${t === 'number' ? ' num' : ''}${sel.value !== undefined && key(sel.value) === key(o.value) ? ' on' : ''}" aria-pressed="${sel.value !== undefined && key(sel.value) === key(o.value)}" data-hc-v="${esc(key(o.value))}">${esc(optionLabel(request,o))}</button>`).join('')}</div>`;
@@ -3687,9 +3695,26 @@ function render(rootEl, request, opts = {}) {
   draw();
   return { destroy() { rootEl.removeEventListener('click', onClick);if(opts.actionsRoot){opts.actionsRoot.removeEventListener('click',onClick);opts.actionsRoot.replaceChildren();opts.actionsRoot.hidden=true;} rootEl.innerHTML = ''; }, select: choose, get selection() { return sel; }, get timing() { return timing; } };
 }
-const api = { render, CSS, describePayment, requestDetail, requestPrompt, optionLabel, timingHint, stepLabel, actionLabel };
+const api = { render, CSS, describePayment, requestDetail, locationLabel, requestPrompt, optionLabel, timingHint, stepLabel, actionLabel };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.BreakChoiceUI = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
+
+/* Local presentation order only. Never mutates a Match or a request. */
+(function(root){'use strict';
+class HandOrder{
+ constructor(store){this.store=store;this.rows=[];try{const saved=JSON.parse(store.get('bk_hand_order_v1'));if(saved?.version===1&&Array.isArray(saved.rows))this.rows=saved.rows.filter(r=>typeof r.key==='string'&&Array.isArray(r.ids)&&r.ids.length<=80&&r.ids.every(id=>typeof id==='string')).slice(-20);}catch{}}
+ indices(key,refs){const ids=this.rows.find(r=>r.key===key)?.ids||[],rank=new Map(ids.map((id,i)=>[id,i]));return refs.map((_,i)=>i).sort((a,b)=>(rank.get(refs[a].id)??ids.length+a)-(rank.get(refs[b].id)??ids.length+b));}
+ move(key,refs,source,target,before){
+  if(!key||source===target||!refs.some(c=>c.id===source)||!refs.some(c=>c.id===target))return false;
+  const prior=this.rows.find(r=>r.key===key)?.ids||[],ids=[...new Set([...prior,...refs.map(c=>c.id)])];
+  ids.splice(ids.indexOf(source),1);ids.splice(ids.indexOf(target)+(before?0:1),0,source);
+  this.rows=this.rows.filter(r=>r.key!==key);this.rows.push({key,ids});this.rows=this.rows.slice(-20);
+  try{this.store.set('bk_hand_order_v1',JSON.stringify({version:1,rows:this.rows}));}catch{}
+  return true;
+ }
+}
+if(typeof module==='object'&&module.exports)module.exports=HandOrder;else root.BreakHandOrder=HandOrder;
+})(globalThis);
 
 /* Presentation only: consumes private player views; never answers a rules request. */
 (function(root){
@@ -4028,6 +4053,8 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
   let menuCloudRows=[],cloudMenuStamp='';const cloudSelections=new Map();
   const AI_DECKS = ['seijoh'];
   const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+  const handOrder = new BreakHandOrder(store);
+  const handOrderKey=()=>session?(OL.inGame?'online:'+OL.roomId+':'+session.last?.actor+':'+session.last?.view.match.id:'solo:'+session.match?._m.id):'';
   if (store.get('bk_game_mode') === 'strict') $('gameMode').value = 'strict';
   if (['easy','normal','hard'].includes(store.get('bk_ai_level'))) $('aiLevel').value = store.get('bk_ai_level');
   $('aiLevel').onchange = () => store.set('bk_ai_level', $('aiLevel').value);
@@ -4290,6 +4317,7 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
     nativeWidget=BreakChoiceUI.render($('dockOpts'),r,{goLabel:labels[r.kind],hidePrompt:true,selection,actionsRoot:$('rallyActions'),
       sourceInfo:ref=>{const c=CL.card(ref.cardNo);return {name:ref.name||c?.name||ref.cardNo,skill:c?(DEF[c.code]?.[10]||c.skill):''};},
       previewBlockSkills:a=>session.match.previewBlockSkills(a),
+      cardLocation:ref=>{const courts=game.players.flatMap(p=>p.court);return {guts:courts.some(c=>c.guts.some(g=>g.id===ref.id))};},
       imgSrc:no=>art.url(no),onCard:c=>cardSheet(c.cardNo.replace(/^HV-?/,'')),
       onAnswer:a=>nativeCommand({kind:'answer',answer:a}),onLoss:()=>nativeAnswer({__loss:true}),onSelection:s=>{syncNativeHand(s);olControls();if(courtRequest(r)==='parameter'&&s.value!==undefined){const value=s.value;queueMicrotask(()=>{if(pending?.req.requestId===r.requestId&&pending.req.epoch===r.epoch)nativeAnswer(value);});}}
     });
@@ -4534,12 +4562,13 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
   function fanHTML(p) {
     const req = pending && pending.req, legal = legalCards();
     if (!p.hand.length) return '<div class="hand fan empty-hand"><span class="empty">手牌空了</span></div>';
-    return `<div class="hand fan" style="--hn:${p.hand.length}">${p.hand.map((c, i) => {
+    return `<div class="hand fan" style="--hn:${p.hand.length}">${handOrder.indices(handOrderKey(),p.handRefs).map((i,position) => {
+      const c=p.hand[i];
       const ref = p.handRefs?.[i], selection = req?.input.type==='single' ? [nativeSelection?.value] : nativeSelection?.picked || [];
       const eligible=!!req&&req.input.max!==0&&req.options.some(o=>o.value===ref?.id);
       const cls=selection.includes(ref?.id)&&eligible?(req.kind==='mulligan'?'picked':'staged'):eligible?'sel':'dim';
       const ready = req && (req.kind === 'event' && req.options.some(o => o.value === ref?.id) || req.context.entrySkillIds?.includes(ref?.id) || req.kind === 'block' && nativeWidget?.timing?.ids?.includes(ref?.id)) ? ' skill-ready' : '';
-      const mid = (p.hand.length - 1) / 2, rot = (i - mid) * Math.min(4, 24 / p.hand.length), drop = Math.abs(i - mid) * Math.min(4, 20 / p.hand.length);
+      const mid = (p.hand.length - 1) / 2, rot = (position - mid) * Math.min(4, 24 / p.hand.length), drop = Math.abs(position - mid) * Math.min(4, 20 / p.hand.length);
       return `<div class="hc ${cls}${ready}" style="--r:${rot.toFixed(1)}deg;--d:${drop.toFixed(1)}px">${nativeSelection?.center === ref?.id ? '<span class="newb ctr">中攔</span>' : ''}<button class="cbtn" type="button" data-hand="${i}" data-card="${c}" title="${eligible?'點選選牌，長按查看資訊':'查看卡片資訊（目前不可使用）'}" aria-label="${esc(nm(c))}・${eligible?'目前可選擇':'目前不可使用，點選查看資訊'}">${img(c)}</button></div>`;
     }).join('')}</div>`;
   }
@@ -4699,8 +4728,8 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
   // ---------- 拖曳出牌
   let drag = null;
   document.addEventListener('pointerdown', e => {
-    const b = e.target.closest('.hand .hc.sel .cbtn, .hand .hc.staged .cbtn'); if (!b || !pending || !targetOf(pending.req,b.dataset.card) || (e.pointerType === 'mouse' && e.button !== 0)) return;
-    drag = { b, requestId:pending.req.requestId, epoch:pending.req.epoch, ref:game.players[0].handRefs[+b.dataset.hand]?.id, c: b.dataset.card, handIndex:+b.dataset.hand, x: e.clientX, y: e.clientY, on: false, el: null, over: null, id: e.pointerId };
+    const b = e.target.closest('.hand [data-hand]'); if (!b || !game || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    drag = { b, session, orderKey:handOrderKey(), requestId:pending?.req.requestId, epoch:pending?.req.epoch, ref:game.players[0].handRefs[+b.dataset.hand]?.id, c: b.dataset.card, handIndex:+b.dataset.hand, x: e.clientX, y: e.clientY, on: false, el: null, over: null, id: e.pointerId };
   });
   document.addEventListener('pointermove', e => {
     if (!drag || e.pointerId !== drag.id) return;
@@ -4714,16 +4743,24 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
     }
     e.preventDefault();
     drag.el.style.transform = `translate(${e.clientX - drag.w / 2}px, ${e.clientY - drag.h * 0.8}px) rotate(-4deg)`;
-    const t=document.elementFromPoint(e.clientX,e.clientY),court=$('meSide').querySelector('.court2').getBoundingClientRect(),want=targetOf(pending?.req,drag.c),inside=e.clientX>=court.left-24&&e.clientX<=court.right+24&&e.clientY>=court.top-24&&e.clientY<=court.bottom+24,z=inside&&want?document.querySelector('#meSide [data-drop="'+want+'"]'):t?.closest('#meSide [data-drop]');
+    const sort=handSortTarget(e.clientX,e.clientY,drag.ref);if(drag.sortEl)drag.sortEl.classList.remove('hand-insert-before','hand-insert-after');drag.sort=sort;drag.sortEl=sort?.el;if(sort)sort.el.classList.add(sort.before?'hand-insert-before':'hand-insert-after');
+    const t=document.elementFromPoint(e.clientX,e.clientY),court=$('meSide').querySelector('.court2').getBoundingClientRect(),want=targetOf(pending?.req,drag.c),inside=e.clientX>=court.left-24&&e.clientX<=court.right+24&&e.clientY>=court.top-24&&e.clientY<=court.bottom+24,z=sort?null:inside&&want?document.querySelector('#meSide [data-drop="'+want+'"]'):t?.closest('#meSide [data-drop]');
     if (drag.over && drag.over !== z) drag.over.classList.remove('over');
     drag.over = z; if (z) z.classList.add('over');
   }, { passive: false });
+  function handSortTarget(x,y,ref){
+    const hand=$('handZone').querySelector('.hand'),r=hand?.getBoundingClientRect();if(!r||x<r.left||x>r.right||y<r.top-12||y>r.bottom+12)return null;
+    const targets=[...hand.querySelectorAll('[data-hand]')].filter(b=>game.players[0].handRefs[+b.dataset.hand]?.id!==ref);if(!targets.length)return null;
+    const hit=document.elementFromPoint(x,y)?.closest('.hand [data-hand]'),b=targets.includes(hit)?hit:targets.reduce((a,b)=>Math.abs(a.getBoundingClientRect().left+a.getBoundingClientRect().width/2-x)<Math.abs(b.getBoundingClientRect().left+b.getBoundingClientRect().width/2-x)?a:b),rect=b.getBoundingClientRect();
+    return {el:b.closest('.hc'),target:game.players[0].handRefs[+b.dataset.hand]?.id,before:x<rect.left+rect.width/2};
+  }
   function endDrag(e) {
     if (!drag || (e && e.pointerId !== drag.id)) return;
     const d = drag; drag = null; document.body.classList.remove('dragging');
     if (!d.on) return;
     suppressClick = true; setTimeout(() => { suppressClick = false; }, 0);
-    if (d.el) d.el.remove(); if (d.over) d.over.classList.remove('over');
+    if (d.el) d.el.remove(); if (d.over) d.over.classList.remove('over');if(d.sortEl)d.sortEl.classList.remove('hand-insert-before','hand-insert-after');
+    if(e?.type!=='pointercancel'&&d.sort&&session===d.session&&handOrderKey()===d.orderKey){if(handOrder.move(d.orderKey,game.players[0].handRefs,d.ref,d.sort.target,d.sort.before)){$('handZone').innerHTML=fanHTML(game.players[0]);markDiscardHand();}return;}
     try { if(d.b.hasPointerCapture(d.id))d.b.releasePointerCapture(d.id); } catch (_) {}
     if (e?.type === 'pointercancel' || !d.over || !pending || pending.req.requestId!==d.requestId || pending.req.epoch!==d.epoch) return;
     const want = targetOf(pending.req, d.c);

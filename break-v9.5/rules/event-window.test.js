@@ -1,14 +1,14 @@
 'use strict';
 const assert=require('node:assert/strict'),{Match}=require('./match'),H=require('../host-choice');
-function fixture(mode,code,withTargets=false){
+function fixture(mode,code,withTargets=false,phase='receive'){
  const deck=[code,'D01-009','P01-001','P01-006',...Array(36).fill('D01-009')],m=new Match({seed:7,decks:[deck,deck],mode}),k=m._kernel;
  const put=(no,z)=>{const id=k.zone(0,'deck').find(id=>k.card(id).cardNo==='HV-'+no);assert(id);k._atomic(()=>k._move(id,0,z,k._context(id,0)));return id;};
  put('D01-009','receive');const id=put(code,'hand');if(withTargets){put('P01-001','drop');put('P01-006','drop');}
- Object.assign(m._m,{pending:null,continuation:null,phase:'rally',actor:0,turnNo:1,rally:1,pc:'receiveEvent',notices:[]});k.state.stage='rally';k.state.turn={id:1,player:0,phase:'receive',step:'free'};k.state.ball={kind:'attack',offense:0,owner:1};m._pump();return {m,id};
+ Object.assign(m._m,{pending:null,continuation:null,phase:'rally',actor:0,turnNo:1,rally:1,pc:phase==='draw'?'drawEvent':'receiveEvent',notices:[]});k.state.stage='rally';k.state.turn={id:1,player:0,phase,step:'free'};k.state.ball={kind:'attack',offense:0,owner:1};m._pump();return {m,id};
 }
 for(const mode of ['numeric','strict']){
  for(const code of ['D01-009','PR-029']){const {m}=fixture(mode,code);assert.notEqual(m.request(0)?.kind,'event',mode+' skips unavailable effect '+code);assert.equal(m.request(0)?.kind,'lossConfirm');}
- const {m,id}=fixture(mode,'PR-029',true),r=m.request(0);assert.equal(r.kind,'event');assert(r.options.some(o=>o.value===id));assert(r.options.some(o=>o.value===null));assert(r.canLoss);assert.equal(r.canManual,mode==='numeric');assert.equal(m.request(1),null,'opponent cannot answer the window');
+ const {m,id}=fixture(mode,'PR-029',true,'draw'),r=m.request(0);assert.equal(r.kind,'event');assert(r.options.some(o=>o.value===id));assert(r.options.some(o=>o.value===null));assert(r.canLoss);assert.equal(r.canManual,mode==='numeric');assert.equal(m.request(1),null,'opponent cannot answer the window');
  m.command({kind:'answer',answer:H.makeAnswer(r,null)});assert.notEqual(m.request(0)?.kind,'event');
  // Entire games, including all six free windows, must never stop on an empty
  // Event prompt. Mandatory draw, turn end and Loss acknowledgments still exist.
