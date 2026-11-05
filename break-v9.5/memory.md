@@ -1739,3 +1739,8 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 計畫：修正回合動畫被效果提示off連帶停用、以及簡易模式同位置飄字遮住的問題；回合中線動畫獨立於技能提示開關，自己回合不再重複排入回合飄字，播放期間暫停其他通知倒數／顯示而不遺失。必要modal關閉後才啟播；補真正onNotice→onRequest流程的normal／simple／off三尺寸測試，不只人工餵board，完整回歸部署。
 - 結果／測試：舊版真實defendStart→turn通知→request在off設定的新增測試先失敗，修正後normal／simple／off×1280／390／320九組皆確認動畫實際running；自己回合不再另排fx-turn，中線播放2秒內其他通知暫隱並保留倒數、其後恢復；維持原曲線與減少動態，modal之後才啟播。build、fuzz3000、6×300、三尺寸9整局、原動畫／抽牌提示／UI檢查及多人Undo／重連／接手／隱私回放全通過，541／358不變。
 - 部署：a69cf82已推送並發布Hosting，web.app／firebaseapp.com主要檔案HTTP200／SHA256一致；公開頁三尺寸×三提示設定九組真實交棒流程皆確認動畫播放、無重複回合飄字、通知延後恢復通過，未建立正式房間或寫入玩家資料。https://haikyuu-playmat.web.app/break-v9.5/?v=a69cf82 。
+
+## 額度通知改由Firebase原生寄送
+- 計畫／狀態：依Xiah要求解除本對話的break-firebase-50本機排程，確認Firebase原生電子郵件通知，並同步交接文件；不修改遊戲或新增付費服務。
+- 結果／驗證：排程工具已確認deleted。於Firebase專案警告設定確認既定帳號的總開關、Realtime Database用量接近方案上限郵件、Hosting用量接近配額郵件均已開啟；無需重複切換、未寄測試信。原生門檻由Firebase管理，控制台未提供50%自訂值；舊精確50%監看已停止，Cloud Monitoring自訂通知／警示目前均無配置，不宣稱50%仍生效。
+- 界線：未改Blaze／付費方案、未建立Cloud Functions或新排程、未部署；未讀玩家內容。這是通知設定與文件同步，網站版本維持a69cf82，541／358不變。
