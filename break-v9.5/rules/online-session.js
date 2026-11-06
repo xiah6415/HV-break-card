@@ -33,15 +33,16 @@ class OnlineSession{
   if(this.stopped||!this.available||this.client.pending||this.previewFlight)return [];
   this.previewFlight=key;queueMicrotask(()=>{if(this.stopped||this.previewFlight!==key)return;Promise.resolve().then(()=>this.client.send({kind:'previewBlock',answer:H.makeAnswer(r,value)})).catch(e=>{this.previewCache.set(key,[]);this.previewFlight=null;this.callbacks.onSendError?.(e);this.refresh();});});return [];
  }
- status(){return {enabled:!!(!this.stopped&&this.available&&!this.client.pending&&this.last?.undo?.canRequest),reason:'需對手同意後撤回上一個操作'};}
- _undoSend(kind,extra={}){if(this.stopped||!this.available||this.client.pending||!this.last)return false;const v=this.last;return this.client.send({kind,actor:v.actor,matchId:v.view.match.id,epoch:v.epoch,...extra});}
+ status(){if(this.spectator)return {enabled:false,reason:'觀戰模式僅可觀看'};return {enabled:!!(!this.stopped&&this.available&&!this.client.pending&&this.last?.undo?.canRequest),reason:'需對手同意後撤回上一個操作'};}
+ _undoSend(kind,extra={}){if(this.spectator||this.stopped||!this.available||this.client.pending||!this.last)return false;const v=this.last;return this.client.send({kind,actor:v.actor,matchId:v.view.match.id,epoch:v.epoch,...extra});}
  undo(){if(!this.status().enabled)return false;return this._undoSend('undoRequest',{decisionIndex:this.last.view.match.decisionIndex});}
+ rewind(){if(!this.last?.undo?.canTurnRequest)return false;return this._undoSend('undoRequest',{scope:'turn',decisionIndex:this.last.view.match.decisionIndex});}
  respondUndo(approve){return this._undoSend('undoReply',{undoId:this.last.undo?.pending?.id,approve});}
  cancelUndo(){return this._undoSend('undoCancel',{undoId:this.last.undo?.pending?.id});}
  request(){return this.waiting;}
  // FirebaseRooms 的 view 回呼直接交給這裡
  handle(v){
-  if(!v||!v.view)return;
+  if(!v||!v.view)return;this.spectator=!!v.spectator||!!this.client.spectating;
   if(this.last&&(v.term<this.last.term||v.term===this.last.term&&v.revision<this.last.revision))return;
   const newMatch=this.last?.view.match.id!==v.view.match.id;
   if(this.last&&(v.epoch!==this.last.epoch||v.undo?.pending)){this.resume=null;this.noticeIndex=v.view.match.notices?.length||0;this.previewCache.clear();this.previewFlight=null;}
@@ -55,9 +56,9 @@ class OnlineSession{
   if(this.stopped||!this.last)return;
   const v=this.last,view=rotateView(v.view,v.actor),board=boardView(view,this.deckKeys);this.waiting=null;
   try{
-   if(v.undo?.pending)view.request=null;
+   if(v.undo?.pending||this.spectator)view.request=null;
    this.callbacks.onBoard?.(board,view);
-   if(v.undo?.pending)return;
+   if(v.undo?.pending||this.spectator)return;
    const notices=view.match?.notices||[];
    if(this.noticeIndex>notices.length)this.noticeIndex=notices.length;
    if(this.noticeIndex<notices.length){
@@ -69,9 +70,9 @@ class OnlineSession{
    if(r&&r.actor===v.actor&&this.available&&!this.client.pending){this.waiting=r;this.callbacks.onRequest?.(r);}
   }catch(e){this.callbacks.onError?.(e);}
  }
- surrender(){if(this.stopped||!this.last||!this.available||this.client.pending||this.last.view.match.phase==='finished')throw Error('請等待連線恢復後投降');if(!Number.isInteger(this.last.epoch))throw Error('請房主更新頁面後再試投降');return this.client.send({kind:'surrender',actor:this.last.actor,matchId:this.last.view.match.id,epoch:this.last.epoch});}
+ surrender(){if(this.spectator||this.stopped||!this.last||!this.available||this.client.pending||this.last.view.match.phase==='finished')throw Error('請等待連線恢復後投降');if(!Number.isInteger(this.last.epoch))throw Error('請房主更新頁面後再試投降');return this.client.send({kind:'surrender',actor:this.last.actor,matchId:this.last.view.match.id,epoch:this.last.epoch});}
  submit(command){
-  if(this.stopped||!this.waiting||!this.available||this.client.pending)throw Error('NO_LOCAL_DECISION');
+  if(this.spectator||this.stopped||!this.waiting||!this.available||this.client.pending)throw Error('NO_LOCAL_DECISION');
   this.waiting=null;
   Promise.resolve(this.client.send(command)).catch(e=>{this.callbacks.onSendError?.(e);if(this.last)this._drive();});
  }

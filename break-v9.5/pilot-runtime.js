@@ -1590,13 +1590,17 @@ class RoomAuthority{
  publicReplay(){return Replay.build(this.config,this.match,{id:this.config.archiveId});}
  expireUndo(now=Date.now()){if(this.undoPending&&this.undoPending.expiresAt<=now){this.undoPending=null;return true;}return false;}
  _undoIndex(actor){const h=this.match._m.history;for(let i=h.length-1;i>=0;i--)if(h[i].actor===actor)return i;return -1;}
+ _turnStartIndex(actor){
+  const h=this.match._m.history;let c=this.turnIndexCache;
+  if(!c||c.epoch!==this.match.epoch||c.length>h.length)c=this.turnIndexCache={epoch:this.match.epoch,length:0,last:[-1,-1],key:null,match:new Match({...this.config,wantsAck:[true,true]})};
+  const mark=()=>{const m=c.match,key=m._m.phase==='rally'?m._m.rally+':'+m._kernel.state.turn.id+':'+m._kernel.state.turn.player:null;if(key!==c.key&&key!==null)c.last[m._kernel.state.turn.player]=c.length;c.key=key;};mark();
+  while(c.length<h.length){this._replayEvent(c.match,h[c.length]);c.length++;mark();}return c.last[actor];
+ }
+ _canTurnUndo(actor){return !this.undoPending&&this.match._m.phase==='rally'&&this.match._kernel.state.turn.player!==actor&&this._turnStartIndex(actor)>=0;}
+ _replayEvent(m,e){const r=m.request(0)||m.request(1);if(!r||r.actor!==e.actor)throw Error('UNDO_REPLAY_DIVERGED');if(e.kind==='loss'||e.kind==='manual')m.command({kind:e.kind,matchId:r.matchId,requestId:r.requestId,epoch:r.epoch,actor:r.actor,...(e.kind==='manual'?{action:copy(e.value)}:{})});else{if(r.kind!==e.kind)throw Error('UNDO_REPLAY_DIVERGED');m.command({kind:'answer',answer:H.makeAnswer(r,e.value)});}}
  _replayUntil(index){
   const m=new Match({...this.config,wantsAck:[true,true]});
-  for(const e of this.match._m.history.slice(0,index)){
-   const r=m.request(0)||m.request(1);if(!r||r.actor!==e.actor)throw Error('UNDO_REPLAY_DIVERGED');
-   if(e.kind==='loss'||e.kind==='manual')m.command({kind:e.kind,matchId:r.matchId,requestId:r.requestId,epoch:r.epoch,actor:r.actor,...(e.kind==='manual'?{action:copy(e.value)}:{})});
-   else {if(r.kind!==e.kind)throw Error('UNDO_REPLAY_DIVERGED');m.command({kind:'answer',answer:H.makeAnswer(r,e.value)});}
-  }return m;
+  for(const e of this.match._m.history.slice(0,index))this._replayEvent(m,e);return m;
  }
  _approveUndo(){const next=this._replayUntil(this.undoPending.targetIndex);next.epoch=this.match.epoch;next.restore(next.snapshot());this.match=next;this.undoPending=null;}
  _undoCommand(uid,cmdId,c){
@@ -1605,10 +1609,10 @@ class RoomAuthority{
   if(c.kind==='undoRequest'){
    if(this.undoPending)throw Error('UNDO_PENDING');
    if(c.decisionIndex!==this.match._m.decisionIndex)throw Error('INVALID_OR_STALE_COMMAND');
-   let targetIndex=this._undoIndex(actor);if(targetIndex<0)throw Error('NO_UNDO_TARGET');
+   const wholeTurn=c.scope==='turn';if(c.scope!==undefined&&!wholeTurn)throw Error('INVALID_UNDO_SCOPE');if(wholeTurn&&!this._canTurnUndo(actor))throw Error('NOT_OPPONENT_TURN');let targetIndex=wholeTurn?this._turnStartIndex(actor):this._undoIndex(actor);if(targetIndex<0)throw Error('NO_UNDO_TARGET');
    let m=this._replayUntil(targetIndex),r=m.request(actor);
-   while(r?.kind==='target'&&r.input.min===1&&r.input.max===1&&r.options.length===1){let previous=targetIndex-1;while(previous>=0&&this.match._m.history[previous].actor!==actor)previous--;if(previous<0)break;targetIndex=previous;m=this._replayUntil(targetIndex);r=m.request(actor);}
-   this.undoPending={id:cmdId,byActor:actor,expiresAt:Date.now()+120000,targetIndex,target:{rally:m._m.rally,turn:m._kernel.state.turn.id,phase:m._kernel.state.turn.phase,kind:r?.kind||this.match._m.history[targetIndex].kind}};
+   while(!wholeTurn&&r?.kind==='target'&&r.input.min===1&&r.input.max===1&&r.options.length===1){let previous=targetIndex-1;while(previous>=0&&this.match._m.history[previous].actor!==actor)previous--;if(previous<0)break;targetIndex=previous;m=this._replayUntil(targetIndex);r=m.request(actor);}
+   this.undoPending={id:cmdId,byActor:actor,expiresAt:Date.now()+120000,targetIndex,target:{rally:m._m.rally,turn:m._kernel.state.turn.id,phase:m._kernel.state.turn.phase,kind:r?.kind||this.match._m.history[targetIndex].kind,...(wholeTurn?{scope:'turn'}:{})}};
    if(this.players[1-actor]==='AI')this._approveUndo();
   }else{
    const u=this.undoPending;if(!u||c.undoId!==u.id)throw Error('STALE_UNDO');
@@ -1634,9 +1638,10 @@ class RoomAuthority{
  checkpoint(){return {schema:1,...copy(this.config),undoPending:copy(this.undoPending),players:[...this.players],epoch:this.match.epoch,snapshot:this.match.snapshot()};}
  views(term,revision){const out={},r=this.match.request(0)||this.match.request(1);for(let actor=0;actor<2;actor++)if(this.players[actor]!=='AI'){
   const uid=this.players[actor],last=Object.values(this.log).filter(x=>x.uid===uid).at(-1);
-  out[uid]=JSON.stringify({term,revision,actor,epoch:this.match.epoch,pendingActor:r?.actor??null,undo:{canRequest:!this.undoPending&&this.match._m.phase!=='finished'&&this._undoIndex(actor)>=0,pending:this.undoPending?{id:this.undoPending.id,byActor:this.undoPending.byActor,expiresAt:this.undoPending.expiresAt,target:copy(this.undoPending.target)}:null},view:this.match.view(actor),receipt:last?{cmdId:last.cmdId,ok:last.ok,error:last.error,...(last.preview?{preview:last.preview}:{})}:null});
+  out[uid]=JSON.stringify({term,revision,actor,epoch:this.match.epoch,pendingActor:r?.actor??null,undo:{canTurnRequest:this._canTurnUndo(actor),canRequest:!this.undoPending&&this.match._m.phase!=='finished'&&this._undoIndex(actor)>=0,pending:this.undoPending?{id:this.undoPending.id,byActor:this.undoPending.byActor,expiresAt:this.undoPending.expiresAt,target:copy(this.undoPending.target)}:null},view:this.match.view(actor),receipt:last?{cmdId:last.cmdId,ok:last.ok,error:last.error,...(last.preview?{preview:last.preview}:{})}:null});
  }return out;}
- bundle(term,revision,writer){return {term,revision,writer,matchId:this.config.id,checkpointJSON:JSON.stringify(this.checkpoint()),logJSON:JSON.stringify(this.log),views:this.views(term,revision),updatedAt:Date.now()};}
+ spectatorView(term,revision){const a=this.match.view(0),b=this.match.view(1);a.players[1]=b.players[1];a.request=null;const statuses=[...(a.statuses||[]),...(b.statuses||[])];a.statuses=statuses.filter((s,i)=>statuses.findIndex(x=>JSON.stringify(x)===JSON.stringify(s))===i);return JSON.stringify({spectator:true,term,revision,actor:0,epoch:this.match.epoch,pendingActor:null,undo:null,receipt:null,view:a});}
+ bundle(term,revision,writer){return {term,revision,writer,matchId:this.config.id,checkpointJSON:JSON.stringify(this.checkpoint()),logJSON:JSON.stringify(this.log),views:this.views(term,revision),spectator:this.spectatorView(term,revision),updatedAt:Date.now()};}
 }
 module.exports={RoomAuthority};
 
@@ -1677,15 +1682,16 @@ class OnlineSession{
   if(this.stopped||!this.available||this.client.pending||this.previewFlight)return [];
   this.previewFlight=key;queueMicrotask(()=>{if(this.stopped||this.previewFlight!==key)return;Promise.resolve().then(()=>this.client.send({kind:'previewBlock',answer:H.makeAnswer(r,value)})).catch(e=>{this.previewCache.set(key,[]);this.previewFlight=null;this.callbacks.onSendError?.(e);this.refresh();});});return [];
  }
- status(){return {enabled:!!(!this.stopped&&this.available&&!this.client.pending&&this.last?.undo?.canRequest),reason:'需對手同意後撤回上一個操作'};}
- _undoSend(kind,extra={}){if(this.stopped||!this.available||this.client.pending||!this.last)return false;const v=this.last;return this.client.send({kind,actor:v.actor,matchId:v.view.match.id,epoch:v.epoch,...extra});}
+ status(){if(this.spectator)return {enabled:false,reason:'觀戰模式僅可觀看'};return {enabled:!!(!this.stopped&&this.available&&!this.client.pending&&this.last?.undo?.canRequest),reason:'需對手同意後撤回上一個操作'};}
+ _undoSend(kind,extra={}){if(this.spectator||this.stopped||!this.available||this.client.pending||!this.last)return false;const v=this.last;return this.client.send({kind,actor:v.actor,matchId:v.view.match.id,epoch:v.epoch,...extra});}
  undo(){if(!this.status().enabled)return false;return this._undoSend('undoRequest',{decisionIndex:this.last.view.match.decisionIndex});}
+ rewind(){if(!this.last?.undo?.canTurnRequest)return false;return this._undoSend('undoRequest',{scope:'turn',decisionIndex:this.last.view.match.decisionIndex});}
  respondUndo(approve){return this._undoSend('undoReply',{undoId:this.last.undo?.pending?.id,approve});}
  cancelUndo(){return this._undoSend('undoCancel',{undoId:this.last.undo?.pending?.id});}
  request(){return this.waiting;}
  // FirebaseRooms 的 view 回呼直接交給這裡
  handle(v){
-  if(!v||!v.view)return;
+  if(!v||!v.view)return;this.spectator=!!v.spectator||!!this.client.spectating;
   if(this.last&&(v.term<this.last.term||v.term===this.last.term&&v.revision<this.last.revision))return;
   const newMatch=this.last?.view.match.id!==v.view.match.id;
   if(this.last&&(v.epoch!==this.last.epoch||v.undo?.pending)){this.resume=null;this.noticeIndex=v.view.match.notices?.length||0;this.previewCache.clear();this.previewFlight=null;}
@@ -1699,9 +1705,9 @@ class OnlineSession{
   if(this.stopped||!this.last)return;
   const v=this.last,view=rotateView(v.view,v.actor),board=boardView(view,this.deckKeys);this.waiting=null;
   try{
-   if(v.undo?.pending)view.request=null;
+   if(v.undo?.pending||this.spectator)view.request=null;
    this.callbacks.onBoard?.(board,view);
-   if(v.undo?.pending)return;
+   if(v.undo?.pending||this.spectator)return;
    const notices=view.match?.notices||[];
    if(this.noticeIndex>notices.length)this.noticeIndex=notices.length;
    if(this.noticeIndex<notices.length){
@@ -1713,9 +1719,9 @@ class OnlineSession{
    if(r&&r.actor===v.actor&&this.available&&!this.client.pending){this.waiting=r;this.callbacks.onRequest?.(r);}
   }catch(e){this.callbacks.onError?.(e);}
  }
- surrender(){if(this.stopped||!this.last||!this.available||this.client.pending||this.last.view.match.phase==='finished')throw Error('請等待連線恢復後投降');if(!Number.isInteger(this.last.epoch))throw Error('請房主更新頁面後再試投降');return this.client.send({kind:'surrender',actor:this.last.actor,matchId:this.last.view.match.id,epoch:this.last.epoch});}
+ surrender(){if(this.spectator||this.stopped||!this.last||!this.available||this.client.pending||this.last.view.match.phase==='finished')throw Error('請等待連線恢復後投降');if(!Number.isInteger(this.last.epoch))throw Error('請房主更新頁面後再試投降');return this.client.send({kind:'surrender',actor:this.last.actor,matchId:this.last.view.match.id,epoch:this.last.epoch});}
  submit(command){
-  if(this.stopped||!this.waiting||!this.available||this.client.pending)throw Error('NO_LOCAL_DECISION');
+  if(this.spectator||this.stopped||!this.waiting||!this.available||this.client.pending)throw Error('NO_LOCAL_DECISION');
   this.waiting=null;
   Promise.resolve(this.client.send(command)).catch(e=>{this.callbacks.onSendError?.(e);if(this.last)this._drive();});
  }

@@ -1,0 +1,14 @@
+'use strict';const A=require('node:assert/strict'),{RoomAuthority}=require('./room-authority'),H=require('../host-choice');const deck=Array(40).fill('D01-009');let sequence=0;const room=new RoomAuthority({id:'rewind-unit',players:['p0','p1'],decks:[deck,deck],seed:7,interactiveDraws:true,openingCoin:true});
+const command=(actor,kind,extra={})=>({kind,actor,matchId:room.match._m.id,epoch:room.match.epoch,decisionIndex:room.match._m.decisionIndex,...extra});let checked=new Set();
+for(let i=0;i<400&&room.match._m.phase!=='finished';i++){
+ const turn=room.match._kernel.state.turn,by=1-turn.player;
+ if(room._canTurnUndo(by)&&!checked.has(by)){
+  const target=room._turnStartIndex(by),expected=room._replayUntil(target).snapshot(),old=room.match.snapshot(),epoch=room.match.epoch,r=room.match.request(0)||room.match.request(1);
+  let result=room.apply(room.players[by],'turn'+(++sequence),command(by,'undoRequest',{scope:'turn'}));A(result.ok,result.error);const pending=room.undoPending;A.equal(pending.target.scope,'turn');A.equal(pending.targetIndex,target);A.equal(expected.turn.player,by);A.equal(room.apply(room.players[turn.player],'blocked'+(++sequence),{kind:'answer',answer:H.aiAnswer(r)}).error,'UNDO_PENDING');A.equal(room.apply(room.players[by],'self'+(++sequence),command(by,'undoReply',{undoId:pending.id,approve:true})).error,'WRONG_SEAT');
+  A(room.apply(room.players[turn.player],'reject'+(++sequence),command(turn.player,'undoReply',{undoId:pending.id,approve:false})).ok);A.deepEqual(room.match.snapshot(),old);
+  A(room.apply(room.players[by],'request'+(++sequence),command(by,'undoRequest',{scope:'turn'})).ok);const id=room.undoPending.id,restored=new RoomAuthority({players:room.players,checkpoint:room.checkpoint(),log:room.log});A.equal(restored.undoPending.targetIndex,target);
+  A(room.apply(room.players[turn.player],'accept'+(++sequence),command(turn.player,'undoReply',{undoId:id,approve:true})).ok);const actual=room.match.snapshot();A.equal(actual.match.decisionIndex,target);A.equal(actual.turn.player,by);A.deepEqual(actual.rng,expected.rng);A.deepEqual(actual.cards,expected.cards);A.deepEqual(actual.players,expected.players);A.deepEqual(actual.publicLog,expected.publicLog);A(room.match.epoch>epoch);A(!room.apply(room.players[r.actor],'stale'+(++sequence),{kind:'answer',answer:H.aiAnswer(r)}).ok);A(!room.apply(room.players[by],'wrong-turn'+(++sequence),command(by,'undoRequest',{scope:'turn'})).ok);checked.add(by);continue;
+ }
+ const r=room.match.request(0)||room.match.request(1);A(room.apply(room.players[r.actor],'normal'+(++sequence),{kind:'answer',answer:H.aiAnswer(r)}).ok);
+}
+A.equal(checked.size,2);console.log('Whole-turn consent undo: both seats, exact turn start/RNG/cards/log, pause, rejection, self-approval refusal, checkpoint and stale commands passed');

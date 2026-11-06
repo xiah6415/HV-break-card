@@ -2,7 +2,7 @@
 const assert=require('node:assert/strict'),{setup}=require('./block-skill-feedback.test'),{RoomAuthority}=require('./room-authority'),{OnlineSession}=require('./online-session'),H=require('../host-choice');
 const tick=()=>new Promise(r=>setImmediate(r));
 (async()=>{
- const f=setup(),a=Object.assign(Object.create(RoomAuthority.prototype),{match:f.m,players:['me','them'],log:{}}),r=f.m.request(0),value={cards:[f.id,f.side],center:f.id},command={kind:'previewBlock',answer:H.makeAnswer(r,value)},before=f.m.snapshot();
+ const f=setup(),a=Object.assign(Object.create(RoomAuthority.prototype),{match:f.m,players:['me','them'],log:{},_canTurnUndo:()=>false}),r=f.m.request(0),value={cards:[f.id,f.side],center:f.id},command={kind:'previewBlock',answer:H.makeAnswer(r,value)},before=f.m.snapshot();
  assert.equal(a.apply('them','wrong',command).ok,false);const result=a.apply('me','preview',command);assert(result.ok);assert.deepEqual(result.preview.ids,[f.id]);assert.deepEqual(f.m.snapshot(),before);assert.deepEqual(JSON.parse(a.views(1,1).me).receipt.preview,result.preview);assert(!JSON.parse(a.views(1,1).them).receipt.preview);
  assert(!a.apply('me','stale',{kind:'previewBlock',answer:{...command.answer,epoch:r.epoch+1}}).ok);assert.deepEqual(f.m.snapshot(),before);
  let session,n=0;const client={pending:null,get core(){throw Error('adapter read private Match');},async send(c){this.pending='p'+(++n);await tick();const receipt=a.apply('me',this.pending,c);assert(receipt.ok,receipt.error);this.pending=null;session.handle(JSON.parse(a.views(1,n+2).me));}};

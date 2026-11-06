@@ -1,4 +1,4 @@
-/* Firebase transport: clients read their own view and submit only commands. */
+/* Players read their seat view; acknowledged spectators receive a separate read-only projection. */
 const VERSION='13.1.0',base='https://www.gstatic.com/firebasejs/'+VERSION+'/';
 export async function firebaseServices(){
  const [App,A,D]=await Promise.all([import(base+'firebase-app.js'),import(base+'firebase-auth.js'),import(base+'firebase-database.js')]);
@@ -20,14 +20,14 @@ export class FirebaseRooms{
  async updateName(name){
   name=String(name||'').trim().slice(0,20);if(!name||!this.user||!this.online)return;
   const uid=this.user.uid,updates={};if(this.connection)updates['presence/'+uid+'/'+this.connection+'/name']=name;
-  if(this.room){updates['rooms/'+this.room+'/presence/'+uid+'/'+this.connection+'/name']=name;updates['rooms/'+this.room+'/meta/names/'+uid]=name;updates['rooms/'+this.room+'/meta/'+(this.meta?.p0===uid?'p0Name':'p1Name')]=name;}
+  if(this.room&&!this.spectating){updates['rooms/'+this.room+'/presence/'+uid+'/'+this.connection+'/name']=name;updates['rooms/'+this.room+'/meta/names/'+uid]=name;updates['rooms/'+this.room+'/meta/'+(this.meta?.p0===uid?'p0Name':'p1Name')]=name;}
   if(Object.keys(updates).length)await this.D.update(this.D.ref(this.db),updates);this.name=name;
  }
  async _connected(){
   this.connection=connection();const path='presence/'+this.user.uid+'/'+this.connection;await this.D.onDisconnect(this.ref(path)).remove();await this.D.set(this.ref(path),{name:this.name,at:this.D.serverTimestamp()});
-  if(this.room){await this._roomPresence();await this._inspectLease();}
+  if(this.room){this.watchRestoring=!!this.spectating;try{await this._roomPresence();if(this.spectating)this._watchRoomView();await this._inspectLease();}finally{this.watchRestoring=false;}}
  }
- async _roomPresence(){if(!this.online||!this.connection||!this.room)return;const r=this.ref('rooms/'+this.room+'/presence/'+this.user.uid+'/'+this.connection);await this.D.onDisconnect(r).remove();await this.D.set(r,{name:this.name,at:this.D.serverTimestamp()});}
+ async _roomPresence(){if(!this.online||!this.connection||!this.room)return;const r=this.ref('rooms/'+this.room+'/'+(this.spectating?'spectators':'presence')+'/'+this.user.uid+'/'+this.connection);await this.D.onDisconnect(r).remove();await this.D.set(r,{name:this.name,at:this.D.serverTimestamp(),...(this.spectating?{accepted:true}:{})});}
  async create({title,deck,aiDeck=null,mode='strict'}){
   if(!this.online)throw Error('請先連線登入');await this.leave();const uid=this.user.uid;
   for(let tries=0;tries<4;tries++){
@@ -44,17 +44,19 @@ export class FirebaseRooms{
   if(!meta.names?.[this.user.uid])await this.D.set(this.ref('rooms/'+id+'/meta/names/'+this.user.uid),meta[nameField]||this.name);
   if(meta.status==='waiting')await this.D.set(this.ref('rooms/'+id+'/settings/'+this.user.uid),{deckJSON:JSON.stringify(deck),ready:true});await this._enter(id);return id;
  }
- async _enter(id){this.room=id;this.roomStops=[];this.meta=null;this.lease=null;this.roomOnline={};this.settings=null;this.lastView=null;this.pending=null;this.cb.room?.(id);await this._roomPresence();const root='rooms/'+id+'/';
-  this.roomStops.push(this.D.onValue(this.ref(root+'meta'),s=>{this.meta=s.val();this.cb.meta?.(this.meta);this._schedule();},e=>this.error(e)),this.D.onValue(this.ref(root+'authority'),s=>{this.lease=s.val();this._inspectLease().catch(e=>this.error(e));},e=>this.error(e)),this.D.onValue(this.ref(root+'presence'),s=>{this.roomOnline=s.val()||{};this._inspectLease().catch(e=>this.error(e));},e=>this.error(e)),this.D.onValue(this.ref(root+'bundle/views/'+this.user.uid),s=>{if(!s.exists())return;try{const v=JSON.parse(s.val());this.lastView=v;if(v.receipt?.cmdId===this.pending){this.pending=null;if(!v.receipt.ok)this.cb.error?.(new Error(v.receipt.error));}this.cb.view?.(v);}catch(e){this.error(e);}},e=>this.error(e)));
+ async spectate(id,{accepted=false}={}){id=String(id).trim().toUpperCase();if(!accepted)throw Error('請先確認觀戰提醒');if(!/^[A-Z0-9]{8}$/.test(id))throw Error('房號為8碼英數字');if(!this.online||!this.user)throw Error('請先連線登入');const meta=(await this.D.get(this.ref('rooms/'+id+'/meta'))).val();if(!meta||!['running','finished'].includes(meta.status))throw Error('對局尚未開始或房間已關閉');if([meta.p0,meta.p1].includes(this.user.uid))throw Error('這是你的對局，請使用回到房間');await this.leave();try{await this._enter(id,true);const view=await this.D.get(this.ref('rooms/'+id+'/bundle/spectator'));if(!view.exists())throw Error('房主尚未支援觀戰，請房主重新整理頁面');}catch(e){await this.leave();throw e;}return id;}
+ _watchRoomView(){this.viewStop?.();this.viewStop=null;const token=this.viewGeneration=(this.viewGeneration||0)+1,id=this.room,watch=this.spectating;if(!id)return;this.viewStop=this.D.onValue(this.ref('rooms/'+id+'/bundle/'+(watch?'spectator':'views/'+this.user.uid)),s=>{if(token!==this.viewGeneration||this.room!==id||this.spectating!==watch||!s.exists())return;try{const v=JSON.parse(s.val());if(watch&&!v.spectator)throw Error('觀戰視圖尚未更新，請房主重整');this.lastView=v;if(v.receipt?.cmdId===this.pending){this.pending=null;if(!v.receipt.ok)this.cb.error?.(new Error(v.receipt.error));}this.cb.view?.(v);}catch(e){this.error(e);}},e=>{if(token===this.viewGeneration&&!this.watchRestoring)this.error(e);});}
+ async _enter(id,spectating=false){this.room=id;this.spectating=spectating;this.roomStops=[];this.meta=null;this.lease=null;this.roomOnline={};this.settings=null;this.lastView=null;this.pending=null;this.cb.room?.(id);await this._roomPresence();const root='rooms/'+id+'/';
+  this.roomStops.push(this.D.onValue(this.ref(root+'meta'),s=>{this.meta=s.val();this.cb.meta?.(this.meta);this._schedule();},e=>this.error(e)),this.D.onValue(this.ref(root+'authority'),s=>{this.lease=s.val();this._inspectLease().catch(e=>this.error(e));},e=>this.error(e)),this.D.onValue(this.ref(root+'presence'),s=>{this.roomOnline=s.val()||{};this._inspectLease().catch(e=>this.error(e));},e=>this.error(e)));this._watchRoomView();
  }
  async _inspectLease(){
   const a=this.lease;if(!a||!this.room||!this.online)return;
-  const active=!!this.roomOnline[a.uid]?.[a.connection];this.cb.authority?.({lease:a,active,mine:a.uid===this.user.uid&&a.connection===this.connection});
+  const active=!!this.roomOnline[a.uid]?.[a.connection];this.cb.authority?.({lease:a,active,mine:!this.spectating&&a.uid===this.user.uid&&a.connection===this.connection});if(this.spectating)return;
   if(a.uid===this.user.uid&&a.connection===this.connection){if(!this.active&&!this.loading){this.loading=true;try{await this._activate();}finally{this.loading=false;if(!this.active&&this.room)queueMicrotask(()=>this._inspectLease().catch(e=>this.error(e)));}}}
   else {this.core=null;this.active=null;this.generation++;this._stopAuthority();if(!active&&a.uid===this.user.uid)await this.takeover();}
  }
  async takeover(){if(this.claiming)return;this.claiming=true;try{return await this._takeover();}finally{this.claiming=false;}}
- async _takeover(){if(!this.room||!this.online)throw Error('目前未連線');await this._roomPresence();const uid=this.user.uid,conn=this.connection;
+ async _takeover(){if(this.spectating)throw Error('觀戰者無法接手');if(!this.room||!this.online)throw Error('目前未連線');await this._roomPresence();const uid=this.user.uid,conn=this.connection;
   const result=await this.D.runTransaction(this.ref('rooms/'+this.room+'/authority'),a=>{if(!a||this.roomOnline[a.uid]?.[a.connection])return;return {uid,connection:conn,term:a.term+1};},{applyLocally:false});if(!result.committed)throw Error('原權威端仍在線，或已有玩家接手');
  }
  _stopAuthority(){clearTimeout(this.undoTimer);this.undoTimer=null;for(const stop of this.authorityStops||[])stop();this.authorityStops=[];this.commands={};}
@@ -110,18 +112,18 @@ export class FirebaseRooms{
   catch(e){if(this.active?.gen===gen){this.core=null;this.active=null;this.generation++;this._stopAuthority();this.recoveries=(this.recoveries||0)+1;if(this.online&&this.recoveries<=3)setTimeout(()=>this._inspectLease().catch(x=>this.error(x)),200);}throw e;}
 
  }
- async _publishLobby(){if(!this.meta||!this._current(this.active?.gen))return;await this.D.set(this.ref('lobby/'+this.room),{room:this.room,title:this.meta.title,owner:this.user.uid,p0:this.meta.p0,status:this.meta.status,mode:this.meta.mode,createdAt:this.meta.createdAt});}
- async send(command){if(command?.kind==='rematch')return this._confirmRematch(command);if(!this.online||!this.room||!this.lastView||this.meta?.status!=='running')throw Error('請等待連線與對戰開始');if(!this.lease||this.lastView.term!==this.lease.term||!this.roomOnline[this.lease.uid]?.[this.lease.connection])throw Error('請等待房主接手與最新視圖');if(this.pending)throw Error('正在等待上一個操作確認');const r=this.ref('rooms/'+this.room+'/commands/'+this.user.uid),cid=this.D.push(r).key;this.pending=cid;this.cb.sending?.(true);
+ async _publishLobby(){if(!this.meta||!this._current(this.active?.gen))return;await this.D.set(this.ref('lobby/'+this.room),{room:this.room,title:this.meta.title,owner:this.user.uid,p0:this.meta.p0,...(this.meta.p1?{p1:this.meta.p1}:{}),status:this.meta.status,mode:this.meta.mode,createdAt:this.meta.createdAt});}
+ async send(command){if(this.spectating)throw Error('觀戰模式僅可觀看');if(command?.kind==='rematch')return this._confirmRematch(command);if(!this.online||!this.room||!this.lastView||this.meta?.status!=='running')throw Error('請等待連線與對戰開始');if(!this.lease||this.lastView.term!==this.lease.term||!this.roomOnline[this.lease.uid]?.[this.lease.connection])throw Error('請等待房主接手與最新視圖');if(this.pending)throw Error('正在等待上一個操作確認');const r=this.ref('rooms/'+this.room+'/commands/'+this.user.uid),cid=this.D.push(r).key;this.pending=cid;this.cb.sending?.(true);
   try{await this.D.set(this.ref('rooms/'+this.room+'/commands/'+this.user.uid+'/'+cid),{body:JSON.stringify(command),term:this.lastView.term,createdAt:this.D.serverTimestamp()});}catch(e){this.pending=null;throw e;}finally{this.cb.sending?.(false);}return cid;
  }
- async _confirmRematch(command){
+ async _confirmRematch(command){if(this.spectating)throw Error('觀戰模式僅可觀看');
   if(!this.online||!this.room||this.meta?.status!=='finished'||this.lastView?.view.match.phase!=='finished')throw Error('對局結束後才能確認再來一局');
   if(command.matchId!==this.lastView.view.match.id)throw Error('這是舊局的再戰確認，請重新確認');
   this.cb.sending?.(true);try{await this.D.set(this.ref('rooms/'+this.room+'/meta/rematch/'+this.user.uid),command.matchId);}finally{this.cb.sending?.(false);}
   return command.matchId;
  }
  async _flushReplay(){const gen=this.active?.gen;if(this._current(gen)&&this.meta&&this.core?.match._m.phase==='finished'&&this.meta.status!=='closed'){if(this.meta.status!=='finished')await this.D.set(this.ref('rooms/'+this.room+'/meta/status'),'finished');await this._publishReplay(gen);}}
- async deleteRoom(id){
+ async deleteRoom(id){if(this.spectating)throw Error('觀戰者無法刪除房間');
   id=String(id||'').toUpperCase();if(!/^[A-Z0-9]{8}$/.test(id)||!this.online||!this.user)throw Error('請先連線登入');
   if(this.room===id){await this._flushReplay();if(this.archiveError)throw Error('回放尚未保存，請稍後重試刪除');}
   const meta=(await this.D.get(this.ref('rooms/'+id+'/meta'))).val(),lease=(await this.D.get(this.ref('rooms/'+id+'/authority'))).val();
@@ -132,7 +134,7 @@ export class FirebaseRooms{
   if(this.room===id)await this.leave();
  }
  async close(){await this._flushReplay();const id=this.room;if(!this._current(this.active?.gen))throw Error('只有權威端可以關閉房間');await this.D.set(this.ref('rooms/'+this.room+'/meta/status'),'closed');await this.D.remove(this.ref('lobby/'+id));await this.leave();}
- async leave(){await this._flushReplay();const id=this.room,conn=this.connection;this.generation++;this.core=null;this.active=null;this._stopAuthority();for(const stop of this.roomStops||[])stop();this.roomStops=[];this.room=null;this.meta=null;this.lease=null;this.pending=null;this.lastView=null;if(id&&conn&&this.user)await this.D.remove(this.ref('rooms/'+id+'/presence/'+this.user.uid+'/'+conn)).catch(()=>{});this.cb.room?.(null);}
+ async leave(){await this._flushReplay();const id=this.room,conn=this.connection,watch=this.spectating;this.viewStop?.();this.viewStop=null;this.generation++;this.core=null;this.active=null;this._stopAuthority();for(const stop of this.roomStops||[])stop();this.roomStops=[];this.room=null;this.spectating=false;this.meta=null;this.lease=null;this.pending=null;this.lastView=null;if(id&&conn&&this.user)await this.D.remove(this.ref('rooms/'+id+'/'+(watch?'spectators':'presence')+'/'+this.user.uid+'/'+conn)).catch(()=>{});this.cb.room?.(null);}
  async logout(){await this.leave();if(this.user&&this.connection)await this.D.remove(this.ref('presence/'+this.user.uid+'/'+this.connection)).catch(()=>{});for(const stop of this.stops)stop();this.stops=[];this.online=false;this.user=null;}
  error(e){this.cb.error?.(e);}
 }

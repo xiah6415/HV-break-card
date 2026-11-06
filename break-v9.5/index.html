@@ -882,6 +882,10 @@ body.playing .dock:has([data-kind="drawConfirm"]){width:min(360px,calc(100vw - 1
 </script>
 <style>
 #agreementGate{position:fixed;inset:0;z-index:20000;background:#10252bcc;display:flex;align-items:center;justify-content:center;padding:12px}#agreementGate[hidden]{display:none}#agreementContent{background:var(--bg,#fff);color:var(--ink,#18343b);border-radius:18px;max-width:700px;width:100%;max-height:calc(100dvh - 24px);overflow:auto;padding:20px;box-sizing:border-box}#agreementContent p{line-height:1.65}#agreementContent label{display:flex;gap:10px;margin:16px 0;line-height:1.6}#agreementContent input{flex:0 0 20px;width:20px;height:20px}#agreementContent .opts{position:sticky;bottom:-20px;background:var(--bg,#fff);padding:12px 0;display:flex;flex-wrap:wrap}#agreementContent button{min-height:44px}#agreementContent a{color:#bd570c}
+</style><style>
+body.playing[data-spectating="1"]{--handh:clamp(156px,30vh,240px)}
+body.playing[data-spectating="1"] .rally-status{animation:none!important;transform:none!important;opacity:1!important}
+.spectator-hands{height:100%;display:grid;grid-template-rows:1fr 1fr;gap:4px;padding:3px 8px;box-sizing:border-box;min-width:0}.spectator-hand{min-height:0;min-width:0}.spectator-hand h3{font-size:12px;margin:0 0 2px;line-height:18px}.spectator-cards{display:flex;gap:5px;height:calc(var(--handh)/2 - 26px);overflow-x:auto;overflow-y:hidden}.spectator-cards .cbtn{flex:0 0 auto;height:100%;width:auto;aspect-ratio:0.7;border-radius:5px}.spectator-cards img{height:100%;width:100%;object-fit:contain}.ol-join:has(#olWatch){display:flex;flex-wrap:wrap}.ol-join #olCode{min-width:90px;flex:1}.ol-room .opts{display:flex;gap:5px;flex-wrap:wrap}
 </style></head>
 <body>
 <div class="wrap">
@@ -931,9 +935,9 @@ body.playing .dock:has([data-kind="drawConfirm"]){width:min(360px,calc(100vw - 1
       </div>
       <div id="olLobby" class="ol-list" hidden><p class="sub">資料回放：完賽後，雙方完整牌組與出牌操作會匿名公開供研究，不含暱稱、帳號及房號。</p>
         <div class="ol-me"><span class="ol-dot" id="olDot"></span><b id="olWho"></b><span class="ol-sp"></span><button class="chip" type="button" id="olLink" hidden>連結 Google</button><button class="chip" type="button" id="olLogout">登出</button></div>
-        <label class="field" for="olOpp">對手<select id="olOpp"><option value="human">邀請朋友</option><option value="AI">策略 AI</option></select></label>
+        <p class="sub">邀請朋友進行 1 對 1 對戰。觀戰模式可看見雙方手牌，請勿偷看正在對戰的牌友手牌。</p>
         <button class="btn wide" type="button" id="olCreate" disabled>建立房間</button>
-        <div class="ol-join"><input class="ol-input ol-code-input" id="olCode" maxlength="8" autocomplete="off" placeholder="房號" aria-label="8 碼房號"><button class="btn outline" type="button" id="olJoin" disabled>加入</button></div>
+        <div class="ol-join"><input class="ol-input ol-code-input" id="olCode" maxlength="8" autocomplete="off" placeholder="房號" aria-label="8 碼房號"><button class="btn outline" type="button" id="olJoin" disabled>加入</button><button class="btn outline" type="button" id="olWatch" disabled>觀戰</button></div>
         <h2>房間</h2><div class="ol-list" id="olRooms"></div>
         <h2>在線</h2><div class="ol-people" id="olPeople"></div>
       </div>
@@ -981,7 +985,7 @@ body.playing .dock:has([data-kind="drawConfirm"]){width:min(360px,calc(100vw - 1
 </div>
 
 <div class="dock" id="dock" hidden><div class="in"><div class="dock-head"><div class="dock-summary" id="dockSummary">目前操作</div><button class="chip" id="choicePeek" type="button" aria-expanded="true" aria-controls="dockOpts" hidden>查看球場</button><button class="chip" id="manualBtn" type="button" hidden>手動</button><button class="chip undo-button" id="undoBtn" type="button" disabled>Undo</button></div><div class="q" id="dockQ"></div><div class="opts" id="dockOpts"></div></div></div>
-<div id="tableTools" aria-label="牌桌工具" hidden></div>
+<div id="tableTools" aria-label="牌桌工具" hidden><button class="chip" id="rewindBtn" type="button" hidden>請求回溯</button></div>
 <div id="courtParamPicker" role="group" aria-label="選擇此卡的調整數值" hidden></div>
 <div id="tableEffects" aria-live="polite"></div><div id="hintToast" role="status" hidden></div>
 <div class="sheet" id="sheet" hidden><div class="box" id="sheetBox"></div></div>
@@ -2584,13 +2588,17 @@ class RoomAuthority{
  publicReplay(){return Replay.build(this.config,this.match,{id:this.config.archiveId});}
  expireUndo(now=Date.now()){if(this.undoPending&&this.undoPending.expiresAt<=now){this.undoPending=null;return true;}return false;}
  _undoIndex(actor){const h=this.match._m.history;for(let i=h.length-1;i>=0;i--)if(h[i].actor===actor)return i;return -1;}
+ _turnStartIndex(actor){
+  const h=this.match._m.history;let c=this.turnIndexCache;
+  if(!c||c.epoch!==this.match.epoch||c.length>h.length)c=this.turnIndexCache={epoch:this.match.epoch,length:0,last:[-1,-1],key:null,match:new Match({...this.config,wantsAck:[true,true]})};
+  const mark=()=>{const m=c.match,key=m._m.phase==='rally'?m._m.rally+':'+m._kernel.state.turn.id+':'+m._kernel.state.turn.player:null;if(key!==c.key&&key!==null)c.last[m._kernel.state.turn.player]=c.length;c.key=key;};mark();
+  while(c.length<h.length){this._replayEvent(c.match,h[c.length]);c.length++;mark();}return c.last[actor];
+ }
+ _canTurnUndo(actor){return !this.undoPending&&this.match._m.phase==='rally'&&this.match._kernel.state.turn.player!==actor&&this._turnStartIndex(actor)>=0;}
+ _replayEvent(m,e){const r=m.request(0)||m.request(1);if(!r||r.actor!==e.actor)throw Error('UNDO_REPLAY_DIVERGED');if(e.kind==='loss'||e.kind==='manual')m.command({kind:e.kind,matchId:r.matchId,requestId:r.requestId,epoch:r.epoch,actor:r.actor,...(e.kind==='manual'?{action:copy(e.value)}:{})});else{if(r.kind!==e.kind)throw Error('UNDO_REPLAY_DIVERGED');m.command({kind:'answer',answer:H.makeAnswer(r,e.value)});}}
  _replayUntil(index){
   const m=new Match({...this.config,wantsAck:[true,true]});
-  for(const e of this.match._m.history.slice(0,index)){
-   const r=m.request(0)||m.request(1);if(!r||r.actor!==e.actor)throw Error('UNDO_REPLAY_DIVERGED');
-   if(e.kind==='loss'||e.kind==='manual')m.command({kind:e.kind,matchId:r.matchId,requestId:r.requestId,epoch:r.epoch,actor:r.actor,...(e.kind==='manual'?{action:copy(e.value)}:{})});
-   else {if(r.kind!==e.kind)throw Error('UNDO_REPLAY_DIVERGED');m.command({kind:'answer',answer:H.makeAnswer(r,e.value)});}
-  }return m;
+  for(const e of this.match._m.history.slice(0,index))this._replayEvent(m,e);return m;
  }
  _approveUndo(){const next=this._replayUntil(this.undoPending.targetIndex);next.epoch=this.match.epoch;next.restore(next.snapshot());this.match=next;this.undoPending=null;}
  _undoCommand(uid,cmdId,c){
@@ -2599,10 +2607,10 @@ class RoomAuthority{
   if(c.kind==='undoRequest'){
    if(this.undoPending)throw Error('UNDO_PENDING');
    if(c.decisionIndex!==this.match._m.decisionIndex)throw Error('INVALID_OR_STALE_COMMAND');
-   let targetIndex=this._undoIndex(actor);if(targetIndex<0)throw Error('NO_UNDO_TARGET');
+   const wholeTurn=c.scope==='turn';if(c.scope!==undefined&&!wholeTurn)throw Error('INVALID_UNDO_SCOPE');if(wholeTurn&&!this._canTurnUndo(actor))throw Error('NOT_OPPONENT_TURN');let targetIndex=wholeTurn?this._turnStartIndex(actor):this._undoIndex(actor);if(targetIndex<0)throw Error('NO_UNDO_TARGET');
    let m=this._replayUntil(targetIndex),r=m.request(actor);
-   while(r?.kind==='target'&&r.input.min===1&&r.input.max===1&&r.options.length===1){let previous=targetIndex-1;while(previous>=0&&this.match._m.history[previous].actor!==actor)previous--;if(previous<0)break;targetIndex=previous;m=this._replayUntil(targetIndex);r=m.request(actor);}
-   this.undoPending={id:cmdId,byActor:actor,expiresAt:Date.now()+120000,targetIndex,target:{rally:m._m.rally,turn:m._kernel.state.turn.id,phase:m._kernel.state.turn.phase,kind:r?.kind||this.match._m.history[targetIndex].kind}};
+   while(!wholeTurn&&r?.kind==='target'&&r.input.min===1&&r.input.max===1&&r.options.length===1){let previous=targetIndex-1;while(previous>=0&&this.match._m.history[previous].actor!==actor)previous--;if(previous<0)break;targetIndex=previous;m=this._replayUntil(targetIndex);r=m.request(actor);}
+   this.undoPending={id:cmdId,byActor:actor,expiresAt:Date.now()+120000,targetIndex,target:{rally:m._m.rally,turn:m._kernel.state.turn.id,phase:m._kernel.state.turn.phase,kind:r?.kind||this.match._m.history[targetIndex].kind,...(wholeTurn?{scope:'turn'}:{})}};
    if(this.players[1-actor]==='AI')this._approveUndo();
   }else{
    const u=this.undoPending;if(!u||c.undoId!==u.id)throw Error('STALE_UNDO');
@@ -2628,9 +2636,10 @@ class RoomAuthority{
  checkpoint(){return {schema:1,...copy(this.config),undoPending:copy(this.undoPending),players:[...this.players],epoch:this.match.epoch,snapshot:this.match.snapshot()};}
  views(term,revision){const out={},r=this.match.request(0)||this.match.request(1);for(let actor=0;actor<2;actor++)if(this.players[actor]!=='AI'){
   const uid=this.players[actor],last=Object.values(this.log).filter(x=>x.uid===uid).at(-1);
-  out[uid]=JSON.stringify({term,revision,actor,epoch:this.match.epoch,pendingActor:r?.actor??null,undo:{canRequest:!this.undoPending&&this.match._m.phase!=='finished'&&this._undoIndex(actor)>=0,pending:this.undoPending?{id:this.undoPending.id,byActor:this.undoPending.byActor,expiresAt:this.undoPending.expiresAt,target:copy(this.undoPending.target)}:null},view:this.match.view(actor),receipt:last?{cmdId:last.cmdId,ok:last.ok,error:last.error,...(last.preview?{preview:last.preview}:{})}:null});
+  out[uid]=JSON.stringify({term,revision,actor,epoch:this.match.epoch,pendingActor:r?.actor??null,undo:{canTurnRequest:this._canTurnUndo(actor),canRequest:!this.undoPending&&this.match._m.phase!=='finished'&&this._undoIndex(actor)>=0,pending:this.undoPending?{id:this.undoPending.id,byActor:this.undoPending.byActor,expiresAt:this.undoPending.expiresAt,target:copy(this.undoPending.target)}:null},view:this.match.view(actor),receipt:last?{cmdId:last.cmdId,ok:last.ok,error:last.error,...(last.preview?{preview:last.preview}:{})}:null});
  }return out;}
- bundle(term,revision,writer){return {term,revision,writer,matchId:this.config.id,checkpointJSON:JSON.stringify(this.checkpoint()),logJSON:JSON.stringify(this.log),views:this.views(term,revision),updatedAt:Date.now()};}
+ spectatorView(term,revision){const a=this.match.view(0),b=this.match.view(1);a.players[1]=b.players[1];a.request=null;const statuses=[...(a.statuses||[]),...(b.statuses||[])];a.statuses=statuses.filter((s,i)=>statuses.findIndex(x=>JSON.stringify(x)===JSON.stringify(s))===i);return JSON.stringify({spectator:true,term,revision,actor:0,epoch:this.match.epoch,pendingActor:null,undo:null,receipt:null,view:a});}
+ bundle(term,revision,writer){return {term,revision,writer,matchId:this.config.id,checkpointJSON:JSON.stringify(this.checkpoint()),logJSON:JSON.stringify(this.log),views:this.views(term,revision),spectator:this.spectatorView(term,revision),updatedAt:Date.now()};}
 }
 module.exports={RoomAuthority};
 
@@ -2671,15 +2680,16 @@ class OnlineSession{
   if(this.stopped||!this.available||this.client.pending||this.previewFlight)return [];
   this.previewFlight=key;queueMicrotask(()=>{if(this.stopped||this.previewFlight!==key)return;Promise.resolve().then(()=>this.client.send({kind:'previewBlock',answer:H.makeAnswer(r,value)})).catch(e=>{this.previewCache.set(key,[]);this.previewFlight=null;this.callbacks.onSendError?.(e);this.refresh();});});return [];
  }
- status(){return {enabled:!!(!this.stopped&&this.available&&!this.client.pending&&this.last?.undo?.canRequest),reason:'需對手同意後撤回上一個操作'};}
- _undoSend(kind,extra={}){if(this.stopped||!this.available||this.client.pending||!this.last)return false;const v=this.last;return this.client.send({kind,actor:v.actor,matchId:v.view.match.id,epoch:v.epoch,...extra});}
+ status(){if(this.spectator)return {enabled:false,reason:'觀戰模式僅可觀看'};return {enabled:!!(!this.stopped&&this.available&&!this.client.pending&&this.last?.undo?.canRequest),reason:'需對手同意後撤回上一個操作'};}
+ _undoSend(kind,extra={}){if(this.spectator||this.stopped||!this.available||this.client.pending||!this.last)return false;const v=this.last;return this.client.send({kind,actor:v.actor,matchId:v.view.match.id,epoch:v.epoch,...extra});}
  undo(){if(!this.status().enabled)return false;return this._undoSend('undoRequest',{decisionIndex:this.last.view.match.decisionIndex});}
+ rewind(){if(!this.last?.undo?.canTurnRequest)return false;return this._undoSend('undoRequest',{scope:'turn',decisionIndex:this.last.view.match.decisionIndex});}
  respondUndo(approve){return this._undoSend('undoReply',{undoId:this.last.undo?.pending?.id,approve});}
  cancelUndo(){return this._undoSend('undoCancel',{undoId:this.last.undo?.pending?.id});}
  request(){return this.waiting;}
  // FirebaseRooms 的 view 回呼直接交給這裡
  handle(v){
-  if(!v||!v.view)return;
+  if(!v||!v.view)return;this.spectator=!!v.spectator||!!this.client.spectating;
   if(this.last&&(v.term<this.last.term||v.term===this.last.term&&v.revision<this.last.revision))return;
   const newMatch=this.last?.view.match.id!==v.view.match.id;
   if(this.last&&(v.epoch!==this.last.epoch||v.undo?.pending)){this.resume=null;this.noticeIndex=v.view.match.notices?.length||0;this.previewCache.clear();this.previewFlight=null;}
@@ -2693,9 +2703,9 @@ class OnlineSession{
   if(this.stopped||!this.last)return;
   const v=this.last,view=rotateView(v.view,v.actor),board=boardView(view,this.deckKeys);this.waiting=null;
   try{
-   if(v.undo?.pending)view.request=null;
+   if(v.undo?.pending||this.spectator)view.request=null;
    this.callbacks.onBoard?.(board,view);
-   if(v.undo?.pending)return;
+   if(v.undo?.pending||this.spectator)return;
    const notices=view.match?.notices||[];
    if(this.noticeIndex>notices.length)this.noticeIndex=notices.length;
    if(this.noticeIndex<notices.length){
@@ -2707,9 +2717,9 @@ class OnlineSession{
    if(r&&r.actor===v.actor&&this.available&&!this.client.pending){this.waiting=r;this.callbacks.onRequest?.(r);}
   }catch(e){this.callbacks.onError?.(e);}
  }
- surrender(){if(this.stopped||!this.last||!this.available||this.client.pending||this.last.view.match.phase==='finished')throw Error('請等待連線恢復後投降');if(!Number.isInteger(this.last.epoch))throw Error('請房主更新頁面後再試投降');return this.client.send({kind:'surrender',actor:this.last.actor,matchId:this.last.view.match.id,epoch:this.last.epoch});}
+ surrender(){if(this.spectator||this.stopped||!this.last||!this.available||this.client.pending||this.last.view.match.phase==='finished')throw Error('請等待連線恢復後投降');if(!Number.isInteger(this.last.epoch))throw Error('請房主更新頁面後再試投降');return this.client.send({kind:'surrender',actor:this.last.actor,matchId:this.last.view.match.id,epoch:this.last.epoch});}
  submit(command){
-  if(this.stopped||!this.waiting||!this.available||this.client.pending)throw Error('NO_LOCAL_DECISION');
+  if(this.spectator||this.stopped||!this.waiting||!this.available||this.client.pending)throw Error('NO_LOCAL_DECISION');
   this.waiting=null;
   Promise.resolve(this.client.send(command)).catch(e=>{this.callbacks.onSendError?.(e);if(this.last)this._drive();});
  }
@@ -4605,7 +4615,7 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
     }).join('')}</div>`;
   }
   let midlineSession=null,midlineSeen=new Set(),midlineAnimations=[];
-  function syncMidlineMotion() {
+  function syncMidlineMotion() {if(isSpectating())return;
     if(midlineSession!==session){midlineAnimations.forEach(a=>a.cancel());midlineAnimations=[];midlineSeen.clear();midlineSession=session;}
     const own=game?.turnP?.idx===0&&game.rallyNo&&!game.winner&&game.matchPhase==='rally';
     if(!own){midlineAnimations.forEach(a=>a.cancel());midlineAnimations=[];return;}
@@ -4626,12 +4636,12 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
     ],{duration:reduced?120:800,delay:reduced?120:1200,fill:'backwards',easing:'cubic-bezier(.25,.1,.2,1)'}));
   }
   function netHTML() {
-    if(game.winner)return '<div class="ball"><span class="k">'+(game.winner.idx===0?'你':esc(oppName))+'獲勝</span></div>';
+    if(game.winner)return '<div class="ball"><span class="k">'+esc(tablePlayerName(game.winner.idx))+'獲勝</span></div>';
     if(['loss','interval'].includes(game.matchPhase))return '<div class="ball"><span class="k">準備下一球</span></div>';
     const b=game.ball;
-    if(!b)return '<div class="ball"><span class="k">'+(game.turnP?(game.turnP.idx===0?'你':esc(oppName))+'發球中':'等待開始')+'</span></div>';
+    if(!b)return '<div class="ball"><span class="k">'+(game.turnP?esc(tablePlayerName(game.turnP.idx))+'發球中':'等待開始')+'</span></div>';
     const toMe=game.target===0,sig=b.type+b.off+game.target,pop=sig!==prevBall;prevBall=sig;
-    return `<div class="ball ${toMe?'toMe':'toOpp'}${pop?' pop':''}"><span class="k">${toMe?'你':esc(oppName)}需要接</span><span class="v">${b.off}</span><span class="k">點</span></div>`;
+    return `<div class="ball ${toMe?'toMe':'toOpp'}${pop?' pop':''}"><span class="k">${esc(tablePlayerName(toMe?0:1))}需要接</span><span class="v">${b.off}</span><span class="k">點</span></div>`;
   }
 
 
@@ -4689,7 +4699,7 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
   document.addEventListener('click',e=>{const b=e.target.closest('[data-status]');if(!b)return;const s=game?.statuses?.find(s=>s.id===b.dataset.status);if(!s)return;openSheet(`<div class="status-detail"><h3>${esc(s.label)}</h3><p><b>${s.player===0?'你':esc(oppName)}</b> · ${s.scheduled?'尚未生效':'生效中'}</p><p>${esc(s.detail)}</p><p><b>解除時機：</b>${esc(s.expires)}</p><p><b>來源：</b>${s.source?esc(s.source.name)+'（'+esc(s.source.cardNo)+'）':'來源卡尚未公開'}</p>${s.source?'<button type="button" class="chip" id="statusSource">查看來源卡完整效果</button>':''}</div>`);if(s.source)$('statusSource').onclick=()=>cardSheet(s.source.cardNo.replace(/^HV-?/,''));});
   function barHTML(p, mine) {
     const backs = mine ? '' : `<span class="backs">${'<i></i>'.repeat(Math.min(p.hand.length, 8))}</span>`;
-    return `<div class="pbar ${mine ? 'me' : 'opp'}"><span class="av">${esc((mine ? '你' : oppName).slice(0, 1))}</span><span class="who">${mine ? '你' : esc(oppName)}</span><span class="hn" aria-label="${mine ? '你的' : '對手'}手牌 ${p.hand.length} 張">手牌 <b>${p.hand.length}</b> 張</span><span class="dk">${esc(OL.inGame&&mine?(!OL.client?.online?'已離線':!OL.authority?.active?'房主離線':OL.client.pending?'同步中':'已連線'):DECKS[p.deckKey]?.name || '')}</span><span class="sp"></span>${backs}${mine?'':statusStrip(p.idx)}</div>`;
+    return `<div class="pbar ${mine ? 'me' : 'opp'}"><span class="av">${esc(tablePlayerName(p.idx).slice(0,1))}</span><span class="who">${esc(tablePlayerName(p.idx))}</span><span class="hn" aria-label="${mine ? '你的' : '對手'}手牌 ${p.hand.length} 張">手牌 <b>${p.hand.length}</b> 張</span><span class="dk">${esc(OL.inGame&&mine?(!OL.client?.online?'已離線':!OL.authority?.active?'房主離線':OL.client.pending?'同步中':'已連線'):DECKS[p.deckKey]?.name || '')}</span><span class="sp"></span>${backs}${mine?'':statusStrip(p.idx)}</div>`;
   }
   function markDiscardHand(){$('handZone').querySelector('.hand')?.classList.toggle('discard-required',!!pending?.req.uiPresentation?.handDiscard);}
   function fanHTML(p) {
@@ -4723,11 +4733,15 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
   if (window.ResizeObserver) new ResizeObserver(() => requestAnimationFrame(measureDock)).observe($('dock'));
   syncViewport();
 
+  const isSpectating=()=>!!OL.client?.spectating;
+  const tablePlayerName=p=>isSpectating()?olNameOf(p===0?OL.meta?.p0:OL.meta?.p1):p===0?'你':oppName;
+  function spectatorHands(){return '<div class="spectator-hands">'+game.players.map((p,i)=>'<section class="spectator-hand" data-spectator-hand="'+i+'"><h3>'+esc(tablePlayerName(i))+'・手牌 '+p.hand.length+' 張</h3><div class="spectator-cards">'+p.hand.map(c=>'<button type="button" class="cbtn" data-card="'+c+'" aria-label="'+esc(nm(c))+'・查看卡片資訊">'+img(c)+'</button>').join('')+'</div></section>').join('')+'</div>';}
   function updateUndoButton() {
-    $('undoBtn').disabled = !session?.status().enabled; $('undoBtn').hidden = false;
+    $('undoBtn').disabled = !session?.status().enabled; $('undoBtn').hidden = isSpectating();$('rewindBtn').hidden=!OL.inGame||isSpectating();$('rewindBtn').disabled=!(session?.last?.undo?.canTurnRequest&&olCanSend()&&!OL.client?.pending);$('rewindBtn').title='對手同意後，回到你最近一次回合的開始';
     $('undoBtn').textContent = OL.inGame?'申請 Undo':'Undo';
     $('undoBtn').title = OL.inGame?'需對手同意後，撤回你上一個已確認操作':'撤回本回合上一個已確認操作';
   }
+  $('rewindBtn').onclick=()=>{if(!$('rewindBtn').disabled)olRun(()=>session.rewind())();};
   $('undoBtn').onclick = () => {
     if (!session?.status().enabled) return;
     if(OL.inGame){olRun(()=>session.undo())();return;}
@@ -4744,7 +4758,7 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
     nextTop = {}; nextVal = {};
     $('oppSide').innerHTML = barHTML(ai, false) + courtHTML(ai);
     $('meSide').innerHTML = courtHTML(me) + barHTML(me, true);
-    $('handZone').innerHTML = fanHTML(me);markDiscardHand();
+    $('handZone').innerHTML = isSpectating()?spectatorHands():fanHTML(me);if(!isSpectating())markDiscardHand();
     prevTop = nextTop; prevVal = nextVal;
     $('net').innerHTML = netHTML();
     const server = game.server ?? game.firstServer;
@@ -4771,8 +4785,8 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
     } else if (OL.inGame&&session.last?.undo?.pending) {
       const u=session.last.undo.pending,mine=u.byActor===session.last.actor;
       dock.classList.remove('wait');dock.dataset.mode='bar';document.body.dataset.dock='bar';$('manualBtn').hidden=true;
-      $('dockQ').textContent=mine?'已申請撤回上一個操作，等待對手同意；雙方操作暫停，2 分鐘未回覆自動取消。':`${oppName} 申請撤回上一個操作（第 ${u.target.rally} 球）；同意後返回該次選擇，2 分鐘未回覆自動取消。`;
-      $('dockOpts').innerHTML=mine?'<button class="opt" data-undo-cancel>取消申請</button>':'<button class="opt primary" data-undo-reply="yes">同意撤回</button><button class="opt" data-undo-reply="no">拒絕</button>';
+      const turn=u.target.scope==='turn';$('dockQ').textContent=mine?(turn?'已請求回溯至我的回合開始，等待對手同意；雙方操作暫停。':'已申請撤回上一個操作，等待對手同意；雙方操作暫停，2 分鐘未回覆自動取消。'):`${oppName} ${turn?'請求回溯至其回合開始':'申請撤回上一個操作'}（第 ${u.target.rally} 球／第 ${u.target.turn} 回合）；${turn?'同意後回到對方該回合開始':'同意後返回該次選擇'}，2 分鐘未回覆自動取消。`;
+      $('dockOpts').innerHTML=mine?'<button class="opt" data-undo-cancel>取消申請</button>':'<button class="opt primary" data-undo-reply="yes">'+(turn?'同意回溯':'同意撤回')+'</button><button class="opt" data-undo-reply="no">拒絕</button>';
       for(const b of $('dockOpts').querySelectorAll('[data-undo-reply]'))b.onclick=olRun(()=>session.respondUndo(b.dataset.undoReply==='yes'));
       const cancel=$('dockOpts').querySelector('[data-undo-cancel]');if(cancel)cancel.onclick=olRun(()=>session.cancelUndo());
     } else if (pending) {
@@ -4785,6 +4799,7 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
     }
     $('dockSummary').textContent = OL.inGame&&session.last?.undo?.pending?'悔棋申請 · 需雙方同意':game.winner ? $('dockQ').textContent : pending ? courtRequest(pending.req)==='parameter'?$('dock').classList.contains('peek-court')?'點擊亮框角色，選擇數值':'直接點選下方要調整的數值':BreakChoiceUI.requestPrompt(pending.req) : `${oppName} 行動中`;
     dock.hidden=!(game.winner||OL.inGame&&session.last?.undo?.pending||pending&&!['ack','turnEnd'].includes(pending.req.kind));
+    if(isSpectating()){$('rallyActions').hidden=true;$('rallyActions').replaceChildren();$('manualBtn').hidden=true;dock.hidden=!game.winner;if(game.winner){$('dockQ').textContent=tablePlayerName(game.winner.idx)+' 獲勝・觀戰結束';$('dockOpts').innerHTML='<button class="opt primary" data-act="home">離開觀戰，回到主頁</button><button class="opt" data-act="log">查看紀錄</button>';}else $('rallyStatus').textContent=game.rallyNo?'觀戰・第 '+game.turnNo+' 回合・'+tablePlayerName(game.turnP?.idx??game.server)+'的回合'+(game.ball?'・需要接 '+game.ball.off+' 點':''):'觀戰・開局準備';}
     updateUndoButton();
     renderCourtParam();
     presentation.sync();
@@ -4920,7 +4935,7 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
     root.innerHTML=!uid?'<p class="sub">Google 登入後可查看私人備份。</p>':cloud.loading?'<p class="sub">載入中…</p>':cloud.rows.map(r=>`<article class="cloud-row"><div><strong>單人 · ${r.result==='win'?'勝利':'落敗'}</strong><small>${esc(new Date(r.updatedAt).toLocaleString('zh-TW'))} · 第${r.rally}球 · ${r.decisionIndex}次操作</small></div><button class="chip" data-private-record="${esc(r.id)}">查看</button></article>`).join('')||'<p class="sub">尚無私人雲端紀錄。可從本機紀錄手動備份。</p>';
     root.onclick=async e=>{const b=e.target.closest('[data-private-record]');if(!b)return;const current=OL.records.uid;b.disabled=true;try{const record=await OL.records.fetch(b.dataset.privateRecord);if(OL.records.uid===current&&$('privateRecordList')===root)showMatchRecord(record.id,{record,cloudId:b.dataset.privateRecord,uid:current});}catch(err){if($('privateRecordList')===root){privateRecordMessage=olFriendly(err);renderPrivateRecords();}}finally{b.disabled=false;}};
   }
-  function captureMatchRecord(view,checkpoint){
+  function captureMatchRecord(view,checkpoint){if(OL.client?.spectating)return;
     const kind=OL.inGame?'online':'solo',id=kind+':'+(OL.inGame?(OL.roomId||'')+':'+(session.last?.actor??0)+':':'')+view.match.id;
     const token=[id,view.revision,view.match.decisionIndex,checkpoint?.stamp].join(':');if(token===archiveToken)return;
     try{matchRecords.save({id,kind,view,checkpoint,names:['你',oppName],deckNames:session.deckKeys.map(k=>DECKS[k]?.name||'自訂牌組'),logs:logBuf.map(([s])=>s)});archiveToken=token;archiveMessage='';backupCurrentRecord();}catch(e){archiveMessage=e.message;}
@@ -4966,10 +4981,10 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
   function showLog() { openSheet(`<h3>對局紀錄</h3><div class="log" style="max-height:60vh">${logBuf.map(([s, c]) => `<div class="${c || ''}">${esc(s)}</div>`).join('')}</div>`); const l = $('sheetBox').querySelector('.log'); l.scrollTop = l.scrollHeight; }
   $('logBtn').onclick = showLog;
   function openGameMenu(){
-    openSheet('<h3>對局選單</h3><p class="sub" id="archiveStatus">'+esc(archiveMessage||privateRecordMessage||'此場對局紀錄自動保存在本機')+'</p><div class="opts"><button class="opt" type="button" id="mRecords">歷史對局紀錄</button><button class="opt danger" type="button" id="mSurrender" '+(game?.winner?'disabled':'')+'>投降</button><button class="opt" type="button" id="mHome">回到主頁</button>'+(OL.inGame?'':'<button class="opt" type="button" id="mRestart">重新開始這場</button>')+'</div><h3>外觀</h3>'+bkThemeSeg()+hintSettings());
+    openSheet('<h3>對局選單</h3><p class="sub" id="archiveStatus">'+esc(isSpectating()?'觀戰模式，不會以玩家身分保存此場紀錄':archiveMessage||privateRecordMessage||'此場對局紀錄自動保存在本機')+'</p><div class="opts"><button class="opt" type="button" id="mRecords">歷史對局紀錄</button><button class="opt danger" type="button" id="mSurrender" '+(game?.winner||isSpectating()?'disabled':'')+'>投降</button><button class="opt" type="button" id="mHome">回到主頁</button>'+(OL.inGame?'<button class="opt" id="mWatchLink" type="button">分享觀戰連結</button>':'')+(OL.inGame?'':'<button class="opt" type="button" id="mRestart">重新開始這場</button>')+'</div><h3>外觀</h3>'+bkThemeSeg()+hintSettings());
   }
   function confirmGameAction(kind){
-    const surrender=kind==='surrender',current=session,id=OL.inGame?session?.last?.view.match.id:session?.match?._m.id;
+    if(isSpectating()&&kind==='surrender')return;const surrender=kind==='surrender',current=session,id=OL.inGame?session?.last?.view.match.id:session?.match?._m.id;
     openSheet(`<h3>${surrender?'確定投降？':'回到主頁？'}</h3><p>${surrender?'投降會結束整場對局，對手獲勝；無法 Undo。':OL.inGame?'將離開房間並回到主頁。房間保留，對手可接手；這不會判定投降。':'目前對局會保存在此裝置，可從主頁繼續。'}</p><p id="exitMessage" role="alert"></p><div class="opts"><button class="opt ${surrender?'danger':'primary'}" id="confirmGameAction" type="button">${surrender?'確認投降':'確認回到主頁'}</button><button class="opt" id="cancelGameAction" type="button">繼續對局</button></div>`);
     $('cancelGameAction').onclick=closeSheet;
     $('confirmGameAction').onclick=async()=>{const button=$('confirmGameAction');button.disabled=true;try{
@@ -4980,17 +4995,17 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
     }catch(e){if($('exitMessage'))$('exitMessage').textContent=e.message;button.disabled=false;}};
   }
   $('menuBtn').onclick=openGameMenu;
-  $('sheet').addEventListener('click',e=>{if(e.target.id==='mRecords')openMatchRecords();if(e.target.id==='mRestart'){closeSheet();restartSolo();}if(e.target.id==='mSurrender')confirmGameAction('surrender');if(e.target.id==='mHome'||e.target.id==='mSetup'||e.target.id==='mLeave')confirmGameAction('home');});
+  $('sheet').addEventListener('click',e=>{if(e.target.id==='mWatchLink'){const u=new URL(location.href);u.searchParams.set('online','1');u.searchParams.set('room',OL.roomId);u.searchParams.set('watch','1');Promise.resolve().then(()=>navigator.clipboard.writeText(u.href)).then(()=>{if($('mWatchLink'))$('mWatchLink').textContent='觀戰連結已複製';}).catch(()=>{openSheet('<h3>觀戰連結</h3><p>複製以下連結邀請朋友觀戰，進場前會顯示提醒。</p><input aria-label="觀戰連結" readonly value="'+esc(u.href)+'">');});}if(e.target.id==='mRecords')openMatchRecords();if(e.target.id==='mRestart'){closeSheet();restartSolo();}if(e.target.id==='mSurrender')confirmGameAction('surrender');if(e.target.id==='mHome'||e.target.id==='mSetup'||e.target.id==='mLeave')confirmGameAction('home');});
 
   function backToSetup() { cancelHandPress();heldHand=null;courtParamOpen=null;courtNextTarget=null;$('courtParamPicker').hidden=true;presentation.reset();priorStatuses=null;statusToastUntil=0;$('hintToast').hidden=true;clearTimeout(hintToastTimer);persistSolo(false);nativeWidget?.destroy();nativeWidget=null;session?.stop(); session = null; game = null; pending = null; turnNotice = null; renderTransition(); $('game').hidden = true; $('dock').hidden = true;$('tableTools').hidden=true; $('tbtns').hidden = true; $('setup').hidden = false; $('modebar').hidden = false; document.body.classList.remove('playing'); delete document.body.dataset.dock; }
 
   function publicLogText(e){const phase={setup:'調度',draw:'抽牌',receive:'接球',toss:'舉球',attack:'攻擊',serve:'發球',block:'攔網',end:'回合結束',loss_set:'失分',interval:'下一球準備'}[e.phase]||e.phase||'';const at=e.turn!=null?`【${e.rally?'第'+e.rally+'球・':''}回合${e.turn}・${phase}】`:'';return at+publicLogBody(e);}
   function publicLogBody(e) {
-    const who=e.player===0?'你':oppName;
+    const who=tablePlayerName(e.player);
     if(e.type==='card_move'){const name=nm(e.cardNo.replace(/^HV-?/,'')),zone=E.AREA_ZH[e.from]||e.from;if(e.to==='drop')return `${who}${e.guts?'拔除':'棄掉'} ${name}${e.guts?'（'+zone+'區 Guts）':''}${e.payment?'，支付費用':''}`;return `${who}將 ${name} 放到${E.AREA_ZH[e.to]||{event:'Event區'}[e.to]||e.to}`;}
     if(e.type==='rally_notice')return `${who}${e.notice==='loss'?'本球失分：'+e.reason:e.notice==='serve'?'發球'+(e.offense!=null?'，進攻值 '+e.offense:''):'的回合開始'}`;
-    if(e.type==='skill_resolved'){const params={receive:'接球',toss:'舉球',attack:'攻擊',serve:'發球',block:'攔網'},parts=[...(e.draws||[]).map(d=>(d.player===e.player?'':d.player===0?'你':oppName)+'抽 '+d.count+' 張'),...(e.numeric||[]).map(n=>(params[n.parameter]||'數值')+(n.operation==='set'?'設為 '+n.value:(n.value>=0?' +':' ')+n.value))];return `${who}・${nm(e.cardNo.replace(/^HV-?/,''))} 技能已結算${parts.length?'：'+parts.join('、'):''}`;}
-    if(e.type==='surrender')return `${who}投降，${e.player===0?oppName:'你'}獲勝`;
+    if(e.type==='skill_resolved'){const params={receive:'接球',toss:'舉球',attack:'攻擊',serve:'發球',block:'攔網'},parts=[...(e.draws||[]).map(d=>(d.player===e.player?'':tablePlayerName(d.player))+'抽 '+d.count+' 張'),...(e.numeric||[]).map(n=>(params[n.parameter]||'數值')+(n.operation==='set'?'設為 '+n.value:(n.value>=0?' +':' ')+n.value))];return `${who}・${nm(e.cardNo.replace(/^HV-?/,''))} 技能已結算${parts.length?'：'+parts.join('、'):''}`;}
+    if(e.type==='surrender')return `${who}投降，${tablePlayerName(1-e.player)}獲勝`;
     if(e.type==='draw')return `${who}抽${e.count}張`;
     if(e.type==='deck_view'&&e.visibility==='look')return `${who}查看牌庫頂 ${e.count} 張`;
     if(e.type==='deck_view')return `${who}公開：${(e.cards||[]).map(c=>nm(c.cardNo.replace(/^HV-?/,''))).join('、')||'牌庫為空'}`;
@@ -5045,7 +5060,7 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
   function noticeStatuses(board,view){const statuses=board.statuses||[],ids=new Set(statuses.map(s=>s.id)),activeIds=new Set(statuses.filter(s=>s.active).map(s=>s.id));
     if(priorStatuses&&priorStatuses.id===view.match.id&&view.match.decisionIndex>=priorStatuses.at&&hintMode()!=='off'){
       const added=statuses.filter(s=>!priorStatuses.ids.has(s.id)||s.active&&!priorStatuses.activeIds.has(s.id));
-      if(added.length){statusToastUntil=Date.now()+2200;clearTimeout(hintToastTimer);$('hintToast').hidden=true;presentation.negative(added.map(s=>({id:s.id,text:(s.player===0?'你':oppName)+'：'+s.label+(s.scheduled?'（下回合生效）':'（生效中）')+(hintMode()==='normal'&&s.source?' · '+s.source.name:'')})));}
+      if(added.length){statusToastUntil=Date.now()+2200;clearTimeout(hintToastTimer);$('hintToast').hidden=true;presentation.negative(added.map(s=>({id:s.id,text:tablePlayerName(s.player)+'：'+s.label+(s.scheduled?'（下回合生效）':'（生效中）')+(hintMode()==='normal'&&s.source?' · '+s.source.name:'')})));}
     }priorStatuses={id:view.match.id,at:view.match.decisionIndex,ids,activeIds};
   }
   function tableCallbacks() {
@@ -5054,7 +5069,7 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
         const same=pending&&view.request?.requestId===pending.req.requestId&&view.request?.epoch===pending.req.epoch;game=board;if(!same)pending=null;turnNotice=null;
         art.preload(view.players.flatMap(p=>[...(Array.isArray(p.hand)?p.hand:[]),...p.court,...p.event,...p.drop]).map(c=>c.cardNo)).catch(()=>{});
         skillResults=view.publicLog.filter(e=>e.type==='skill_resolved'&&e.turn===view.turn.id).slice(-2);const checkpoint=persistSolo(true);
-        logBuf=view.publicLog.map(e=>[publicLogText(e), '']);captureMatchRecord(view,checkpoint);render();if(OL.inGame&&session.last?.undo?.pending){presentation.reset();$('hintToast').hidden=true;clearTimeout(hintToastTimer);}presentation.observe(view);noticeStatuses(board,view);
+        logBuf=view.publicLog.map(e=>[publicLogText(e), '']);captureMatchRecord(view,checkpoint);render();if(OL.inGame&&session.last?.undo?.pending){presentation.reset();$('hintToast').hidden=true;clearTimeout(hintToastTimer);}if(!isSpectating())presentation.observe(view);noticeStatuses(board,view);
       },
       onRequest(req) {presentation.request(req);pending={req};if(req.kind==='parameter')courtParamOpen=null;else courtNextTarget=null;setDockCollapsed(false);render();soloSelection=null;if(!courtUndoing&&courtRequest(req)==='target'&&req.input.min===1&&req.input.max===1&&req.options.length===1){queueMicrotask(()=>{if(pending?.req.requestId===req.requestId&&pending.req.epoch===req.epoch)nativeAnswer([req.options[0].value]);});}},
       onNotice(board,data,resolve) {if(hintMode()!=='normal'&&['serve','turn'].includes(data.type)){briefNotice(data);queueMicrotask(resolve);return;}turnNotice={data,resolve,game:board};render();},
@@ -5067,7 +5082,7 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
     if(drag?.el)drag.el.remove();if(drag?.over)drag.over.classList.remove('over');drag=null;suppressClick=false;document.body.classList.remove('dragging');
     $('setup').hidden = true; $('modebar').hidden = true; $('game').hidden = false; $('tbtns').hidden = false; document.body.classList.add('playing'); syncViewport();
     if(!navigator.connection?.saveData){const codes=OL.inGame?Object.keys(DECKS[$('myDeck').value]?.cards||{}):session.options.decks.flat();art.preload(codes).catch(()=>{});}
-    $('tableTools').append($('manualBtn'),$('undoBtn'));$('tableTools').hidden=false;$('game').querySelector('.game').append($('dock'),$('tableTools'),$('tableEffects'));
+    $('tableTools').append($('manualBtn'),$('undoBtn'),$('rewindBtn'));$('tableTools').hidden=false;$('game').querySelector('.game').append($('dock'),$('tableTools'),$('tableEffects'));
     session.start();if(OL.inGame)olConnectionChanged();
   }
   /* ---------- 多人連線（Claude 2026-10-25）：大廳在選牌頁，開打後沿用同一張正式牌桌 */
@@ -5159,23 +5174,24 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
     $('olLogin').hidden = signedIn; $('olLobby').hidden = !signedIn || inRoom; $('olWait').hidden = !waiting;
     if (signedIn) { $('olWho').textContent = cleanName(c.name) + (c.user.isAnonymous ? '' : '・Google'); $('olLink').hidden = !c.user.isAnonymous; $('olDot').classList.toggle('on', !!c.online); }
     document.body.dataset.room = inRoom ? '1' : '';
-    deckConnectionReady=!!c?.online;deckButtons();accountRender();olConnectionChanged();if(OL.inGame&&game?.winner)render();
+    $('olWatch').disabled=!signedIn||!c?.online;deckConnectionReady=!!c?.online;deckButtons();accountRender();olConnectionChanged();if(OL.inGame&&game?.winner)render();
+    if(signedIn&&c.online&&!inRoom&&!OL.watchPrompted&&new URLSearchParams(location.search).get('watch')==='1'){OL.watchPrompted=true;watchRoom($('olCode').value);}
     if (waiting) { $('olWaitCode').textContent = OL.roomId; $('olWaitText').textContent = OL.meta.p1 === 'AI' ? '正在準備對局' : '等待朋友加入'; }
   }
-  function olCanSend(v=session?.last){const c=OL.client,a=OL.authority;return !!(c?.online&&!c.pending&&OL.meta?.status==='running'&&a?.active&&a.lease.term===v?.term);}
+  function olCanSend(v=session?.last){const c=OL.client,a=OL.authority;return !!(!c?.spectating&&c?.online&&!c.pending&&OL.meta?.status==='running'&&a?.active&&a.lease.term===v?.term);}
   function olControls(){if(!OL.inGame)return;const locked=!olCanSend();for(const b of document.querySelectorAll('#dockOpts .hc button,#dockOpts [data-undo-reply],#dockOpts [data-undo-cancel],#rallyActions button,#courtParamPicker [data-court-param]')){if(locked){if(!b.hasAttribute('data-ol-disabled'))b.dataset.olDisabled=String(b.disabled);b.disabled=true;}else if(b.hasAttribute('data-ol-disabled')){b.disabled=b.dataset.olDisabled==='true';delete b.dataset.olDisabled;}}}
   function olConnectionChanged(){
     if(OL.inGame)$('tbtns').prepend($('olConnectionBar'));else if($('olConnectionBar').parentElement===$('tbtns'))$('runtimeStatus').before($('olConnectionBar'));
     $('olConnectionBar').hidden=!OL.roomId;const a=OL.authority,c=OL.client;
     $('olConnectionText').textContent=!c?.online?'連線中斷，恢復後同步對局':!a?.active?'房主離線，等待接手':a.mine?'房主：你':'房主在線';
-    $('olTakeover').hidden=!OL.roomId||!c?.online||!a||a.mine||a.active;document.body.dataset.takeover=$('olTakeover').hidden?'0':'1';
+    $('olTakeover').hidden=!!c?.spectating||!OL.roomId||!c?.online||!a||a.mine||a.active;document.body.dataset.takeover=$('olTakeover').hidden?'0':'1';
     if(OL.inGame){session?.setAvailable?.(olCanSend());olControls();updateUndoButton();}
   }
   $('olTakeover').onclick=olRun(()=>OL.client.takeover());
   function olLobby() {
     profileWatches();
     const mine = OL.client?.user?.uid, list = Object.values(OL.rooms).filter(r => r && r.status !== 'closed').sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 30);
-    $('olRooms').innerHTML = list.map(r => `<div class="ol-room"><div><b>${esc(r.title || r.room)}</b><small>${esc(r.room)}・${({ waiting: '等待玩家', running: '對戰中', finished: '已結束' })[r.status] || esc(r.status)}${OL.presence[r.owner] ? '' : '・房主離線'}</small></div><button class="btn outline" type="button" data-ol-join="${esc(r.room)}">${r.owner === mine || r.p0 === mine || r.p1 === mine ? '回到房間' : r.status === 'waiting' ? '加入' : '加入／回房'}</button>${r.status==='finished'&&(r.owner===mine||r.p0===mine)?`<button class="btn outline" type="button" data-ol-delete="${esc(r.room)}">刪除</button>`:''}</div>`).join('') || '<p class="ol-empty">目前沒有房間，建立一間邀請朋友吧。</p>';
+    $('olRooms').innerHTML = list.map(r => `<div class="ol-room"><div><b>${esc(r.title || r.room)}</b><small>${esc(r.room)}・${({ waiting: '等待玩家', running: '對戰中', finished: '已結束' })[r.status] || esc(r.status)}${OL.presence[r.owner] ? '' : '・房主離線'}</small></div><button class="btn outline" type="button" data-ol-join="${esc(r.room)}">${r.owner === mine || r.p0 === mine || r.p1 === mine ? '回到房間' : r.status === 'waiting' ? '加入' : '加入／回房'}</button>${['running','finished'].includes(r.status)&&r.owner!==mine&&r.p0!==mine&&r.p1!==mine?`<button class="btn outline" type="button" data-ol-watch="${esc(r.room)}">觀戰</button>`:''}${r.status==='finished'&&(r.owner===mine||r.p0===mine)?`<button class="btn outline" type="button" data-ol-delete="${esc(r.room)}">刪除</button>`:''}</div>`).join('') || '<p class="ol-empty">目前沒有房間，建立一間邀請朋友吧。</p>';
     const people = Object.entries(OL.presence).map(([uid, conns]) => ({ uid, name: profileOf(uid)?.name || cleanName(Object.values(conns || {})[0]?.name) })).filter(p => p.name);
     $('olPeople').innerHTML = people.map(p => `<span class="ol-person">${avatarMarkup(p.uid)}<span class="ol-dot on"></span>${esc(p.name)}${p.uid === mine ? '（你）' : ''}</span>`).join('') || '<span class="ol-empty">目前沒有其他人在線</span>';
   }
@@ -5183,12 +5199,12 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
     if (OL.inGame || !OL.client) return;
     OL.inGame = true; nativeWidget?.destroy(); nativeWidget = null; session?.stop();
     const me = OL.client.user.uid, other = OL.meta ? (OL.meta.p0 === me ? OL.meta.p1 : OL.meta.p0) : null;
-    oppName = olNameOf(other); setLogoSub('你 vs ' + oppName);
+    oppName = olNameOf(OL.client.spectating?OL.meta?.p1:other);document.body.dataset.spectating=OL.client.spectating?'1':'0';setLogoSub(OL.client.spectating?'觀戰・'+olNameOf(OL.meta?.p0)+' vs '+oppName:'你 vs '+oppName);
     DECKS.__online_me = { name: DECKS[$('myDeck').value]?.name || '我的牌組', cards: {} }; DECKS.__online_opp = { name: oppName + ' 的牌組', cards: {} };
     session = new BreakMatchPilot.OnlineSession(OL.client, { ...tableCallbacks(), onSendError(e) { olToast(olFriendly(e)); } });
     enterTable();
   }
-  function olLeaveGame() { if (!OL.inGame) return; OL.inGame = false; backToSetup(); }
+  function olLeaveGame() { if (!OL.inGame) return; OL.inGame = false;document.body.dataset.spectating='0';backToSetup(); }
   let cancelAgreement=null,authGeneration=0;
   async function agreementPrompt(user,error=null,generation=authGeneration){
     const {TEXT}=await import('./player-agreement.js');
@@ -5244,9 +5260,9 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
         error: e => olToast(olFriendly(e)),
         connection: () => {deckSync.setOnline(!!OL.client?.online);olView();syncSharing();backupCurrentRecord();syncProfileName().catch(e=>{accountMessage=olFriendly(e);accountRender();});},
         lobby: v => { OL.rooms = v || {}; olLobby(); },
-        presence: v => { OL.presence = v || {}; olLobby(); if (OL.inGame && OL.meta) { const me = c.user?.uid, other = OL.meta.p0 === me ? OL.meta.p1 : OL.meta.p0; oppName = olNameOf(other); } },
-        room: id => { OL.roomId = id || null; if (id) { const u = new URL(location.href); u.searchParams.set('online', '1'); u.searchParams.set('room', id); history.replaceState(null, '', u); } else { OL.meta = null;OL.authority=null;const u=new URL(location.href);u.searchParams.delete('room');history.replaceState(null,'',u);olLeaveGame(); } olView(); },
-        meta: v => { OL.meta = v;if(OL.inGame&&v){oppName=olNameOf(v.p0===c.user?.uid?v.p1:v.p0);setLogoSub('你 vs '+oppName);} if (v?.status === 'closed' || !v && c.room) { olToast('房間已關閉或刪除'); c.leave(); } olView(); },
+        presence: v => { OL.presence = v || {}; olLobby(); if (OL.inGame && OL.meta) { const me = c.user?.uid, other = OL.meta.p0 === me ? OL.meta.p1 : OL.meta.p0; oppName = olNameOf(c.spectating?OL.meta.p1:other); } },
+        room: id => { const previous=OL.roomId;OL.roomId = id || null; if (id) { const u = new URL(location.href); u.searchParams.set('online', '1'); u.searchParams.set('room', id);if(OL.client?.spectating)u.searchParams.set('watch','1');else u.searchParams.delete('watch');history.replaceState(null, '', u); } else { OL.meta = null;OL.authority=null;if(previous){const u=new URL(location.href);u.searchParams.delete('room');u.searchParams.delete('watch');history.replaceState(null,'',u);}olLeaveGame(); } olView(); },
+        meta: v => { OL.meta = v;if(OL.inGame&&v){oppName=olNameOf(c.spectating?v.p1:v.p0===c.user?.uid?v.p1:v.p0);setLogoSub(c.spectating?'觀戰・'+olNameOf(v.p0)+' vs '+oppName:'你 vs '+oppName);} if (v?.status === 'closed' || !v && c.room) { olToast('房間已關閉或刪除'); c.leave(); } olView(); },
         authority: info => {OL.authority=info;olConnectionChanged();},
         view: v => { if (!v) return; if (!OL.inGame) olEnterGame(); session.available=olCanSend(v);session?.handle?.(v); },
         sending: () => olConnectionChanged(),
@@ -5261,11 +5277,13 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
   $('olGoogle').onclick = olRun(async () => { if (!OL.client) await olLoad(); await OL.services.A.signInWithPopup(OL.services.auth, new OL.services.A.GoogleAuthProvider()); });
   $('olLink').onclick = olRun(async () => { if (OL.roomId) throw Error('請先離開房間再連結帳號'); await OL.services.A.linkWithPopup(OL.services.auth.currentUser, new OL.services.A.GoogleAuthProvider());processAuth(OL.services.auth.currentUser);olView(); });
   $('olLogout').onclick = olRun(async () => { await OL.client.logout(); await OL.services.A.signOut(OL.services.auth); });
-  $('olCreate').onclick = olRun(async () => { const { cards } = olDeck(); await OL.client.create({ title: cleanName(OL.client.name) + ' 的房間', deck: cards, aiDeck: $('olOpp').value === 'AI' ? Object.entries(DECKS[$('aiDeck').value].cards).flatMap(([c,n])=>Array(n).fill(c)) : null }); });
+  $('olCreate').onclick = olRun(async () => { const { cards } = olDeck(); await OL.client.create({ title: cleanName(OL.client.name) + ' 的房間', deck: cards }); });
   const olJoin = code => olRun(async () => { const id = String(code || '').trim().toUpperCase(); if (!/^[A-Z0-9]{8}$/.test(id)) throw Error('房號是 8 碼英數字'); const { cards } = olDeck(); await OL.client.join(id, cards); });
+  function watchRoom(code){const id=String(code||'').trim().toUpperCase();if(!/^[A-Z0-9]{8}$/.test(id)){olToast('房號是 8 碼英數字');return;}openSheet('<h3>觀戰提醒</h3><p><strong>打牌開心自在，請勿偷看你的牌友手牌。</strong></p><p>觀戰會顯示雙方手牌，僅供交流與學習；若你正在參與這場對局，請不要使用其他帳號偷看。</p><button class="opt primary" id="confirmSpectate">我了解，進入觀戰</button><button class="opt" id="cancelSpectate">取消</button><p id="spectateError" role="alert"></p>');$('cancelSpectate').onclick=closeSheet;$('confirmSpectate').onclick=async()=>{const b=$('confirmSpectate');b.disabled=true;try{await OL.client.spectate(id,{accepted:true});closeSheet();}catch(e){if($('spectateError'))$('spectateError').textContent=olFriendly(e);b.disabled=false;}};}
+  $('olWatch').onclick=()=>watchRoom($('olCode').value);
   $('olJoin').onclick = () => olJoin($('olCode').value)();
   $('olCode').onkeydown = e => { if (e.key === 'Enter') olJoin($('olCode').value)(); };
-  $('olRooms').addEventListener('click', e => { const del=e.target.closest('[data-ol-delete]');if(del){const id=del.dataset.olDelete;openSheet('<h3>刪除已結束的房間？</h3><p>房號 '+esc(id)+' 將從大廳移除。已保存的對局紀錄與公開回放會保留。</p><button class="opt danger" type="button" id="confirmRoomDelete">確認刪除房間</button>');$('confirmRoomDelete').onclick=olRun(async()=>{await OL.client.deleteRoom(id);closeSheet();});return;}const b = e.target.closest('[data-ol-join]'); if (b) olJoin(b.dataset.olJoin)(); });
+  $('olRooms').addEventListener('click', e => { const watch=e.target.closest('[data-ol-watch]');if(watch){watchRoom(watch.dataset.olWatch);return;}const del=e.target.closest('[data-ol-delete]');if(del){const id=del.dataset.olDelete;openSheet('<h3>刪除已結束的房間？</h3><p>房號 '+esc(id)+' 將從大廳移除。已保存的對局紀錄與公開回放會保留。</p><button class="opt danger" type="button" id="confirmRoomDelete">確認刪除房間</button>');$('confirmRoomDelete').onclick=olRun(async()=>{await OL.client.deleteRoom(id);closeSheet();});return;}const b = e.target.closest('[data-ol-join]'); if (b) olJoin(b.dataset.olJoin)(); });
   $('olCancel').onclick = olRun(async () => { await (OL.authority?.mine?OL.client.close():OL.client.leave()); });
   $('olShare').onclick = olRun(async () => {
     const u = new URL(location.href); u.search = ''; u.hash = ''; u.searchParams.set('online', '1'); u.searchParams.set('room', OL.roomId);if(new URLSearchParams(location.search).get('emulator')==='1')u.searchParams.set('emulator','1');
