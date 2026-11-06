@@ -331,7 +331,7 @@
     "publicReplays": {
       "$id": {
         ".read": true,
-        ".write": "!data.exists() && auth != null && auth.uid == root.child('archiveWriters').child($id).child('uid').val() && auth.uid == root.child('rooms').child(root.child('archiveWriters').child($id).child('room').val()).child('authority/uid').val() && root.child('rooms').child(root.child('archiveWriters').child($id).child('room').val()).child('meta/status').val() == 'finished' && root.child('archiveWriters').child($id).child('matchId').val() == root.child('rooms').child(root.child('archiveWriters').child($id).child('room').val()).child('bundle/matchId').val()",
+        ".write": "(!data.exists() && auth != null && auth.uid == root.child('archiveWriters').child($id).child('uid').val() && auth.uid == root.child('rooms').child(root.child('archiveWriters').child($id).child('room').val()).child('authority/uid').val() && root.child('rooms').child(root.child('archiveWriters').child($id).child('room').val()).child('meta/status').val() == 'finished' && root.child('archiveWriters').child($id).child('matchId').val() == root.child('rooms').child(root.child('archiveWriters').child($id).child('room').val()).child('bundle/matchId').val()) || (auth != null && auth.token.firebase.sign_in_provider == 'google.com' && root.child('researchWriters').child($id).child('uid').val() == auth.uid && (!newData.exists() || (!data.exists() && root.child('playerAgreements').child(auth.uid).child('version').val() == 1 && root.child('playerAgreements').child(auth.uid).child('usage').val() == true && root.child('playerAgreements').child(auth.uid).child('research').val() == true && root.child('playerAgreements').child(auth.uid).child('researchEnabled').val() == true && root.child('researchPublications').child(auth.uid).child(root.child('researchWriters').child($id).child('slot').val()).child('id').val() == $id)))",
         ".validate": "$id.matches(/^[a-f0-9]{32}$/) && newData.isString() && newData.val().length > 100 && newData.val().length <= 750000 && !newData.val().contains('\"uid\"') && !newData.val().contains('\"room\"') && !newData.val().contains('\"email\"') && !newData.val().contains('\"snapshot\"')"
       }
     },
@@ -342,7 +342,7 @@
       ],
       "$id": {
         ".read": true,
-        ".write": "!data.exists() && root.child('publicReplays').child($id).exists() && auth != null && auth.uid == root.child('archiveWriters').child($id).child('uid').val() && auth.uid == root.child('rooms').child(root.child('archiveWriters').child($id).child('room').val()).child('authority/uid').val() && root.child('rooms').child(root.child('archiveWriters').child($id).child('room').val()).child('meta/status').val() == 'finished' && root.child('archiveWriters').child($id).child('matchId').val() == root.child('rooms').child(root.child('archiveWriters').child($id).child('room').val()).child('bundle/matchId').val()",
+        ".write": "(!data.exists() && root.child('publicReplays').child($id).exists() && auth != null && auth.uid == root.child('archiveWriters').child($id).child('uid').val() && auth.uid == root.child('rooms').child(root.child('archiveWriters').child($id).child('room').val()).child('authority/uid').val() && root.child('rooms').child(root.child('archiveWriters').child($id).child('room').val()).child('meta/status').val() == 'finished' && root.child('archiveWriters').child($id).child('matchId').val() == root.child('rooms').child(root.child('archiveWriters').child($id).child('room').val()).child('bundle/matchId').val()) || (auth != null && auth.token.firebase.sign_in_provider == 'google.com' && root.child('researchWriters').child($id).child('uid').val() == auth.uid && (!newData.exists() || (!data.exists() && root.child('playerAgreements').child(auth.uid).child('version').val() == 1 && root.child('playerAgreements').child(auth.uid).child('usage').val() == true && root.child('playerAgreements').child(auth.uid).child('research').val() == true && root.child('playerAgreements').child(auth.uid).child('researchEnabled').val() == true && root.child('researchPublications').child(auth.uid).child(root.child('researchWriters').child($id).child('slot').val()).child('id').val() == $id && root.child('publicReplays').child($id).exists())))",
         ".validate": "newData.hasChildren(['version','createdAt','rallies','winner','steps','mode','bytes'])",
         "version": {
           ".validate": "newData.val() == 1"
@@ -367,6 +367,15 @@
         },
         "$other": {
           ".validate": false
+        },
+        "origin": {
+          ".validate": "newData.val() == 'solo-ai-research'"
+        },
+        "aiLevel": {
+          ".validate": "newData.val() == 'easy' || newData.val() == 'normal' || newData.val() == 'hard'"
+        },
+        "aiVersion": {
+          ".validate": "newData.isString() && newData.val().length <= 64"
         }
       }
     },
@@ -439,6 +448,74 @@
           "previousRecordId": {
             ".validate": "newData.isString() && newData.val().length <= 160"
           }
+        }
+      }
+    },
+    "playerAgreements": {
+      "$uid": {
+        ".read": "auth != null && auth.uid == $uid && auth.token.firebase.sign_in_provider == 'google.com'",
+        ".write": "auth != null && auth.uid == $uid && auth.token.firebase.sign_in_provider == 'google.com'",
+        ".validate": "newData.hasChildren(['version','usage','research','researchEnabled','acceptedAt','updatedAt'])",
+        "version": {
+          ".validate": "newData.val() == 1"
+        },
+        "usage": {
+          ".validate": "newData.val() == true"
+        },
+        "research": {
+          ".validate": "newData.val() == true"
+        },
+        "researchEnabled": {
+          ".validate": "newData.isBoolean()"
+        },
+        "acceptedAt": {
+          ".validate": "newData.isNumber() && (newData.val() == now || newData.val() == data.val())"
+        },
+        "updatedAt": {
+          ".validate": "newData.val() == now"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+    "researchPublications": {
+      "$uid": {
+        ".read": "auth != null && auth.uid == $uid && auth.token.firebase.sign_in_provider == 'google.com'",
+        "$slot": {
+          ".write": "auth != null && auth.uid == $uid && auth.token.firebase.sign_in_provider == 'google.com' && (!newData.exists() || (root.child('playerAgreements').child(auth.uid).child('version').val() == 1 && root.child('playerAgreements').child(auth.uid).child('usage').val() == true && root.child('playerAgreements').child(auth.uid).child('research').val() == true && root.child('playerAgreements').child(auth.uid).child('researchEnabled').val() == true && (!data.exists() || newData.child('id').val() == data.child('id').val()) && newData.child('recordId').val() == root.child('personalMatchIndex').child($uid).child($slot).child('recordId').val()))",
+          ".validate": "$slot.matches(/^s[0-2][0-9]$/) && newData.hasChildren(['id','recordId','createdAt'])",
+          "id": {
+            ".validate": "newData.isString() && newData.val().matches(/^[a-f0-9]{32}$/)"
+          },
+          "recordId": {
+            ".validate": "newData.isString() && newData.val().beginsWith('solo:')"
+          },
+          "createdAt": {
+            ".validate": "newData.val() == now || newData.val() == data.val()"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      }
+    },
+    "researchWriters": {
+      "$id": {
+        ".read": "auth != null && (!data.exists() || data.child('uid').val() == auth.uid)",
+        ".write": "auth != null && auth.token.firebase.sign_in_provider == 'google.com' && ((!newData.exists() && data.child('uid').val() == auth.uid) || (!data.exists() && root.child('playerAgreements').child(auth.uid).child('version').val() == 1 && root.child('playerAgreements').child(auth.uid).child('usage').val() == true && root.child('playerAgreements').child(auth.uid).child('research').val() == true && root.child('playerAgreements').child(auth.uid).child('researchEnabled').val() == true && newData.child('uid').val() == auth.uid && root.child('researchPublications').child(auth.uid).child(newData.child('slot').val()).child('id').val() == $id && root.child('researchPublications').child(auth.uid).child(newData.child('slot').val()).child('recordId').val() == newData.child('recordId').val()))",
+        ".validate": "$id.matches(/^[a-f0-9]{32}$/) && newData.hasChildren(['uid','slot','recordId'])",
+        "uid": {
+          ".validate": "newData.isString()"
+        },
+        "slot": {
+          ".validate": "newData.isString() && newData.val().matches(/^s[0-2][0-9]$/)"
+        },
+        "recordId": {
+          ".validate": "newData.isString() && newData.val().beginsWith('solo:')"
+        },
+        "$other": {
+          ".validate": false
         }
       }
     }

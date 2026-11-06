@@ -1,0 +1,14 @@
+/* Consent is stored per Google account/version, never inferred from login. */
+export const VERSION=1;
+export const google=user=>!!user&&!user.isAnonymous&&user.providerData?.some(p=>p.providerId==='google.com');
+export const accepted=value=>value?.version===VERSION&&value?.usage===true&&value?.research===true&&Number.isFinite(value.acceptedAt)&&value.acceptedAt>0;
+export const TEXT=`<h2>BREAK 對練台｜玩家使用與資料聲明</h2><p>歡迎使用 BREAK 對練台！登入前，請閱讀以下說明。</p><h3>開發與用途</h3><p>本平台由 <strong>素顏與 wei 協作開發</strong>，對練台系統由素顏維護，卡片資料庫由 wei 維護，提供牌友組牌、對練與交流，<strong>不作商業用途</strong>。</p><p>卡片資料與中文翻譯來自 <a href="https://weilun2022.github.io/haikyuu-cards/" target="_blank" rel="noopener">wei 的卡牌資料庫</a>。</p><p>本系統以牌友交流與研究牌組構築為目的。若你喜歡這款遊戲，也有餘裕，誠摯推薦到店家支持實體卡牌，讓遊戲能持續發展，陪伴更多牌友。</p><h3>Google 登入</h3><p>Google 提供的登入識別資料，僅用於確認身分、維持登入，以及存取你的雲端牌組與對局紀錄。</p><p>本平台不讀取你的 Gmail、Google 雲端硬碟或聯絡人，也不會使用你的 Google 帳號寄信或執行其他操作。公開暱稱與頭像由你自行設定。</p><h3>私人資料與匿名對局研究</h3><p>私人雲端牌組與對局備份僅本人可讀取；私人對局備份保留最近 <strong>30 場</strong>。</p><p>同意後，新開且已結束的單人對局，可另產生匿名研究副本，用於改善 AI 的策略與對練難度，並公開供牌友研究牌組與打法。</p><p>研究資料可能包含：</p><ul><li>雙方牌組、完賽後的手牌與抽牌順序。</li><li>各回合出牌、放置區域、技能選擇及 Guts 費用。</li><li>每一球的失分、最終勝負，以及 AI 難度與版本。</li></ul><p>公開副本會移除 Google 帳號、Email、玩家暱稱及房號。平台另保留私人提交對應，以處理移除申請。<strong>進行中的對局不會因此公開隱藏資訊，既有私人紀錄也不會自動回溯公開。</strong></p><p>資料使用 Firebase 儲存；公開研究副本可透過網際網路被社團牌友瀏覽及下載。</p><h3>停止分享與資料申請</h3><p>你可在「玩家使用聲明」停止後續研究分享，並移除平台保存的研究副本，私人備份仍會保留。研究副本最多保留最近 30 場，至被替換、研究用途結束或完成移除申請為止。</p><p><strong>已被其他人下載的公開副本，無法保證一併收回。</strong></p><p>如需查詢、更正、停止使用或刪除資料，請至 Discord：</p><p><strong>「Haikyu！！ Vobaca！！ Break 排球部」→ @素顏</strong></p><p>不同意可取消 Google 登入，繼續使用本機單人模式；需要登入的雲端功能則不啟用。</p>`;
+export class PlayerAgreement{
+ constructor(services){Object.assign(this,services);this.uid=null;this.value=null;this.stop=null;this.generation=0;}
+ ref(uid){return this.D.ref(this.db,'playerAgreements/'+uid);}
+ async read(user){if(!google(user))return null;return (await this.D.get(this.ref(user.uid))).val();}
+ async accept(user,usage,research){if(!google(user)||usage!==true||research!==true)throw Error('請分別確認兩項同意');if(this.auth.currentUser?.uid!==user.uid)throw Error('帳號已變更');const stamp=this.D.serverTimestamp();await this.D.set(this.ref(user.uid),{version:VERSION,usage:true,research:true,researchEnabled:true,acceptedAt:stamp,updatedAt:stamp});}
+ bind(user,callback){this.stop?.();this.stop=null;this.value=null;this.uid=google(user)?user.uid:null;const gen=++this.generation;if(this.uid)this.stop=this.D.onValue(this.ref(this.uid),s=>{if(gen!==this.generation)return;this.value=s.val();callback?.(this.value);},e=>{if(gen!==this.generation)return;this.value=null;callback?.(null,e);});}
+ get enabled(){return !!this.uid&&accepted(this.value)&&this.value.researchEnabled===true;}
+ async disable(){if(!this.uid)throw Error('請先登入');await this.D.update(this.ref(this.uid),{researchEnabled:false,updatedAt:this.D.serverTimestamp()});}
+}
