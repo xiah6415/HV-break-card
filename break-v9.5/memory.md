@@ -1808,3 +1808,4 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - Codex接手計畫：核對ee8b75e，重新建置並依序完成指定回歸；以隔離瀏覽器實際點擊匯出並在外部牌庫確認卡片顯示，通過後合併master、推送並部署Hosting，核對正式檔案。先前僅驗分享張數未檢查外部卡片識別，這次補驗實際外部顯示。
 - 結果：保留Claude的image_file修正，另修測試斷言以接受真實HVBP-檔名。build、deck-tools、e2e三尺寸9局、share-e2e及deck-builder-e2e三尺寸均通過；實際按匯出鈕到外部正式牌庫，確認40張縮圖全部載入；用外部目前decodeDeck驗證541張0缺卡、6副牌組各40張0缺卡，自家parseShare往返一致。fuzz3000及6×300也已通過。
 - 使用者補充驗證原則：沒動牌局相關功能時，只驗改動功能與相關回歸，不再例行跑整批牌局測試；已同步AGENTS.md供後續遵循。
+- 部署完成：ee8b75e及補驗以a1885d4合併master並推送，Hosting發布成功。兩網域index.html／deck-tools.js皆HTTP200且SHA256與本機一致；從正式站實際按匯出進外部牌庫，40張卡圖全部載入，外部541卡／六牌組0缺卡複驗通過。未修改資料庫規則／玩家資料。https://haikyuu-playmat.web.app/break-v9.5/?v=a1885d4 。
