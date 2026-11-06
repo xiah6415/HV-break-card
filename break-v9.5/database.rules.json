@@ -518,6 +518,54 @@
           ".validate": false
         }
       }
+    },
+    "syncedDecks": {
+      "$uid": {
+        ".read": "auth != null && auth.uid == $uid && auth.token.firebase.sign_in_provider == 'google.com'",
+        "$id": {
+          ".write": "auth != null && auth.uid == $uid && auth.token.firebase.sign_in_provider == 'google.com' && newData.exists() && ((!data.exists() && newData.child('previous').val() == '') || (data.exists() && newData.child('previous').val() == data.child('rev').val() && newData.child('rev').val() != data.child('rev').val()))",
+          ".validate": "$id.matches(/^my_[a-zA-Z0-9_-]+$/) && newData.hasChildren(['version','rev','previous','name','cardsJSON','cardCount','eventCount','visible','publicId','deleted','updatedAt'])",
+          "version": {
+            ".validate": "newData.val() == 1"
+          },
+          "rev": {
+            ".validate": "newData.isString() && newData.val().matches(/^[a-zA-Z0-9_-]{16,64}$/)"
+          },
+          "previous": {
+            ".validate": "newData.isString() && newData.val().length <= 64"
+          },
+          "name": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 60"
+          },
+          "cardsJSON": {
+            ".validate": "newData.isString() && newData.val().length <= 16000"
+          },
+          "cardCount": {
+            ".validate": "newData.val() == 40"
+          },
+          "eventCount": {
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 8"
+          },
+          "visible": {
+            ".validate": "newData.isBoolean()"
+          },
+          "deleted": {
+            ".validate": "newData.isBoolean()"
+          },
+          "publicId": {
+            ".validate": "newData.isString() && (newData.val() == '' || newData.val().matches(/^pub_[a-zA-Z0-9_-]+$/))"
+          },
+          "updatedAt": {
+            ".validate": "newData.isNumber() && newData.val() == now"
+          },
+          "$other": {
+            ".validate": false
+          },
+          "legacyJSON": {
+            ".validate": "newData.isString() && newData.val().length <= 16000"
+          }
+        }
+      }
     }
   }
 }

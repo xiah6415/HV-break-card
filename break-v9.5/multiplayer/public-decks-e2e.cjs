@@ -8,7 +8,7 @@ try{
  const owner=await open(),email='public-'+Date.now()+'@example.test';
  const uid=await login(owner,email,'Public Owner');
  await owner.click('#editDeck');await owner.fill('#shareURL',DT.encodeShare({...DECKS.k1014,name:'<公開音駒>'}));await owner.click('#shareGo');await owner.uncheck('#shareNewPublic');await owner.click('#shareSave');
- await owner.click('#openCloud');await owner.click('#cloudUpload');await owner.waitForSelector('[data-cloud-get]');await owner.locator('[data-close]').click();
+ await owner.waitForFunction(()=>BREAK_ONLINE.decks.ready&&!Object.values(BREAK_ONLINE.decks.state.entries).some(e=>e.dirty));
  await owner.click('#openPublic');assert.equal(await owner.locator('[data-public-view]').count(),0,'private backup not published');
  await owner.click('#publicPublish');await owner.fill('#publicAuthor','<作者>');await owner.click('#publicConfirm');await owner.waitForSelector('[data-public-view]');
  assert.equal(await owner.locator('#publicRows strong').textContent(),'<公開音駒>');

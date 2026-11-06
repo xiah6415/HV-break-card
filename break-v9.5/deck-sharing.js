@@ -19,7 +19,7 @@ class DeckSharing {
    for(const id of Object.keys(this.rows())){
     if(this.user?.uid!==uid||!this.online)break;
     let r=this.row(id);if(r.owner&&r.owner!==uid)continue;
-    const deck=this.deck(id);if(!deck)continue;
+    const deck=this.deck(id);if(!deck){if(r.remoteId&&r.owner===uid){await api.remove(r.remoteId);if(this.user?.uid!==uid)break;this.write(id,{public:false,owner:uid,remoteId:null,synced:null});}continue;}
     if(r.public){
      const sig=this.signature(deck);if(r.synced===sig&&r.remoteId)continue;
      // Persist a stable ID before sending, so reload/retry cannot create duplicates.

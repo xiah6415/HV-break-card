@@ -896,17 +896,17 @@ body.playing .dock:has([data-kind="drawConfirm"]){width:min(360px,calc(100vw - 1
   <div id="olConnectionBar" class="ol-row" hidden><span id="olConnectionText" role="status"></span><button class="chip" id="olTakeover" type="button" hidden>接手房主</button></div>
   <div id="runtimeStatus" role="status" style="margin:10px 0;padding:10px 12px;background:#45251b;color:#fff;border-radius:8px;font-size:13px">⚠️ 尚未啟動 JavaScript。如果此提示一直顯示，代表目前的檔案預覽器不執行遊戲程式。請下載 HTML 後以瀏覽器開啟，或透過 HTTPS 網站遊玩。</div>
   <div class="modebar" role="tablist" aria-label="對戰方式" id="modebar"><button type="button" role="tab" id="modeSolo" aria-selected="true">單人對練</button><button type="button" role="tab" id="modeOnline" aria-selected="false">多人連線</button></div>
-  <div class="account-panel" id="accountPanel"><div class="account-person"><span id="accountAvatar" class="player-avatar" aria-label="個人頭像">🏐</span><div><strong id="accountTitle">訪客模式</strong><p id="accountStatus" role="status">不需登入即可遊玩・牌組與草稿保存在此裝置</p></div></div><div class="opts"><button class="chip" id="accountGoogle" type="button" disabled>Google 登入</button><button class="chip" id="editProfile" type="button" hidden>編輯個人資料</button><button class="chip" id="openAgreement" type="button">玩家使用聲明</button><button class="chip" id="openRecords" type="button">對局紀錄</button><button class="chip" id="openReplays" type="button">匿名對局回放</button><button class="chip" id="openPublic" type="button">瀏覽公開牌組</button><button class="chip" id="openCloud" type="button" disabled>雲端牌組</button><button class="chip" id="accountLogout" type="button" hidden>登出</button></div></div>
+  <div class="account-panel" id="accountPanel"><div class="account-person"><span id="accountAvatar" class="player-avatar" aria-label="個人頭像">🏐</span><div><strong id="accountTitle">訪客模式</strong><p id="accountStatus" role="status">不需登入即可遊玩・牌組與草稿保存在此裝置</p></div></div><div class="opts"><button class="chip" id="accountGoogle" type="button" disabled>Google 登入</button><button class="chip" id="editProfile" type="button" hidden>編輯個人資料</button><button class="chip" id="openAgreement" type="button">玩家使用聲明</button><button class="chip" id="openRecords" type="button">對局紀錄</button><button class="chip" id="openReplays" type="button">匿名對局回放</button><button class="chip" id="openPublic" type="button">瀏覽公開牌組</button><button class="chip" id="accountLogout" type="button" hidden>登出</button></div></div>
   <section id="setup" class="setup">
     <div class="panel solo-only" id="soloResume" hidden><h2>上次的對局</h2><p class="sub" id="soloSaveText"></p><div class="opts"><button class="btn" id="resumeSolo" type="button">繼續對局</button><button class="chip" id="clearSolo" type="button">清除對局存檔</button></div></div>
     <div class="panel" id="deckPanel">
-      <h2>你的牌組</h2>
+      <h2>我的牌組</h2>
       <label class="field solo-only" for="gameMode">對戰模式<select id="gameMode"><option value="numeric" selected>數值模式（含手動技能）</option><option value="strict">嚴格模式（已支援卡片）</option></select></label>
       <label class="field" for="myDeck">牌組<select id="myDeck"><option value="">尚無牌組</option></select></label>
       <p class="sub" id="deckHint" role="status">尚無牌組，請先組牌或匯入牌組。</p>
       <div class="opts"><label class="chip"><input type="checkbox" id="deckPublic"> 公開這副牌組</label><button class="chip" type="button" id="shareRetry" hidden>重試公開同步</button></div><p class="sub" id="deckVisibilityStatus" role="status"></p>
 
-      <div class="deckstrip" id="myStrip"></div>
+      <p class="sub" id="deckSyncStatus" role="status">保存在此裝置・登入後可跨裝置使用</p><button class="chip" id="deckSyncRetry" type="button" hidden>重試同步</button><div class="deckstrip" id="myStrip"></div>
       <div class="opts"><button class="chip" type="button" id="newDeck">＋內建組牌器</button><button class="chip" type="button" id="editMyDeck">編輯</button><button class="chip" type="button" id="renameDeck">改名</button><button class="chip" type="button" id="deleteDeck">刪除</button><button class="chip" type="button" id="exportDeck">匯出分享碼</button></div>
       <a class="chip" id="buildDeck" href="https://weilun2022.github.io/haikyuu-cards/" target="_blank" rel="noopener noreferrer">🃏 到卡牌資料庫組牌</a>
       <button class="chip" type="button" id="editDeck">匯入／編輯自訂牌組</button>
@@ -917,8 +917,8 @@ body.playing .dock:has([data-kind="drawConfirm"]){width:min(360px,calc(100vw - 1
       <h2>AI 對手</h2>
       <label class="field" for="aiDeck">牌組<select id="aiDeck"><option value="seijoh">青葉城西（第四彈）</option></select></label>
       <label class="field" for="aiLevel">AI 難度<select id="aiLevel"><option value="easy">簡單（基礎判斷）</option><option value="normal" selected>普通（進階判斷）</option><option value="hard">困難（留牌與整回合思考）</option></select></label>
-      <div class="opts"><button class="chip" type="button" id="aiCloud" disabled>我的雲端牌組</button><button class="chip" type="button" id="aiPublic">公開牌組</button><button class="chip" type="button" id="editAiDeck">匯入 AI 牌組</button></div>
-      <p class="sub" id="aiCloudHint">Google 登入後可選自己的雲端備份；公開牌組不需登入。</p>
+      <div class="opts"><button class="chip" type="button" id="aiCloud" disabled>我的牌組</button><button class="chip" type="button" id="aiPublic">公開牌組</button><button class="chip" type="button" id="editAiDeck">匯入 AI 牌組</button></div>
+      <p class="sub" id="aiCloudHint">可從我的牌組或公開牌組選擇 AI 對手。</p>
       <div class="deckstrip" id="aiStrip"></div>
     </div>
     <div class="panel online-only" id="olPanel">
@@ -4031,6 +4031,58 @@ MyDecks.Drafts=DeckDrafts;
 if(typeof module!=='undefined'&&module.exports)module.exports=MyDecks;else {root.BreakMyDecks=MyDecks;root.BreakDeckDrafts=DeckDrafts;}
 })(typeof globalThis!=='undefined'?globalThis:this);
 
+/* One deck collection, scoped account caches and revision-checked synchronization. */
+(function(root){'use strict';
+const DT=typeof module!=='undefined'&&module.exports?require('./deck-tools'):root.BreakDeckTools;
+const copy=x=>JSON.parse(JSON.stringify(x)),key=uid=>'bk_deck_sync_'+uid,signature=d=>JSON.stringify([d.name,Object.entries(d.cards).sort(([a],[b])=>a.localeCompare(b))]),newId=()=> 'my_'+root.crypto.randomUUID();
+const read=(s,k,f)=>{const v=s.getItem(k);return v?JSON.parse(v):f;};
+class DeckSync{
+ static prepare(storage){if(storage.getItem('bk_deck_active_uid')){const guest=read(storage,'bk_deck_guest',{decks:[],sharing:{}});storage.setItem('bk_my_decks',JSON.stringify(guest.decks));storage.setItem('bk_deck_sharing',JSON.stringify(guest.sharing));storage.removeItem('bk_deck_active_uid');}}
+ constructor(storage,personal,sharing,callbacks={}){Object.assign(this,{storage,personal,sharing,cb:callbacks});this.uid=null;this.generation=0;this.online=false;this.ready=false;this.remoteReady=false;this.legacyReady=false;this.running=null;this.error='';this.notice='';this.stop=null;this.state=null;this.remote={};this.suppress=false;this.inflight=new Map();
+  this.writeDecks=personal._write.bind(personal);personal._write=next=>{if(!this.uid||this.suppress)return this.writeDecks(next);const old=copy(this.state);for(const d of next){const e=this.state.entries[d.id];if(!e||e.deleted||signature(e.deck)!==signature(d))this.state.entries[d.id]={...e,deck:copy(d),sharing:e?.sharing||this.intent(d.id),base:e?.base||null,dirty:true,deleted:false};}for(const d of personal.decks)if(!next.some(n=>n.id===d.id)){const e=this.state.entries[d.id];if(e)this.state.entries[d.id]={...e,deleted:true,dirty:true};}try{this.persist();this.writeDecks(next);}catch(e){this.state=old;try{this.persist();}catch{}throw e;}this.queue();};
+  this.writeSharing=sharing.write.bind(sharing);sharing.write=(id,row)=>{this.writeSharing(id,row);if(!this.uid||this.suppress)return;const e=this.state.entries[id],intent=this.intent(id);if(e&&!e.deleted&&JSON.stringify(e.sharing)!==JSON.stringify(intent)){e.sharing=intent;e.dirty=true;try{this.persist();}catch(err){this.error=err.message;}this.queue();}};
+ }
+ intent(id){const r=this.sharing.row(id);return{public:!!r.public,publicId:r.remoteId||''};}
+ persist(){this.storage.setItem(key(this.uid),JSON.stringify(this.state));}
+ status(){if(this.error)return '牌組已保留；同步未完成：'+this.error;if(!this.uid)return '保存在此裝置・登入後可跨裝置使用';if(!this.online)return '已保存在此裝置・恢復連線後自動同步';if(!this.ready)return '正在整合你的牌組…';return Object.values(this.state.entries).some(e=>e.dirty)?'已儲存・等待同步':'所有牌組已同步';}
+ bind(user,services){const uid=user&&!user.isAnonymous&&user.providerData?.some(p=>p.providerId==='google.com')?user.uid:null;if(this.uid===uid)return;clearTimeout(this.timer);this.stop?.();this.stop=null;const gen=++this.generation;this.error='';this.notice='';this.inflight.clear();this.remote={};this.remoteReady=this.legacyReady=this.ready=false;
+  if(!this.uid){this.storage.setItem('bk_deck_guest',JSON.stringify({decks:this.personal.decks,sharing:this.sharing.rows()}));}
+  this.uid=uid;this.services=services;this.running=null;
+  try{if(!uid){this.state=null;this.suppress=true;const guest=read(this.storage,'bk_deck_guest',{decks:[],sharing:{}});this.writeDecks(guest.decks);this.storage.setItem('bk_deck_sharing',JSON.stringify(guest.sharing));this.storage.removeItem('bk_deck_active_uid');this.suppress=false;this.cb.changed?.();return;}
+   this.state=read(this.storage,key(uid),{version:1,entries:{},guestSeen:{},legacySeen:{}});if(this.state.version!==1||!this.state.entries)throw Error('帳號牌組快取無法讀取，原資料保留');this.storage.setItem('bk_deck_active_uid',uid);this.apply();
+   const {D,db}=services;this.stop=D.onValue(D.ref(db,'syncedDecks/'+uid),snap=>{if(gen!==this.generation)return;try{this.receive(snap.val()||{});this.remoteReady=true;this.initialize();}catch(e){this.error=e.message;this.cb.changed?.();}},e=>{if(gen!==this.generation)return;this.error=e.message;this.cb.changed?.();});
+  }catch(e){this.suppress=false;this.error=e.message;this.cb.changed?.();}
+ }
+ setOnline(value){if(value&&!this.online)this.error='';this.online=!!value;if(this.online)this.queue();this.cb.changed?.();}
+ legacy(rows){if(!this.uid)return;this.legacyRows=rows;this.legacyReady=true;this.initialize();}
+ initialize(){if(!this.uid||!this.remoteReady||!this.legacyReady)return;
+  {for(const d of this.legacyRows||[]){if(this.state.legacySeen[d.id])continue;let found=Object.values(this.state.entries).find(e=>(e.legacyIds||[]).includes(d.id)||signature(e.deck)===signature(d));if(found&&!(found.legacyIds||[]).includes(d.id)){found.legacyIds=[...(found.legacyIds||[]),d.id];found.dirty=true;}const id=found?.deck.id||'my_legacy_'+d.id.replace(/[^\w-]/g,'_');if(!found&&!this.state.entries[id])this.state.entries[id]={deck:{id,name:d.name,cards:copy(d.cards)},sharing:{public:false,publicId:''},legacyIds:[d.id],base:null,dirty:true,deleted:false};this.state.legacySeen[d.id]=id;}
+   const guest=read(this.storage,'bk_deck_guest',{decks:[],sharing:{}});for(const d of guest.decks){const sig=signature(d);if(this.state.guestSeen[d.id]===sig)continue;const intent=guest.sharing[d.id]||{};if(intent.owner&&intent.owner!==this.uid)continue;const same=Object.values(this.state.entries).find(e=>signature(e.deck)===sig);if(!same){let id=d.id;if(this.state.entries[id])id=newId();this.state.entries[id]={deck:{...copy(d),id},sharing:{public:!!intent.public,publicId:intent.remoteId||''},base:null,dirty:true,deleted:false};}else if(!same.deleted&&intent.public&&!same.sharing.public){same.sharing={public:true,publicId:intent.remoteId||same.sharing.publicId};same.dirty=true;}this.state.guestSeen[d.id]=sig;}
+   this.ready=true;
+  }this.persist();this.apply();this.queue();
+ }
+ decode(id,r){if(!/^my_[\w-]+$/.test(id)||r.version!==1||typeof r.rev!=='string'||typeof r.deleted!=='boolean')throw Error('有牌組同步格式無法讀取，原資料保留');const aliases=JSON.parse(r.legacyJSON||'[]');if(!Array.isArray(aliases)||aliases.length>300||aliases.some(a=>typeof a!=='string'||!/^deck_[\w-]+$/.test(a)))throw Error('舊牌組對應資料無法讀取');const d=DT.parseDeck({name:r.name,cards:JSON.parse(r.cardsJSON)},this.personal.defs,{mode:'numeric'});return{deck:{id,...d},sharing:{public:!!r.visible,publicId:r.publicId||''},legacyIds:aliases,base:r.rev,dirty:false,deleted:r.deleted};}
+ same(a,b){return a.deleted===b.deleted&&signature(a.deck)===signature(b.deck)&&JSON.stringify(a.sharing)===JSON.stringify(b.sharing)&&JSON.stringify(a.legacyIds||[])===JSON.stringify(b.legacyIds||[]);}
+ receive(raw){const decoded=Object.fromEntries(Object.entries(raw).map(([id,r])=>[id,this.decode(id,r)]));this.remote=raw;
+  for(const [id,r]of Object.entries(decoded)){const e=this.state.entries[id];if(!e||!e.dirty){this.state.entries[id]=r;continue;}if(e.base===r.base)continue;if(this.inflight.get(id)?.rev===r.base){if(this.same(e,this.inflight.get(id).sent))this.state.entries[id]=r;else{e.base=r.base;e.dirty=true;}continue;}if(this.same(e,r)){this.state.entries[id]=r;continue;}
+   if(!e.deleted){const other=newId();this.state.entries[other]={...copy(e),deck:{...copy(e.deck),id:other,name:e.deck.name.slice(0,52)+'（另一版本）'},sharing:{public:false,publicId:''},legacyIds:[],base:null,dirty:true};this.notice='另一裝置也修改了這副牌組，兩個版本都已保留；另一版本預設私人。';}else this.notice='另一裝置已更新牌組，已保留最新版；如仍要刪除，請再確認一次。';this.state.entries[id]=r;
+  }
+  this.persist();if(this.ready){this.apply();this.queue();}
+ }
+ apply(){this.suppress=true;try{const decks=Object.values(this.state.entries).filter(e=>!e.deleted).map(e=>e.deck);this.writeDecks(copy(decks));const rows={};for(const [id,e]of Object.entries(this.state.entries)){const old=this.sharing.row(id);rows[id]={...old,public:!e.deleted&&e.sharing.public,remoteId:e.sharing.publicId||null,owner:this.uid};if(old.remoteId!==rows[id].remoteId)rows[id].synced=null;}this.storage.setItem('bk_deck_sharing',JSON.stringify(rows));}finally{this.suppress=false;}this.cb.changed?.();}
+ queue(){clearTimeout(this.timer);this.timer=setTimeout(()=>this.flush(),250);this.cb.status?.();}
+ async flush(){if(!this.uid||!this.online||!this.ready||this.running||this.error)return;const uid=this.uid,gen=this.generation,{D,db}=this.services;const valid=()=>gen===this.generation&&this.uid===uid;let again=false;
+  const work=(async()=>{try{for(const [id]of Object.entries(this.state.entries)){if(!valid()||!this.online)return;const e=this.state.entries[id];if(!e?.dirty)continue;const sent=copy(e),rev=root.crypto.randomUUID(),body={version:1,rev,previous:sent.base||'',name:sent.deck.name,cardsJSON:JSON.stringify(sent.deck.cards),visible:sent.sharing.public,publicId:sent.sharing.publicId,legacyJSON:JSON.stringify(sent.legacyIds||[]),deleted:sent.deleted,cardCount:40,eventCount:Object.entries(sent.deck.cards).reduce((n,[c,k])=>n+(this.personal.defs[c][1]==='E'?k:0),0),updatedAt:D.serverTimestamp()};
+    this.inflight.set(id,{rev,sent});const result=await D.runTransaction(D.ref(db,'syncedDecks/'+uid+'/'+id),current=>{if(!valid())return;if((current?.rev||null)!==sent.base)return;return body;},{applyLocally:false});if(!valid())return;this.inflight.delete(id);
+    if(!result.committed){const snapshot=await D.get(D.ref(db,'syncedDecks/'+uid));if(!valid())return;this.receive(snapshot.val()||{});again=true;break;}
+    const latest=this.state.entries[id];if(latest&&this.same(latest,sent)){latest.base=rev;latest.dirty=false;}else if(latest&&latest.base===sent.base){latest.base=rev;latest.dirty=true;again=true;}this.persist();
+   }this.error='';}catch(e){if(valid()){this.inflight.clear();this.error=e.message||'同步失敗';}}finally{if(valid()){this.cb.status?.();}}})();this.running=work;await work;if(valid()){this.running=null;if(again||Object.values(this.state.entries).some(e=>e.dirty)&&!this.error)this.queue();}
+ }
+ async retry(){this.error='';const gen=this.generation;try{if(this.uid){const {D,db}=this.services,snapshot=await D.get(D.ref(db,'syncedDecks/'+this.uid));if(gen!==this.generation)return;this.receive(snapshot.val()||{});this.remoteReady=true;this.initialize();}}catch(e){if(gen===this.generation)this.error=e.message;}if(gen===this.generation){this.queue();this.cb.changed?.();}}
+}
+if(typeof module!=='undefined'&&module.exports)module.exports=DeckSync;else root.BreakDeckSync=DeckSync;
+})(typeof globalThis!=='undefined'?globalThis:this);
+
 /* Public intent belongs to each local deck. Existing decks have no public intent. */
 (function(root){
 'use strict';
@@ -4052,7 +4104,7 @@ class DeckSharing {
    for(const id of Object.keys(this.rows())){
     if(this.user?.uid!==uid||!this.online)break;
     let r=this.row(id);if(r.owner&&r.owner!==uid)continue;
-    const deck=this.deck(id);if(!deck)continue;
+    const deck=this.deck(id);if(!deck){if(r.remoteId&&r.owner===uid){await api.remove(r.remoteId);if(this.user?.uid!==uid)break;this.write(id,{public:false,owner:uid,remoteId:null,synced:null});}continue;}
     if(r.public){
      const sig=this.signature(deck);if(r.synced===sig&&r.remoteId)continue;
      // Persist a stable ID before sending, so reload/retry cannot create duplicates.
@@ -4131,7 +4183,6 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
   const { DEF, DECKS, nm, isC, st } = E;
   const $ = id => document.getElementById(id);
   const MY_DECKS = [];
-  let menuCloudRows=[],cloudMenuStamp='';const cloudSelections=new Map();
   const AI_DECKS = ['seijoh'];
   const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
   const handOrder = new BreakHandOrder(store);
@@ -4140,7 +4191,9 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
   if (['easy','normal','hard'].includes(store.get('bk_ai_level'))) $('aiLevel').value = store.get('bk_ai_level');
   $('aiLevel').onchange = () => store.set('bk_ai_level', $('aiLevel').value);
   const modeOptions = () => ({mode:$('gameMode').value});
+  let deckWorkspaceError='';try{BreakDeckSync.prepare(localStorage);}catch(e){deckWorkspaceError=e.message;}
   const personal = new BreakMyDecks({getItem:k=>localStorage.getItem(k),setItem:(k,v)=>localStorage.setItem(k,v),removeItem:k=>localStorage.removeItem(k)}, DEF);
+  if(deckWorkspaceError)personal.error=deckWorkspaceError;
   function syncMyDecks() { for(const id of MY_DECKS) delete DECKS[id]; MY_DECKS.splice(0,MY_DECKS.length,...personal.decks.map(d=>d.id)); for(const d of personal.decks) DECKS[d.id]={name:d.name,cards:{...d.cards}}; }
   const drafts=new BreakDeckDrafts({getItem:k=>localStorage.getItem(k),setItem:(k,v)=>localStorage.setItem(k,v)},DEF);
   syncMyDecks();
@@ -4166,13 +4219,12 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
   function usableDeck(k) { try { E.validateDeck(DECKS[k].cards, modeOptions().mode); return true; } catch(e) { return false; } }
   function fill(sel, keys, saved) {
     const usable=keys.filter(usableDeck),local=keys.map(k=>`<option value="${esc(k)}" ${usableDeck(k)?'':'disabled'}>${esc(DECKS[k].name)}${usableDeck(k)?'':'（此模式不可用）'}</option>`).join('');
-    const cloud=sel.id==='myDeck'?menuCloudRows.map(d=>{let ok=true;try{E.validateDeck(d.cards,modeOptions().mode);}catch{ok=false;}return `<option value="cloud:${esc(d.id)}" ${ok?'':'disabled'}>${esc(d.name)}${ok?'':'（此模式不可用）'}</option>`;}).join(''):'';
-    sel.innerHTML=sel.id==='myDeck'?'<option value="">'+(keys.length||cloud?'請選擇牌組':'尚無牌組')+'</option>'+(local?'<optgroup label="本機牌組">'+local+'</optgroup>':'')+(cloud?'<optgroup label="雲端牌組">'+cloud+'</optgroup>':''):local;
+    sel.innerHTML=sel.id==='myDeck'?'<option value="">'+(keys.length?'請選擇牌組':'尚無牌組')+'</option>'+local:local;
     sel.value=saved&&usable.includes(saved)?saved:usable[0]||'';
   }
   let deckConnectionReady=false,sharing=null;
-  function renderSharing(){if(!sharing)return;const id=$('myDeck').value;$('deckPublic').disabled=!MY_DECKS.includes(id);try{$('deckPublic').checked=!!sharing.row(id).public;$('deckVisibilityStatus').textContent=id?(sharing.error?'本機牌組已保留；公開同步失敗：'+sharing.error:sharing.status(id)):'新建／匯入牌組預設公開，可改私人；登入後才會上傳。';$('shareRetry').hidden=!sharing.error;}catch(e){$('deckVisibilityStatus').textContent=e.message;}}
-  function deckButtons(){const valid=MY_DECKS.includes($('myDeck').value)&&usableDeck($('myDeck').value);$('startBtn').disabled=!valid;$('olCreate').disabled=$('olJoin').disabled=!valid||!deckConnectionReady;for(const id of ['editMyDeck','renameDeck','deleteDeck','exportDeck'])$(id).disabled=!MY_DECKS.includes($('myDeck').value);$('deckHint').textContent=personal.error?'牌組讀取失敗：'+personal.error:valid?'已選擇 '+DECKS[$('myDeck').value].name+'・40 張':MY_DECKS.length?'請選擇可用牌組，或先組牌／匯入。':menuCloudRows.length?'請從選單選擇雲端牌組，即可載入對戰。':'尚無牌組，請先組牌或匯入牌組。';$('startHint').textContent=valid?'準備好了，開始對戰':$('deckHint').textContent;renderSharing();}
+  function renderSharing(){if(!sharing)return;const id=$('myDeck').value;$('deckPublic').disabled=!MY_DECKS.includes(id);try{$('deckPublic').checked=!!sharing.row(id).public;$('deckVisibilityStatus').textContent=id?(sharing.error?'牌組已保留；公開同步失敗：'+sharing.error:sharing.status(id)):'新建／匯入牌組預設公開，可改私人；登入後才會上傳。';$('shareRetry').hidden=!sharing.error;}catch(e){$('deckVisibilityStatus').textContent=e.message;}}
+  function deckButtons(){const valid=MY_DECKS.includes($('myDeck').value)&&usableDeck($('myDeck').value);$('startBtn').disabled=!valid;$('olCreate').disabled=$('olJoin').disabled=!valid||!deckConnectionReady;for(const id of ['editMyDeck','renameDeck','deleteDeck','exportDeck'])$(id).disabled=!MY_DECKS.includes($('myDeck').value);$('deckHint').textContent=personal.error?'牌組讀取失敗：'+personal.error:valid?'已選擇 '+DECKS[$('myDeck').value].name+'・40 張':MY_DECKS.length?'請選擇可用牌組，或先組牌／匯入。':'尚無牌組，請先組牌或匯入牌組。';$('startHint').textContent=valid?'準備好了，開始對戰':$('deckHint').textContent;renderSharing();}
   function strip(key) { return Object.entries(DECKS[key]?.cards||{}).sort((a, b) => (isC(a[0]) === isC(b[0]) ? 0 : isC(a[0]) ? -1 : 1)).map(([c, n]) => `<figure><button class="cbtn" type="button" data-card="${c}">${img(c,false,true)}</button><span>×${n}</span></figure>`).join(''); }
   fill($('myDeck'), MY_DECKS, store.get('bk_my')); fill($('aiDeck'), AI_DECKS, store.get('bk_ai') || 'seijoh');
   if (store.get('bk_speed')) $('speed').value = store.get('bk_speed');
@@ -4181,15 +4233,15 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
   const refresh = () => { $('myStrip').innerHTML = strip($('myDeck').value); $('aiStrip').innerHTML = strip($('aiDeck').value);deckButtons(); };
   $('myDeck').onchange=()=>{
     const value=$('myDeck').value;
-    if(value.startsWith('cloud:')){try{
-      const d=menuCloudRows.find(d=>'cloud:'+d.id===value);if(!d)throw Error('雲端牌組已變更，請重新選擇');const deck=DT.parseDeck(d,DEF,modeOptions()),key=accountUser.uid+':'+d.id,old=cloudSelections.get(key),local=personal.decks.find(d=>d.id===old);
-      const id=local&&DT.exportDeck(local)===DT.exportDeck(deck)?old:personal.add(deck);cloudSelections.set(key,id);selectPersonal(id);
-    }catch(e){fill($('myDeck'),MY_DECKS,store.get('bk_my'));refresh();$('deckHint').textContent='雲端牌組載入失敗：'+e.message;}return;}
     store.set('bk_my',value);refresh();
   };$('aiDeck').onchange=()=>{store.set('bk_ai',$('aiDeck').value);refresh();};refresh();
   $('gameMode').onchange = () => { store.set('bk_game_mode', $('gameMode').value); const me=$('myDeck').value, ai=$('aiDeck').value; fill($('myDeck'),MY_DECKS,me);fill($('aiDeck'),AI_DECKS,ai);refresh(); };
 
   sharing=new BreakDeckSharing(localStorage,{deck:id=>personal.decks.find(d=>d.id===id),changed:renderSharing});
+  function deckSyncStatus(){if(!$('deckSyncStatus'))return;$('deckSyncStatus').textContent=deckSync.status()+(deckSync.notice?'・'+deckSync.notice:'');$('deckSyncRetry').hidden=!deckSync.error;}
+  function unifiedDecksChanged(){const selected=$('myDeck').value;syncMyDecks();fill($('myDeck'),MY_DECKS,selected);refresh();deckSyncStatus();if(OL.client)syncSharing();$('aiCloud').disabled=!personal.decks.length;}
+  const deckSync=new BreakDeckSync(localStorage,personal,sharing,{changed:unifiedDecksChanged,status:deckSyncStatus});
+  $('deckSyncRetry').onclick=()=>{deckSync.retry();if(accountUser&&!deckSync.legacyReady)OL.cloud?.bind(accountUser);};
   $('deckPublic').onchange=()=>{try{sharing.set($('myDeck').value,$('deckPublic').checked);}catch(e){$('deckVisibilityStatus').textContent='公開設定未儲存：'+e.message;}};
   $('shareRetry').onclick=()=>sharing.sync();renderSharing();
 
@@ -4274,13 +4326,13 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
     $('builderBrowseTab').onclick=()=>pane(false);$('builderSelectedTab').onclick=()=>pane(true);
     $('builderQuery').oninput=$('builderKind').onchange=()=>{limit=48;renderBuilder();};$('builderName').oninput=()=>{summary();saveDraft();};$('builderMore').onclick=()=>{limit+=48;renderBuilder();};
     const box=$('sheetBox');box.onclick=e=>{const plus=e.target.closest('[data-builder-plus]'),minus=e.target.closest('[data-builder-minus]');if(!plus&&!minus)return;const c=(plus||minus).dataset[plus?'builderPlus':'builderMinus'];if(plus&&(count()>=40||(!isC(c)&&events()>=8)))return;cards[c]=Math.max(0,(cards[c]||0)+(plus?1:-1));if(!cards[c])delete cards[c];renderBuilder(false);saveDraft();};
-    $('builderSave').onclick=()=>{try{const deck=DT.parseDeck({name:$('builderName').value.trim(),cards},DEF,modeOptions()),saved=id?personal.update(id,deck):personal.add(deck);sharing.set(saved,$('builderPublic').checked);selectPersonal(saved);try{drafts.remove(id);}catch{}closeSheet();}catch(e){$('builderError').textContent=e.message;}};
+    $('builderSave').onclick=()=>{try{const deck=DT.parseDeck({name:$('builderName').value.trim(),cards},DEF,modeOptions()),conflict=id&&JSON.stringify(original)!==JSON.stringify(personal.decks.find(d=>d.id===id)),saved=id&&!conflict?personal.update(id,deck):personal.add(conflict?{...deck,name:deck.name.slice(0,52)+'（另一版本）'}:deck);sharing.set(saved,conflict?false:$('builderPublic').checked);selectPersonal(saved);try{drafts.remove(id);}catch{}closeSheet();}catch(e){$('builderError').textContent=e.message;}};
     $('builderDiscardDraft').disabled=!savedDraft;$('builderDiscardDraft').onclick=()=>{try{drafts.remove(id);for(const c of Object.keys(cards))delete cards[c];Object.assign(cards,original?.cards||{});$('builderName').value=original?.name||'我的牌組';renderBuilder(false);$('builderDraftStatus').textContent=original?'已回復正式儲存的牌組':'已清除草稿';$('builderDiscardDraft').disabled=true;}catch(e){$('builderDraftStatus').textContent='無法清除草稿：'+e.message;}};
     renderBuilder();
   }
   $('newDeck').onclick=()=>openBuilder();$('editMyDeck').onclick=()=>openBuilder($('myDeck').value);
-  $('renameDeck').onclick=()=>{const id=$('myDeck').value,d=DECKS[id];openSheet(`<h3>牌組改名</h3><label class="field">名稱<input id="deckName" maxlength="60" value="${esc(d.name)}"></label><p id="deckManageError" role="alert"></p><button class="opt primary" id="saveDeckName" type="button">儲存名稱</button>`);$('saveDeckName').onclick=()=>{try{personal.rename(id,$('deckName').value);sharing.sync();selectPersonal(id);closeSheet();}catch(e){$('deckManageError').textContent=e.message;}};};
-  $('deleteDeck').onclick=()=>{const id=$('myDeck').value;openSheet(`<h3>刪除 ${esc(DECKS[id].name)}？</h3><p>只刪除這副已儲存的牌組。</p><p id="deckManageError" role="alert"></p><button class="opt danger" id="confirmDeleteDeck" type="button">刪除牌組</button>`);$('confirmDeleteDeck').onclick=()=>{try{personal.remove(id);selectPersonal('');closeSheet();}catch(e){$('deckManageError').textContent=e.message;}};};
+  $('renameDeck').onclick=()=>{const id=$('myDeck').value,d=DECKS[id];openSheet(`<h3>牌組改名</h3><label class="field">名稱<input id="deckName" maxlength="60" value="${esc(d.name)}"></label><p id="deckManageError" role="alert"></p><button class="opt primary" id="saveDeckName" type="button">儲存名稱</button>`);$('saveDeckName').onclick=()=>{try{const current=personal.decks.find(d=>d.id===id);let saved=id;if(!current||current.name!==d.name||JSON.stringify(current.cards)!==JSON.stringify(d.cards)){saved=personal.add({name:$('deckName').value.slice(0,52)+'（另一版本）',cards:d.cards});sharing.set(saved,false);}else personal.rename(id,$('deckName').value);sharing.sync();selectPersonal(saved);closeSheet();}catch(e){$('deckManageError').textContent=e.message;}};};
+  $('deleteDeck').onclick=()=>{const id=$('myDeck').value;openSheet(`<h3>刪除 ${esc(DECKS[id].name)}？</h3><p>此操作會同步至你的其他裝置；公開分享也會一併移除。</p><p id="deckManageError" role="alert"></p><button class="opt danger" id="confirmDeleteDeck" type="button">刪除牌組</button>`);$('confirmDeleteDeck').onclick=()=>{try{personal.remove(id);selectPersonal('');closeSheet();}catch(e){$('deckManageError').textContent=e.message;}};};
   $('exportDeck').onclick=()=>{const deck=DECKS[$('myDeck').value],code=DT.encodeShare(deck);openSheet(`<h3>匯出 ${esc(deck.name)}</h3><p>分享碼可貼回「匯入牌組」，也可用連結分享。</p><label class="field">分享碼<textarea id="deckShareCode" readonly rows="4"></textarea></label><label class="field">對練台匯入連結<textarea id="deckShareLink" readonly rows="4"></textarea></label><button class="opt primary" id="copyDeckShare" type="button">複製分享碼</button><p id="deckShareStatus" role="status"></p>`);$('deckShareCode').value=code;const url=new URL(location.href);url.search='';url.hash='';url.searchParams.set('deck',code);$('deckShareLink').value=url.href;$('copyDeckShare').onclick=async()=>{try{await navigator.clipboard.writeText(code);$('deckShareStatus').textContent='已複製';}catch{$('deckShareCode').select();$('deckShareStatus').textContent='請複製已選取的分享碼';}};};
 
   // ---------- sheets
@@ -4342,7 +4394,7 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
   const matchRecords=new BreakMatchRecords({getItem:k=>localStorage.getItem(k),setItem:(k,v)=>localStorage.setItem(k,v),removeItem:k=>localStorage.removeItem(k)});let archiveToken='',archiveMessage=matchRecords.error;
   let oppName = 'AI'; // 對手顯示名稱：單人為 AI，多人為對方暱稱
   const OL = { client: null, services: null, meta: null, rooms: {}, presence: {}, loading: null, inGame: false, roomId: null, lastUid: null, authority: null, authWork: Promise.resolve() };
-  window.BREAK_ONLINE={get agreement(){return OL.agreement;},get research(){return OL.research;},get records(){return OL.records;},get client(){return OL.client;},get current(){return OL.client?.lastView;},get session(){return OL.inGame?session:null;}};
+  window.BREAK_ONLINE={get decks(){return deckSync;},get agreement(){return OL.agreement;},get research(){return OL.research;},get records(){return OL.records;},get client(){return OL.client;},get current(){return OL.client?.lastView;},get session(){return OL.inGame?session:null;}};
   let nativeWidget = null, nativeSelection = null, nativeWidgetKey = null, tableSequence = 0;
   let turnNotice = null, shownTransition = null, priorFocus = null, turnTimer = null;
   let prevTop = {}, prevVal = {}, prevBall = null, suppressClick = false;
@@ -5024,23 +5076,15 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
   function olFriendly(e) { const code = e?.code || ''; return ({ 'auth/popup-blocked': '登入視窗被瀏覽器擋下，請允許彈出視窗後再試。', 'auth/popup-closed-by-user': 'Google 登入已取消。', 'auth/unauthorized-domain': '這個網址尚未加入 Google 登入的授權網域。', 'auth/credential-already-in-use': '這個 Google 帳號已被使用，請先登出再用 Google 登入。', 'PERMISSION_DENIED': '權限已變更，請重新加入房間。', 'UNDO_PENDING':'悔棋申請等待對方回覆，暫停出牌。', 'STALE_UNDO':'悔棋申請已結束，請以目前畫面為準。', 'INVALID_OR_STALE_COMMAND':'對局已更新，請依最新畫面重新操作。' })[code||e?.message] || e?.message || String(e); }
   const olRun = f => async () => { try { olToast(''); await f(); } catch (e) { olToast(olFriendly(e)); } };
   // Optional account and cloud backups share the multiplayer Firebase session.
-  let accountUser=null,accountIdentity='',accountReady=false,accountLoadFailed=false,accountBusy=false,accountMessage='',cloudRows=[],cloudTarget='me';
-  function accountRender(){const member=!!accountUser&&!accountUser.isAnonymous&&accountUser.providerData.some(p=>p.providerId==='google.com');$('accountTitle').textContent=member?(profileOf(accountUser.uid)?.name||accountUser.displayName||'Google 帳號'):'訪客模式';$('accountAvatar').innerHTML=avatarMarkup(member?accountUser.uid:null);$('editProfile').hidden=!member;$('editProfile').disabled=accountBusy;$('accountStatus').textContent=accountMessage||(member?'單人完賽紀錄自動私人備份；牌組與本機紀錄仍保留於此裝置':'不需登入即可遊玩・牌組與草稿保存在此裝置');$('accountGoogle').hidden=member;$('accountLogout').hidden=!member;$('openCloud').disabled=!member||accountBusy;$('aiCloud').disabled=!member||accountBusy;$('aiCloudHint').textContent=member?'可將雲端備份或公開牌組設為 AI 對手，選取結果保存在此裝置。':'Google 登入後可選自己的雲端備份；公開牌組不需登入。';$('accountGoogle').disabled=accountBusy||(!accountReady&&!accountLoadFailed);$('accountGoogle').textContent=accountLoadFailed&&!accountReady?'重試登入連線':'Google 登入';$('accountLogout').disabled=accountBusy||!!OL.roomId;renderCloudOptions();if($('cloudRows'))renderCloud();if($('publicPublish'))$('publicPublish').disabled=!member||!usableDeck($('myDeck').value)||!OL.client?.online;}
+  let accountUser=null,accountIdentity='',accountReady=false,accountLoadFailed=false,accountBusy=false,accountMessage='';
+  function accountRender(){const member=!!accountUser&&!accountUser.isAnonymous&&accountUser.providerData.some(p=>p.providerId==='google.com');$('accountTitle').textContent=member?(profileOf(accountUser.uid)?.name||accountUser.displayName||'Google 帳號'):'訪客模式';$('accountAvatar').innerHTML=avatarMarkup(member?accountUser.uid:null);$('editProfile').hidden=!member;$('editProfile').disabled=accountBusy;$('accountStatus').textContent=accountMessage||(member?'我的牌組會自動同步；單人完賽紀錄另作私人備份':'不需登入即可遊玩・牌組與草稿保存在此裝置');$('accountGoogle').hidden=member;$('accountLogout').hidden=!member;$('aiCloud').disabled=!personal.decks.length||accountBusy;$('aiCloudHint').textContent='可從我的牌組或公開牌組選擇 AI 對手。';$('accountGoogle').disabled=accountBusy||(!accountReady&&!accountLoadFailed);$('accountGoogle').textContent=accountLoadFailed&&!accountReady?'重試登入連線':'Google 登入';$('accountLogout').disabled=accountBusy||!!OL.roomId;deckSyncStatus();if($('publicPublish'))$('publicPublish').disabled=!member||!usableDeck($('myDeck').value)||!OL.client?.online;}
   function syncSharing(){sharing?.bind(accountUser,OL.public,!!OL.client?.online,profileOf(accountUser?.uid)?.name||'玩家');renderSharing();}
-  function accountChanged(user){const identity=user?[user.uid,user.isAnonymous,user.providerData.some(p=>p.providerId==='google.com')].join(':'):'guest';if(accountIdentity===identity){accountUser=user;accountRender();return;}accountIdentity=identity;if(session&&!OL.inGame){session.privateBackupUid=null;session.researchEligible=false;}const wasOpen=!!($('cloudRows')||$('privateRecords')||$('privateRecordDetail'));accountUser=user;accountMessage='';privateRecordMessage='';if(wasOpen){closeSheet();$('sheetBox').replaceChildren();}OL.cloud?.bind(user);OL.records?.bind(user);syncSharing();profileWatches();accountRender();}
-  function renderCloudOptions(){
-    menuCloudRows=accountUser&&!accountUser.isAnonymous&&accountUser.providerData.some(p=>p.providerId==='google.com')?cloudRows:[];
-    const stamp=JSON.stringify([modeOptions().mode,menuCloudRows]);if(stamp===cloudMenuStamp)return;cloudMenuStamp=stamp;
-    fill($('myDeck'),MY_DECKS,$('myDeck').value);refresh();
-  }
-  function renderCloud(){if(!$('cloudRows'))return;$('cloudUpload').disabled=accountBusy||!OL.client?.online||!usableDeck($('myDeck').value);$('cloudSummary').textContent=`${cloudRows.length} 副雲端備份`;$('cloudMessage').textContent=accountMessage;$('cloudRows').innerHTML=cloudRows.map(d=>`<article class="cloud-row"><div><strong>${esc(d.name)}</strong><small>40 張 · Event ${Object.entries(d.cards).reduce((n,[c,k])=>n+(isC(c)?0:k),0)}</small></div><div class="opts"><button class="chip" type="button" data-cloud-get="${esc(d.id)}" ${accountBusy?'disabled':''}>${cloudTarget==='ai'?'設為 AI 牌組':'下載副本'}</button>${cloudTarget==='ai'?'':`<button class="chip" type="button" data-cloud-remove="${esc(d.id)}" ${accountBusy?'disabled':''}>刪除</button>`}</div></article>`).join('')||'<p class="sub">還沒有雲端備份。選擇一副本機牌組後，可另存到此帳號。</p>';}
+  function accountChanged(user){const identity=user?[user.uid,user.isAnonymous,user.providerData.some(p=>p.providerId==='google.com')].join(':'):'guest';if(accountIdentity===identity){accountUser=user;accountRender();return;}accountIdentity=identity;if(session&&!OL.inGame){session.privateBackupUid=null;session.researchEligible=false;}const wasOpen=!!(deckSync.uid||$('myDeckChoices')||$('privateRecords')||$('privateRecordDetail'));accountUser=user;accountMessage='';privateRecordMessage='';if(wasOpen){closeSheet();$('sheetBox').replaceChildren();}deckSync.bind(user,OL.services);OL.cloud?.bind(user);OL.records?.bind(user);syncSharing();profileWatches();accountRender();}
   async function accountRun(fn){if(accountBusy)return;accountBusy=true;accountRender();try{await fn();}catch(e){accountMessage=olFriendly(e);}finally{accountBusy=false;accountRender();}}
   $('accountGoogle').onclick=()=>accountRun(async()=>{if(OL.roomId)throw Error('請先離開房間再切換帳號');if(!accountReady){await olLoad();accountMessage='登入已就緒，請再次點 Google 登入';return;}await OL.services.A.signInWithPopup(OL.services.auth,new OL.services.A.GoogleAuthProvider());});
   $('accountLogout').onclick=()=>accountRun(async()=>{if(OL.roomId)throw Error('請先離開房間再登出');await OL.services.A.signOut(OL.services.auth);});
-  function openCloud(target='me'){cloudTarget=target;accountMessage='';openSheet('<h3>'+ (target==='ai'?'選擇 AI 雲端牌組':'我的雲端牌組')+'</h3><p class="sub">'+(target==='ai'?'選取備份作為 AI 對手，會保存在此裝置供下次使用。':'這裡是私人備份；下載會新增私人本機副本，不會自動公開或覆蓋這台裝置的牌組。')+'</p><button type="button" class="opt primary" id="cloudUpload" '+(target==='ai'?'hidden':'')+'>將目前所選牌組另存雲端</button><p class="sub" id="cloudSummary"></p><p id="cloudMessage" role="status"></p><div id="cloudRows"></div>');renderCloud();$('cloudUpload').onclick=()=>accountRun(async()=>{const uid=OL.cloud.uid;await OL.cloud.upload(DECKS[$('myDeck').value]);if(OL.cloud.uid===uid)accountMessage='已另存雲端，可在其他裝置登入後下載';});$('cloudRows').onclick=e=>{const get=e.target.closest('[data-cloud-get]'),remove=e.target.closest('[data-cloud-remove]');if(get){try{const d=cloudRows.find(d=>d.id===get.dataset.cloudGet);if(!d)throw Error('牌組已變更，請重新選擇');if(target==='ai'){saveDeck('ai',DT.parseDeck(d,DEF,modeOptions()));accountMessage='已設為 AI 牌組：'+d.name;}else{const id=personal.add(d);selectPersonal(id);accountMessage='已下載為新的本機牌組';}accountRender();}catch(err){accountMessage=err.message;accountRender();}}if(remove){if(!remove.dataset.confirm){remove.dataset.confirm='1';remove.textContent='確認刪除';return;}accountRun(async()=>{await OL.cloud.remove(remove.dataset.cloudRemove);accountMessage='雲端備份已刪除，本機牌組保留';});}};};
-
-  $('openCloud').onclick=()=>openCloud();
-  $('aiCloud').onclick=()=>openCloud('ai');
+  function openMyDecks(){openSheet('<h3>選擇 AI 牌組</h3><p class="sub">從我的牌組選擇一副作為 AI 對手。</p><div id="myDeckChoices">'+personal.decks.map(d=>'<article class="cloud-row"><strong>'+esc(d.name)+'</strong><button class="chip" type="button" data-my-ai="'+esc(d.id)+'">設為 AI 牌組</button></article>').join('')+'</div>');$('myDeckChoices').onclick=e=>{const b=e.target.closest('[data-my-ai]');if(!b)return;const d=personal.decks.find(d=>d.id===b.dataset.myAi);try{if(!d)throw Error('牌組已變更，請重新選擇');saveDeck('ai',DT.parseDeck(d,DEF,modeOptions()));closeSheet();}catch(err){accountMessage=err.message;accountRender();}};}
+  $('aiCloud').onclick=openMyDecks;
   $('aiPublic').onclick=()=>openPublic('ai');
 
   const profileOf=uid=>OL.profiles?.rows.get(uid);
@@ -5081,7 +5125,7 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
   async function openPublic(target='me'){
     try{await olLoad();}catch{olToast('公開牌組暫時無法連線，請稍後重試');return;}
     publicGeneration++;publicBusy=false;publicRows=[];publicCursor=null;publicMore=false;
-    publicSheet(`<h3>${target==='ai'?'選擇 AI 公開牌組':'近期公開牌組'}</h3><p class="sub">大家主動分享的牌組。搜尋已載入的名稱、學校或作者；可載入更早牌組。新建／匯入牌組預設公開；私人牌組與雲端備份不會自動公開。</p><div class="opts"><button class="chip" id="publicPublish" type="button">公開目前牌組</button><button class="chip" id="publicRefresh" type="button">重新整理</button></div><p class="sub">公開分享需 Google 登入並選擇一副牌組，瀏覽及複製不需登入。</p><label class="field">搜尋<input type="search" id="publicSearch" placeholder="牌組名稱、學校、作者"></label><p class="sub" id="publicCount"></p><p id="publicMessage" role="status"></p><div id="publicRows"></div><button class="chip" id="publicMore" type="button" hidden>載入更早牌組</button>`);
+    publicSheet(`<h3>${target==='ai'?'選擇 AI 公開牌組':'近期公開牌組'}</h3><p class="sub">大家主動分享的牌組。搜尋已載入的名稱、學校或作者；可載入更早牌組。新建／匯入牌組預設公開；設定為私人的牌組不會公開。</p><div class="opts"><button class="chip" id="publicPublish" type="button">公開目前牌組</button><button class="chip" id="publicRefresh" type="button">重新整理</button></div><p class="sub">公開分享需 Google 登入並選擇一副牌組，瀏覽及複製不需登入。</p><label class="field">搜尋<input type="search" id="publicSearch" placeholder="牌組名稱、學校、作者"></label><p class="sub" id="publicCount"></p><p id="publicMessage" role="status"></p><div id="publicRows"></div><button class="chip" id="publicMore" type="button" hidden>載入更早牌組</button>`);
     $('publicSearch').oninput=renderPublic;$('publicRefresh').onclick=()=>loadPublic(true);$('publicMore').onclick=()=>loadPublic();
     $('publicRows').onclick=e=>{const b=e.target.closest('[data-public-view]');if(b)publicDetail(b.dataset.publicView,target);};
     $('publicPublish').onclick=publishPublic;accountRender();await loadPublic(true);
@@ -5090,14 +5134,14 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
     const d=publicRows.find(x=>x.id===id);if(!d)return;
     publicSheet(`<h3>${esc(d.name)}</h3><p class="sub"><span id="publicDetailAuthor" data-owner="${esc(d.owner)}" data-fallback="${esc(d.author)}">${avatarMarkup(d.owner)} ${esc(profileOf(d.owner)?.name||d.author)}</span> · ${esc(deckSchools(d).join('／'))} · 40 張</p><div class="opts"><button class="chip" id="publicCopy" type="button">存到我的牌組</button><button class="${target==='ai'?'opt primary':'chip'}" id="publicAI" type="button">設為 AI 牌組</button>${accountUser?.uid===d.owner?'<button class="chip" id="publicRemove" type="button">取消公開</button>':''}<button class="chip" id="publicBack" type="button">回公開列表</button></div><p id="publicDetailMessage" role="status"></p><div class="public-cards">${Object.entries(d.cards).map(([c,n])=>`<figure><img loading="lazy" src="${esc(art.url(c))}" alt="${esc(CL.card(c)?.name||c)}"><figcaption>${esc(CL.card(c)?.name||c)}<br>${esc(c)} · ×${n}</figcaption></figure>`).join('')}</div>`);
     profileWatches();$('publicBack').onclick=()=>openPublic(target);
-    $('publicCopy').onclick=()=>{try{const id=personal.add(d);sharing.set(id,true);selectPersonal(id);$('publicDetailMessage').textContent='已存成新的本機牌組，原牌組保留。';}catch(e){$('publicDetailMessage').textContent=e.message;}};
+    $('publicCopy').onclick=()=>{try{const id=personal.add(d);sharing.set(id,true);selectPersonal(id);$('publicDetailMessage').textContent='已加入我的牌組，原牌組保留。';}catch(e){$('publicDetailMessage').textContent=e.message;}};
     $('publicAI').onclick=()=>{try{saveDeck('ai',DT.parseDeck(d,DEF,modeOptions()));$('publicDetailMessage').textContent='已設為 AI 自訂牌組。';}catch(e){$('publicDetailMessage').textContent=e.message;}};
     if($('publicRemove'))$('publicRemove').onclick=async()=>{const b=$('publicRemove');if(!b.dataset.confirm){b.dataset.confirm='1';b.textContent='確認取消公開';return;}b.disabled=true;try{await OL.public.remove(d.id);sharing.removed(d.id);await openPublic();}catch(e){if($('publicDetailMessage'))$('publicDetailMessage').textContent=olFriendly(e);b.disabled=false;}};
   }
   function publishPublic(){
-    const d=DECKS[$('myDeck').value];if(!d)return;
-    publicSheet(`<h3>公開分享 ${esc(d.name)}</h3><p>發布後所有人都能查看完整牌表及複製。取消公開不會刪除別人已複製的牌組。</p><label class="field">公開暱稱<input id="publicAuthor" maxlength="20" value="${esc(profileOf(accountUser?.uid)?.name||cleanName($('olName').value)||'玩家')}"></label><p class="sub">只發布這副牌組的副本，不公開私人備份或其他牌組。編輯本機牌組不會改動此副本。</p><button class="opt primary" id="publicConfirm" type="button">確認公開分享</button><p id="publicPublishMessage" role="status"></p>`);
-    $('publicConfirm').onclick=async()=>{const b=$('publicConfirm');b.disabled=true;try{await OL.public.publish(d,$('publicAuthor').value);await openPublic();}catch(e){if($('publicPublishMessage'))$('publicPublishMessage').textContent=olFriendly(e);b.disabled=false;}};
+    const id=$('myDeck').value,d=DECKS[id];if(!d)return;
+    publicSheet(`<h3>公開分享 ${esc(d.name)}</h3><p>發布後所有人都能查看完整牌表及複製。取消公開不會刪除別人已複製的牌組。</p><label class="field">公開暱稱<input id="publicAuthor" maxlength="20" value="${esc(profileOf(accountUser?.uid)?.name||cleanName($('olName').value)||'玩家')}"></label><p class="sub">只公開這副牌組，其他私人牌組不會公開。之後編輯會更新同一份分享，可隨時取消公開。</p><button class="opt primary" id="publicConfirm" type="button">確認公開分享</button><p id="publicPublishMessage" role="status"></p>`);
+    $('publicConfirm').onclick=async()=>{const b=$('publicConfirm');b.disabled=true;try{const uid=accountUser?.uid,current=personal.decks.find(x=>x.id===id);if(!uid||!current||sharing.signature(current)!==sharing.signature(d))throw Error('牌組或帳號已變更，請重新開啟分享');const row=sharing.row(id),remoteId=row.remoteId||'pub_'+crypto.randomUUID();await OL.public.publish(d,$('publicAuthor').value,remoteId);if(accountUser?.uid!==uid)return;sharing.write(id,{public:true,owner:uid,remoteId,synced:sharing.signature(d)});renderSharing();await openPublic();}catch(e){if($('publicPublishMessage'))$('publicPublishMessage').textContent=olFriendly(e);b.disabled=false;}};
   }
   $('openPublic').onclick=()=>openPublic();
 
@@ -5192,13 +5236,13 @@ session = new BreakMatchPilot.TableSession({id:'table-'+Date.now()+'-'+(++tableS
         accountRender();if($('publicRows'))renderPublic();if($('publicDetailAuthor'))$('publicDetailAuthor').innerHTML=avatarMarkup($('publicDetailAuthor').dataset.owner)+' '+esc(profileOf($('publicDetailAuthor').dataset.owner)?.name||$('publicDetailAuthor').dataset.fallback);olLobby();
       },e=>{accountMessage='個人資料讀取失敗：'+olFriendly(e);accountRender();});
       OL.public=new publicModule.PublicDecks(services);
-      OL.cloud=new cloudModule.DeckCloud(services,{list:rows=>{cloudRows=rows;accountRender();},error:e=>{accountMessage='雲端牌組讀取失敗：'+olFriendly(e);accountRender();}});
+      OL.cloud=new cloudModule.DeckCloud(services,{list:rows=>{if(OL.cloud?.uid===deckSync.uid&&!OL.cloud?.loading)deckSync.legacy(rows);accountRender();},error:e=>{accountMessage='雲端牌組讀取失敗：'+olFriendly(e);accountRender();}});
       OL.records=new recordModule.MatchCloud(services,{list:()=>renderPrivateRecords(),error:e=>{privateRecordMessage='私人雲端紀錄讀取失敗：'+olFriendly(e);renderPrivateRecords();}});
       OL.research=new researchModule.ResearchMatches(services,OL.agreement,OL.records);
       const c = OL.client = new mod.FirebaseRooms(services, {
         archive:info=>{archiveMessage=info.ok?'此場匿名資料回放已公開':'回放上傳失敗，本機文字紀錄仍保留。'+info.message;},
         error: e => olToast(olFriendly(e)),
-        connection: () => {olView();syncSharing();backupCurrentRecord();syncProfileName().catch(e=>{accountMessage=olFriendly(e);accountRender();});},
+        connection: () => {deckSync.setOnline(!!OL.client?.online);olView();syncSharing();backupCurrentRecord();syncProfileName().catch(e=>{accountMessage=olFriendly(e);accountRender();});},
         lobby: v => { OL.rooms = v || {}; olLobby(); },
         presence: v => { OL.presence = v || {}; olLobby(); if (OL.inGame && OL.meta) { const me = c.user?.uid, other = OL.meta.p0 === me ? OL.meta.p1 : OL.meta.p0; oppName = olNameOf(other); } },
         room: id => { OL.roomId = id || null; if (id) { const u = new URL(location.href); u.searchParams.set('online', '1'); u.searchParams.set('room', id); history.replaceState(null, '', u); } else { OL.meta = null;OL.authority=null;const u=new URL(location.href);u.searchParams.delete('room');history.replaceState(null,'',u);olLeaveGame(); } olView(); },
