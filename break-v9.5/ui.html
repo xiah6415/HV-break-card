@@ -914,7 +914,7 @@ body.playing .dock:has([data-kind="drawConfirm"]){width:min(360px,calc(100vw - 1
     <div class="panel solo-only">
       <h2>AI 對手</h2>
       <label class="field" for="aiDeck">牌組<select id="aiDeck"><option value="seijoh">青葉城西（第四彈）</option></select></label>
-      <label class="field" for="aiLevel">AI 難度<select id="aiLevel"><option value="easy">簡單（較常失誤、不攔網）</option><option value="normal" selected>普通</option><option value="hard">困難（思考較久）</option></select></label>
+      <label class="field" for="aiLevel">AI 難度<select id="aiLevel"><option value="easy">簡單（基礎判斷）</option><option value="normal" selected>普通（進階判斷）</option><option value="hard">困難（留牌與整回合思考）</option></select></label>
       <div class="opts"><button class="chip" type="button" id="aiCloud" disabled>我的雲端牌組</button><button class="chip" type="button" id="aiPublic">公開牌組</button><button class="chip" type="button" id="editAiDeck">匯入 AI 牌組</button></div>
       <p class="sub" id="aiCloudHint">Google 登入後可選自己的雲端備份；公開牌組不需登入。</p>
       <div class="deckstrip" id="aiStrip"></div>

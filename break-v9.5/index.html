@@ -914,7 +914,7 @@ body.playing .dock:has([data-kind="drawConfirm"]){width:min(360px,calc(100vw - 1
     <div class="panel solo-only">
       <h2>AI 對手</h2>
       <label class="field" for="aiDeck">牌組<select id="aiDeck"><option value="seijoh">青葉城西（第四彈）</option></select></label>
-      <label class="field" for="aiLevel">AI 難度<select id="aiLevel"><option value="easy">簡單（較常失誤、不攔網）</option><option value="normal" selected>普通</option><option value="hard">困難（思考較久）</option></select></label>
+      <label class="field" for="aiLevel">AI 難度<select id="aiLevel"><option value="easy">簡單（基礎判斷）</option><option value="normal" selected>普通（進階判斷）</option><option value="hard">困難（留牌與整回合思考）</option></select></label>
       <div class="opts"><button class="chip" type="button" id="aiCloud" disabled>我的雲端牌組</button><button class="chip" type="button" id="aiPublic">公開牌組</button><button class="chip" type="button" id="editAiDeck">匯入 AI 牌組</button></div>
       <p class="sub" id="aiCloudHint">Google 登入後可選自己的雲端備份；公開牌組不需登入。</p>
       <div class="deckstrip" id="aiStrip"></div>
@@ -3103,11 +3103,11 @@ function rollout(m0, me, value, seed, longHorizon) {
   } catch (e) { return -Infinity; }
   return evaluate(m, me, base);
 }
-// 難度：easy＝較常隨手選、不攔網；normal＝預設；hard＝角色選擇也模擬（規則首選與次選）、每個選項抽樣 2 次取平均
+// easy＝原normal；normal＝原hard；hard＝完整自身回合＋有限後續窗口、留牌與門檻評分。
 const LEVELS = {
-  easy: { slip: 0.35, samples: 1, roles: false, block: false },
-  normal: { slip: 0, samples: 1, roles: false, block: true },
-  hard: { slip: 0, samples: 2, roles: true, block: true },
+  easy: { slip: 0, samples: 1, roles: false, block: true },
+  normal: { slip: 0, samples: 2, roles: true, block: true },
+  hard: { slip: 0, samples: 2, roles: true, block: true, planning: true },
 };
 const ROLE_KINDS = new Set(['receiver', 'setter', 'attacker', 'serve']);
 function roleCandidates(m, r) {
@@ -3116,16 +3116,94 @@ function roleCandidates(m, r) {
   const score = x => { const p = { receiver: 'receive', setter: 'toss', attacker: 'attack', serve: 'serve' }[r.kind]; return int(printed(m, x, p)) - 0.2 * worth(m, x); };
   return [pick, ...rest.sort((a, b) => score(b) - score(a)).slice(0, 1)];
 }
+// Scripts describe purposes once for the entire library; no per-card AI branches.
+const purposes=new WeakMap();
+function purpose(profile){
+ if(purposes.has(profile))return purposes.get(profile);
+ const p={receive:false,attack:false,resource:false,control:false,guts:[]};
+ const walk=n=>{if(!n||typeof n!=='object')return;if(n.kind==='numeric'){if(['receive','chosen'].includes(n.parameter))p.receive=true;if(['attack','toss','serve','chosen'].includes(n.parameter))p.attack=true;}if(['draw','retrieve','reveal_and_retrieve','draw_to_hand_size'].includes(n.kind))p.resource=true;if(['ban_action','invalidate_skill','force_judgment_failure'].includes(n.kind))p.control=true;if(n.kind==='pay_guts'&&Number.isInteger(n.count))p.guts.push(n.count);for(const v of Object.values(n))if(v&&typeof v==='object'){if(Array.isArray(v))v.forEach(walk);else walk(v);}};
+ walk(profile.program);purposes.set(profile,p);return p;
+}
+function reserve(m,me){
+ let v=0;const copies=new Map();
+ for(const id of zone(m,me,'hand')){
+  const c=K(m).card(id);if(c.printed.type!=='event')continue;
+  const p=purpose(K(m).profile(id)),n=copies.get(c.cardNo)||0;copies.set(c.cardNo,n+1);
+  v+=(2+(p.receive?5:0)+(p.attack?2:0)+(p.resource?2:0)+(p.control?3:0))/(1+n*.7);
+ }
+ return v;
+}
+function planningValue(m,me,base){
+ if(rallyOver(m,base)){if(m._m.loser===me)return -W.rally;if(m._m.loser===1-me)return W.rally;}
+ const k=K(m),hand=zone(m,me,'hand');let v=handValue(hand.length)+reserve(m,me);
+ // Preserve future role coverage and enough Guts for the exposed character's skill.
+ for(const role of ['receive','toss','attack']){const nums=hand.filter(id=>k.card(id).printed.type==='character').map(id=>printed(m,id,role)).filter(n=>Number.isInteger(n)&&n>0);if(nums.length)v+=3+Math.min(6,Math.max(...nums))*.6;}
+ for(const role of [...PARAMS,'side:0','side:1']){const n=Math.max(0,zone(m,me,role).length-1),id=top(m,me,role);v+=n*.8;if(id){const costs=purpose(k.profile(id)).guts.filter(c=>c>0);if(costs.length&&n>=Math.min(...costs))v+=3;}}
+ const b=ball(m);
+ if(b?.owner===me){
+  // This is evaluated only on an information-masked sample, never the true hand.
+  const defenses=zone(m,1-me,'hand').filter(id=>k.card(id).printed.type==='character').map(id=>printed(m,id,'receive')).filter(Number.isInteger),def=defenses.length?Math.max(...defenses):0,margin=b.offense-def;
+  v+=margin>0?Math.max(0,def)*3+32+Math.min(10,margin)*.3:Math.max(0,b.offense)*3;
+ }
+ return v;
+}
+function planningCandidates(r,limit=10){
+ const list=(candidates(r)||[]).filter(v=>legal(r,v)),pass=list.findIndex(v=>v===null||v===false);
+ // Keep pass even when a large request is truncated; ties prefer holding resources.
+ if(pass>=0)list.unshift(...list.splice(pass,1));return list.slice(0,limit);
+}
+function planRules(m,r){
+ if(['guts','payment_cards'].includes(r.kind)){
+  const ids=cardIds(r),score=id=>worth(m,id)+(K(m).card(id).printed.type==='event'?reserveFor(id):0);
+  function reserveFor(id){const p=purpose(K(m).profile(id));return 3+(p.receive?5:0)+(p.resource?2:0);}
+  return ids.slice().sort((a,b)=>score(a)-score(b)).slice(0,r.input.min);
+ }
+ if(r.kind==='parameter'){const role=K(m).state.turn.phase;const v=r.options.find(o=>o.value===role);if(v&&legal(r,v.value))return v.value;}
+ return safeRules(m,r);
+}
+const PLAN_COMMAND_LIMIT=96;
+function planCommand(m,r,value,budget){if(--budget.left<0)throw Error('AI_PLAN_BUDGET');m.command({kind:'answer',answer:H.makeAnswer(r,value)});}
+function finishPlan(m,me,base,windows=0,budget={left:PLAN_COMMAND_LIMIT}){
+ for(let steps=0;steps<64;steps++){
+  if(rallyOver(m,base))break;const r=m.request(0)||m.request(1);if(!r||r.actor!==me)break;
+  let value=planRules(m,r);
+  if(windows>0&&['event','activate_payment','optional'].includes(r.kind)){
+   const list=planningCandidates(r,2);let score=-Infinity;windows--;
+   for(const next of list){const trial=clone(m);let n=-Infinity;try{planCommand(trial,trial.request(me),next,budget);finishPlan(trial,me,base,0,budget);n=planningValue(trial,me,base);}catch(e){if(budget.left<0)throw e;}if(n>score+1e-6){score=n;value=next;}}
+  }
+  planCommand(m,r,value,budget);
+ }
+ if(!rallyOver(m,base)&&(m.request(0)||m.request(1))?.actor===me)throw Error('AI_PLAN_BUDGET');
+ return m;
+}
+function planningRollout(m,me,value,seed,budget={left:PLAN_COMMAND_LIMIT}){
+ const trial=simulation(m,me,seed),base={rally:m._m.rally};
+ try{planCommand(trial,trial.request(me),value,budget);finishPlan(trial,me,base,1,budget);return planningValue(trial,me,base);}catch{return -Infinity;}
+}
+function planningChoose(m,r,L,seed){
+ let list=planningCandidates(r);
+ if(ROLE_KINDS.has(r.kind)){const first=roleCandidates(m,r)||[safeRules(m,r)];list=[...new Set([...first,...cardIds(r)])].slice(0,4);}
+ if(!list.length)return planRules(m,r);
+ let value=list[0],score=-Infinity;const budget={left:PLAN_COMMAND_LIMIT};
+ for(const candidate of list){
+  if(budget.left<=0)break;let sum=0,count=0;
+  for(let i=0;i<L.samples&&budget.left>0;i++){const n=planningRollout(m,r.actor,candidate,(seed+Math.imul(i,0x632BE5AB))>>>0,budget);if(Number.isFinite(n)){sum+=n;count++;}else if(budget.left>0){sum=-Infinity;count=1;break;}}
+  if(count&&sum/count>score+.25){score=sum/count;value=candidate;}
+ }
+ // Failed previews must not turn into automatic payment or throwing away a card.
+ return Number.isFinite(score)?value:(list.includes(null)?null:list.includes(false)?false:planRules(m,r));
+}
 function choose(m, r, level = 'normal') {
   const L = LEVELS[level] || LEVELS.normal;
   if (r.input.type === 'ack') return true;
   if (r.context?.ineffectiveReason && r.options.some(o => o.value === false)) return false;
   const seed = (m._m.seed ^ Math.imul(m._m.decisionIndex + 1, 2654435761)) >>> 0;
+  if(L.planning&&(SIMULATE.has(r.kind)||ROLE_KINDS.has(r.kind)))return planningChoose(m,r,L,seed);
   if (r.kind === 'defend' && !L.block && r.options.some(o => o.value === 'receive')) return 'receive';
   let list = SIMULATE.has(r.kind) ? candidates(r) : null, long = r.kind === 'defend';
   if (!list && L.roles && ROLE_KINDS.has(r.kind)) { list = roleCandidates(m, r); long = true; }
   if (!list || list.length < 2) return safeRules(m, r);
-  list = list.filter(v => legal(r, v)).slice(0, 10); if (!list.length) return safeRules(m, r);
+  list = list.filter(v => legal(r, v));const pass=list.find(v=>v===null||v===false);if(list.length>10){list=list.slice(0,10);if(pass!==undefined&&!list.includes(pass))list[9]=pass;} if (!list.length) return safeRules(m, r);
   if (L.slip && rng(seed ^ 0x9E3779B9)() < L.slip) return list[Math.floor(rng(seed)() * list.length)];
   let bestValue = list[0], bestScore = -Infinity;
   for (const value of list) {
@@ -3145,7 +3223,7 @@ function answer(m, r, options = {}) {
 }
 // 以暫時權重回答（調參／難度用）：同步執行，結束後還原
 function answerWith(weights, m, r, options) { const saved = { ...W }; Object.assign(W, weights || {}); try { return answer(m, r, options); } finally { Object.assign(W, saved); } }
-const api = { LEVELS, answer, answerWith, rollout, choose, evaluate, rulesValue, clone, simulation, W };
+const api = { LEVELS, answer, answerWith, rollout, choose, evaluate, rulesValue, clone, simulation, planningValue, planningCandidates, planningRollout, finishPlan, reserve, PLAN_COMMAND_LIMIT, W };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.BreakMatchAI = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
 
