@@ -1798,3 +1798,9 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 結果：新增FirebaseRooms.spectate(room,{accepted:true})與唯讀spectating／spectator投影；大廳／房號／觀戰邀請均先確認提醒，可查雙手牌卡片資訊、不需牌組、不讀快照／牌庫順序／選擇要求、不送指令或接手。回溯以undoRequest.scope=turn請求，僅對方同意後回到我方最近回合開始，保留原單步Undo與拒絕／取消／逾時，支援跨權威接手。多人介面移除AI選項，保留單人AI及舊房間相容。
 - 測試：199套單元逐項通過（線上預覽隔離fixture更新後重跑）、fuzz3000、6×300、130既有＋29觀戰權限；三視窗觀戰提醒／取消／無牌組／雙手牌與卡片資訊／指令拒絕／原玩家私牌隔離／1280、390、320／整回合拒絕與同意及RNG還原／待同意時房主接手／觀眾重連與重整重確認／完賽與刪房、原多人Undo、建房門檻及單人e2e／mobile-review通過。依使用者負載反饋，重型測試改逐項、降低優先度；541／358不變。
 - 部署：96055f3已推送並發布RTDB規則與Hosting；兩網域12個主要檔案HTTP200及SHA256一致，正式站1280／390／320訪客多人入口無AI選項、登入後觀戰入口及回溯元件皆正常，未讀寫正式玩家／房間資料。https://haikyuu-playmat.web.app/break-v9.5/?online=1&v=96055f3 。
+
+## Claude：匯出到外部牌庫牌組是空的（2026-11-07，分支 claude/share-image-file）
+- 使用者回報：「到牌庫匯出圖片」或分享碼帶到外部牌庫，出現牌組項目但裡面沒有卡
+- 原因：DT.encodeShare 輸出 [卡號, 張數]，卡號是對練台內部碼（如 P01-011，無 HV- 前綴、無 .webp）；外部牌庫 decodeDeck 只接受 image_file（HV-P01-011-R.webp）或 card_no（HV-P01-011），兩者都比對不到 → 保留原字串，畫面上沒有卡圖
+- 計畫：encodeShare 改輸出外部牌庫新格式 image_file（library.card(c).versions[0].images[0]，541 張全數存在於外部 cards_data）；對練台自身 decodeShare/parseShare 原本就認得 image_file，回歸不受影響；補 deck-tools 測試與外部解碼模擬
+- 交接 Codex（2026-11-07）：使用者要求停止並交 Codex 續做。已改 deck-tools.js（shareId＋encodeShare 輸出 image_file）與 deck-tools.test.js（斷言分享 id 為 HV-…webp）。已驗：deck-tools 測試通過；541 張全數可被外部 cards_data 比對、6 副內建牌組外部解碼 0 缺卡、自家 parseShare 往返一致。未完成：fuzz／test.js 300／e2e／share-e2e／deck-builder-e2e 回歸（中途停止），以及實際到外部牌庫確認匯入後卡片顯示

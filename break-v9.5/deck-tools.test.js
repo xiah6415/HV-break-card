@@ -35,6 +35,8 @@ console.log('deck-tools: all tests passed');
   assert.deepEqual(DT.parseShare(LZ.compressToEncodedURIComponent(JSON.stringify({ n: 'old', c: Object.entries(deck.cards).map(([c, n]) => ['HV-' + c, n]) })), DEF).cards, deck.cards);
   // 自家 encodeShare 往返
   assert.deepEqual(DT.parseShare(DT.encodeShare(deck), DEF).cards, deck.cards);
+  // 外部牌庫只認 image_file（.webp）或 HV- 卡號：分享碼一律輸出 image_file
+  for (const [id] of JSON.parse(DT.LZString.decompressFromEncodedURIComponent(DT.encodeShare(deck))).c) assert.match(id, /^HV-.+\.webp$/, 'share id must be the external image_file: ' + id);
   // inspect：一次列出鎖定卡、張數
   // All real cards are now open; simulate unresolved browse metadata so the
   // inspector's locked-card/count diagnostics remain tested without a live lock.
