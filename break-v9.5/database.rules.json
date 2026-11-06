@@ -369,6 +369,78 @@
           ".validate": false
         }
       }
+    },
+    "personalMatches": {
+      "$uid": {
+        ".read": "auth != null && auth.uid == $uid && auth.token.firebase.sign_in_provider == 'google.com'",
+        "$id": {
+          ".write": "auth != null && auth.uid == $uid && auth.token.firebase.sign_in_provider == 'google.com' && (!newData.exists() || (!data.exists() && newData.child('previousRecordId').val() == '') || (data.exists() && (newData.child('recordId').val() == data.child('recordId').val() || newData.child('previousRecordId').val() == data.child('recordId').val())))",
+          ".validate": "$id.matches(/^s[0-2][0-9]$/) && newData.hasChildren(['recordId','previousRecordId','version','recordJSON','createdAt','updatedAt'])",
+          "version": {
+            ".validate": "newData.val() == 1"
+          },
+          "recordJSON": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 900000"
+          },
+          "createdAt": {
+            ".validate": "newData.isNumber() && (newData.val() == now || newData.val() == data.val())"
+          },
+          "updatedAt": {
+            ".validate": "newData.isNumber() && newData.val() == now"
+          },
+          "$other": {
+            ".validate": false
+          },
+          "recordId": {
+            ".validate": "newData.isString() && newData.val().length <= 160 && newData.val().beginsWith('solo:')"
+          },
+          "previousRecordId": {
+            ".validate": "newData.isString() && newData.val().length <= 160"
+          }
+        }
+      }
+    },
+    "personalMatchIndex": {
+      "$uid": {
+        ".read": "auth != null && auth.uid == $uid && auth.token.firebase.sign_in_provider == 'google.com'",
+        ".indexOn": [
+          "updatedAt"
+        ],
+        "$id": {
+          ".write": "auth != null && auth.uid == $uid && auth.token.firebase.sign_in_provider == 'google.com' && (!newData.exists() || (!data.exists() && newData.child('previousRecordId').val() == '') || (data.exists() && (newData.child('recordId').val() == data.child('recordId').val() || newData.child('previousRecordId').val() == data.child('recordId').val())))",
+          ".validate": "$id.matches(/^s[0-2][0-9]$/) && newData.hasChildren(['recordId','previousRecordId','version','result','rally','decisionIndex','chars','createdAt','updatedAt'])",
+          "version": {
+            ".validate": "newData.val() == 1"
+          },
+          "recordId": {
+            ".validate": "newData.isString() && newData.val().length <= 160 && newData.val().beginsWith('solo:')"
+          },
+          "result": {
+            ".validate": "newData.val() == 'win' || newData.val() == 'loss'"
+          },
+          "rally": {
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000"
+          },
+          "decisionIndex": {
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000"
+          },
+          "chars": {
+            ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() <= 900000"
+          },
+          "createdAt": {
+            ".validate": "newData.isNumber() && (newData.val() == now || newData.val() == data.val())"
+          },
+          "updatedAt": {
+            ".validate": "newData.isNumber() && newData.val() == now"
+          },
+          "$other": {
+            ".validate": false
+          },
+          "previousRecordId": {
+            ".validate": "newData.isString() && newData.val().length <= 160"
+          }
+        }
+      }
     }
   }
 }
