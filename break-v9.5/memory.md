@@ -1804,3 +1804,6 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 原因：DT.encodeShare 輸出 [卡號, 張數]，卡號是對練台內部碼（如 P01-011，無 HV- 前綴、無 .webp）；外部牌庫 decodeDeck 只接受 image_file（HV-P01-011-R.webp）或 card_no（HV-P01-011），兩者都比對不到 → 保留原字串，畫面上沒有卡圖
 - 計畫：encodeShare 改輸出外部牌庫新格式 image_file（library.card(c).versions[0].images[0]，541 張全數存在於外部 cards_data）；對練台自身 decodeShare/parseShare 原本就認得 image_file，回歸不受影響；補 deck-tools 測試與外部解碼模擬
 - 交接 Codex（2026-11-07）：使用者要求停止並交 Codex 續做。已改 deck-tools.js（shareId＋encodeShare 輸出 image_file）與 deck-tools.test.js（斷言分享 id 為 HV-…webp）。已驗：deck-tools 測試通過；541 張全數可被外部 cards_data 比對、6 副內建牌組外部解碼 0 缺卡、自家 parseShare 往返一致。未完成：fuzz／test.js 300／e2e／share-e2e／deck-builder-e2e 回歸（中途停止），以及實際到外部牌庫確認匯入後卡片顯示
+- Codex接手計畫：核對ee8b75e，重新建置並依序完成指定回歸；以隔離瀏覽器實際點擊匯出並在外部牌庫確認卡片顯示，通過後合併master、推送並部署Hosting，核對正式檔案。先前僅驗分享張數未檢查外部卡片識別，這次補驗實際外部顯示。
+- 結果：保留Claude的image_file修正，另修測試斷言以接受真實HVBP-檔名。build、deck-tools、e2e三尺寸9局、share-e2e及deck-builder-e2e三尺寸均通過；實際按匯出鈕到外部正式牌庫，確認40張縮圖全部載入；用外部目前decodeDeck驗證541張0缺卡、6副牌組各40張0缺卡，自家parseShare往返一致。fuzz3000及6×300也已通過。
+- 使用者補充驗證原則：沒動牌局相關功能時，只驗改動功能與相關回歸，不再例行跑整批牌局測試；已同步AGENTS.md供後續遵循。
