@@ -3973,7 +3973,9 @@ function decodeShare(text) {
   if (!payload || !Array.isArray(payload.c)) throw Error('分享連結內容不是牌組資料');
   return { n: typeof payload.n === 'string' ? payload.n : '分享牌組', c: payload.c };
 }
-function encodeShare(deck) { return LZString.compressToEncodedURIComponent(JSON.stringify({ n: deck.name, c: Object.entries(deck.cards) })); }
+// 與外部牌庫（weilun2022/haikyuu-cards）新格式一致：c 為 [image_file, 張數]；外部牌庫只認 image_file 或 HV- 卡號
+function shareId(code) { const c = library.card(code); const v = c && c.versions && c.versions[0]; return (v && v.images && v.images[0]) || ('HV-' + code); }
+function encodeShare(deck) { return LZString.compressToEncodedURIComponent(JSON.stringify({ n: deck.name, c: Object.entries(deck.cards).map(([code, n]) => [shareId(code), n]) })); }
 // 一次列出所有問題（parseDeck 遇到第一個錯誤就停）；不放寬任何開放權限
 function inspectDeck(source, defs, {mode='strict'}={}) {
   library.checkMode(mode);
