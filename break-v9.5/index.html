@@ -904,7 +904,7 @@ body.playing[data-spectating="1"] .rally-status{animation:none!important;transfo
   <section id="setup" class="setup">
     <div class="panel solo-only" id="soloResume" hidden><h2>上次的對局</h2><p class="sub" id="soloSaveText"></p><div class="opts"><button class="btn" id="resumeSolo" type="button">繼續對局</button><button class="chip" id="clearSolo" type="button">清除對局存檔</button></div></div>
     <div class="panel" id="deckPanel">
-      <h2>我的牌組</h2>
+      <h2>我的牌組 <button class="chip" type="button" id="exportDeckImage">到牌庫匯出圖片 ↗</button></h2>
       <label class="field solo-only" for="gameMode">對戰模式<select id="gameMode"><option value="numeric" selected>數值模式（含手動技能）</option><option value="strict">嚴格模式（已支援卡片）</option></select></label>
       <label class="field" for="myDeck">牌組<select id="myDeck"><option value="">尚無牌組</option></select></label>
       <p class="sub" id="deckHint" role="status">尚無牌組，請先組牌或匯入牌組。</p>
@@ -4234,7 +4234,8 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
   }
   let deckConnectionReady=false,sharing=null;
   function renderSharing(){if(!sharing)return;const id=$('myDeck').value;$('deckPublic').disabled=!MY_DECKS.includes(id);try{$('deckPublic').checked=!!sharing.row(id).public;$('deckVisibilityStatus').textContent=id?(sharing.error?'牌組已保留；公開同步失敗：'+sharing.error:sharing.status(id)):'新建／匯入牌組預設公開，可改私人；登入後才會上傳。';$('shareRetry').hidden=!sharing.error;}catch(e){$('deckVisibilityStatus').textContent=e.message;}}
-  function deckButtons(){const valid=MY_DECKS.includes($('myDeck').value)&&usableDeck($('myDeck').value);$('startBtn').disabled=!valid;$('olCreate').disabled=$('olJoin').disabled=!valid||!deckConnectionReady;for(const id of ['editMyDeck','renameDeck','deleteDeck','exportDeck'])$(id).disabled=!MY_DECKS.includes($('myDeck').value);$('deckHint').textContent=personal.error?'牌組讀取失敗：'+personal.error:valid?'已選擇 '+DECKS[$('myDeck').value].name+'・40 張':MY_DECKS.length?'請選擇可用牌組，或先組牌／匯入。':'尚無牌組，請先組牌或匯入牌組。';$('startHint').textContent=valid?'準備好了，開始對戰':$('deckHint').textContent;renderSharing();}
+  function deckButtons(){const valid=MY_DECKS.includes($('myDeck').value)&&usableDeck($('myDeck').value);$('startBtn').disabled=!valid;$('olCreate').disabled=$('olJoin').disabled=!valid||!deckConnectionReady;for(const id of ['editMyDeck','renameDeck','deleteDeck','exportDeck','exportDeckImage'])$(id).disabled=!MY_DECKS.includes($('myDeck').value);$('deckHint').textContent=personal.error?'牌組讀取失敗：'+personal.error:valid?'已選擇 '+DECKS[$('myDeck').value].name+'・40 張':MY_DECKS.length?'請選擇可用牌組，或先組牌／匯入。':'尚無牌組，請先組牌或匯入牌組。';$('startHint').textContent=valid?'準備好了，開始對戰':$('deckHint').textContent;renderSharing();}
+  $('exportDeckImage').onclick=()=>{if(!MY_DECKS.includes($('myDeck').value))return;const url=new URL('https://weilun2022.github.io/haikyuu-cards/');url.searchParams.set('deck',DT.encodeShare(DECKS[$('myDeck').value]));window.open(url.href,'_blank','noopener,noreferrer');};
   function strip(key) { return Object.entries(DECKS[key]?.cards||{}).sort((a, b) => (isC(a[0]) === isC(b[0]) ? 0 : isC(a[0]) ? -1 : 1)).map(([c, n]) => `<figure><button class="cbtn" type="button" data-card="${c}">${img(c,false,true)}</button><span>×${n}</span></figure>`).join(''); }
   fill($('myDeck'), MY_DECKS, store.get('bk_my')); fill($('aiDeck'), AI_DECKS, store.get('bk_ai') || 'seijoh');
   if (store.get('bk_speed')) $('speed').value = store.get('bk_speed');
@@ -4304,7 +4305,7 @@ root.BreakEngine={DEF,DECKS,nm,isC,st,short:c=>nm(c).split(' ')[0],val:c=>DEF[c]
     };
     const copy = text => { if (navigator.clipboard?.writeText) navigator.clipboard.writeText(text).catch(() => { $('customError').textContent = '複製失敗，請手動選取文字'; }); else { $('customJSON').select(); $('customError').textContent = '請手動複製選取的文字'; } };
     $('copyCustom').onclick = () => copy($('customJSON').value);
-    $('copyShare').onclick = () => { try { copy(DT.encodeShare(DT.parseDeck($('customJSON').value, DEF, modeOptions()))); } catch (e) { $('customError').textContent = e.message; } };
+  $('copyShare').onclick = () => { try { copy(DT.encodeShare(DT.parseDeck($('customJSON').value, DEF, modeOptions()))); } catch (e) { $('customError').textContent = e.message; } };
   }
   $('editDeck').onclick = () => openImporter('me');
   $('editAiDeck').onclick = () => openImporter('ai');
