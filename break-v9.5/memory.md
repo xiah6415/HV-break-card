@@ -1791,6 +1791,7 @@ Xiah 要跟 AI 對打的網頁版模擬器，可跨裝置使用 → 純前端（
 - 計畫：新增「到牌庫匯出圖片 ↗」，使用牌庫既有 n/c 壓縮分享格式攜帶目前牌組，在牌庫確認匯入後使用既有圖片匯出功能；無牌組停用、新分頁隔離 opener。僅本機修改與驗證。
 - 結果：ui.html 已新增按鈕與目前選取牌組的分享網址；index.html 由 build.py 產生。建置及 deck-tools.test.js 通過。fuzz／test.js 300 回歸仍在執行，尚未取得結果；本機缺少可直接載入的 playwright，瀏覽器驗證尚未完成。牌庫格式依本機 repo-assessment/haikyuu-cards/index.html 核對，線上版本尚未重新驗證；未推送或部署。
 - 完成驗證：fuzz 3000局、test.js 300六組共1800局均通過。找到本機 runtime 的 Playwright 後，以 PLAYWRIGHT_MODULE 指定位置並允許啟動測試瀏覽器，e2e.js 三尺寸各3局共9局全過，0頁面錯誤／橫向溢出。額外於1280／390／320實際點按新增按鈕，確認網址目標、分享資料解碼後40張及 noopener,noreferrer 全過。原串接命令末段因預設找不到 playwright 結束，已以上述指定位置的獨立E2E成功補驗。所有測試程序已結束，未推送部署。
+- 部署：使用者本回合明確要求自動部署；ec6330e 已推送 master 並成功發布 haikyuu-playmat Hosting。web.app／firebaseapp.com 遊戲頁皆HTTP200、SHA256與已測本機index完全一致，含新增匯出圖片按鈕；本次僅部署Hosting，未修改正式資料庫。https://haikyuu-playmat.web.app/break-v9.5/?v=ec6330e 。
 
 ## 多人觀戰與同意回溯
 - 計畫：大廳／邀請新增觀戰入口，入場前明示「打牌開心自在，請勿偷看你的牌友手牌」並確認；觀戰專用唯讀視圖公開雙方手牌，不公開牌庫順序或權威快照，觀眾不可送出牌／Undo／接手等指令，玩家視圖維持只讀自己的手牌。
