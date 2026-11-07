@@ -13,7 +13,9 @@ const connection=()=>crypto.randomUUID();
 export class FirebaseRooms{
  constructor(services,callbacks={}){Object.assign(this,services);this.cb=callbacks;this.room=null;this.user=null;this.online=false;this.connection=null;this.stops=[];this.generation=0;this.core=null;this.rev=-1;this.log={};this.work=Promise.resolve();this.busy=false;this.pending=null;this.lastView=null;}
  ref(path){return this.D.ref(this.db,path);}
- async login(user,name){await this.leave();this.user=user;this.name=(name||user.displayName||'匿名玩家').trim().slice(0,40)||'玩家';
+ get canManageEmptyRooms(){return !!(this.roomModerator&&this.user?.emailVerified&&!this.user.isAnonymous&&this.user.providerData?.some(p=>p.providerId==='google.com'));}
+ async login(user,name){await this.leave();this.roomModerator=false;this.user=user;this.cb.moderator?.(false);this.name=(name||user.displayName||'匿名玩家').trim().slice(0,40)||'玩家';
+  const uid=user.uid;this.stops.push(this.D.onValue(this.ref('roomModerators/'+uid),s=>{if(this.user?.uid!==uid)return;this.roomModerator=s.val()===true;this.cb.moderator?.(this.canManageEmptyRooms);},()=>{this.roomModerator=false;this.cb.moderator?.(false);}));
   this.stops.push(this.D.onValue(this.ref('.info/connected'),snap=>{this.online=snap.val()===true;this.cb.connection?.(this.online);if(this.online)this._connected().catch(e=>this.error(e));else{this.generation++;this.core=null;}}));
   this.stops.push(this.D.onValue(this.ref('lobby'),s=>this.cb.lobby?.(s.val()||{}),e=>this.error(e)),this.D.onValue(this.ref('presence'),s=>this.cb.presence?.(s.val()||{}),e=>this.error(e)));
  }
@@ -141,6 +143,19 @@ export class FirebaseRooms{
   await this.D.update(this.D.ref(this.db),{['rooms/'+id]:null,['lobby/'+id]:null});
   if(this.room===id)await this.leave();
  }
+ async closeEmptyRoom(id){
+  if(!this.canManageEmptyRooms||!this.online)throw Error('請以空房管理員Google帳號登入');
+  id=String(id||'').toUpperCase();if(!/^[A-Z0-9]{8}$/.test(id))throw Error('房號為8碼英數字');
+  const root='rooms/'+id+'/',[m,p,s,match]=await Promise.all(['meta','presence','spectators','bundle/matchId'].map(path=>this.D.get(this.ref(root+path))));
+  const meta=m.val();if(!meta)throw Error('房間已不存在');
+  const count=rows=>Object.values(rows||{}).some(conns=>Object.keys(conns||{}).length);
+  if(count(p.val())||count(s.val()))throw Error('房內還有玩家或觀眾，不能關閉');
+  const matchId=match.val()||'room-'+id;
+  if([meta.p0,meta.p1].some(uid=>uid&&uid!=='AI'&&meta.rematch?.[uid]===matchId))throw Error('玩家已確認再來一局，房間會保留');
+  try{await this.D.update(this.ref(root+'meta'),{status:'closed',emptyClosed:true});}
+  catch(e){if(/permission.denied/i.test(String(e.code||e.message)))throw Error('權限或房間狀態已改變，未關閉房間，請重新確認');throw e;}
+  await this.D.remove(this.ref('lobby/'+id));return id;
+ }
  async close(){await this._flushReplay();const id=this.room;if(!this._current(this.active?.gen))throw Error('只有權威端可以關閉房間');await this.D.set(this.ref('rooms/'+this.room+'/meta/status'),'closed');await this.D.remove(this.ref('lobby/'+id));await this.leave();}
  async _closeEmptyRoom(id){
   if(!this.online||!this.user||this.archiveError)return;
@@ -160,6 +175,6 @@ export class FirebaseRooms{
   await Promise.all(refs.map(r=>this.D.remove(r).catch(()=>{})));for(const [key]of own)this.roomConnections.delete(key);
   if(!watch)await this._closeEmptyRoom(id);
  }this.cb.room?.(null);}
- async logout(){await this.leave();if(this.user&&this.connection)await this.D.remove(this.ref('presence/'+this.user.uid+'/'+this.connection)).catch(()=>{});for(const stop of this.stops)stop();this.stops=[];this.online=false;this.user=null;}
+ async logout(){await this.leave();if(this.user&&this.connection)await this.D.remove(this.ref('presence/'+this.user.uid+'/'+this.connection)).catch(()=>{});for(const stop of this.stops)stop();this.stops=[];this.online=false;this.user=null;this.roomModerator=false;this.cb.moderator?.(false);}
  error(e){this.cb.error?.(e);}
 }
