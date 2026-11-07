@@ -1804,7 +1804,7 @@ body.playing[data-spectating="1"] .rally-status{animation:none!important;transfo
   }
   function confirmGameAction(kind){
     if(isSpectating()&&kind==='surrender')return;const surrender=kind==='surrender',current=session,id=OL.inGame?session?.last?.view.match.id:session?.match?._m.id;
-    openSheet(`<h3>${surrender?'確定投降？':'回到主頁？'}</h3><p>${surrender?'投降會結束整場對局，對手獲勝；無法 Undo。':OL.inGame?'將離開房間並回到主頁。房間保留，對手可接手；這不會判定投降。':'目前對局會保存在此裝置，可從主頁繼續。'}</p><p id="exitMessage" role="alert"></p><div class="opts"><button class="opt ${surrender?'danger':'primary'}" id="confirmGameAction" type="button">${surrender?'確認投降':'確認回到主頁'}</button><button class="opt" id="cancelGameAction" type="button">繼續對局</button></div>`);
+    openSheet(`<h3>${surrender?'確定投降？':'回到主頁？'}</h3><p>${surrender?'投降會結束整場對局，對手獲勝；無法 Undo。':OL.inGame?'將離開房間並回到主頁，這不會判定投降。對手仍在房內時可繼續接手；雙方離開且未確認再來一局時，房間會自動關閉。':'目前對局會保存在此裝置，可從主頁繼續。'}</p><p id="exitMessage" role="alert"></p><div class="opts"><button class="opt ${surrender?'danger':'primary'}" id="confirmGameAction" type="button">${surrender?'確認投降':'確認回到主頁'}</button><button class="opt" id="cancelGameAction" type="button">繼續對局</button></div>`);
     $('cancelGameAction').onclick=closeSheet;
     $('confirmGameAction').onclick=async()=>{const button=$('confirmGameAction');button.disabled=true;try{
       const now=OL.inGame?session?.last?.view.match.id:session?.match?._m.id;

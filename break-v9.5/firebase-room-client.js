@@ -27,7 +27,15 @@ export class FirebaseRooms{
   this.connection=connection();const path='presence/'+this.user.uid+'/'+this.connection;await this.D.onDisconnect(this.ref(path)).remove();await this.D.set(this.ref(path),{name:this.name,at:this.D.serverTimestamp()});
   if(this.room){this.watchRestoring=!!this.spectating;try{await this._roomPresence();if(this.spectating)this._watchRoomView();await this._inspectLease();}finally{this.watchRestoring=false;}}
  }
- async _roomPresence(){if(!this.online||!this.connection||!this.room)return;const r=this.ref('rooms/'+this.room+'/'+(this.spectating?'spectators':'presence')+'/'+this.user.uid+'/'+this.connection);await this.D.onDisconnect(r).remove();await this.D.set(r,{name:this.name,at:this.D.serverTimestamp(),...(this.spectating?{accepted:true}:{})});}
+ async _roomPresence(){
+  if(!this.online||!this.connection||!this.room)return;
+  const id=this.room,conn=this.connection,watch=this.spectating;
+  const key=id+'/'+(watch?'spectators':'presence')+'/'+this.user.uid+'/'+conn,r=this.ref('rooms/'+key);
+  (this.roomConnections??=new Map()).set(key,{id,ref:r});
+  await this.D.onDisconnect(r).remove();
+  if(this.room!==id||this.connection!==conn||this.spectating!==watch)return;
+  await this.D.set(r,{name:this.name,at:this.D.serverTimestamp(),...(watch?{accepted:true}:{})});
+ }
  async create({title,deck,aiDeck=null,mode='strict'}){
   if(!this.online)throw Error('請先連線登入');await this.leave();const uid=this.user.uid;
   for(let tries=0;tries<4;tries++){
@@ -134,7 +142,24 @@ export class FirebaseRooms{
   if(this.room===id)await this.leave();
  }
  async close(){await this._flushReplay();const id=this.room;if(!this._current(this.active?.gen))throw Error('只有權威端可以關閉房間');await this.D.set(this.ref('rooms/'+this.room+'/meta/status'),'closed');await this.D.remove(this.ref('lobby/'+id));await this.leave();}
- async leave(){await this._flushReplay();const id=this.room,conn=this.connection,watch=this.spectating;this.viewStop?.();this.viewStop=null;this.generation++;this.core=null;this.active=null;this._stopAuthority();for(const stop of this.roomStops||[])stop();this.roomStops=[];this.room=null;this.spectating=false;this.meta=null;this.lease=null;this.pending=null;this.lastView=null;if(id&&conn&&this.user)await this.D.remove(this.ref('rooms/'+id+'/'+(watch?'spectators':'presence')+'/'+this.user.uid+'/'+conn)).catch(()=>{});this.cb.room?.(null);}
+ async _closeEmptyRoom(id){
+  if(!this.online||!this.user||this.archiveError)return;
+  try{
+   const root='rooms/'+id+'/',meta=(await this.D.get(this.ref(root+'meta'))).val();
+   if(!meta||meta.status==='closed'||![meta.p0,meta.p1].includes(this.user.uid))return;
+   const presence=(await this.D.get(this.ref(root+'presence'))).val()||{};
+   if(Object.keys(presence[meta.p0]||{}).length||(meta.p1!=='AI'&&Object.keys(presence[meta.p1]||{}).length))return;
+   // Rules atomically recheck both seats and current-match rematch votes.
+   await this.D.update(this.ref(root+'meta'),{status:'closed',emptyClosed:true});
+   await this.D.remove(this.ref('lobby/'+id));
+  }catch(e){if(!/permission.denied/i.test(String(e.code||e.message)))this.error(e);}
+ }
+ async leave(){await this._flushReplay();const id=this.room,conn=this.connection,watch=this.spectating;this.viewStop?.();this.viewStop=null;this.generation++;this.core=null;this.active=null;this._stopAuthority();for(const stop of this.roomStops||[])stop();this.roomStops=[];this.room=null;this.spectating=false;this.meta=null;this.lease=null;this.pending=null;this.lastView=null;if(id&&conn&&this.user){
+  const own=[...(this.roomConnections||[])].filter(([,v])=>v.id===id);
+  const refs=own.length?own.map(([,v])=>v.ref):[this.ref('rooms/'+id+'/'+(watch?'spectators':'presence')+'/'+this.user.uid+'/'+conn)];
+  await Promise.all(refs.map(r=>this.D.remove(r).catch(()=>{})));for(const [key]of own)this.roomConnections.delete(key);
+  if(!watch)await this._closeEmptyRoom(id);
+ }this.cb.room?.(null);}
  async logout(){await this.leave();if(this.user&&this.connection)await this.D.remove(this.ref('presence/'+this.user.uid+'/'+this.connection)).catch(()=>{});for(const stop of this.stops)stop();this.stops=[];this.online=false;this.user=null;}
  error(e){this.cb.error?.(e);}
 }

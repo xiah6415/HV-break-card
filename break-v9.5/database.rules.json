@@ -26,7 +26,7 @@
         "createdAt"
       ],
       "$room": {
-        ".write": "(auth != null && auth.uid == root.child('rooms').child($room).child('authority').child('uid').val() || (auth != null && auth.uid == root.child('rooms').child($room).child('meta').child('p0').val() && root.child('rooms').child($room).child('meta').child('status').val() == 'closed' && !newData.exists())) || (auth != null && (auth.uid == root.child('rooms').child($room).child('meta/p0').val() || auth.uid == root.child('rooms').child($room).child('authority/uid').val()) && root.child('rooms').child($room).child('meta/status').val() == 'finished' && !newData.exists())",
+        ".write": "(auth != null && auth.uid == root.child('rooms').child($room).child('authority').child('uid').val() || (auth != null && auth.uid == root.child('rooms').child($room).child('meta').child('p0').val() && root.child('rooms').child($room).child('meta').child('status').val() == 'closed' && !newData.exists())) || (auth != null && (auth.uid == root.child('rooms').child($room).child('meta/p0').val() || auth.uid == root.child('rooms').child($room).child('authority/uid').val()) && root.child('rooms').child($room).child('meta/status').val() == 'finished' && !newData.exists()) || (auth != null && (auth.uid == root.child('rooms').child($room).child('meta/p0').val() || auth.uid == root.child('rooms').child($room).child('meta/p1').val()) && root.child('rooms').child($room).child('meta/status').val() == 'closed' && root.child('rooms').child($room).child('meta/emptyClosed').val() == true && !newData.exists())",
         ".validate": "newData.hasChildren(['room','title','owner','status','mode','createdAt'])",
         "room": {
           ".validate": "newData.val() == $room"
@@ -78,7 +78,12 @@
             ".validate": "newData.isString() && newData.val().length <= 128 && (newData.val() == data.val() || (!data.exists() && (newData.val() == auth.uid || (newData.val() == 'AI' && auth.uid == newData.parent().child('p0').val()))))"
           },
           "status": {
-            ".validate": "newData.val() == 'waiting' || newData.val() == 'running' || newData.val() == 'finished' || newData.val() == 'closed'"
+            ".write": "auth != null && (auth.uid == root.child('rooms').child($room).child('meta/p0').val() || auth.uid == root.child('rooms').child($room).child('meta/p1').val()) && newData.val() == 'closed' && newData.parent().child('emptyClosed').val() == true",
+            ".validate": "(data.val() != 'closed' || newData.val() == 'closed') && (newData.val() == 'waiting' || newData.val() == 'running' || newData.val() == 'finished' || newData.val() == 'closed')"
+          },
+          "emptyClosed": {
+            ".write": "auth != null && (auth.uid == root.child('rooms').child($room).child('meta/p0').val() || auth.uid == root.child('rooms').child($room).child('meta/p1').val())",
+            ".validate": "newData.val() == true && newData.parent().child('status').val() == 'closed' && !root.child('rooms').child($room).child('presence').child(root.child('rooms').child($room).child('meta/p0').val()).exists() && (!root.child('rooms').child($room).child('meta/p1').exists() || root.child('rooms').child($room).child('meta/p1').val() == 'AI' || !root.child('rooms').child($room).child('presence').child(root.child('rooms').child($room).child('meta/p1').val()).exists()) && root.child('rooms').child($room).child('meta/rematch').child(root.child('rooms').child($room).child('meta/p0').val()).val() != (root.child('rooms').child($room).child('bundle/matchId').exists() ? root.child('rooms').child($room).child('bundle/matchId').val() : 'room-'+$room) && (!root.child('rooms').child($room).child('meta/p1').exists() || root.child('rooms').child($room).child('meta/p1').val() == 'AI' || root.child('rooms').child($room).child('meta/rematch').child(root.child('rooms').child($room).child('meta/p1').val()).val() != (root.child('rooms').child($room).child('bundle/matchId').exists() ? root.child('rooms').child($room).child('bundle/matchId').val() : 'room-'+$room))"
           },
           "mode": {
             ".validate": "newData.val() == 'strict' || newData.val() == 'numeric'"
@@ -132,7 +137,7 @@
           ".read": "(auth != null && (auth.uid == root.child('rooms').child($room).child('meta').child('p0').val() || auth.uid == root.child('rooms').child($room).child('meta').child('p1').val())) || (auth != null && !(auth.uid == root.child('rooms').child($room).child('meta/p0').val() || auth.uid == root.child('rooms').child($room).child('meta/p1').val()) && root.child('rooms').child($room).child('spectators').child(auth.uid).exists() && (root.child('rooms').child($room).child('meta/status').val() == 'running' || root.child('rooms').child($room).child('meta/status').val() == 'finished'))",
           "$uid": {
             "$connection": {
-              ".write": "auth != null && (auth.uid == root.child('rooms').child($room).child('meta').child('p0').val() || auth.uid == root.child('rooms').child($room).child('meta').child('p1').val()) && auth.uid == $uid",
+              ".write": "auth != null && (auth.uid == root.child('rooms').child($room).child('meta').child('p0').val() || auth.uid == root.child('rooms').child($room).child('meta').child('p1').val()) && auth.uid == $uid && (!newData.exists() || root.child('rooms').child($room).child('meta/status').val() != 'closed')",
               ".validate": "newData.hasChildren(['name','at'])",
               "name": {
                 ".validate": "newData.isString() && newData.val().length <= 40"
